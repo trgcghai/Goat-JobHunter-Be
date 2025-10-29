@@ -1,0 +1,15 @@
+package iuh.fit.goat.common;
+
+import lombok.Getter;
+
+@Getter
+public enum NotificationType {
+    LIKE("Thích"), FOLLOW("Theo dõi"),
+    COMMENT("Bình luận"), REPLY("Trả lời");
+
+    private final String value;
+
+    NotificationType(String value) {
+        this.value = value;
+    }
+}
