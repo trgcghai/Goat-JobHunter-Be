@@ -5,7 +5,9 @@ import iuh.fit.goat.dto.response.ResultPaginationResponse;
 import iuh.fit.goat.entity.Blog;
 import iuh.fit.goat.entity.Comment;
 import iuh.fit.goat.entity.Notification;
+import iuh.fit.goat.entity.User;
 import iuh.fit.goat.repository.CommentRepository;
+import iuh.fit.goat.repository.UserRepository;
 import iuh.fit.goat.service.BlogService;
 import iuh.fit.goat.util.SecurityUtil;
 import lombok.RequiredArgsConstructor;
@@ -18,13 +20,14 @@ import org.springframework.stereotype.Service;
 @RequiredArgsConstructor
 public class CommentServiceImpl implements iuh.fit.goat.service.CommentService {
     private final CommentRepository commentRepository;
+    private final UserRepository userRepository;
     private final BlogService blogService;
 
     @Override
     public Comment handleCreateComment(Comment comment) {
         String email = SecurityUtil.getCurrentUserLogin().isPresent() ? SecurityUtil.getCurrentUserLogin().get() : "";
-//        User currentUser = this.userRepository.findByContact_Email(email);
-//        comment.setCommentedBy(currentUser);
+        User currentUser = this.userRepository.findByContact_Email(email);
+        comment.setCommentedBy(currentUser);
         if(comment.getBlog() != null) {
             Blog blog = this.blogService.handleGetBlogById(comment.getBlog().getBlogId());
             if(blog != null) {

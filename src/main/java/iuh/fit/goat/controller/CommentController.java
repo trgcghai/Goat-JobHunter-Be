@@ -5,7 +5,6 @@ import iuh.fit.goat.dto.response.ResultPaginationResponse;
 import iuh.fit.goat.entity.Blog;
 import iuh.fit.goat.entity.Comment;
 import iuh.fit.goat.exception.InvalidException;
-import iuh.fit.goat.service.BlogService;
 import iuh.fit.goat.service.CommentService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;

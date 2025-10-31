@@ -70,7 +70,7 @@ public class BlogController {
 
     @PutMapping("/liked-blogs")
     public ResponseEntity<List<Notification>> likeBlogs(@Valid @RequestBody LikeBlogRequest likeBlogRequest) {
-        List<Notification> res = this.blogService.handleLikeBlog();
+        List<Notification> res = this.blogService.handleLikeBlog(likeBlogRequest);
         return ResponseEntity.status(HttpStatus.OK).body(res);
     }
 

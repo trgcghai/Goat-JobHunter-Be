@@ -1,12 +1,16 @@
 package iuh.fit.goat.service.impl;
 
 import iuh.fit.goat.common.NotificationType;
+import iuh.fit.goat.dto.request.LikeBlogRequest;
 import iuh.fit.goat.dto.response.ResultPaginationResponse;
 import iuh.fit.goat.entity.Blog;
 import iuh.fit.goat.entity.Comment;
 import iuh.fit.goat.entity.Notification;
 import iuh.fit.goat.entity.User;
 import iuh.fit.goat.repository.BlogRepository;
+import iuh.fit.goat.repository.CommentRepository;
+import iuh.fit.goat.repository.NotificationRepository;
+import iuh.fit.goat.repository.UserRepository;
 import iuh.fit.goat.util.SecurityUtil;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -21,15 +25,15 @@ import java.util.Optional;
 @RequiredArgsConstructor
 public class BlogServiceImpl implements iuh.fit.goat.service.BlogService {
     private final BlogRepository blogRepository;
-
-    @Override
-    public Blog handleGetBlogById(long id) {
-        return this.blogRepository.findById(id).orElse(null);
-    }
+    private final CommentRepository commentRepository;
+    private final UserRepository userRepository;
+    private final NotificationRepository notificationRepository;
 
     @Override
     public Blog handleCreateBlog(Blog blog) {
         String email = SecurityUtil.getCurrentUserLogin().isPresent() ? SecurityUtil.getCurrentUserLogin().get() : "";
+        User currentUser = this.userRepository.findByContact_Email(email);
+        blog.setAuthor(currentUser);
         return this.blogRepository.save(blog);
     }
 
@@ -54,7 +58,23 @@ public class BlogServiceImpl implements iuh.fit.goat.service.BlogService {
 
     @Override
     public void handleDeleteBlog(long id) {
-        this.blogRepository.delete(this.handleGetBlogById(id));
+        Blog blog = this.handleGetBlogById(id);
+
+        if(blog.getComments() != null) {
+            List<Comment> comments = blog.getComments();
+            comments.forEach(this::deleteRecursively);
+        }
+        if(blog.getNotifications() != null) {
+            List<Notification> notifications = blog.getNotifications();
+            this.notificationRepository.deleteAll(notifications);
+        }
+
+        this.blogRepository.delete(blog);
+    }
+
+    @Override
+    public Blog handleGetBlogById(long id) {
+        return this.blogRepository.findById(id).orElse(null);
     }
 
     @Override
@@ -81,11 +101,38 @@ public class BlogServiceImpl implements iuh.fit.goat.service.BlogService {
     }
 
     @Override
+    public List<Notification> handleLikeBlog(LikeBlogRequest likeBlogRequest) {
+        int incrementVal = likeBlogRequest.isLiked() ? 1 : -1;
+        Blog blog = this.handleGetBlogById(likeBlogRequest.getBlog().getBlogId());
+        long newTotalLikes = blog.getActivity().getTotalLikes() + incrementVal;
+        blog.getActivity().setTotalLikes(Math.max(newTotalLikes, 0));
+        Blog updatedBlog = this.blogRepository.save(blog);
+
+        String email = SecurityUtil.getCurrentUserLogin().isPresent() ? SecurityUtil.getCurrentUserLogin().get() : "";
+        User currentUser = this.userRepository.findByContact_Email(email);
+
+        if(likeBlogRequest.isLiked()) {
+            Notification notification = new Notification();
+            notification.setType(NotificationType.LIKE);
+            notification.setSeen(false);
+            notification.setBlog(updatedBlog);
+            notification.setActor(currentUser);
+            notification.setRecipient(blog.getAuthor());
+
+            this.notificationRepository.save(notification);
+        } else {
+            Optional<Notification> optNotification = this.notificationRepository.findByTypeAndActorAndBlogAndRecipient(
+                    NotificationType.LIKE, currentUser, updatedBlog,  blog.getAuthor()
+            );
+            optNotification.ifPresent(this.notificationRepository :: delete);
+        }
+
+        return currentUser.getActorNotifications();
+    }
+
+    @Override
     public List<Object[]> handleGetAllTags(String keyword) {
         return this.blogRepository.findAllTags(keyword);
     }
 
-    public List<Notification> handleLikeBlog() {
-        return List.of();
-    }
 }
