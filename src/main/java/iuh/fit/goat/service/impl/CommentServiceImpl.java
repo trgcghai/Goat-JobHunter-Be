@@ -7,6 +7,7 @@ import iuh.fit.goat.entity.Comment;
 import iuh.fit.goat.entity.Notification;
 import iuh.fit.goat.entity.User;
 import iuh.fit.goat.repository.CommentRepository;
+import iuh.fit.goat.repository.NotificationRepository;
 import iuh.fit.goat.repository.UserRepository;
 import iuh.fit.goat.service.BlogService;
 import iuh.fit.goat.util.SecurityUtil;
@@ -16,11 +17,14 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
+
 @Service
 @RequiredArgsConstructor
 public class CommentServiceImpl implements iuh.fit.goat.service.CommentService {
     private final CommentRepository commentRepository;
     private final UserRepository userRepository;
+    private final NotificationRepository notificationRepository;
     private final BlogService blogService;
 
     @Override
@@ -85,6 +89,31 @@ public class CommentServiceImpl implements iuh.fit.goat.service.CommentService {
             blog.getActivity().setTotalParentComments(blog.getActivity().getTotalParentComments() - 1);
         }
         this.blogService.handleUpdateBlog(blog);
+    }
+
+    private int deleteRecursively(Comment comment) {
+        int count = 1;
+        if (comment.getChildren() != null) {
+            for (Comment child : comment.getChildren()) {
+                count += deleteRecursively(child);
+            }
+        }
+
+        if(comment.getCommentNotifications() != null) {
+            List<Notification> notifications = comment.getCommentNotifications();
+            this.notificationRepository.deleteAll(notifications);
+        }
+        if(comment.getReplyNotifications() != null) {
+            List<Notification> notifications = comment.getReplyNotifications();
+            this.notificationRepository.deleteAll(notifications);
+        }
+        if(comment.getRepliedOnCommentNotifications() != null) {
+            List<Notification> notifications = comment.getRepliedOnCommentNotifications();
+            this.notificationRepository.deleteAll(notifications);
+        }
+        this.commentRepository.delete(comment);
+
+        return count;
     }
 
     @Override

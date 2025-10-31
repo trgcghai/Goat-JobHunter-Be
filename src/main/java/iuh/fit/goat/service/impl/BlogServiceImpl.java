@@ -25,8 +25,8 @@ import java.util.Optional;
 @RequiredArgsConstructor
 public class BlogServiceImpl implements iuh.fit.goat.service.BlogService {
     private final BlogRepository blogRepository;
-    private final CommentRepository commentRepository;
     private final UserRepository userRepository;
+    private final CommentRepository commentRepository;
     private final NotificationRepository notificationRepository;
 
     @Override
@@ -70,6 +70,29 @@ public class BlogServiceImpl implements iuh.fit.goat.service.BlogService {
         }
 
         this.blogRepository.delete(blog);
+    }
+
+    private void deleteRecursively(Comment comment) {
+        if (comment.getChildren() != null) {
+            for (Comment child : comment.getChildren()) {
+                deleteRecursively(child);
+            }
+        }
+
+        if(comment.getCommentNotifications() != null) {
+            List<Notification> notifications = comment.getCommentNotifications();
+            this.notificationRepository.deleteAll(notifications);
+        }
+        if(comment.getReplyNotifications() != null) {
+            List<Notification> notifications = comment.getReplyNotifications();
+            this.notificationRepository.deleteAll(notifications);
+        }
+        if(comment.getRepliedOnCommentNotifications() != null) {
+            List<Notification> notifications = comment.getRepliedOnCommentNotifications();
+            this.notificationRepository.deleteAll(notifications);
+        }
+
+        this.commentRepository.delete(comment);
     }
 
     @Override
