@@ -24,13 +24,13 @@ import java.util.regex.Pattern;
 public class BlogController {
     private final BlogService blogService;
 
-    @PostMapping("")
+    @PostMapping
     public ResponseEntity<?> createBlog(@Valid @RequestBody Blog blog) {
         Blog res = this.blogService.handleCreateBlog(blog);
         return ResponseEntity.status(HttpStatus.CREATED).body(res);
     }
 
-    @PutMapping("")
+    @PutMapping
     public ResponseEntity<?> updateBlog(@Valid @RequestBody Blog blog) throws InvalidException {
         Blog res = this.blogService.handleUpdateBlog(blog);
         if(res == null) throw new InvalidException("Blog doesn't exist");
@@ -60,7 +60,7 @@ public class BlogController {
         return ResponseEntity.status(HttpStatus.OK).body(res);
     }
 
-    @GetMapping("")
+    @GetMapping
     public ResponseEntity<ResultPaginationResponse> getAllBlogs(
             @Filter Specification<Blog> spec, Pageable pageable
     ) {

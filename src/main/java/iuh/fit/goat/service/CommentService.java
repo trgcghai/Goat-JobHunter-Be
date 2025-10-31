@@ -11,7 +11,7 @@ import java.util.List;
 
 public interface CommentService {
 
-    final CommentRepository commentRepository = null;
+    CommentRepository commentRepository = null;
 
     Comment handleCreateComment(Comment comment);
 

@@ -5,7 +5,6 @@ import iuh.fit.goat.dto.response.ResultPaginationResponse;
 import iuh.fit.goat.entity.Blog;
 import iuh.fit.goat.entity.Comment;
 import iuh.fit.goat.entity.Notification;
-import iuh.fit.goat.entity.User;
 import iuh.fit.goat.repository.CommentRepository;
 import iuh.fit.goat.service.BlogService;
 import iuh.fit.goat.util.SecurityUtil;
@@ -14,8 +13,6 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
-
-import java.util.List;
 
 @Service
 @RequiredArgsConstructor
