@@ -20,7 +20,7 @@ public class OpenAPIConfiguration {
         return new OpenAPI()
                 .info(createAPIInfo())
                 .servers(List.of(
-                        createServer("http://localhost:8080", "Server URL in Development environment")
+                        createServer()
                 ))
                 .addSecurityItem(new SecurityRequirement().addList("Bearer Authentication"))
                 .components(new Components().addSecuritySchemes("Bearer Authentication", createAPIKeyScheme()));
@@ -48,10 +48,10 @@ public class OpenAPIConfiguration {
                 .url("https://choosealicense.com/licenses/mit/");
     }
 
-    private Server createServer(String url, String description) {
+    private Server createServer() {
         return new Server()
-                .url(url)
-                .description(description);
+                .url("http://localhost:8080")
+                .description("Server URL in Development environment");
     }
 
     private SecurityScheme createAPIKeyScheme() {
