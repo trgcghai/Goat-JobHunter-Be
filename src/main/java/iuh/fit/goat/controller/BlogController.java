@@ -19,7 +19,7 @@ import java.util.List;
 import java.util.regex.Pattern;
 
 @RestController
-@RequestMapping("/blogs")
+@RequestMapping("/api/v1/blogs")
 @RequiredArgsConstructor
 public class BlogController {
     private final BlogService blogService;
