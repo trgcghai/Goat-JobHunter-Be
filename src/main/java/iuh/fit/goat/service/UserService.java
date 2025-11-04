@@ -3,6 +3,7 @@ package iuh.fit.goat.service;
 import iuh.fit.goat.dto.request.FollowRecruiterRequest;
 import iuh.fit.goat.dto.request.ResetPasswordRequest;
 import iuh.fit.goat.dto.request.SaveJobRequest;
+import iuh.fit.goat.dto.request.VerifyUserRequest;
 import iuh.fit.goat.dto.response.ResultPaginationResponse;
 import iuh.fit.goat.dto.response.UserResponse;
 import iuh.fit.goat.entity.User;
@@ -34,6 +35,10 @@ public interface UserService {
     UserResponse handleSaveJobs(SaveJobRequest saveJobRequest);
 
     UserResponse handleFollowRecruiters(FollowRecruiterRequest followRecruiterRequest);
+
+    void handleVerifyUser(VerifyUserRequest verifyUser) throws InvalidException;
+
+    void handleResendCode(String email) throws InvalidException;
 
     UserResponse convertToUserResponse(User user);
 }

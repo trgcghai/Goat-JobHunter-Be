@@ -76,8 +76,7 @@ public class UserController {
     }
 
     @PutMapping("/users/reset-password")
-    public ResponseEntity<?> resetPassword(@Valid @RequestBody ResetPasswordRequest resetPasswordRequest)
-            throws InvalidException {
+    public ResponseEntity<?> resetPassword(@Valid @RequestBody ResetPasswordRequest resetPasswordRequest) {
         try {
             this.userService.handleResetPassword(resetPasswordRequest);
             return ResponseEntity.status(HttpStatus.OK).body(

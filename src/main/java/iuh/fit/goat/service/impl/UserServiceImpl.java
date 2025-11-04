@@ -4,6 +4,7 @@ import iuh.fit.goat.common.Role;
 import iuh.fit.goat.dto.request.FollowRecruiterRequest;
 import iuh.fit.goat.dto.request.ResetPasswordRequest;
 import iuh.fit.goat.dto.request.SaveJobRequest;
+import iuh.fit.goat.dto.request.VerifyUserRequest;
 import iuh.fit.goat.dto.response.LoginResponse;
 import iuh.fit.goat.dto.response.ResultPaginationResponse;
 import iuh.fit.goat.dto.response.UserResponse;
@@ -15,6 +16,7 @@ import iuh.fit.goat.exception.InvalidException;
 import iuh.fit.goat.repository.JobRepository;
 import iuh.fit.goat.repository.RecruiterRepository;
 import iuh.fit.goat.repository.UserRepository;
+import iuh.fit.goat.service.EmailService;
 import iuh.fit.goat.service.UserService;
 import iuh.fit.goat.util.SecurityUtil;
 import lombok.RequiredArgsConstructor;
@@ -24,6 +26,7 @@ import org.springframework.data.jpa.domain.Specification;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -33,6 +36,7 @@ import java.util.stream.Collectors;
 @Service
 @RequiredArgsConstructor
 public class UserServiceImpl implements UserService {
+    private final EmailService emailService;
     private final UserRepository userRepository;
     private final JobRepository jobRepository;
     private final RecruiterRepository recruiterRepository;
@@ -178,6 +182,39 @@ public class UserServiceImpl implements UserService {
         }
 
         return null;
+    }
+
+    @Override
+    public void handleVerifyUser(VerifyUserRequest verifyUser) throws InvalidException {
+        User user = this.handleGetUserByEmail(verifyUser.getEmail());
+        if (user != null) {
+            if (user.getVerificationCodeExpiresAt().isBefore(LocalDateTime.now())) {
+                throw new InvalidException("Verification code has expired");
+            }
+            if (user.getVerificationCode().equals(verifyUser.getVerificationCode())) {
+                user.setEnabled(true);
+                user.setVerificationCode(null);
+                user.setVerificationCodeExpiresAt(null);
+                this.userRepository.save(user);
+            } else {
+                throw new InvalidException("Invalid verification code");
+            }
+        } else {
+            throw new InvalidException("User not found");
+        }
+    }
+
+    @Override
+    public void handleResendCode(String email) throws InvalidException {
+        User user = this.handleGetUserByEmail(email);
+        if (user != null) {
+            user.setVerificationCode(SecurityUtil.generateVerificationCode());
+            user.setVerificationCodeExpiresAt(LocalDateTime.now().plusMinutes(15));
+            this.emailService.handleSendVerificationEmail(user);
+            this.userRepository.save(user);
+        } else {
+            throw new InvalidException("User not found");
+        }
     }
 
     @Override

@@ -2,13 +2,11 @@ package iuh.fit.goat.controller;
 
 import iuh.fit.goat.common.Role;
 import iuh.fit.goat.dto.request.LoginRequest;
+import iuh.fit.goat.dto.request.VerifyUserRequest;
 import iuh.fit.goat.dto.response.LoginResponse;
-import iuh.fit.goat.dto.response.RecruiterResponse;
 import iuh.fit.goat.entity.Applicant;
-import iuh.fit.goat.entity.Recruiter;
 import iuh.fit.goat.entity.User;
 import iuh.fit.goat.exception.InvalidException;
-import iuh.fit.goat.service.RecruiterService;
 import iuh.fit.goat.service.UserService;
 import iuh.fit.goat.util.SecurityUtil;
 import iuh.fit.goat.util.annotation.ApiMessage;
@@ -23,7 +21,6 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.web.bind.annotation.*;
 
@@ -87,6 +84,33 @@ public class AuthController {
         return ResponseEntity.status(HttpStatus.OK)
                 .header(HttpHeaders.SET_COOKIE, cookie.toString())
                 .body(loginResponse);
+    }
+
+    @PostMapping("/auth/logout")
+    @ApiMessage("Logout account")
+    public ResponseEntity<Void> logout() throws InvalidException {
+        String email = SecurityUtil.getCurrentUserLogin().isPresent()
+                ? SecurityUtil.getCurrentUserLogin().get()
+                : "";
+
+        if(email.isEmpty()){
+            throw new InvalidException("Access token is invalid");
+        }
+
+        this.userService.handleUpdateRefreshToken(email, null);
+
+        ResponseCookie cookie = ResponseCookie
+                .from("refreshToken", null)
+                .httpOnly(true)
+                .secure(true)
+                .path("/")
+                .maxAge(0)
+                .build();
+
+        return ResponseEntity
+                .status(HttpStatus.OK)
+                .header(HttpHeaders.SET_COOKIE, cookie.toString())
+                .body(null);
     }
 
     @GetMapping("/auth/account")
@@ -171,30 +195,23 @@ public class AuthController {
                 .body(loginResponse);
     }
 
-    @PostMapping("/auth/logout")
-    @ApiMessage("Logout account")
-    public ResponseEntity<Void> logout() throws InvalidException {
-        String email = SecurityUtil.getCurrentUserLogin().isPresent()
-                ? SecurityUtil.getCurrentUserLogin().get()
-                : "";
-
-        if(email.isEmpty()){
-            throw new InvalidException("Access token is invalid");
+    @PostMapping("/auth/verify")
+    public ResponseEntity<?> verifyUser(@RequestBody VerifyUserRequest verifyUser) {
+        try {
+            this.userService.handleVerifyUser(verifyUser);
+            return ResponseEntity.ok(Map.of("message", "Account verified successfully"));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
         }
+    }
 
-        this.userService.handleUpdateRefreshToken(email, null);
-
-        ResponseCookie cookie = ResponseCookie
-                .from("refreshToken", null)
-                .httpOnly(true)
-                .secure(true)
-                .path("/")
-                .maxAge(0)
-                .build();
-
-        return ResponseEntity
-                .status(HttpStatus.OK)
-                .header(HttpHeaders.SET_COOKIE, cookie.toString())
-                .body(null);
+    @PostMapping("/auth/resend")
+    public ResponseEntity<?> resendVerificationCode(@RequestParam String email) {
+        try {
+            this.userService.handleResendCode(email);
+            return ResponseEntity.ok(Map.of("message", "Verification code sent"));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
     }
 }
