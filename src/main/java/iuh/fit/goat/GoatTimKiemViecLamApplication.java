@@ -8,7 +8,6 @@ public class GoatTimKiemViecLamApplication {
 
 	public static void main(String[] args) {
 		SpringApplication.run(GoatTimKiemViecLamApplication.class, args);
-//		Testttt
 	}
 
 }

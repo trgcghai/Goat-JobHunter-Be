@@ -5,6 +5,7 @@ import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import iuh.fit.goat.common.Gender;
 import iuh.fit.goat.entity.embeddable.Contact;
+import iuh.fit.goat.util.SecurityUtil;
 import jakarta.persistence.*;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
@@ -110,16 +111,16 @@ public abstract class User {
 
     @PrePersist
     public void handleBeforeCreate(){
-//        this.createdAt = Instant.now();
-//        this.createdBy = SecurityUtil.getCurrentUserLogin().isPresent()
-//                ? SecurityUtil.getCurrentUserLogin().get()
-//                : "";
+        this.createdAt = Instant.now();
+        this.createdBy = SecurityUtil.getCurrentUserLogin().isPresent()
+                ? SecurityUtil.getCurrentUserLogin().get()
+                : "";
     }
     @PreUpdate
     public void handleBeforeUpdate(){
-//        this.updatedAt = Instant.now();
-//        this.updatedBy = SecurityUtil.getCurrentUserLogin().isPresent()
-//                ? SecurityUtil.getCurrentUserLogin().get()
-//                : "";
+        this.updatedAt = Instant.now();
+        this.updatedBy = SecurityUtil.getCurrentUserLogin().isPresent()
+                ? SecurityUtil.getCurrentUserLogin().get()
+                : "";
     }
 }
