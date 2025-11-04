@@ -5,6 +5,7 @@ import iuh.fit.goat.common.Status;
 import iuh.fit.goat.entity.Application;
 import iuh.fit.goat.entity.Job;
 import iuh.fit.goat.service.DashboardService;
+import lombok.RequiredArgsConstructor;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -16,12 +17,9 @@ import java.util.Map;
 
 @RestController
 @RequestMapping("/api/v1")
+@RequiredArgsConstructor
 public class DashboardController {
     private final DashboardService dashboardService;
-
-    public DashboardController(DashboardService dashboardService) {
-        this.dashboardService = dashboardService;
-    }
 
     @GetMapping("/dashboard/users")
     public ResponseEntity<?> statisticsUser() {

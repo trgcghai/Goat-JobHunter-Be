@@ -6,28 +6,37 @@ import iuh.fit.goat.dto.response.ResultPaginationResponse;
 import iuh.fit.goat.entity.Recruiter;
 import iuh.fit.goat.exception.InvalidException;
 import iuh.fit.goat.service.RecruiterService;
+import iuh.fit.goat.service.UserService;
 import iuh.fit.goat.util.annotation.ApiMessage;
 import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.regex.Pattern;
 
 @RestController
 @RequestMapping("/api/v1")
+@RequiredArgsConstructor
 public class RecruiterController {
     private final RecruiterService recruiterService;
-
-    public RecruiterController(RecruiterService recruiterService) {
-        this.recruiterService = recruiterService;
-    }
+    private final UserService userService;
+    private final PasswordEncoder passwordEncoder;
 
     @PostMapping("/recruiters")
     public ResponseEntity<RecruiterResponse> createRecruiter(@Valid @RequestBody Recruiter recruiter)
             throws InvalidException {
+        if(userService.handleExistsByEmail(recruiter.getContact().getEmail())) {
+            throw new InvalidException("Email exists: " + recruiter.getContact().getEmail());
+        }
+
+        String hashPassword = passwordEncoder.encode(recruiter.getPassword());
+        recruiter.setPassword(hashPassword);
+
         Recruiter newRecruiter = this.recruiterService.handleCreateRecruiter(recruiter);
         RecruiterResponse recruiterResponse = this.recruiterService.convertToRecruiterResponse(newRecruiter);
         return ResponseEntity.status(HttpStatus.CREATED).body(recruiterResponse);
@@ -80,5 +89,4 @@ public class RecruiterController {
         ResultPaginationResponse result = this.recruiterService.handleGetAllRecruiters(finalSpec, pageable);
         return ResponseEntity.status(HttpStatus.OK).body(result);
     }
-
 }

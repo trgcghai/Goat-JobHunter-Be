@@ -1,5 +1,6 @@
 package iuh.fit.goat.service.impl;
 
+import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
@@ -14,22 +15,13 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
+@RequiredArgsConstructor
 public class JobServiceImpl implements iuh.fit.goat.service.JobService {
     private final JobRepository jobRepository;
     private final SkillRepository skillRepository;
     private final CareerRepository careerRepository;
     private final ApplicationRepository applicationRepository;
     private final UserRepository userRepository;
-
-    public JobServiceImpl(JobRepository jobRepository, SkillRepository skillRepository, CareerRepository careerRepository,
-                      ApplicationRepository applicationRepository, UserRepository userRepository
-    ) {
-        this.jobRepository = jobRepository;
-        this.skillRepository = skillRepository;
-        this.careerRepository = careerRepository;
-        this.applicationRepository = applicationRepository;
-        this.userRepository = userRepository;
-    }
 
     @Override
     public JobResponse handleCreateJob(Job job) {
@@ -114,10 +106,7 @@ public class JobServiceImpl implements iuh.fit.goat.service.JobService {
     public Job handleGetJobById(long id) {
         Optional<Job> job = this.jobRepository.findById(id);
 
-        if(job.isPresent()){
-            return job.get();
-        }
-        return null;
+        return job.orElse(null);
     }
 
     @Override

@@ -15,14 +15,10 @@ import java.util.List;
 import java.util.Optional;
 
 @Service
+@RequiredArgsConstructor
 public class CareerServiceImpl implements iuh.fit.goat.service.CareerService {
     private final CareerRepository careerRepository;
     private final JobRepository jobRepository;
-
-    public CareerServiceImpl(CareerRepository careerRepository, JobRepository jobRepository) {
-        this.careerRepository = careerRepository;
-        this.jobRepository = jobRepository;
-    }
 
     @Override
     public Career handleCreateCareer(Career career) {
@@ -56,10 +52,7 @@ public class CareerServiceImpl implements iuh.fit.goat.service.CareerService {
     public Career handleGetCareerById(long id) {
         Optional<Career> career = this.careerRepository.findById(id);
 
-        if(career.isPresent()) {
-            return career.get();
-        }
-        return null;
+        return career.orElse(null);
     }
 
     @Override
