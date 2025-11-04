@@ -1,5 +1,6 @@
 package iuh.fit.goat.service.impl;
 
+import iuh.fit.goat.service.JobService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -16,7 +17,7 @@ import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
-public class JobServiceImpl implements iuh.fit.goat.service.JobService {
+public class JobServiceImpl implements JobService {
     private final JobRepository jobRepository;
     private final SkillRepository skillRepository;
     private final CareerRepository careerRepository;

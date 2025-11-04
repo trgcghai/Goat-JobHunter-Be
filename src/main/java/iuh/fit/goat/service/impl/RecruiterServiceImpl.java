@@ -7,6 +7,7 @@ import iuh.fit.goat.entity.Job;
 import iuh.fit.goat.entity.Recruiter;
 import iuh.fit.goat.entity.Role;
 import iuh.fit.goat.repository.*;
+import iuh.fit.goat.service.RecruiterService;
 import iuh.fit.goat.service.RoleService;
 import iuh.fit.goat.util.SecurityUtil;
 import lombok.RequiredArgsConstructor;
@@ -21,7 +22,7 @@ import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
-public class RecruiterServiceImpl implements iuh.fit.goat.service.RecruiterService {
+public class RecruiterServiceImpl implements RecruiterService {
     private final RecruiterRepository recruiterRepository;
     private final JobRepository jobRepository;
     private final CommentRepository commentRepository;
