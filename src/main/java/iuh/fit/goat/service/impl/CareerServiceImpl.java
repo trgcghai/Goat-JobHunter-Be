@@ -5,6 +5,7 @@ import iuh.fit.goat.entity.Career;
 import iuh.fit.goat.entity.Job;
 import iuh.fit.goat.repository.CareerRepository;
 import iuh.fit.goat.repository.JobRepository;
+import iuh.fit.goat.service.CareerService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -15,14 +16,10 @@ import java.util.List;
 import java.util.Optional;
 
 @Service
-public class CareerServiceImpl implements iuh.fit.goat.service.CareerService {
+@RequiredArgsConstructor
+public class CareerServiceImpl implements CareerService {
     private final CareerRepository careerRepository;
     private final JobRepository jobRepository;
-
-    public CareerServiceImpl(CareerRepository careerRepository, JobRepository jobRepository) {
-        this.careerRepository = careerRepository;
-        this.jobRepository = jobRepository;
-    }
 
     @Override
     public Career handleCreateCareer(Career career) {
@@ -56,10 +53,7 @@ public class CareerServiceImpl implements iuh.fit.goat.service.CareerService {
     public Career handleGetCareerById(long id) {
         Optional<Career> career = this.careerRepository.findById(id);
 
-        if(career.isPresent()) {
-            return career.get();
-        }
-        return null;
+        return career.orElse(null);
     }
 
     @Override

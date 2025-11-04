@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <title>Verification Code</title>
+    <meta charset="UTF-8">
+</head>
+
+<body style="font-family: Arial, sans-serif;">
+<table style="max-width: 80rem; min-height: 100vh; padding: 2rem; margin: 0 auto; background-color: #f5f5f5;">
+    <tr>
+        <td align="center">
+            <table style="background-color: white; border-radius: 5px; padding: 20px;">
+                <tr>
+                    <td>
+                        <div style="text-align: left; font-size: 20px;">Job Hunter</div>
+                    </td>
+                    <td>
+                        <div style="text-align: right; font-size: 20px;">Future in our heart</div>
+                    </td>
+                </tr>
+                <tr>
+                    <td colspan="2" style="margin: 15px 0; border-top: 1px solid rgba(5, 5, 5, 0.06);"></td>
+                </tr>
+                <tr>
+                    <td colspan="2">
+                        <h2 style="color: #333;">Welcome to our app!</h2>
+                        <p style="font-size: 16px;">Please enter the verification code below to continue:</p>
+                        <div style="background-color: #fff; padding: 20px; border-radius: 5px; box-shadow: 0 0 10px rgba(0,0,0,0.1);">
+                            <h3 style="color: #333;">Verification Code:</h3>
+                            <p style="font-size: 18px; font-weight: bold; color: #007bff;" th:text="${verificationCode}"></p>
+                        </div>
+                    </td>
+                </tr>
+                <tr>
+                    <td colspan="2">
+                        <div style="padding-top: 20px; text-align: left; font-size: 16px;">Cheers,</div>
+                        <div style="text-align: left; font-size: 16px;">MinhDat.</div>
+                    </td>
+                </tr>
+            </table>
+        </td>
+    </tr>
+</table>
+</body>
+
+</html>

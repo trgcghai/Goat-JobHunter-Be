@@ -7,6 +7,7 @@ import iuh.fit.goat.exception.InvalidException;
 import iuh.fit.goat.service.CareerService;
 import iuh.fit.goat.util.annotation.ApiMessage;
 import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.http.HttpStatus;
@@ -17,12 +18,9 @@ import java.util.regex.Pattern;
 
 @RestController
 @RequestMapping("/api/v1")
+@RequiredArgsConstructor
 public class CareerController {
     private final CareerService careerService;
-
-    public CareerController(CareerService careerService) {
-        this.careerService = careerService;
-    }
 
     @PostMapping("/careers")
     public ResponseEntity<Career> createCareer(@Valid @RequestBody Career career) throws InvalidException {

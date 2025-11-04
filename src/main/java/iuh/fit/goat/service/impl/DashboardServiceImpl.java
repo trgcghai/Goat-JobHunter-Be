@@ -7,6 +7,8 @@ import iuh.fit.goat.repository.ApplicantRepository;
 import iuh.fit.goat.repository.ApplicationRepository;
 import iuh.fit.goat.repository.JobRepository;
 import iuh.fit.goat.repository.RecruiterRepository;
+import iuh.fit.goat.service.DashboardService;
+import lombok.RequiredArgsConstructor;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 
@@ -18,20 +20,12 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 @Service
-public class DashboardServiceImpl implements iuh.fit.goat.service.DashboardService {
+@RequiredArgsConstructor
+public class DashboardServiceImpl implements DashboardService {
     private final ApplicantRepository applicantRepository;
     private final RecruiterRepository recruiterRepository;
     private final JobRepository jobRepository;
     private final ApplicationRepository applicationRepository;
-
-    public DashboardServiceImpl(ApplicantRepository applicantRepository, RecruiterRepository recruiterRepository,
-                            JobRepository jobRepository, ApplicationRepository applicationRepository)
-    {
-        this.applicantRepository = applicantRepository;
-        this.recruiterRepository = recruiterRepository;
-        this.jobRepository = jobRepository;
-        this.applicationRepository = applicationRepository;
-    }
 
     @Override
     public Map<String, Long> handleStatisticsUser(){
