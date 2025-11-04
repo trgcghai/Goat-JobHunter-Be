@@ -1,8 +1,10 @@
 package iuh.fit.goat.service;
 
+import iuh.fit.goat.dto.request.ResetPasswordRequest;
 import iuh.fit.goat.dto.response.ResultPaginationResponse;
 import iuh.fit.goat.dto.response.UserResponse;
 import iuh.fit.goat.entity.User;
+import iuh.fit.goat.exception.InvalidException;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 
@@ -24,6 +26,8 @@ public interface UserService {
     boolean handleCheckCurrentPassword(String currentPassword);
 
     Map<String, Object> handleUpdatePassword(String newPassword);
+
+    void handleResetPassword(ResetPasswordRequest resetPasswordRequest) throws InvalidException;
 
     UserResponse convertToUserResponse(User user);
 }

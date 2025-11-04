@@ -1,11 +1,15 @@
 package iuh.fit.goat.service.impl;
 
 import iuh.fit.goat.common.Role;
+import iuh.fit.goat.dto.request.ResetPasswordRequest;
 import iuh.fit.goat.dto.response.LoginResponse;
 import iuh.fit.goat.dto.response.ResultPaginationResponse;
 import iuh.fit.goat.dto.response.UserResponse;
 import iuh.fit.goat.entity.Applicant;
 import iuh.fit.goat.entity.User;
+import iuh.fit.goat.exception.InvalidException;
+import iuh.fit.goat.repository.JobRepository;
+import iuh.fit.goat.repository.RecruiterRepository;
 import iuh.fit.goat.repository.UserRepository;
 import iuh.fit.goat.service.UserService;
 import iuh.fit.goat.util.SecurityUtil;
@@ -26,6 +30,8 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class UserServiceImpl implements UserService {
     private final UserRepository userRepository;
+    private final JobRepository jobRepository;
+    private final RecruiterRepository recruiterRepository;
     private final PasswordEncoder passwordEncoder;
     private final SecurityUtil securityUtil;
 
@@ -123,6 +129,18 @@ public class UserServiceImpl implements UserService {
         }
 
         return null;
+    }
+
+    @Override
+    public void handleResetPassword(ResetPasswordRequest resetPasswordRequest) throws InvalidException {
+        User user = this.handleGetUserByEmail(resetPasswordRequest.getEmail());
+        if(user != null) {
+            String hashedPassword = this.passwordEncoder.encode(resetPasswordRequest.getNewPassword());
+            user.setPassword(hashedPassword);
+            this.userRepository.save(user);
+        } else {
+            throw new InvalidException("User not found");
+        }
     }
 
     @Override
