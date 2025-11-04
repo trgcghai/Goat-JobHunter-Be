@@ -1,11 +1,15 @@
 package iuh.fit.goat.service.impl;
 
 import iuh.fit.goat.common.Role;
+import iuh.fit.goat.dto.request.FollowRecruiterRequest;
 import iuh.fit.goat.dto.request.ResetPasswordRequest;
+import iuh.fit.goat.dto.request.SaveJobRequest;
 import iuh.fit.goat.dto.response.LoginResponse;
 import iuh.fit.goat.dto.response.ResultPaginationResponse;
 import iuh.fit.goat.dto.response.UserResponse;
 import iuh.fit.goat.entity.Applicant;
+import iuh.fit.goat.entity.Job;
+import iuh.fit.goat.entity.Recruiter;
 import iuh.fit.goat.entity.User;
 import iuh.fit.goat.exception.InvalidException;
 import iuh.fit.goat.repository.JobRepository;
@@ -141,6 +145,39 @@ public class UserServiceImpl implements UserService {
         } else {
             throw new InvalidException("User not found");
         }
+    }
+
+    @Override
+    public UserResponse handleSaveJobs(SaveJobRequest saveJobRequest) {
+        User user = this.userRepository.findById(saveJobRequest.getUserId()).orElse(null);
+
+        if(user != null) {
+            List<Long> jobIds = saveJobRequest.getSavedJobs().stream().map(Job::getJobId).toList();
+            List<Job> savedJobs = this.jobRepository.findByJobIdIn(jobIds);
+            user.setSavedJobs(savedJobs);
+            this.userRepository.save(user);
+
+            return this.convertToUserResponse(user);
+        }
+
+        return null;
+    }
+
+    @Override
+    public UserResponse handleFollowRecruiters(FollowRecruiterRequest followRecruiterRequest) {
+        User user = this.userRepository.findById(followRecruiterRequest.getUserId()).orElse(null);
+
+        if(user != null) {
+            List<Long> recruiterIds = followRecruiterRequest.getFollowedRecruiters()
+                    .stream().map(Recruiter::getUserId).toList();
+            List<Recruiter> followedRecruiters = this.recruiterRepository.findByUserIdIn(recruiterIds);
+            user.setFollowedRecruiters(followedRecruiters);
+            this.userRepository.save(user);
+
+            return this.convertToUserResponse(user);
+        }
+
+        return null;
     }
 
     @Override

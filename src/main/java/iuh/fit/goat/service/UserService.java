@@ -1,6 +1,8 @@
 package iuh.fit.goat.service;
 
+import iuh.fit.goat.dto.request.FollowRecruiterRequest;
 import iuh.fit.goat.dto.request.ResetPasswordRequest;
+import iuh.fit.goat.dto.request.SaveJobRequest;
 import iuh.fit.goat.dto.response.ResultPaginationResponse;
 import iuh.fit.goat.dto.response.UserResponse;
 import iuh.fit.goat.entity.User;
@@ -28,6 +30,10 @@ public interface UserService {
     Map<String, Object> handleUpdatePassword(String newPassword);
 
     void handleResetPassword(ResetPasswordRequest resetPasswordRequest) throws InvalidException;
+
+    UserResponse handleSaveJobs(SaveJobRequest saveJobRequest);
+
+    UserResponse handleFollowRecruiters(FollowRecruiterRequest followRecruiterRequest);
 
     UserResponse convertToUserResponse(User user);
 }

@@ -1,9 +1,13 @@
 package iuh.fit.goat.controller;
 
 import com.turkraft.springfilter.boot.Filter;
+import iuh.fit.goat.dto.request.FollowRecruiterRequest;
+import iuh.fit.goat.dto.request.ResetPasswordRequest;
+import iuh.fit.goat.dto.request.SaveJobRequest;
 import iuh.fit.goat.dto.request.UpdatePasswordRequest;
 import iuh.fit.goat.dto.response.LoginResponse;
 import iuh.fit.goat.dto.response.ResultPaginationResponse;
+import iuh.fit.goat.dto.response.UserResponse;
 import iuh.fit.goat.entity.User;
 import iuh.fit.goat.exception.InvalidException;
 import iuh.fit.goat.service.UserService;
@@ -69,5 +73,44 @@ public class UserController {
         return ResponseEntity.status(HttpStatus.OK)
                 .header(HttpHeaders.SET_COOKIE, cookie.toString())
                 .body((LoginResponse) result.get("loginResponse"));
+    }
+
+    @PutMapping("/users/reset-password")
+    public ResponseEntity<?> resetPassword(@Valid @RequestBody ResetPasswordRequest resetPasswordRequest)
+            throws InvalidException {
+        try {
+            this.userService.handleResetPassword(resetPasswordRequest);
+            return ResponseEntity.status(HttpStatus.OK).body(
+                    Map.of("message", "Reset password successful")
+            );
+        } catch (Exception e){
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
+    }
+
+    @PutMapping("/users/saved-jobs")
+    public ResponseEntity<UserResponse> saveJobs(@Valid @RequestBody SaveJobRequest saveJobRequest)
+            throws InvalidException
+    {
+        User user = this.userService.handleGetUserById(saveJobRequest.getUserId());
+        if(user == null) {
+            throw new InvalidException("User not found");
+        }
+
+        UserResponse userResponse = this.userService.handleSaveJobs(saveJobRequest);
+        return ResponseEntity.status(HttpStatus.OK).body(userResponse);
+    }
+
+    @PutMapping("/users/followed-recruiters")
+    public ResponseEntity<UserResponse> followRecruiters(@Valid @RequestBody FollowRecruiterRequest followRecruiterRequest)
+            throws InvalidException
+    {
+        User user = this.userService.handleGetUserById(followRecruiterRequest.getUserId());
+        if(user == null) {
+            throw new InvalidException("User not found");
+        }
+
+        UserResponse userResponse = this.userService.handleFollowRecruiters(followRecruiterRequest);
+        return ResponseEntity.status(HttpStatus.OK).body(userResponse);
     }
 }
