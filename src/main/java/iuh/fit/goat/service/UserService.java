@@ -1,0 +1,29 @@
+package iuh.fit.goat.service;
+
+import iuh.fit.goat.dto.response.ResultPaginationResponse;
+import iuh.fit.goat.dto.response.UserResponse;
+import iuh.fit.goat.entity.User;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
+
+import java.util.Map;
+
+public interface UserService {
+    User handleGetUserByEmail(String email);
+
+    boolean handleExistsByEmail(String email);
+
+    User handleGetUserById(long id);
+
+    void handleUpdateRefreshToken(String email, String refreshToken);
+
+    User handleGetUserByRefreshTokenAndEmail(String refreshToken, String email);
+
+    ResultPaginationResponse handleGetAllUsers(Specification<User> spec, Pageable pageable);
+
+    boolean handleCheckCurrentPassword(String currentPassword);
+
+    Map<String, Object> handleUpdatePassword(String newPassword);
+
+    UserResponse convertToUserResponse(User user);
+}
