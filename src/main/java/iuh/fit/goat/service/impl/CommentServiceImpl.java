@@ -10,6 +10,7 @@ import iuh.fit.goat.repository.CommentRepository;
 import iuh.fit.goat.repository.NotificationRepository;
 import iuh.fit.goat.repository.UserRepository;
 import iuh.fit.goat.service.BlogService;
+import iuh.fit.goat.service.CommentService;
 import iuh.fit.goat.util.SecurityUtil;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -21,7 +22,7 @@ import java.util.List;
 
 @Service
 @RequiredArgsConstructor
-public class CommentServiceImpl implements iuh.fit.goat.service.CommentService {
+public class CommentServiceImpl implements CommentService {
     private final CommentRepository commentRepository;
     private final UserRepository userRepository;
     private final NotificationRepository notificationRepository;

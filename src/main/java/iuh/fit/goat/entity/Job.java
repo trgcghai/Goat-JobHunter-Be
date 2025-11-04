@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import iuh.fit.goat.common.Level;
 import iuh.fit.goat.common.WorkingType;
+import iuh.fit.goat.util.SecurityUtil;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
 import lombok.*;
@@ -74,16 +75,16 @@ public class Job {
 
     @PrePersist
     public void handleBeforeCreate(){
-//        this.createdAt = Instant.now();
-//        this.createdBy = SecurityUtil.getCurrentUserLogin().isPresent()
-//                ? SecurityUtil.getCurrentUserLogin().get()
-//                : "";
+        this.createdAt = Instant.now();
+        this.createdBy = SecurityUtil.getCurrentUserLogin().isPresent()
+                ? SecurityUtil.getCurrentUserLogin().get()
+                : "";
     }
     @PreUpdate
     public void handleBeforeUpdate(){
-//        this.updatedAt = Instant.now();
-//        this.updatedBy = SecurityUtil.getCurrentUserLogin().isPresent()
-//                ? SecurityUtil.getCurrentUserLogin().get()
-//                : "";
+        this.updatedAt = Instant.now();
+        this.updatedBy = SecurityUtil.getCurrentUserLogin().isPresent()
+                ? SecurityUtil.getCurrentUserLogin().get()
+                : "";
     }
 }
