@@ -7,6 +7,7 @@ import iuh.fit.goat.entity.Job;
 import iuh.fit.goat.entity.Recruiter;
 import iuh.fit.goat.entity.Role;
 import iuh.fit.goat.repository.*;
+import iuh.fit.goat.service.EmailService;
 import iuh.fit.goat.service.RecruiterService;
 import iuh.fit.goat.service.RoleService;
 import iuh.fit.goat.util.SecurityUtil;
@@ -29,15 +30,22 @@ public class RecruiterServiceImpl implements RecruiterService {
     private final BlogRepository blogRepository;
     private final NotificationRepository notificationRepository;
     private final RoleService roleService;
+    private final EmailService emailService;
     private final String HR = "HR";
 
     @Override
     public Recruiter handleCreateRecruiter(Recruiter recruiter) {
         Role role = null;
+        if(recruiter.getRole() != null) {
+            role = this.roleService.handleGetRoleById(recruiter.getRole().getRoleId());
+        } else {
+            role = this.roleService.handleGetRoleByName(HR);
+        }
         recruiter.setRole(role);
         recruiter.setVerificationCode(SecurityUtil.generateVerificationCode());
         recruiter.setVerificationCodeExpiresAt(LocalDateTime.now().plusMinutes(15));
         recruiter.setEnabled(false);
+        this.emailService.handleSendVerificationEmail(recruiter);
 
         return this.recruiterRepository.save(recruiter);
     }
@@ -89,6 +97,11 @@ public class RecruiterServiceImpl implements RecruiterService {
             currentRecruiter.setWebsite(updateRecruiter.getWebsite());
             currentRecruiter.setEnabled(updateRecruiter.isEnabled());
 
+            if(updateRecruiter.getRole() != null) {
+                Role role = this.roleService.handleGetRoleById(updateRecruiter.getRole().getRoleId());
+                currentRecruiter.setRole(role);
+            }
+
             return this.recruiterRepository.save(currentRecruiter);
         }
 
@@ -99,11 +112,8 @@ public class RecruiterServiceImpl implements RecruiterService {
     public Recruiter handleGetRecruiterById(long id) {
         Optional<Recruiter> recruiter = this.recruiterRepository.findById(id);
 
-        if(recruiter.isPresent()) {
-            return recruiter.get();
-        }
+        return recruiter.orElse(null);
 
-        return null;
     }
 
     @Override
