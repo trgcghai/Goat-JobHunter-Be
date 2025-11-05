@@ -10,8 +10,6 @@ import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import iuh.fit.goat.entity.*;
 import iuh.fit.goat.repository.*;
-import iuh.fit.goat.util.*;
-import iuh.fit.goat.dto.*;
 
 import java.util.List;
 import java.util.Optional;
