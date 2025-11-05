@@ -55,7 +55,7 @@ public class CommentServiceImpl implements CommentService {
         Notification notification = new Notification();
         notification.setSeen(false);
         notification.setBlog(newComment.getBlog());
-//        notification.setActor(currentUser);
+        notification.setActor(currentUser);
         notification.setRecipient(newComment.getBlog().getAuthor());
         if(newComment.getParent() != null) {
             notification.setType(NotificationType.REPLY);
@@ -65,7 +65,7 @@ public class CommentServiceImpl implements CommentService {
             notification.setType(NotificationType.COMMENT);
             notification.setComment(newComment);
         }
-//        this.notificationRepository.save(notification);
+        this.notificationRepository.save(notification);
 
         return newComment;
     }
