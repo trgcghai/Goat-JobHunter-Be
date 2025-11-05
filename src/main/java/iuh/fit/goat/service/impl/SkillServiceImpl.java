@@ -1,6 +1,8 @@
 package iuh.fit.goat.service.impl;
 
 import iuh.fit.goat.dto.response.ResultPaginationResponse;
+import iuh.fit.goat.service.SkillService;
+import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
@@ -13,12 +15,9 @@ import iuh.fit.goat.dto.*;
 import java.util.Optional;
 
 @Service
-public class SkillServiceImpl implements iuh.fit.goat.service.SkillService {
+@RequiredArgsConstructor
+public class SkillServiceImpl implements SkillService {
     private final SkillRepository skillRepository;
-
-    public SkillServiceImpl(SkillRepository skillRepository) {
-        this.skillRepository = skillRepository;
-    }
 
     @Override
     public Skill handleCreateSkill(Skill skill) {
@@ -55,10 +54,7 @@ public class SkillServiceImpl implements iuh.fit.goat.service.SkillService {
     public Skill handGetSkillById(long id) {
         Optional<Skill> skill = this.skillRepository.findById(id);
 
-        if(skill.isPresent()) {
-            return skill.get();
-        }
-        return null;
+        return skill.orElse(null);
     }
 
     @Override

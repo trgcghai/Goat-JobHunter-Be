@@ -10,6 +10,7 @@ import iuh.fit.goat.dto.response.ApplicationResponse;
 import iuh.fit.goat.dto.response.ResultPaginationResponse;
 import iuh.fit.goat.util.annotation.ApiMessage;
 import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.http.HttpStatus;
@@ -28,21 +29,12 @@ import java.util.regex.Pattern;
 
 @RestController
 @RequestMapping("/api/v1")
+@RequiredArgsConstructor
 public class ApplicationController {
     private final ApplicationService applicationService;
     private final JobService jobService;
     private final FilterSpecificationConverter filterSpecificationConverter;
     private final FilterParser filterParser;
-
-    public ApplicationController(ApplicationService applicationService, JobService jobService,
-                                 FilterSpecificationConverter filterSpecificationConverter,
-                                 FilterParser filterParser
-    ) {
-        this.applicationService = applicationService;
-        this.jobService = jobService;
-        this.filterSpecificationConverter = filterSpecificationConverter;
-        this.filterParser = filterParser;
-    }
 
     @PostMapping("/applications")
     public ResponseEntity<ApplicationResponse> createApplication(@Valid @RequestBody Application application)

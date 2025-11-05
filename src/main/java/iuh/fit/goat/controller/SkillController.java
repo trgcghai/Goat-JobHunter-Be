@@ -4,6 +4,7 @@ import com.turkraft.springfilter.boot.Filter;
 import iuh.fit.goat.dto.response.ResultPaginationResponse;
 import iuh.fit.goat.util.annotation.ApiMessage;
 import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.http.HttpStatus;
@@ -20,12 +21,9 @@ import java.util.regex.Pattern;
 
 @RestController
 @RequestMapping("/api/v1")
+@RequiredArgsConstructor
 public class SkillController {
     private final SkillService skillService;
-
-    public SkillController(SkillService skillService) {
-        this.skillService = skillService;
-    }
 
     @PostMapping("/skills")
     public ResponseEntity<Skill> createSkill(@Valid @RequestBody Skill skill) throws InvalidException {

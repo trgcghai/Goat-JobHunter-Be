@@ -5,6 +5,7 @@ import iuh.fit.goat.dto.response.ApplicantResponse;
 import iuh.fit.goat.dto.response.ResultPaginationResponse;
 import iuh.fit.goat.util.annotation.ApiMessage;
 import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.http.HttpStatus;
@@ -23,17 +24,11 @@ import java.util.regex.Pattern;
 
 @RestController
 @RequestMapping("/api/v1")
+@RequiredArgsConstructor
 public class ApplicantController {
     private final ApplicantService applicantService;
     private final UserService userService;
     private final PasswordEncoder passwordEncoder;
-
-    public ApplicantController(ApplicantService applicantService, UserService userService,
-                               PasswordEncoder passwordEncoder) {
-        this.applicantService = applicantService;
-        this.userService = userService;
-        this.passwordEncoder = passwordEncoder;
-    }
 
     @PostMapping("/applicants")
     public ResponseEntity<ApplicantResponse> createApplicant(@Valid @RequestBody Applicant applicant) throws InvalidException {

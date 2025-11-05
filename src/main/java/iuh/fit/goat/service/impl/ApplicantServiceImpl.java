@@ -6,6 +6,7 @@ import iuh.fit.goat.dto.response.UserResponse;
 import iuh.fit.goat.service.ApplicantService;
 import iuh.fit.goat.service.EmailService;
 import iuh.fit.goat.service.RoleService;
+import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
@@ -13,15 +14,13 @@ import org.springframework.stereotype.Service;
 import iuh.fit.goat.entity.*;
 import iuh.fit.goat.repository.*;
 import iuh.fit.goat.util.*;
-import iuh.fit.goat.dto.*;
-
-
 
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
 @Service
+@RequiredArgsConstructor
 public class ApplicantServiceImpl implements ApplicantService {
     private final ApplicantRepository applicantRepository;
     private final ApplicationRepository applicationRepository;
@@ -30,18 +29,6 @@ public class ApplicantServiceImpl implements ApplicantService {
     private final RoleService roleService;
     private final EmailService emailService;
     private final String APPLICANT = "APPLICANT";
-
-    public ApplicantServiceImpl(ApplicantRepository applicantRepository, ApplicationRepository applicationRepository,
-                                CommentRepository commentRepository, NotificationRepository notificationRepository,
-                                RoleService roleService, EmailService emailService
-    ) {
-        this.applicantRepository = applicantRepository;
-        this.applicationRepository = applicationRepository;
-        this.commentRepository = commentRepository;
-        this.notificationRepository = notificationRepository;
-        this.roleService = roleService;
-        this.emailService = emailService;
-    }
 
     @Override
     public Applicant handleCreateApplicant(Applicant applicant) {
@@ -115,10 +102,7 @@ public class ApplicantServiceImpl implements ApplicantService {
     public Applicant handleGetApplicantById(long id) {
         Optional<Applicant> result = this.applicantRepository.findById(id);
 
-        if(result.isPresent()) {
-            return result.get();
-        }
-        return null;
+        return result.orElse(null);
     }
 
     @Override

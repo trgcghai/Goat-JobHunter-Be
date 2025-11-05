@@ -2,6 +2,8 @@ package iuh.fit.goat.service.impl;
 
 import iuh.fit.goat.dto.response.ApplicationResponse;
 import iuh.fit.goat.dto.response.ResultPaginationResponse;
+import iuh.fit.goat.service.ApplicationService;
+import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
@@ -15,17 +17,11 @@ import java.util.List;
 import java.util.Optional;
 
 @Service
-public class ApplicationServiceImp implements iuh.fit.goat.service.ApplicationService {
+@RequiredArgsConstructor
+public class ApplicationServiceImp implements ApplicationService {
     private final ApplicationRepository applicationRepository;
     private final JobRepository jobRepository;
     private final ApplicantRepository applicantRepository;
-
-    public ApplicationServiceImp(ApplicationRepository applicationRepository, ApplicantRepository applicantRepository,
-                                 JobRepository jobRepository) {
-        this.applicationRepository = applicationRepository;
-        this.jobRepository = jobRepository;
-        this.applicantRepository = applicantRepository;
-    }
 
     @Override
     public ApplicationResponse handleCreateApplication(Application application) {
