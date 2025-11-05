@@ -8,6 +8,7 @@ import iuh.fit.goat.repository.SkillRepository;
 import iuh.fit.goat.repository.SubscriberRepository;
 import iuh.fit.goat.repository.UserRepository;
 import iuh.fit.goat.service.EmailService;
+import iuh.fit.goat.service.SubscriberService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -23,13 +24,14 @@ import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
-public class SubscriberServiceImpl {
+public class SubscriberServiceImpl implements SubscriberService {
     private final SubscriberRepository subscriberRepository;
     private final SkillRepository skillRepository;
     private final JobRepository jobRepository;
     private final UserRepository userRepository;
     private final EmailService emailService;
 
+    @Override
     public Subscriber handleCreateSubscriber(Subscriber subscriber) {
         if (subscriber.getSkills() != null) {
             List<Long> idSkills = subscriber.getSkills().stream().map(Skill::getSkillId)
@@ -40,6 +42,7 @@ public class SubscriberServiceImpl {
         return this.subscriberRepository.save(subscriber);
     }
 
+    @Override
     public Subscriber handleUpdateSubscriber(Subscriber subscriber) {
         Subscriber currentSubscriber = this.handleGetSubscriberById(subscriber.getSubscriberId());
 
@@ -54,16 +57,19 @@ public class SubscriberServiceImpl {
         return this.subscriberRepository.save(currentSubscriber);
     }
 
+    @Override
     public void handleDeleteSubscriber(long id) {
         Subscriber subscriber = this.handleGetSubscriberById(id);
         this.jobRepository.deleteById(id);
     }
 
+    @Override
     public Subscriber handleGetSubscriberById(long id) {
         Optional<Subscriber> optional = this.subscriberRepository.findById(id);
         return optional.orElse(null);
     }
 
+    @Override
     public ResultPaginationResponse handleGetAllSubscribers(Specification<Subscriber> spec, Pageable pageable) {
         Page<Subscriber> page = this.subscriberRepository.findAll(spec, pageable);
 
@@ -76,14 +82,17 @@ public class SubscriberServiceImpl {
         return new ResultPaginationResponse(meta, page.getContent());
     }
 
+    @Override
     public Subscriber handleGetSubscribersSkill(String email) {
         return this.subscriberRepository.findByEmail(email);
     }
 
+    @Override
     public Subscriber handleGetSubscriberByEmail(String email) {
         return this.subscriberRepository.findByEmail(email);
     }
 
+    @Override
     public void handleSendSubscribersEmailJobs() {
         List<Subscriber> listSubs = this.subscriberRepository.findAll();
         if (!listSubs.isEmpty()) {
@@ -107,6 +116,7 @@ public class SubscriberServiceImpl {
         }
     }
 
+    @Override
     public void handleSendFollowersEmailJobs() {
         List<User> users = this.userRepository.findAll();
         Instant sevenDaysAgo = Instant.now().minus(7, ChronoUnit.DAYS);
@@ -140,14 +150,7 @@ public class SubscriberServiceImpl {
         }
     }
 
-    private boolean isRecentJob(Job job, Instant sevenDaysAgo) {
-        Instant updatedAt = job.getUpdatedAt();
-        Instant createdAt = job.getCreatedAt();
-
-        return (updatedAt != null && updatedAt.isAfter(sevenDaysAgo)) ||
-                (updatedAt == null && createdAt != null && createdAt.isAfter(sevenDaysAgo));
-    }
-
+    @Override
     public EmailJobResponse convertJobToSendEmail(Job job) {
         EmailJobResponse res = new EmailJobResponse();
         res.setTitle(job.getTitle());
