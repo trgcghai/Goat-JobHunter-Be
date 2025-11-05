@@ -3,10 +3,15 @@ package iuh.fit.goat.controller;
 import iuh.fit.goat.common.Role;
 import iuh.fit.goat.dto.request.LoginRequest;
 import iuh.fit.goat.dto.request.VerifyUserRequest;
+import iuh.fit.goat.dto.response.ApplicantResponse;
 import iuh.fit.goat.dto.response.LoginResponse;
+import iuh.fit.goat.dto.response.RecruiterResponse;
 import iuh.fit.goat.entity.Applicant;
+import iuh.fit.goat.entity.Recruiter;
 import iuh.fit.goat.entity.User;
 import iuh.fit.goat.exception.InvalidException;
+import iuh.fit.goat.service.ApplicantService;
+import iuh.fit.goat.service.RecruiterService;
 import iuh.fit.goat.service.UserService;
 import iuh.fit.goat.util.SecurityUtil;
 import iuh.fit.goat.util.annotation.ApiMessage;
@@ -21,6 +26,7 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.web.bind.annotation.*;
 
@@ -33,6 +39,9 @@ public class AuthController {
     private final AuthenticationManagerBuilder authenticationManagerBuilder;
     private final SecurityUtil securityUtil;
     private final UserService userService;
+    private final ApplicantService applicantService;
+    private final RecruiterService recruiterService;
+    private final PasswordEncoder passwordEncoder;
 
     @Value("${minhdat.jwt.refresh-token-validity-in-seconds}")
     private long jwtRefreshToken;
@@ -213,5 +222,35 @@ public class AuthController {
         } catch (Exception e) {
             return ResponseEntity.badRequest().body(e.getMessage());
         }
+    }
+
+    @PostMapping("/auth/register/applicant")
+    public ResponseEntity<ApplicantResponse> registerApplicant(@Valid @RequestBody Applicant applicant)
+            throws InvalidException {
+        if(this.userService.handleExistsByEmail(applicant.getContact().getEmail())) {
+            throw new InvalidException("Email exists: " + applicant.getContact().getEmail());
+        }
+
+        String hashPassword = this.passwordEncoder.encode(applicant.getPassword());
+        applicant.setPassword(hashPassword);
+
+        Applicant newApplicant = this.applicantService.handleCreateApplicant(applicant);
+        ApplicantResponse applicantResponse = this.applicantService.convertToApplicantResponse(newApplicant);
+        return ResponseEntity.status(HttpStatus.CREATED).body(applicantResponse);
+    }
+
+    @PostMapping("/auth/register/recruiter")
+    public ResponseEntity<RecruiterResponse> registerRecruiter(@Valid @RequestBody Recruiter recruiter)
+            throws InvalidException {
+        if(this.userService.handleExistsByEmail(recruiter.getContact().getEmail())) {
+            throw new InvalidException("Email exists: " + recruiter.getContact().getEmail());
+        }
+
+        String hashPassword = this.passwordEncoder.encode(recruiter.getPassword());
+        recruiter.setPassword(hashPassword);
+
+        Recruiter newRecruiter = this.recruiterService.handleCreateRecruiter(recruiter);
+        RecruiterResponse recruiterResponse = this.recruiterService.convertToRecruiterResponse(newRecruiter);
+        return ResponseEntity.status(HttpStatus.CREATED).body(recruiterResponse);
     }
 }
