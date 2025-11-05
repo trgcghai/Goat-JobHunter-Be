@@ -59,7 +59,6 @@ public class SubscriberServiceImpl implements SubscriberService {
 
     @Override
     public void handleDeleteSubscriber(long id) {
-        Subscriber subscriber = this.handleGetSubscriberById(id);
         this.jobRepository.deleteById(id);
     }
 
