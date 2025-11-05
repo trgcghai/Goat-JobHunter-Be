@@ -91,6 +91,13 @@ public class SecurityConfiguration {
                 .cors(Customizer.withDefaults())
                 .authorizeHttpRequests( request ->
                         request.requestMatchers(whiteList).permitAll()
+                                .requestMatchers(HttpMethod.GET, "/api/v1/recruiters/**").permitAll()
+                                .requestMatchers(HttpMethod.GET, "/api/v1/jobs/**").permitAll()
+                                .requestMatchers(HttpMethod.GET, "/api/v1/skills/**").permitAll()
+                                .requestMatchers(HttpMethod.GET, "/api/v1/careers/**").permitAll()
+                                .requestMatchers(HttpMethod.GET, "/api/v1/roles/**").permitAll()
+                                .requestMatchers(HttpMethod.POST, "/api/v1/users/**").permitAll()
+                                .requestMatchers(HttpMethod.PUT, "/api/v1/users/**").permitAll()
                                 .requestMatchers(HttpMethod.GET, "/api/v1/blogs/**").permitAll()
                                 .anyRequest().authenticated()
                 )
