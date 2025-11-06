@@ -3,6 +3,7 @@ package iuh.fit.goat.service.impl;
 import com.cloudinary.Cloudinary;
 import iuh.fit.goat.dto.response.CloudinaryResponse;
 import iuh.fit.goat.exception.InvalidException;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
@@ -10,12 +11,9 @@ import org.springframework.web.multipart.MultipartFile;
 import java.util.Map;
 
 @Service
+@RequiredArgsConstructor
 public class CloudinaryServiceImpl implements iuh.fit.goat.service.CloudinaryService {
     private final Cloudinary cloudinary;
-
-    public CloudinaryServiceImpl(Cloudinary cloudinary) {
-        this.cloudinary = cloudinary;
-    }
 
     @Transactional
     @Override
