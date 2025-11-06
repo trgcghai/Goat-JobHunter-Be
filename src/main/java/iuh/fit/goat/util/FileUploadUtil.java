@@ -1,8 +1,8 @@
 package iuh.fit.goat.util;
 
+import iuh.fit.goat.exception.InvalidException;
 import lombok.experimental.UtilityClass;
 import org.springframework.web.multipart.MultipartFile;
-import vn.minhdat.jobhunter_be.exception.InvalidException;
 
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
