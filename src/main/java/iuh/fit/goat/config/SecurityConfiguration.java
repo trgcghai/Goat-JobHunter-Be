@@ -7,8 +7,11 @@ import iuh.fit.goat.util.SecurityUtil;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
+import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.oauth2.jwt.JwtDecoder;
@@ -17,6 +20,8 @@ import org.springframework.security.oauth2.jwt.NimbusJwtDecoder;
 import org.springframework.security.oauth2.jwt.NimbusJwtEncoder;
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationConverter;
 import org.springframework.security.oauth2.server.resource.authentication.JwtGrantedAuthoritiesConverter;
+import org.springframework.security.oauth2.server.resource.web.BearerTokenAuthenticationEntryPoint;
+import org.springframework.security.oauth2.server.resource.web.access.BearerTokenAccessDeniedHandler;
 import org.springframework.security.web.SecurityFilterChain;
 
 import javax.crypto.SecretKey;
@@ -81,26 +86,33 @@ public class SecurityConfiguration {
                 "/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html"
         };
 
-//        http
-//                .csrf(c -> c.disable())
-//                .cors(Customizer.withDefaults())
-//                .authorizeHttpRequests( request ->
-//                        request.requestMatchers(whiteList).permitAll()
-//                                .requestMatchers(HttpMethod.GET, "/api/v1/blogs/**").permitAll()
-//                                .anyRequest().authenticated()
-//                )
-//                .oauth2ResourceServer(o ->
-//                        o.jwt(Customizer.withDefaults())
-//                                .authenticationEntryPoint(authenticationEntryPointCustom)
-//                )
-//                .exceptionHandling(e ->
-//                        e.authenticationEntryPoint(new BearerTokenAuthenticationEntryPoint())
-//                                .accessDeniedHandler(new BearerTokenAccessDeniedHandler())
-//                )
-//                .formLogin(f -> f.disable())
-//                .sessionManagement(session ->
-//                        session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)
-//                );
+        http
+                .csrf(c -> c.disable())
+                .cors(Customizer.withDefaults())
+                .authorizeHttpRequests( request ->
+                        request.requestMatchers(whiteList).permitAll()
+                                .requestMatchers(HttpMethod.GET, "/api/v1/recruiters/**").permitAll()
+                                .requestMatchers(HttpMethod.GET, "/api/v1/jobs/**").permitAll()
+                                .requestMatchers(HttpMethod.GET, "/api/v1/skills/**").permitAll()
+                                .requestMatchers(HttpMethod.GET, "/api/v1/careers/**").permitAll()
+                                .requestMatchers(HttpMethod.GET, "/api/v1/roles/**").permitAll()
+                                .requestMatchers(HttpMethod.POST, "/api/v1/users/**").permitAll()
+                                .requestMatchers(HttpMethod.PUT, "/api/v1/users/**").permitAll()
+                                .requestMatchers(HttpMethod.GET, "/api/v1/blogs/**").permitAll()
+                                .anyRequest().authenticated()
+                )
+                .oauth2ResourceServer(o ->
+                        o.jwt(Customizer.withDefaults())
+                                .authenticationEntryPoint(authenticationEntryPointCustom)
+                )
+                .exceptionHandling(e ->
+                        e.authenticationEntryPoint(new BearerTokenAuthenticationEntryPoint())
+                                .accessDeniedHandler(new BearerTokenAccessDeniedHandler())
+                )
+                .formLogin(f -> f.disable())
+                .sessionManagement(session ->
+                        session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)
+                );
 
         return http.build();
     }

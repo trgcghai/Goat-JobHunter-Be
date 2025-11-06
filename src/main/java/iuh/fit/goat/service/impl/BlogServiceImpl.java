@@ -49,6 +49,7 @@ public class BlogServiceImpl implements BlogService {
             currentBlog.setContent(blog.getContent());
             currentBlog.setTags(blog.getTags());
             currentBlog.setDraft(blog.isDraft());
+            currentBlog.setEnabled(blog.isEnabled());
             currentBlog.setActivity(blog.getActivity());
 
             return this.blogRepository.save(currentBlog);
