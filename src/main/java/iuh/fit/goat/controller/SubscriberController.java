@@ -8,6 +8,7 @@ import iuh.fit.goat.exception.InvalidException;
 import iuh.fit.goat.service.SubscriberService;
 import iuh.fit.goat.util.SecurityUtil;
 import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.http.HttpStatus;
@@ -18,12 +19,9 @@ import java.util.regex.Pattern;
 
 @RestController
 @RequestMapping("/api/v1")
+@RequiredArgsConstructor
 public class SubscriberController {
     private final SubscriberService subscriberService;
-
-    public SubscriberController(SubscriberService subscriberService) {
-        this.subscriberService = subscriberService;
-    }
 
     @PostMapping("/subscribers")
     public ResponseEntity<Subscriber> createSubscriber(@Valid @RequestBody Subscriber subscriber)

@@ -28,13 +28,7 @@ public interface SubscriberService {
 
     void handleSendFollowersEmailJobs();
 
-    default boolean isRecentJob(Job job, Instant sevenDaysAgo) {
-        Instant updatedAt = job.getUpdatedAt();
-        Instant createdAt = job.getCreatedAt();
-
-        return (updatedAt != null && updatedAt.isAfter(sevenDaysAgo)) ||
-                (updatedAt == null && createdAt != null && createdAt.isAfter(sevenDaysAgo));
-    }
+    boolean isRecentJob(Job job, Instant sevenDaysAgo);
 
     EmailJobResponse convertJobToSendEmail(Job job);
 }

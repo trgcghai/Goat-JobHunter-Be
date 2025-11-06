@@ -150,6 +150,15 @@ public class SubscriberServiceImpl implements SubscriberService {
     }
 
     @Override
+    public boolean isRecentJob(Job job, Instant sevenDaysAgo) {
+        Instant updatedAt = job.getUpdatedAt();
+        Instant createdAt = job.getCreatedAt();
+
+        return (updatedAt != null && updatedAt.isAfter(sevenDaysAgo)) ||
+                (updatedAt == null && createdAt != null && createdAt.isAfter(sevenDaysAgo));
+    }
+
+    @Override
     public EmailJobResponse convertJobToSendEmail(Job job) {
         EmailJobResponse res = new EmailJobResponse();
         res.setTitle(job.getTitle());
