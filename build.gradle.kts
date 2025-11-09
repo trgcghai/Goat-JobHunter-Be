@@ -21,7 +21,9 @@ repositories {
 
 dependencies {
 	implementation("org.springframework.boot:spring-boot-starter")
-	implementation("org.springframework.boot:spring-boot-starter-oauth2-resource-server")
+	implementation("org.springframework.boot:spring-boot-starter-oauth2-resource-server") {
+		exclude(group = "com.google.code.gson", module = "gson")
+	}
 	implementation("org.springframework.boot:spring-boot-starter-actuator")
 	implementation("org.springframework.boot:spring-boot-starter-data-jpa")
 	implementation("org.springframework.boot:spring-boot-starter-security")
@@ -33,6 +35,7 @@ dependencies {
 	implementation("org.springframework.boot:spring-boot-starter-mail")
 	implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:2.8.8")
 	runtimeOnly ("com.h2database:h2")
+	implementation("org.springframework.boot:spring-boot-starter-data-redis:3.5.7")
 
 	developmentOnly("org.springframework.boot:spring-boot-devtools")
 	runtimeOnly("com.mysql:mysql-connector-j")

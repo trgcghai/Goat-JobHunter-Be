@@ -4,7 +4,6 @@ import iuh.fit.goat.common.Role;
 import iuh.fit.goat.dto.request.FollowRecruiterRequest;
 import iuh.fit.goat.dto.request.ResetPasswordRequest;
 import iuh.fit.goat.dto.request.SaveJobRequest;
-import iuh.fit.goat.dto.request.VerifyUserRequest;
 import iuh.fit.goat.dto.response.LoginResponse;
 import iuh.fit.goat.dto.response.ResultPaginationResponse;
 import iuh.fit.goat.dto.response.UserResponse;
@@ -16,32 +15,36 @@ import iuh.fit.goat.exception.InvalidException;
 import iuh.fit.goat.repository.JobRepository;
 import iuh.fit.goat.repository.RecruiterRepository;
 import iuh.fit.goat.repository.UserRepository;
-import iuh.fit.goat.service.EmailService;
+import iuh.fit.goat.service.RedisService;
 import iuh.fit.goat.service.UserService;
 import iuh.fit.goat.util.SecurityUtil;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
-import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
 public class UserServiceImpl implements UserService {
-    private final EmailService emailService;
     private final UserRepository userRepository;
     private final JobRepository jobRepository;
     private final RecruiterRepository recruiterRepository;
+    private final RedisService redisService;
     private final PasswordEncoder passwordEncoder;
     private final SecurityUtil securityUtil;
+
+    @Value("${minhdat.jwt.refresh-token-validity-in-seconds}")
+    private long jwtRefreshToken;
 
     @Override
     public User handleGetUserByEmail(String email) {
@@ -59,21 +62,7 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public void handleUpdateRefreshToken(String email, String refreshToken) {
-        User user = this.userRepository.findByContact_Email(email);
-        if (user != null) {
-            user.setRefreshToken(refreshToken);
-            this.userRepository.save(user);
-        }
-    }
-
-    @Override
-    public User handleGetUserByRefreshTokenAndEmail(String refreshToken, String email) {
-        return this.userRepository.findByRefreshTokenAndContact_Email(refreshToken, email);
-    }
-
-    @Override
-    public ResultPaginationResponse handleGetAllUsers(Specification<User> spec, Pageable pageable) {
+    public ResultPaginationResponse handleGetAllUsers (Specification<User> spec, Pageable pageable) {
         Page<User> page = this.userRepository.findAll(spec, pageable);
 
         ResultPaginationResponse.Meta meta = new ResultPaginationResponse.Meta();
@@ -82,8 +71,7 @@ public class UserServiceImpl implements UserService {
         meta.setPages(page.getTotalPages());
         meta.setTotal(page.getTotalElements());
 
-        List<UserResponse> userResponses = page.getContent()
-                .stream()
+        List<UserResponse> userResponses = page.getContent().stream()
                 .map(this::convertToUserResponse)
                 .collect(Collectors.toList());
 
@@ -104,7 +92,7 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public Map<String, Object> handleUpdatePassword(String newPassword){
+    public Map<String, Object> handleUpdatePassword(String newPassword, String refreshToken) {
         String currentEmail = SecurityUtil.getCurrentUserLogin().isPresent() ?
                 SecurityUtil.getCurrentUserLogin().get() : "";
 
@@ -124,14 +112,18 @@ public class UserServiceImpl implements UserService {
                     res.getActorNotifications()
             );
             loginResponse.setUser(userLogin);
-            String accessToken = this.securityUtil.createAccessToken(currentEmail, loginResponse);
-            loginResponse.setAccessToken(accessToken);
-            String refreshToken = this.securityUtil.createRefreshToken(currentEmail, loginResponse);
-            this.handleUpdateRefreshToken(currentEmail, refreshToken);
+            String newAccessToken = this.securityUtil.createAccessToken(currentEmail, loginResponse);
+            String newRefreshToken = this.securityUtil.createRefreshToken(currentEmail, loginResponse);
+            this.redisService.replaceToken(
+                    refreshToken, newRefreshToken,
+                    currentEmail, jwtRefreshToken, TimeUnit.SECONDS
+
+            );
 
             Map<String, Object> response = new HashMap<>();
             response.put("loginResponse", loginResponse);
-            response.put("refreshToken", refreshToken);
+            response.put("refreshToken", newRefreshToken);
+            response.put("accessToken", newAccessToken);
 
             return response;
         }
@@ -185,39 +177,6 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public void handleVerifyUser(VerifyUserRequest verifyUser) throws InvalidException {
-        User user = this.handleGetUserByEmail(verifyUser.getEmail());
-        if (user != null) {
-            if (user.getVerificationCodeExpiresAt().isBefore(LocalDateTime.now())) {
-                throw new InvalidException("Verification code has expired");
-            }
-            if (user.getVerificationCode().equals(verifyUser.getVerificationCode())) {
-                user.setEnabled(true);
-                user.setVerificationCode(null);
-                user.setVerificationCodeExpiresAt(null);
-                this.userRepository.save(user);
-            } else {
-                throw new InvalidException("Invalid verification code");
-            }
-        } else {
-            throw new InvalidException("User not found");
-        }
-    }
-
-    @Override
-    public void handleResendCode(String email) throws InvalidException {
-        User user = this.handleGetUserByEmail(email);
-        if (user != null) {
-            user.setVerificationCode(SecurityUtil.generateVerificationCode());
-            user.setVerificationCodeExpiresAt(LocalDateTime.now().plusMinutes(15));
-            this.emailService.handleSendVerificationEmail(user);
-            this.userRepository.save(user);
-        } else {
-            throw new InvalidException("User not found");
-        }
-    }
-
-    @Override
     public UserResponse convertToUserResponse(User user) {
         UserResponse userResponse = new UserResponse();
 
@@ -257,4 +216,5 @@ public class UserServiceImpl implements UserService {
 
         return userResponse;
     }
+
 }

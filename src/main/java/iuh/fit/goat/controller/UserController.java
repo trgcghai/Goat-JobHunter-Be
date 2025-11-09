@@ -51,18 +51,29 @@ public class UserController {
     }
 
     @PutMapping("/users/update-password")
-    public ResponseEntity<LoginResponse> updatePassword(@Valid @RequestBody UpdatePasswordRequest updatePasswordRequest)
-            throws InvalidException {
+    public ResponseEntity<LoginResponse> updatePassword(
+            @CookieValue(name = "refreshToken", defaultValue = "missingValue") String refreshToken,
+            @Valid @RequestBody UpdatePasswordRequest updatePasswordRequest
+    ) throws InvalidException {
         boolean checked = this.userService.handleCheckCurrentPassword(updatePasswordRequest.getCurrentPassword());
         if(!checked) {
             throw new InvalidException("Current password is error");
         }
 
-        Map<String, Object> result = this.userService.handleUpdatePassword(updatePasswordRequest.getNewPassword());
+        Map<String, Object> result = this.userService
+                .handleUpdatePassword(updatePasswordRequest.getNewPassword(), refreshToken);
         if(result == null) {
             throw new InvalidException("Updated password is failed");
         }
-        ResponseCookie cookie = ResponseCookie
+
+        ResponseCookie accessTokenCookie = ResponseCookie
+                .from("accessToken", result.get("accessToken").toString())
+                .httpOnly(true)
+                .secure(true)
+                .path("/")
+                .maxAge(jwtRefreshToken)
+                .build();
+        ResponseCookie refreshTokenCookie = ResponseCookie
                 .from("refreshToken", result.get("refreshToken").toString())
                 .httpOnly(true)
                 .secure(true)
@@ -70,13 +81,15 @@ public class UserController {
                 .maxAge(jwtRefreshToken)
                 .build();
 
-        return ResponseEntity.status(HttpStatus.OK)
-                .header(HttpHeaders.SET_COOKIE, cookie.toString())
+        return ResponseEntity.ok()
+                .header(HttpHeaders.SET_COOKIE, accessTokenCookie.toString())
+                .header(HttpHeaders.SET_COOKIE, refreshTokenCookie.toString())
                 .body((LoginResponse) result.get("loginResponse"));
     }
 
     @PutMapping("/users/reset-password")
-    public ResponseEntity<?> resetPassword(@Valid @RequestBody ResetPasswordRequest resetPasswordRequest) {
+    public ResponseEntity<?> resetPassword(@Valid @RequestBody ResetPasswordRequest resetPasswordRequest)
+            throws InvalidException {
         try {
             this.userService.handleResetPassword(resetPasswordRequest);
             return ResponseEntity.status(HttpStatus.OK).body(

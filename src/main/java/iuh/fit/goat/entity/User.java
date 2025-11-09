@@ -51,8 +51,6 @@ public abstract class User {
     protected Gender gender;
     @NotBlank(message = "Password is not empty")
     protected String password;
-    @Column(columnDefinition = "MEDIUMTEXT")
-    protected String refreshToken;
     protected String username;
     protected String avatar;
     protected String verificationCode;

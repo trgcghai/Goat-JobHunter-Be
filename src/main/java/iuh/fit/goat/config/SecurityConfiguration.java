@@ -3,7 +3,10 @@ package iuh.fit.goat.config;
 
 import com.nimbusds.jose.jwk.source.ImmutableSecret;
 import com.nimbusds.jose.util.Base64;
+import iuh.fit.goat.config.components.AuthenticationEntryPointCustom;
+import iuh.fit.goat.config.components.RedisTokenBlacklistFilter;
 import iuh.fit.goat.util.SecurityUtil;
+import jakarta.servlet.http.Cookie;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -21,11 +24,14 @@ import org.springframework.security.oauth2.jwt.NimbusJwtEncoder;
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationConverter;
 import org.springframework.security.oauth2.server.resource.authentication.JwtGrantedAuthoritiesConverter;
 import org.springframework.security.oauth2.server.resource.web.BearerTokenAuthenticationEntryPoint;
+import org.springframework.security.oauth2.server.resource.web.BearerTokenAuthenticationFilter;
+import org.springframework.security.oauth2.server.resource.web.BearerTokenResolver;
 import org.springframework.security.oauth2.server.resource.web.access.BearerTokenAccessDeniedHandler;
 import org.springframework.security.web.SecurityFilterChain;
 
 import javax.crypto.SecretKey;
 import javax.crypto.spec.SecretKeySpec;
+import java.util.Arrays;
 
 @Configuration
 @EnableMethodSecurity(securedEnabled = true)
@@ -75,8 +81,25 @@ public class SecurityConfiguration {
     }
 
     @Bean
-    public SecurityFilterChain filterChain(HttpSecurity http,
-                                           AuthenticationEntryPointCustom authenticationEntryPointCustom) throws Exception {
+    public BearerTokenResolver bearerTokenResolver() {
+        return request -> {
+            if (request.getCookies() != null) {
+                return Arrays.stream(request.getCookies())
+                        .filter(cookie -> "accessToken".equals(cookie.getName()))
+                        .map(Cookie::getValue)
+                        .findFirst()
+                        .orElse(null);
+            }
+
+            return null;
+        };
+    }
+
+    @Bean
+    public SecurityFilterChain filterChain(
+            HttpSecurity http, AuthenticationEntryPointCustom authenticationEntryPointCustom,
+            RedisTokenBlacklistFilter redisTokenBlacklistFilter
+    ) throws Exception {
         String[] whiteList = {
                 "/ping",
                 "/", "/api/v1/auth/login", "/api/v1/auth/register/**", "/api/v1/auth/refresh",
@@ -101,10 +124,12 @@ public class SecurityConfiguration {
                                 .requestMatchers(HttpMethod.GET, "/api/v1/blogs/**").permitAll()
                                 .anyRequest().authenticated()
                 )
-                .oauth2ResourceServer(o ->
-                        o.jwt(Customizer.withDefaults())
+                .oauth2ResourceServer(oauth2 ->
+                        oauth2.jwt(jwt -> jwt.jwtAuthenticationConverter(jwtAuthenticationConverter()))
+                                .bearerTokenResolver(bearerTokenResolver())
                                 .authenticationEntryPoint(authenticationEntryPointCustom)
                 )
+                .addFilterBefore(redisTokenBlacklistFilter, BearerTokenAuthenticationFilter.class)
                 .exceptionHandling(e ->
                         e.authenticationEntryPoint(new BearerTokenAuthenticationEntryPoint())
                                 .accessDeniedHandler(new BearerTokenAccessDeniedHandler())

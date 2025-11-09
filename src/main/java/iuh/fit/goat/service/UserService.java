@@ -20,25 +20,17 @@ public interface UserService {
 
     User handleGetUserById(long id);
 
-    void handleUpdateRefreshToken(String email, String refreshToken);
-
-    User handleGetUserByRefreshTokenAndEmail(String refreshToken, String email);
-
     ResultPaginationResponse handleGetAllUsers(Specification<User> spec, Pageable pageable);
 
     boolean handleCheckCurrentPassword(String currentPassword);
 
-    Map<String, Object> handleUpdatePassword(String newPassword);
+    Map<String, Object> handleUpdatePassword(String newPassword, String refreshToken);
 
     void handleResetPassword(ResetPasswordRequest resetPasswordRequest) throws InvalidException;
 
     UserResponse handleSaveJobs(SaveJobRequest saveJobRequest);
 
     UserResponse handleFollowRecruiters(FollowRecruiterRequest followRecruiterRequest);
-
-    void handleVerifyUser(VerifyUserRequest verifyUser) throws InvalidException;
-
-    void handleResendCode(String email) throws InvalidException;
 
     UserResponse convertToUserResponse(User user);
 }

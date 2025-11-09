@@ -1,4 +1,4 @@
-package iuh.fit.goat.config;
+package iuh.fit.goat.config.components;
 
 import iuh.fit.goat.entity.User;
 import iuh.fit.goat.service.UserService;
