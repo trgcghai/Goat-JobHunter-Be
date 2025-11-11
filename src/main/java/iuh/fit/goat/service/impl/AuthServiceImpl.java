@@ -32,6 +32,7 @@ import org.springframework.stereotype.Service;
 import java.time.LocalDateTime;
 import java.util.Collections;
 import java.util.Map;
+import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 
 @Service
@@ -63,6 +64,7 @@ public class AuthServiceImpl implements AuthService {
 
         LoginResponse loginResponse = new LoginResponse();
         User currentUser = this.userService.handleGetUserByEmail(loginRequest.getEmail());
+        System.out.println(currentUser);
         if (currentUser == null) {
             throw new InvalidException("Invalid account");
         }
@@ -76,11 +78,15 @@ public class AuthServiceImpl implements AuthService {
 
         LoginResponse.UserLogin userLogin = new LoginResponse.UserLogin(
                 currentUser.getUserId(), currentUser.getContact().getEmail(),
-                currentUser.getFullName(), currentUser.getUsername(), currentUser.getAvatar(),
+                currentUser.getFullName() != null ? currentUser.getFullName() : "",
+                currentUser.getUsername() != null ? currentUser.getUsername() : "",
+                currentUser.getAvatar() != null ? currentUser.getAvatar() : "",
                 currentUser instanceof Applicant ? Role.APPLICANT.getValue() : Role.RECRUITER.getValue(),
                 true,
-                currentUser.getRole(), currentUser.getSavedJobs(), currentUser.getFollowedRecruiters(),
-                currentUser.getActorNotifications()
+                currentUser.getRole(),
+                Optional.ofNullable(currentUser.getSavedJobs()).orElse(Collections.emptyList()),
+                Optional.ofNullable(currentUser.getFollowedRecruiters()).orElse(Collections.emptyList()),
+                Optional.ofNullable(currentUser.getActorNotifications()).orElse(Collections.emptyList())
         );
         loginResponse.setUser(userLogin);
 
