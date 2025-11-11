@@ -10,6 +10,7 @@ import iuh.fit.goat.entity.Applicant;
 import iuh.fit.goat.entity.Recruiter;
 import iuh.fit.goat.entity.User;
 import iuh.fit.goat.exception.InvalidException;
+import iuh.fit.goat.repository.RecruiterRepository;
 import iuh.fit.goat.repository.UserRepository;
 import iuh.fit.goat.service.*;
 import iuh.fit.goat.util.SecurityUtil;
@@ -32,6 +33,7 @@ import org.springframework.stereotype.Service;
 import java.time.LocalDateTime;
 import java.util.Collections;
 import java.util.Map;
+import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 
 @Service
@@ -45,6 +47,7 @@ public class AuthServiceImpl implements AuthService {
     private final RecruiterService recruiterService;
     private final SecurityUtil securityUtil;
     private final UserRepository userRepository;
+    private final RecruiterRepository recruiterRepository;
     private final PasswordEncoder passwordEncoder;
 
     @Value("${minhdat.jwt.access-token-validity-in-seconds}")
@@ -63,6 +66,7 @@ public class AuthServiceImpl implements AuthService {
 
         LoginResponse loginResponse = new LoginResponse();
         User currentUser = this.userService.handleGetUserByEmail(loginRequest.getEmail());
+        System.out.println(currentUser);
         if (currentUser == null) {
             throw new InvalidException("Invalid account");
         }
@@ -76,11 +80,15 @@ public class AuthServiceImpl implements AuthService {
 
         LoginResponse.UserLogin userLogin = new LoginResponse.UserLogin(
                 currentUser.getUserId(), currentUser.getContact().getEmail(),
-                currentUser.getFullName(), currentUser.getUsername(), currentUser.getAvatar(),
+                currentUser.getFullName() != null ? currentUser.getFullName() : "",
+                currentUser.getUsername() != null ? currentUser.getUsername() : "",
+                currentUser.getAvatar() != null ? currentUser.getAvatar() : "",
                 currentUser instanceof Applicant ? Role.APPLICANT.getValue() : Role.RECRUITER.getValue(),
                 true,
-                currentUser.getRole(), currentUser.getSavedJobs(), currentUser.getFollowedRecruiters(),
-                currentUser.getActorNotifications()
+                currentUser.getRole(),
+                Optional.ofNullable(currentUser.getSavedJobs()).orElse(Collections.emptyList()),
+                Optional.ofNullable(currentUser.getFollowedRecruiters()).orElse(Collections.emptyList()),
+                Optional.ofNullable(currentUser.getActorNotifications()).orElse(Collections.emptyList())
         );
         loginResponse.setUser(userLogin);
 
@@ -97,8 +105,8 @@ public class AuthServiceImpl implements AuthService {
         ResponseCookie accessCookie = ResponseCookie
                 .from("accessToken", accessToken)
                 .httpOnly(true)
-                .secure(true)
-                .sameSite("Strict")
+//                .secure(true)
+//                .sameSite("Strict")
                 .path("/")
                 .maxAge(jwtAccessToken)
                 .build();
@@ -107,8 +115,8 @@ public class AuthServiceImpl implements AuthService {
                 .from("refreshToken", refreshToken)
                 .httpOnly(true)
                 .secure(true)
-                .sameSite("Strict")
-                .path("/")
+//                .sameSite("Strict")
+//                .path("/")
                 .maxAge(jwtRefreshToken)
                 .build();
 
@@ -172,8 +180,8 @@ public class AuthServiceImpl implements AuthService {
         ResponseCookie newAccessCookie = ResponseCookie
                 .from("accessToken", newAccessToken)
                 .httpOnly(true)
-                .secure(true)
-                .sameSite("Strict")
+//                .secure(true)
+//                .sameSite("Strict")
                 .path("/")
                 .maxAge(jwtAccessToken)
                 .build();
@@ -181,8 +189,8 @@ public class AuthServiceImpl implements AuthService {
         ResponseCookie newRefreshCookie = ResponseCookie
                 .from("refreshToken", newRefreshToken)
                 .httpOnly(true)
-                .secure(true)
-                .sameSite("Strict")
+//                .secure(true)
+//                .sameSite("Strict")
                 .path("/")
                 .maxAge(jwtRefreshToken)
                 .build();
@@ -292,6 +300,17 @@ public class AuthServiceImpl implements AuthService {
             }
         } else {
             throw new InvalidException("User not found");
+        }
+    }
+
+    @Override
+    public void handleVerifyRecruiter(long id) throws InvalidException {
+        Recruiter recruiter = this.recruiterService.handleGetRecruiterById(id);
+        if (recruiter != null) {
+            recruiter.setEnabled(true);
+            this.recruiterRepository.save(recruiter);
+        } else {
+            throw new InvalidException("Recruiter not found");
         }
     }
 

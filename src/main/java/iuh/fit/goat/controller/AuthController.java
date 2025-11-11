@@ -84,6 +84,16 @@ public class AuthController {
         }
     }
 
+    @PatchMapping("/auth/verify/recruiter/{id}")
+    public ResponseEntity<?> verifyRecruiter(@PathVariable("id") long id) {
+        try {
+            this.authService.handleVerifyRecruiter(id);
+            return ResponseEntity.ok(Map.of("message", "Recruiter verified successfully"));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
+    }
+
     @PostMapping("/auth/resend")
     public ResponseEntity<?> resendVerificationCode(@RequestParam String email) {
         try {

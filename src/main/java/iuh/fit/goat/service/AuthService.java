@@ -25,5 +25,7 @@ public interface AuthService {
 
     void handleVerifyUser(VerifyUserRequest verifyUser) throws InvalidException;
 
+    void handleVerifyRecruiter(long id) throws InvalidException;
+
     void handleResendCode(String email) throws InvalidException;
 }

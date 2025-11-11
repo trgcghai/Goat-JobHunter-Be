@@ -42,10 +42,7 @@ public class RecruiterServiceImpl implements RecruiterService {
             role = this.roleService.handleGetRoleByName(HR);
         }
         recruiter.setRole(role);
-        recruiter.setVerificationCode(SecurityUtil.generateVerificationCode());
-        recruiter.setVerificationCodeExpiresAt(LocalDateTime.now().plusMinutes(15));
         recruiter.setEnabled(false);
-        this.emailService.handleSendVerificationEmail(recruiter);
 
         return this.recruiterRepository.save(recruiter);
     }

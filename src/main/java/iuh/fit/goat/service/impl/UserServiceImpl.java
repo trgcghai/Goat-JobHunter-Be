@@ -186,9 +186,9 @@ public class UserServiceImpl implements UserService {
         userResponse.setUsername(user.getUsername());
         userResponse.setFullName(user.getFullName());
         userResponse.setAvatar(user.getAvatar());
+        userResponse.setEnabled(user.isEnabled());
         userResponse.setCreatedAt(user.getCreatedAt());
         userResponse.setUpdatedAt(user.getUpdatedAt());
-
 
         if(user.getRole() != null) {
             UserResponse.RoleUser roleUser = new UserResponse.RoleUser();
