@@ -10,6 +10,7 @@ import iuh.fit.goat.entity.Applicant;
 import iuh.fit.goat.entity.Recruiter;
 import iuh.fit.goat.entity.User;
 import iuh.fit.goat.exception.InvalidException;
+import iuh.fit.goat.repository.RecruiterRepository;
 import iuh.fit.goat.repository.UserRepository;
 import iuh.fit.goat.service.*;
 import iuh.fit.goat.util.SecurityUtil;
@@ -46,6 +47,7 @@ public class AuthServiceImpl implements AuthService {
     private final RecruiterService recruiterService;
     private final SecurityUtil securityUtil;
     private final UserRepository userRepository;
+    private final RecruiterRepository recruiterRepository;
     private final PasswordEncoder passwordEncoder;
 
     @Value("${minhdat.jwt.access-token-validity-in-seconds}")
@@ -298,6 +300,17 @@ public class AuthServiceImpl implements AuthService {
             }
         } else {
             throw new InvalidException("User not found");
+        }
+    }
+
+    @Override
+    public void handleVerifyRecruiter(long id) throws InvalidException {
+        Recruiter recruiter = this.recruiterService.handleGetRecruiterById(id);
+        if (recruiter != null) {
+            recruiter.setEnabled(true);
+            this.recruiterRepository.save(recruiter);
+        } else {
+            throw new InvalidException("Recruiter not found");
         }
     }
 
