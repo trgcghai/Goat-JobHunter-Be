@@ -97,8 +97,8 @@ public class AuthServiceImpl implements AuthService {
         ResponseCookie accessCookie = ResponseCookie
                 .from("accessToken", accessToken)
                 .httpOnly(true)
-                .secure(true)
-                .sameSite("Strict")
+//                .secure(true)
+//                .sameSite("Strict")
                 .path("/")
                 .maxAge(jwtAccessToken)
                 .build();
@@ -107,8 +107,8 @@ public class AuthServiceImpl implements AuthService {
                 .from("refreshToken", refreshToken)
                 .httpOnly(true)
                 .secure(true)
-                .sameSite("Strict")
-                .path("/")
+//                .sameSite("Strict")
+//                .path("/")
                 .maxAge(jwtRefreshToken)
                 .build();
 
@@ -172,8 +172,8 @@ public class AuthServiceImpl implements AuthService {
         ResponseCookie newAccessCookie = ResponseCookie
                 .from("accessToken", newAccessToken)
                 .httpOnly(true)
-                .secure(true)
-                .sameSite("Strict")
+//                .secure(true)
+//                .sameSite("Strict")
                 .path("/")
                 .maxAge(jwtAccessToken)
                 .build();
@@ -181,8 +181,8 @@ public class AuthServiceImpl implements AuthService {
         ResponseCookie newRefreshCookie = ResponseCookie
                 .from("refreshToken", newRefreshToken)
                 .httpOnly(true)
-                .secure(true)
-                .sameSite("Strict")
+//                .secure(true)
+//                .sameSite("Strict")
                 .path("/")
                 .maxAge(jwtRefreshToken)
                 .build();
