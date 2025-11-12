@@ -13,23 +13,28 @@ public class RedisServiceImpl implements RedisService {
     private final StringRedisTemplate redisTemplate;
 
     @Override
-    public void setTokenWithTTL(String key, String value, long ttl, TimeUnit timeUnit) {
+    public void saveWithTTL(String key, String value, long ttl, TimeUnit timeUnit) {
         this.redisTemplate.opsForValue().set(key, value, ttl, timeUnit);
     }
 
     @Override
-    public boolean hasToken(String token) {
-        return this.redisTemplate.hasKey(token);
+    public boolean hasKey(String key) {
+        return this.redisTemplate.hasKey(key);
     }
 
     @Override
-    public void deleteToken(String key) {
+    public String getValue(String key) {
+        return this.redisTemplate.opsForValue().get(key);
+    }
+
+    @Override
+    public void deleteKey(String key) {
         this.redisTemplate.delete(key);
     }
 
     @Override
-    public void replaceToken(String oldToken, String newToken, String value, long ttl, TimeUnit timeUnit) {
-        this.redisTemplate.delete("refresh:" + oldToken);
-        this.redisTemplate.opsForValue().set("refresh:" + newToken, value, ttl, timeUnit);
+    public void replaceKey(String oldKey, String newKey, String value, long ttl, TimeUnit timeUnit) {
+        this.redisTemplate.delete(oldKey);
+        this.redisTemplate.opsForValue().set(newKey, value, ttl, timeUnit);
     }
 }

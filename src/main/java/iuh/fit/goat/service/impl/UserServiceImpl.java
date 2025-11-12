@@ -114,8 +114,9 @@ public class UserServiceImpl implements UserService {
             loginResponse.setUser(userLogin);
             String newAccessToken = this.securityUtil.createAccessToken(currentEmail, loginResponse);
             String newRefreshToken = this.securityUtil.createRefreshToken(currentEmail, loginResponse);
-            this.redisService.replaceToken(
-                    refreshToken, newRefreshToken,
+            this.redisService.replaceKey(
+                    "refresh:" + refreshToken,
+                    "refresh:" + newRefreshToken,
                     currentEmail, jwtRefreshToken, TimeUnit.SECONDS
 
             );

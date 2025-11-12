@@ -64,12 +64,12 @@ public class EmailServiceImpl implements EmailService {
     }
 
     @Override
-    public void handleSendVerificationEmail(User user) {
+    public void handleSendVerificationEmail(String email, String verificationCode) {
         String subject = "Account Verification";
         Context context = new Context();
-        context.setVariable("verificationCode", user.getVerificationCode());
+        context.setVariable("verificationCode", verificationCode);
         String content = this.templateEngine.process("verification", context);
 
-        this.handleSendEmailSync(user.getContact().getEmail(), subject, content, false, true);
+        this.handleSendEmailSync(email, subject, content, false, true);
     }
 }

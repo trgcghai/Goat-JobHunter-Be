@@ -39,10 +39,7 @@ public class ApplicantServiceImpl implements ApplicantService {
             role = this.roleService.handleGetRoleByName(APPLICANT);
         }
         applicant.setRole(role);
-        applicant.setVerificationCode(SecurityUtil.generateVerificationCode());
-        applicant.setVerificationCodeExpiresAt(LocalDateTime.now().plusMinutes(15));
         applicant.setEnabled(false);
-        this.emailService.handleSendVerificationEmail(applicant);
 
         return this.applicantRepository.save(applicant);
     }
