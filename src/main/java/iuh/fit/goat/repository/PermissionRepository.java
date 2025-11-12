@@ -11,4 +11,5 @@ import java.util.List;
 public interface PermissionRepository extends JpaRepository<Permission, Long>, JpaSpecificationExecutor<Permission> {
     boolean existsByApiPathAndModuleAndMethod(String apiPath, String module, String method);
     List<Permission> findByPermissionIdIn(List<Long> permissionIds);
+    Permission findByName(String name);
 }
