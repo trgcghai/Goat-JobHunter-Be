@@ -54,10 +54,12 @@ public class AuthServiceImpl implements AuthService {
     private long jwtAccessToken;
     @Value("${minhdat.jwt.refresh-token-validity-in-seconds}")
     private long jwtRefreshToken;
+    @Value("${minhdat.verify-code-validity-in-seconds}")
+    private long validityInSeconds;
 
     @Override
     public Object handleLogin(LoginRequest loginRequest, HttpServletResponse response) throws InvalidException {
-        Authentication authentication = authenticationManagerBuilder.getObject()
+        Authentication authentication = this.authenticationManagerBuilder.getObject()
                 .authenticate(new UsernamePasswordAuthenticationToken(
                         loginRequest.getEmail(), loginRequest.getPassword())
                 );
@@ -95,7 +97,7 @@ public class AuthServiceImpl implements AuthService {
         String accessToken = this.securityUtil.createAccessToken(currentUser.getContact().getEmail(), loginResponse);
         String refreshToken = this.securityUtil.createRefreshToken(currentUser.getContact().getEmail(), loginResponse);
 
-        this.redisService.setTokenWithTTL(
+        this.redisService.saveWithTTL(
                 "refresh:" + refreshToken,
                 currentUser.getContact().getEmail(),
                 jwtRefreshToken,
@@ -131,7 +133,7 @@ public class AuthServiceImpl implements AuthService {
         if(refreshToken.equalsIgnoreCase("missingValue")) {
             throw new InvalidException("You don't have a refresh token at cookie");
         }
-        if (!this.redisService.hasToken("refresh:" + refreshToken)) {
+        if (!this.redisService.hasKey("refresh:" + refreshToken)) {
             throw new InvalidException("Invalid or expired refresh token");
         }
 
@@ -170,8 +172,9 @@ public class AuthServiceImpl implements AuthService {
         String newAccessToken = this.securityUtil.createAccessToken(email, loginResponse);
         String newRefreshToken = this.securityUtil.createAccessToken(email, loginResponse);
 
-        this.redisService.replaceToken(
-                refreshToken, newRefreshToken,
+        this.redisService.replaceKey(
+                "refresh:" + refreshToken,
+                "refresh:" + newRefreshToken,
                 currentUser.getContact().getEmail(),
                 jwtRefreshToken,
                 TimeUnit.SECONDS
@@ -203,8 +206,8 @@ public class AuthServiceImpl implements AuthService {
 
     @Override
     public void handleLogout(String accessToken, String refreshToken, HttpServletResponse response) {
-        this.redisService.deleteToken("refresh:" + refreshToken);
-        this.redisService.setTokenWithTTL(
+        this.redisService.deleteKey("refresh:" + refreshToken);
+        this.redisService.saveWithTTL(
                 "blacklist:" + accessToken,
                 "revoked",
                 this.securityUtil.getRemainingTime(accessToken),
@@ -265,6 +268,15 @@ public class AuthServiceImpl implements AuthService {
         Applicant newApplicant = this.applicantService.handleCreateApplicant(applicant);
         ApplicantResponse applicantResponse = this.applicantService.convertToApplicantResponse(newApplicant);
 
+        String verificationCode = SecurityUtil.generateVerificationCode();
+        this.redisService.saveWithTTL(
+                newApplicant.getContact().getEmail(),
+                verificationCode,
+                validityInSeconds,
+                TimeUnit.SECONDS
+        );
+        this.emailService.handleSendVerificationEmail(newApplicant.getContact().getEmail(), verificationCode);
+
         return applicantResponse;
     }
 
@@ -286,21 +298,22 @@ public class AuthServiceImpl implements AuthService {
     @Override
     public void handleVerifyUser(VerifyUserRequest verifyUser) throws InvalidException {
         User user = this.userService.handleGetUserByEmail(verifyUser.getEmail());
-        if (user != null) {
-            if (user.getVerificationCodeExpiresAt().isBefore(LocalDateTime.now())) {
-                throw new InvalidException("Verification code has expired");
-            }
-            if (user.getVerificationCode().equals(verifyUser.getVerificationCode())) {
-                user.setEnabled(true);
-                user.setVerificationCode(null);
-                user.setVerificationCodeExpiresAt(null);
-                this.userRepository.save(user);
-            } else {
-                throw new InvalidException("Invalid verification code");
-            }
-        } else {
+        if(user == null) {
             throw new InvalidException("User not found");
         }
+
+        String key = user.getContact().getEmail();
+        if(!this.redisService.hasKey(key)) {
+            throw new InvalidException("Verification code has expired");
+        }
+        if(!this.redisService.getValue(key).equalsIgnoreCase(verifyUser.getVerificationCode())) {
+            throw new InvalidException("Invalid verification code");
+        }
+
+        user.setEnabled(true);
+        this.userRepository.save(user);
+
+        this.redisService.deleteKey(key);
     }
 
     @Override
@@ -317,14 +330,20 @@ public class AuthServiceImpl implements AuthService {
     @Override
     public void handleResendCode(String email) throws InvalidException {
         User user = this.userService.handleGetUserByEmail(email);
-        if (user != null) {
-            user.setVerificationCode(SecurityUtil.generateVerificationCode());
-            user.setVerificationCodeExpiresAt(LocalDateTime.now().plusMinutes(15));
-            this.emailService.handleSendVerificationEmail(user);
-            this.userRepository.save(user);
-        } else {
+        if(user == null) {
             throw new InvalidException("User not found");
         }
+
+        String key = user.getContact().getEmail();
+        String verificationCode = SecurityUtil.generateVerificationCode();
+        this.redisService.replaceKey(
+                key,
+                key,
+                verificationCode,
+                validityInSeconds,
+                TimeUnit.SECONDS
+        );
+        this.emailService.handleSendVerificationEmail(key, verificationCode);
     }
 
 }

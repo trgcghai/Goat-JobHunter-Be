@@ -3,11 +3,13 @@ package iuh.fit.goat.service;
 import java.util.concurrent.TimeUnit;
 
 public interface RedisService {
-    void setTokenWithTTL(String key, String value, long ttl, TimeUnit timeUnit);
+    void saveWithTTL(String key, String value, long ttl, TimeUnit timeUnit);
 
-    boolean hasToken(String token);
+    boolean hasKey(String key);
 
-    void deleteToken(String key);
+    String getValue(String key);
 
-    void replaceToken(String oldToken, String newToken, String value, long ttl, TimeUnit timeUnit);
+    void deleteKey(String key);
+
+    void replaceKey(String oldKey, String newKey, String value, long ttl, TimeUnit timeUnit);
 }

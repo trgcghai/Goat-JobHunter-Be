@@ -16,5 +16,5 @@ public interface EmailService {
     void handleSendEmailWithTemplate(String recipient, String subject, String templateName,
                                      String username, Object object);
 
-    void handleSendVerificationEmail(User user);
+    void handleSendVerificationEmail(String email, String verificationCode);
 }

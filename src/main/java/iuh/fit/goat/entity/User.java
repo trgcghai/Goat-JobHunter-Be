@@ -53,10 +53,7 @@ public abstract class User {
     protected String password;
     protected String username;
     protected String avatar;
-    protected String verificationCode;
-    protected LocalDateTime verificationCodeExpiresAt;
     protected boolean enabled;
-
 
     protected Instant createdAt;
     protected String createdBy;
