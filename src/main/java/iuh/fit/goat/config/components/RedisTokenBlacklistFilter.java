@@ -26,16 +26,18 @@ public class RedisTokenBlacklistFilter extends OncePerRequestFilter {
             HttpServletRequest request, HttpServletResponse response, FilterChain filterChain
     ) throws ServletException, IOException {
 
-        String token = Arrays.stream(request.getCookies())
-                .filter(c -> c.getName().equalsIgnoreCase("accessToken"))
-                .map(Cookie::getValue)
-                .findFirst()
-                .orElse(null);
+        if(request.getCookies() != null) {
+            String token = Arrays.stream(request.getCookies())
+                    .filter(c -> c.getName().equalsIgnoreCase("accessToken"))
+                    .map(Cookie::getValue)
+                    .findFirst()
+                    .orElse(null);
 
-        if (token != null && Boolean.TRUE.equals(this.redisTemplate.hasKey("blacklist:" + token))) {
-            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-            response.getWriter().write("Token has been revoked");
-            return;
+            if (token != null && Boolean.TRUE.equals(this.redisTemplate.hasKey("blacklist:" + token))) {
+                response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+                response.getWriter().write("Token has been revoked");
+                return;
+            }
         }
 
         filterChain.doFilter(request, response);
