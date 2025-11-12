@@ -22,7 +22,7 @@ public interface JobService {
 
     Map<Long, Long> handleCountJobByRecruiter();
 
-    JobResponse convertToJobResponse(Job job);
-
     List<Long> handleGetAllJobIdsByRecruiter();
+
+    JobResponse convertToJobResponse(Job job);
 }

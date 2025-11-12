@@ -120,7 +120,11 @@ public class JobServiceImpl implements JobService {
         meta.setPages(page.getTotalPages());
         meta.setTotal(page.getTotalElements());
 
-        return new ResultPaginationResponse(meta, page.getContent());
+        List<JobResponse> responses = page.getContent().stream()
+                .map(this::convertToJobResponse)
+                .toList();
+
+        return new ResultPaginationResponse(meta, responses);
     }
 
     @Override
@@ -132,6 +136,22 @@ public class JobServiceImpl implements JobService {
                                 row-> (Long)row[1]
                         )
                 );
+    }
+
+    @Override
+    public List<Long> handleGetAllJobIdsByRecruiter() {
+        List<Long> jobIds = null;
+
+        String email = SecurityUtil.getCurrentUserLogin().isPresent() ? SecurityUtil.getCurrentUserLogin().get() : "";
+        User currentUser = this.userRepository.findByContact_Email(email);
+        if(currentUser instanceof Recruiter){
+            List<Job> jobs = ( (Recruiter) currentUser ).getJobs();
+            if(jobs != null && !jobs.isEmpty()){
+                jobIds = jobs.stream().map(Job::getJobId).toList();
+            }
+        }
+
+        return jobIds;
     }
 
     @Override
@@ -159,22 +179,6 @@ public class JobServiceImpl implements JobService {
         }
 
         return jobResponse;
-    }
-
-    @Override
-    public List<Long> handleGetAllJobIdsByRecruiter() {
-        List<Long> jobIds = null;
-
-        String email = SecurityUtil.getCurrentUserLogin().isPresent() ? SecurityUtil.getCurrentUserLogin().get() : "";
-        User currentUser = this.userRepository.findByContact_Email(email);
-        if(currentUser instanceof Recruiter){
-            List<Job> jobs = ( (Recruiter) currentUser ).getJobs();
-            if(jobs != null && !jobs.isEmpty()){
-                jobIds = jobs.stream().map(Job::getJobId).toList();
-            }
-        }
-
-        return jobIds;
     }
 }
 

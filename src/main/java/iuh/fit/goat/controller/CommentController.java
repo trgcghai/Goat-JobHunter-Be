@@ -1,6 +1,7 @@
 package iuh.fit.goat.controller;
 
 import com.turkraft.springfilter.boot.Filter;
+import iuh.fit.goat.dto.response.CommentResponse;
 import iuh.fit.goat.dto.response.ResultPaginationResponse;
 import iuh.fit.goat.entity.Blog;
 import iuh.fit.goat.entity.Comment;
@@ -15,6 +16,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
 import java.util.regex.Pattern;
 
 @RestController
@@ -25,19 +27,23 @@ public class CommentController {
     private final BlogService blogService;
 
     @PostMapping
-    public ResponseEntity<Comment> createComment(@Valid @RequestBody Comment comment) throws InvalidException {
+    public ResponseEntity<CommentResponse> createComment(@Valid @RequestBody Comment comment) throws InvalidException {
         Blog blog = this.blogService.handleGetBlogById(comment.getBlog().getBlogId());
         if(blog == null) throw new InvalidException("Blog doesn't exist");
 
         Comment res = this.commentService.handleCreateComment(comment);
-        return ResponseEntity.status(HttpStatus.CREATED).body(res);
+        return ResponseEntity.status(HttpStatus.CREATED).body(
+                this.commentService.convertToCommentResponse(res)
+        );
     }
 
     @PutMapping
-    public ResponseEntity<Comment> updateComment(@Valid @RequestBody Comment comment) throws InvalidException {
+    public ResponseEntity<CommentResponse> updateComment(@Valid @RequestBody Comment comment) throws InvalidException {
         Comment res = this.commentService.handleUpdateComment(comment);
         if(res == null) throw new InvalidException("Comment doesn't exist");
-        return ResponseEntity.status(HttpStatus.CREATED).body(res);
+        return ResponseEntity.status(HttpStatus.CREATED).body(
+                this.commentService.convertToCommentResponse(res)
+        );
     }
 
     @DeleteMapping("/{id}")
@@ -53,14 +59,16 @@ public class CommentController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<Comment> getCommentById(@PathVariable("id") String id) throws InvalidException {
+    public ResponseEntity<CommentResponse> getCommentById(@PathVariable("id") String id) throws InvalidException {
         Pattern pattern = Pattern.compile("^[0-9]+$");
         if(!pattern.matcher(id).matches()) throw new InvalidException("Id is number");
 
         Comment res = this.commentService.handleGetCommentById(Long.parseLong(id));
         if(res == null) throw new InvalidException("Comment doesn't exist");
 
-        return ResponseEntity.status(HttpStatus.OK).body(res);
+        return ResponseEntity.status(HttpStatus.OK).body(
+                this.commentService.convertToCommentResponse(res)
+        );
     }
 
     @GetMapping
@@ -68,6 +76,14 @@ public class CommentController {
             @Filter Specification<Comment> spec, Pageable pageable
     ) {
         ResultPaginationResponse res = this.commentService.handleGetAllComments(spec, pageable);
+        return ResponseEntity.status(HttpStatus.OK).body(res);
+    }
+
+    @GetMapping("/blog/{id}")
+    public ResponseEntity<List<CommentResponse>> getAllCommentsByBlog(
+            @PathVariable("id") long id
+    ) {
+        List<CommentResponse> res = this.commentService.handleGetCommentsByBlogId(id);
         return ResponseEntity.status(HttpStatus.OK).body(res);
     }
 }

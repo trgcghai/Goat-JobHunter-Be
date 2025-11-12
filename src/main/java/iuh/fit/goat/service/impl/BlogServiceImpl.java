@@ -2,6 +2,7 @@ package iuh.fit.goat.service.impl;
 
 import iuh.fit.goat.common.NotificationType;
 import iuh.fit.goat.dto.request.LikeBlogRequest;
+import iuh.fit.goat.dto.response.BlogResponse;
 import iuh.fit.goat.dto.response.ResultPaginationResponse;
 import iuh.fit.goat.entity.Blog;
 import iuh.fit.goat.entity.Comment;
@@ -112,7 +113,11 @@ public class BlogServiceImpl implements BlogService {
         meta.setPages(page.getTotalPages());
         meta.setTotal(page.getTotalElements());
 
-        return new ResultPaginationResponse(meta, page.getContent());
+        List<BlogResponse> blogResponses = page.getContent().stream()
+                .map(this :: convertToBlogResponse)
+                .toList();
+
+        return new ResultPaginationResponse(meta, blogResponses);
     }
 
     @Override
@@ -158,6 +163,33 @@ public class BlogServiceImpl implements BlogService {
     @Override
     public List<Object[]> handleGetAllTags(String keyword) {
         return this.blogRepository.findAllTags(keyword);
+    }
+
+    @Override
+    public BlogResponse convertToBlogResponse(Blog blog) {
+        BlogResponse response = new BlogResponse();
+
+        response.setBlogId(blog.getBlogId());
+        response.setTitle(blog.getTitle());
+        response.setBanner(blog.getBanner());
+        response.setDescription(blog.getDescription());
+        response.setContent(blog.getContent());
+        response.setTags(blog.getTags());
+        response.setDraft(blog.isDraft());
+        response.setEnabled(blog.isEnabled());
+        response.setActivity(blog.getActivity());
+        response.setCreatedAt(blog.getCreatedAt());
+        response.setCreatedBy(blog.getCreatedBy());
+        response.setUpdatedAt(blog.getUpdatedAt());
+        response.setUpdatedBy(blog.getUpdatedBy());
+
+        BlogResponse.BlogAuthor author = new BlogResponse.BlogAuthor(
+                blog.getAuthor().getUserId(),
+                blog.getAuthor().getFullName()
+        );
+        response.setAuthor(author);
+
+        return response;
     }
 
 }

@@ -1,6 +1,7 @@
 package iuh.fit.goat.service;
 
 import iuh.fit.goat.dto.request.LikeBlogRequest;
+import iuh.fit.goat.dto.response.BlogResponse;
 import iuh.fit.goat.dto.response.ResultPaginationResponse;
 import iuh.fit.goat.entity.Blog;
 import iuh.fit.goat.entity.Comment;
@@ -26,4 +27,6 @@ public interface BlogService {
     List<Notification> handleLikeBlog(LikeBlogRequest likeBlogRequest);
 
     List<Object[]> handleGetAllTags(String keyword);
+
+    BlogResponse convertToBlogResponse(Blog blog);
 }
