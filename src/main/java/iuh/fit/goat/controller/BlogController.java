@@ -2,6 +2,7 @@ package iuh.fit.goat.controller;
 
 import com.turkraft.springfilter.boot.Filter;
 import iuh.fit.goat.dto.request.LikeBlogRequest;
+import iuh.fit.goat.dto.response.BlogResponse;
 import iuh.fit.goat.dto.response.ResultPaginationResponse;
 import iuh.fit.goat.entity.Blog;
 import iuh.fit.goat.entity.Notification;
@@ -27,14 +28,16 @@ public class BlogController {
     @PostMapping
     public ResponseEntity<?> createBlog(@Valid @RequestBody Blog blog) {
         Blog res = this.blogService.handleCreateBlog(blog);
-        return ResponseEntity.status(HttpStatus.CREATED).body(res);
+        BlogResponse blogResponse = this.blogService.convertToBlogResponse(res);
+        return ResponseEntity.status(HttpStatus.CREATED).body(blogResponse);
     }
 
     @PutMapping
     public ResponseEntity<?> updateBlog(@Valid @RequestBody Blog blog) throws InvalidException {
         Blog res = this.blogService.handleUpdateBlog(blog);
         if(res == null) throw new InvalidException("Blog doesn't exist");
-        return ResponseEntity.status(HttpStatus.OK).body(res);
+        BlogResponse blogResponse = this.blogService.convertToBlogResponse(res);
+        return ResponseEntity.status(HttpStatus.OK).body(blogResponse);
     }
 
     @DeleteMapping("/{id}")
@@ -57,7 +60,9 @@ public class BlogController {
         Blog res = this.blogService.handleGetBlogById(Long.parseLong(id));
         if(res == null) throw new InvalidException("Blog doesn't exist");
 
-        return ResponseEntity.status(HttpStatus.OK).body(res);
+        BlogResponse blogResponse = this.blogService.convertToBlogResponse(res);
+
+        return ResponseEntity.status(HttpStatus.OK).body(blogResponse);
     }
 
     @GetMapping

@@ -51,6 +51,8 @@ dependencies {
 	// https://mvnrepository.com/artifact/dnsjava/dnsjava
 	implementation("dnsjava:dnsjava:3.6.3")
 
+	implementation("net.datafaker:datafaker:2.5.3")
+
 	testImplementation("org.springframework.boot:spring-boot-starter-test")
 	testImplementation("org.springframework.security:spring-security-test")
 	testRuntimeOnly("org.junit.platform:junit-platform-launcher")

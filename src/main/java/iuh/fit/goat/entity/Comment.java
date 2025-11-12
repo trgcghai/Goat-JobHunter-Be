@@ -23,7 +23,7 @@ public class Comment {
     @NotBlank(message = "comment is not empty")
     @Column(columnDefinition = "TEXT")
     private String comment;
-    private boolean isReply;
+    private boolean reply;
     private Instant createdAt;
     private String createdBy;
     private Instant updatedAt;

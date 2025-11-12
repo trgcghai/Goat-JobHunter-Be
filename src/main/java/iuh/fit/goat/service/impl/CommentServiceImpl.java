@@ -1,6 +1,7 @@
 package iuh.fit.goat.service.impl;
 
 import iuh.fit.goat.common.NotificationType;
+import iuh.fit.goat.dto.response.CommentResponse;
 import iuh.fit.goat.dto.response.ResultPaginationResponse;
 import iuh.fit.goat.entity.Blog;
 import iuh.fit.goat.entity.Comment;
@@ -19,6 +20,7 @@ import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -132,6 +134,56 @@ public class CommentServiceImpl implements CommentService {
         meta.setPages(page.getTotalPages());
         meta.setTotal(page.getTotalElements());
 
-        return new ResultPaginationResponse(meta, page.getContent());
+        List<CommentResponse> responses = page.getContent().stream()
+                .map(this::convertToCommentResponse)
+                .toList();
+
+        return new ResultPaginationResponse(meta, responses);
     }
+
+    @Override
+    public List<CommentResponse> handleGetCommentsByBlogId(long blogId) {
+        List<Comment> res = this.blogService.handleGetBlogById(blogId).getComments();
+
+        return res.stream()
+                .map(this::convertToCommentResponse)
+                .toList();
+    }
+
+    @Override
+    public CommentResponse convertToCommentResponse(Comment comment) {
+        CommentResponse commentResponse = new CommentResponse();
+
+        commentResponse.setCommentId(comment.getCommentId());
+        commentResponse.setComment(comment.getComment());
+        commentResponse.setReply(comment.isReply());
+
+        if(comment.getBlog() != null) {
+            CommentResponse.BlogComment blog = new CommentResponse.BlogComment(
+                    comment.getBlog().getBlogId(),
+                    comment.getBlog().getTitle()
+            );
+            commentResponse.setBlog(blog);
+        }
+
+        if(comment.getCommentedBy() != null) {
+            CommentResponse.UserCommented commentedBy = new CommentResponse.UserCommented(
+                    comment.getCommentedBy().getUserId(),
+                    comment.getCommentedBy().getContact().getEmail()
+            );
+            commentResponse.setCommentedBy(commentedBy);
+
+        }
+
+        if(comment.getParent() != null) {
+            CommentResponse.ParentComment parent = new CommentResponse.ParentComment(
+                    comment.getParent().getCommentId(),
+                    comment.getParent().getComment()
+            );
+            commentResponse.setParent(parent);
+        }
+
+        return commentResponse;
+    }
+
 }
