@@ -56,14 +56,14 @@ public class JobController {
     }
 
     @GetMapping("/jobs/{id}")
-    public ResponseEntity<Job> getJobById(@PathVariable("id") String id) throws InvalidException {
+    public ResponseEntity<JobResponse> getJobById(@PathVariable("id") String id) throws InvalidException {
         Pattern pattern = Pattern.compile("^[0-9]+$");
         if (pattern.matcher(id).matches()) {
             Job currentJob = this.jobService.handleGetJobById(Long.parseLong(id));
             if (currentJob == null) {
                 throw new InvalidException("Job doesn't exist");
             }
-            return ResponseEntity.status(HttpStatus.OK).body(currentJob);
+            return ResponseEntity.status(HttpStatus.OK).body(this.jobService.convertToJobResponse(currentJob));
         } else {
             throw new InvalidException("Id is number");
         }

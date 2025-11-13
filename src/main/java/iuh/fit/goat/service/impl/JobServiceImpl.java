@@ -170,12 +170,19 @@ public class JobServiceImpl implements JobService {
         jobResponse.setWorkingType(job.getWorkingType());
 
         if(job.getSkills() != null){
-            List<String> skillStr = job.getSkills().stream().map(Skill::getName).toList();
-            jobResponse.setSkills(skillStr);
+            jobResponse.setSkills(job.getSkills());
         }
 
         if(job.getCareer() != null){
             jobResponse.setCareer(job.getCareer());
+        }
+
+        if(job.getRecruiter() != null){
+            JobResponse.RecruiterJob recruiterJob = new JobResponse.RecruiterJob(
+                    job.getRecruiter().getUserId(),
+                    job.getRecruiter().getFullName()
+            );
+            jobResponse.setRecruiter(recruiterJob);
         }
 
         return jobResponse;
