@@ -46,7 +46,6 @@ public class UserController {
     public <T extends User> ResponseEntity<T> getUserByEmail() {
         String email = SecurityUtil.getCurrentUserLogin().isPresent() ? SecurityUtil.getCurrentUserLogin().get() : null;
         User user =  this.userService.handleGetUserByEmail(email);
-        System.out.println();
         return ResponseEntity.status(HttpStatus.OK).body((T) user);
     }
 

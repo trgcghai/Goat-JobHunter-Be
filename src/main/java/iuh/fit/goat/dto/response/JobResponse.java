@@ -1,6 +1,7 @@
 package iuh.fit.goat.dto.response;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
+import iuh.fit.goat.entity.Skill;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -29,11 +30,21 @@ public class JobResponse {
     private LocalDate startDate;
     private LocalDate endDate;
     private boolean active;
-    private List<String> skills;
+    private List<Skill> skills;
     private Career career;
+    private RecruiterJob recruiter;
 
     private Instant createdAt;
     private String createdBy;
     private Instant updatedAt;
     private String updatedBy;
+
+    @Getter
+    @Setter
+    @NoArgsConstructor
+    @AllArgsConstructor
+    public static class RecruiterJob {
+        private long userId;
+        private String fullName;
+    }
 }

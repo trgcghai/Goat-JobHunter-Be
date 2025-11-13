@@ -68,7 +68,6 @@ public class AuthServiceImpl implements AuthService {
 
         LoginResponse loginResponse = new LoginResponse();
         User currentUser = this.userService.handleGetUserByEmail(loginRequest.getEmail());
-        System.out.println(currentUser);
         if (currentUser == null) {
             throw new InvalidException("Invalid account");
         }
