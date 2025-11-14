@@ -1,6 +1,7 @@
 package iuh.fit.goat.entity;
 
 import iuh.fit.goat.common.NotificationType;
+import iuh.fit.goat.util.SecurityUtil;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -21,6 +22,7 @@ public class Notification {
     private NotificationType type;
     private boolean seen;
     private Instant createdAt;
+    private String createdBy;
 
     @ManyToOne
     @JoinColumn(name = "blog_id")
@@ -49,5 +51,8 @@ public class Notification {
     @PrePersist
     public void handleBeforeCreate(){
         this.createdAt = Instant.now();
+        this.createdBy = SecurityUtil.getCurrentUserLogin().isPresent()
+                ? SecurityUtil.getCurrentUserLogin().get()
+                : "";
     }
 }
