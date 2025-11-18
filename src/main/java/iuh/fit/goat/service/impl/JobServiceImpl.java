@@ -163,6 +163,7 @@ public class JobServiceImpl implements JobService {
         jobResponse.setLocation(job.getLocation());
         jobResponse.setSalary(job.getSalary());
         jobResponse.setQuantity(job.getQuantity());
+        jobResponse.setDescription(job.getDescription());
         jobResponse.setLevel(job.getLevel());
         jobResponse.setStartDate(job.getStartDate());
         jobResponse.setEndDate(job.getEndDate());

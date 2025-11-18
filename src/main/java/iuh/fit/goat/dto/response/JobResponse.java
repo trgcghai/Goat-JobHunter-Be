@@ -25,6 +25,7 @@ public class JobResponse {
     private String location;
     private double salary;
     private int quantity;
+    private String description;
     private Level level;
     private WorkingType workingType;
     private LocalDate startDate;
