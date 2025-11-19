@@ -69,7 +69,7 @@ public class UserController {
                 .from("accessToken", result.get("accessToken").toString())
                 .httpOnly(true)
                 .secure(false) // for dev
-                .sameSite("None") // for dev
+                .sameSite("Lax") // for dev
                 .path("/")
                 .maxAge(jwtRefreshToken)
                 .build();
@@ -77,7 +77,7 @@ public class UserController {
                 .from("refreshToken", result.get("refreshToken").toString())
                 .httpOnly(true)
                 .secure(false) // for dev
-                .sameSite("None") // for dev
+                .sameSite("Lax") // for dev
                 .path("/")
                 .maxAge(jwtRefreshToken)
                 .build();

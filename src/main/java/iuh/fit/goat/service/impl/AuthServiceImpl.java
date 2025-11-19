@@ -91,7 +91,7 @@ public class AuthServiceImpl implements AuthService {
                 .from("accessToken", accessToken)
                 .httpOnly(true)
                 .secure(false) // for dev
-                .sameSite("None") // for dev
+                .sameSite("Lax") // for dev
                 .path("/")
                 .maxAge(jwtAccessToken)
                 .build();
@@ -100,7 +100,7 @@ public class AuthServiceImpl implements AuthService {
                 .from("refreshToken", refreshToken)
                 .httpOnly(true)
                 .secure(false) // for dev
-                .sameSite("None") // for dev
+                .sameSite("Lax") // for dev
                 .path("/")
                 .maxAge(jwtAccessToken)
                 .build();
@@ -159,7 +159,7 @@ public class AuthServiceImpl implements AuthService {
                 .from("accessToken", newAccessToken)
                 .httpOnly(true)
                 .secure(false) // for dev
-                .sameSite("None") // for dev
+                .sameSite("Lax") // for dev
                 .path("/")
                 .maxAge(jwtAccessToken)
                 .build();
@@ -168,7 +168,7 @@ public class AuthServiceImpl implements AuthService {
                 .from("refreshToken", newRefreshToken)
                 .httpOnly(true)
                 .secure(false) // for dev
-                .sameSite("None") // for dev
+                .sameSite("Lax") // for dev
                 .path("/")
                 .maxAge(jwtRefreshToken)
                 .build();
