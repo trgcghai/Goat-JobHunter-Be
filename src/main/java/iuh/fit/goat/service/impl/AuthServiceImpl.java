@@ -20,6 +20,7 @@ import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseCookie;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -72,11 +73,7 @@ public class AuthServiceImpl implements AuthService {
             throw new InvalidException("Invalid account");
         }
         if(!currentUser.isEnabled()) {
-            return ResponseEntity.badRequest().body(
-                    Map.of(
-                            "message", "Account is locked"
-                    )
-            );
+            throw new InvalidException("Account is locked");
         }
         loginResponse.setUser(createUserLogin(currentUser));
 

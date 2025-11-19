@@ -82,7 +82,6 @@ public class ApplicantServiceImpl implements ApplicantService {
             currentApplicant.setLevel(applicant.getLevel());
             currentApplicant.setResumeUrl(applicant.getResumeUrl());
             currentApplicant.setAvatar(applicant.getAvatar());
-            currentApplicant.setEnabled(applicant.isEnabled());
 
             if(applicant.getRole() != null){
                 Role role = this.roleService.handleGetRoleById(applicant.getRole().getRoleId());
