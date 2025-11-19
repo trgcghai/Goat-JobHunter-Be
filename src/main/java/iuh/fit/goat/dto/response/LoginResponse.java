@@ -1,15 +1,17 @@
 package iuh.fit.goat.dto.response;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
+import iuh.fit.goat.common.Gender;
 import iuh.fit.goat.entity.Job;
 import iuh.fit.goat.entity.Notification;
 import iuh.fit.goat.entity.Recruiter;
 import iuh.fit.goat.entity.Role;
+import iuh.fit.goat.entity.embeddable.Contact;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+import java.time.LocalDate;
 import java.util.List;
 
 @Getter
@@ -25,7 +27,9 @@ public class LoginResponse {
     @AllArgsConstructor
     public static class UserLogin {
         private long userId;
-        private String email;
+        private Contact contact;
+        private LocalDate dob;
+        private Gender gender;
         private String fullName;
         private String username;
         private String avatar;

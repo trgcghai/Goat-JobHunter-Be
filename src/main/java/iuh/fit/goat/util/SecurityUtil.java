@@ -2,7 +2,6 @@ package iuh.fit.goat.util;
 
 import com.nimbusds.jose.util.Base64;
 import iuh.fit.goat.dto.response.LoginResponse;
-import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -16,8 +15,6 @@ import javax.crypto.spec.SecretKeySpec;
 import java.time.Duration;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Optional;
 import java.util.Random;
 
@@ -48,7 +45,7 @@ public class SecurityUtil {
                 .expiresAt(validity)
                 .subject(email)
                 .claim("userId", user.getUserId())
-                .claim("email", user.getEmail())
+                .claim("email", user.getContact().getEmail())
                 .claim("fullName", user.getFullName())
                 .build();
 

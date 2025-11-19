@@ -103,14 +103,22 @@ public class UserServiceImpl implements UserService {
             User res = this.userRepository.save(currentUser);
 
             LoginResponse loginResponse = new LoginResponse();
-            LoginResponse.UserLogin userLogin = new LoginResponse.UserLogin(
-                    res.getUserId(), res.getContact().getEmail(),
-                    res.getFullName(), res.getUsername(), res.getAvatar(),
-                    res instanceof Applicant ? Role.APPLICANT.getValue() : Role.RECRUITER.getValue(),
-                    res.isEnabled(),
-                    res.getRole(), res.getSavedJobs(), res.getFollowedRecruiters(),
-                    res.getActorNotifications()
-            );
+            LoginResponse.UserLogin userLogin = new LoginResponse.UserLogin();
+
+            userLogin.setUserId(res.getUserId());
+            userLogin.setDob(res.getDob());
+            userLogin.setGender(res.getGender());
+            userLogin.setFullName(res.getFullName());
+            userLogin.setUsername(res.getUsername());
+            userLogin.setContact(res.getContact());
+            userLogin.setAvatar(res.getAvatar());
+            userLogin.setType(res instanceof Applicant ? Role.APPLICANT.getValue() : Role.RECRUITER.getValue());
+            userLogin.setRole(res.getRole());
+            userLogin.setSavedJobs(res.getSavedJobs());
+            userLogin.setFollowedRecruiters(res.getFollowedRecruiters());
+            userLogin.setActorNotifications(res.getActorNotifications());
+            userLogin.setEnabled(res.isEnabled());
+
             loginResponse.setUser(userLogin);
             String newAccessToken = this.securityUtil.createAccessToken(currentEmail, loginResponse);
             String newRefreshToken = this.securityUtil.createRefreshToken(currentEmail, loginResponse);

@@ -1,5 +1,6 @@
 package iuh.fit.goat.service.impl;
 
+
 import iuh.fit.goat.common.Role;
 import iuh.fit.goat.dto.request.LoginRequest;
 import iuh.fit.goat.dto.request.VerifyUserRequest;
@@ -9,6 +10,7 @@ import iuh.fit.goat.dto.response.RecruiterResponse;
 import iuh.fit.goat.entity.Applicant;
 import iuh.fit.goat.entity.Recruiter;
 import iuh.fit.goat.entity.User;
+import iuh.fit.goat.entity.embeddable.Contact;
 import iuh.fit.goat.exception.InvalidException;
 import iuh.fit.goat.repository.RecruiterRepository;
 import iuh.fit.goat.repository.UserRepository;
@@ -30,9 +32,8 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.stereotype.Service;
 
-import java.util.Collections;
-import java.util.Map;
-import java.util.Optional;
+
+import java.util.*;
 import java.util.concurrent.TimeUnit;
 
 @Service
@@ -77,20 +78,7 @@ public class AuthServiceImpl implements AuthService {
                     )
             );
         }
-
-        LoginResponse.UserLogin userLogin = new LoginResponse.UserLogin(
-                currentUser.getUserId(), currentUser.getContact().getEmail(),
-                currentUser.getFullName() != null ? currentUser.getFullName() : "",
-                currentUser.getUsername() != null ? currentUser.getUsername() : "",
-                currentUser.getAvatar() != null ? currentUser.getAvatar() : "",
-                currentUser instanceof Applicant ? Role.APPLICANT.getValue() : Role.RECRUITER.getValue(),
-                true,
-                currentUser.getRole(),
-                Optional.ofNullable(currentUser.getSavedJobs()).orElse(Collections.emptyList()),
-                Optional.ofNullable(currentUser.getFollowedRecruiters()).orElse(Collections.emptyList()),
-                Optional.ofNullable(currentUser.getActorNotifications()).orElse(Collections.emptyList())
-        );
-        loginResponse.setUser(userLogin);
+        loginResponse.setUser(createUserLogin(currentUser));
 
         String accessToken = this.securityUtil.createAccessToken(currentUser.getContact().getEmail(), loginResponse);
         String refreshToken = this.securityUtil.createRefreshToken(currentUser.getContact().getEmail(), loginResponse);
@@ -157,15 +145,7 @@ public class AuthServiceImpl implements AuthService {
         SecurityContextHolder.getContext().setAuthentication(authentication);
 
         LoginResponse loginResponse = new LoginResponse();
-        LoginResponse.UserLogin currentUserLogin = new LoginResponse.UserLogin();
-        currentUserLogin.setUserId(currentUser.getUserId());
-        currentUserLogin.setFullName(currentUser.getFullName());
-        currentUserLogin.setEmail(currentUser.getContact().getEmail());
-        currentUserLogin.setRole(currentUser.getRole());
-        currentUserLogin.setSavedJobs(currentUser.getSavedJobs());
-        currentUserLogin.setFollowedRecruiters(currentUser.getFollowedRecruiters());
-        currentUserLogin.setActorNotifications(currentUser.getActorNotifications());
-        loginResponse.setUser(currentUserLogin);
+        loginResponse.setUser(createUserLogin(currentUser));
 
         String newAccessToken = this.securityUtil.createAccessToken(email, loginResponse);
         String newRefreshToken = this.securityUtil.createAccessToken(email, loginResponse);
@@ -234,23 +214,10 @@ public class AuthServiceImpl implements AuthService {
                 : "";
 
         User currentUser = this.userService.handleGetUserByEmail(currentEmail);
-        LoginResponse.UserLogin currentUserLogin = new LoginResponse.UserLogin();
         LoginResponse.UserGetAccount userGetAccount = new LoginResponse.UserGetAccount();
         if(currentUser != null) {
-            currentUserLogin.setUserId(currentUser.getUserId());
-            currentUserLogin.setFullName(currentUser.getFullName());
-            currentUserLogin.setUsername(currentUser.getUsername());
-            currentUserLogin.setEmail(currentUser.getContact().getEmail());
-            currentUserLogin.setAvatar(currentUser.getAvatar());
-            currentUserLogin.setType(currentUser instanceof Applicant ? Role.APPLICANT.getValue() : Role.RECRUITER.getValue());
-            currentUserLogin.setRole(currentUser.getRole());
-            currentUserLogin.setSavedJobs(currentUser.getSavedJobs());
-            currentUserLogin.setFollowedRecruiters(currentUser.getFollowedRecruiters());
-            currentUserLogin.setActorNotifications(currentUser.getActorNotifications());
-            currentUserLogin.setEnabled(currentUser.isEnabled());
-            userGetAccount.setUser(currentUserLogin);
+            userGetAccount.setUser(createUserLogin(currentUser));
         }
-
         return userGetAccount;
     }
 
@@ -288,9 +255,8 @@ public class AuthServiceImpl implements AuthService {
         recruiter.setPassword(hashPassword);
 
         Recruiter newRecruiter = this.recruiterService.handleCreateRecruiter(recruiter);
-        RecruiterResponse recruiterResponse = this.recruiterService.convertToRecruiterResponse(newRecruiter);
 
-        return recruiterResponse;
+        return this.recruiterService.convertToRecruiterResponse(newRecruiter);
     }
 
     @Override
@@ -344,4 +310,25 @@ public class AuthServiceImpl implements AuthService {
         this.emailService.handleSendVerificationEmail(key, verificationCode);
     }
 
+    private LoginResponse.UserLogin createUserLogin(User user) {
+
+        LoginResponse.UserLogin currentUserLogin = new LoginResponse.UserLogin();
+
+        currentUserLogin.setUserId(user.getUserId());
+        currentUserLogin.setDob(user.getDob());
+        currentUserLogin.setGender(user.getGender());
+        currentUserLogin.setFullName(Objects.requireNonNullElse(user.getFullName(), ""));
+        currentUserLogin.setUsername(Objects.requireNonNullElse(user.getUsername(), ""));
+        currentUserLogin.setContact((Contact) Objects.requireNonNullElse(user.getContact(), ""));
+        currentUserLogin.setAvatar(Objects.requireNonNullElse(user.getAvatar(), ""));
+        currentUserLogin.setType(user instanceof Applicant ? Role.APPLICANT.getValue() : Role.RECRUITER.getValue());
+        currentUserLogin.setRole((iuh.fit.goat.entity.Role) Objects.requireNonNullElse(user.getRole(), ""));
+        currentUserLogin.setSavedJobs(Objects.requireNonNullElse(user.getSavedJobs(), new ArrayList<>()));
+        currentUserLogin.setFollowedRecruiters(Objects.requireNonNullElse(user.getFollowedRecruiters(), new ArrayList<>()));
+        currentUserLogin.setActorNotifications(Objects.requireNonNullElse(user.getActorNotifications(), new ArrayList<>()));
+        currentUserLogin.setEnabled(user.isEnabled());
+
+
+        return currentUserLogin;
+    }
 }
