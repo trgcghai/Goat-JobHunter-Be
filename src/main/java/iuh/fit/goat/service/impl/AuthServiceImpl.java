@@ -90,8 +90,8 @@ public class AuthServiceImpl implements AuthService {
         ResponseCookie accessCookie = ResponseCookie
                 .from("accessToken", accessToken)
                 .httpOnly(true)
-//                .secure(true)
-//                .sameSite("Strict")
+                .secure(false) // for dev
+                .sameSite("None") // for dev
                 .path("/")
                 .maxAge(jwtAccessToken)
                 .build();
@@ -99,10 +99,10 @@ public class AuthServiceImpl implements AuthService {
         ResponseCookie refreshCookie = ResponseCookie
                 .from("refreshToken", refreshToken)
                 .httpOnly(true)
-                .secure(true)
-//                .sameSite("Strict")
-//                .path("/")
-                .maxAge(jwtRefreshToken)
+                .secure(false) // for dev
+                .sameSite("None") // for dev
+                .path("/")
+                .maxAge(jwtAccessToken)
                 .build();
 
         response.addHeader(HttpHeaders.SET_COOKIE, accessCookie.toString());
