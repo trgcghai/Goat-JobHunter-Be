@@ -68,14 +68,16 @@ public class UserController {
         ResponseCookie accessTokenCookie = ResponseCookie
                 .from("accessToken", result.get("accessToken").toString())
                 .httpOnly(true)
-                .secure(true)
+                .secure(false) // for dev
+                .sameSite("None") // for dev
                 .path("/")
                 .maxAge(jwtRefreshToken)
                 .build();
         ResponseCookie refreshTokenCookie = ResponseCookie
                 .from("refreshToken", result.get("refreshToken").toString())
                 .httpOnly(true)
-                .secure(true)
+                .secure(false) // for dev
+                .sameSite("None") // for dev
                 .path("/")
                 .maxAge(jwtRefreshToken)
                 .build();

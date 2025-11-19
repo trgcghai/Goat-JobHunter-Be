@@ -30,7 +30,6 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.stereotype.Service;
 
-import java.time.LocalDateTime;
 import java.util.Collections;
 import java.util.Map;
 import java.util.Optional;
@@ -182,8 +181,8 @@ public class AuthServiceImpl implements AuthService {
         ResponseCookie newAccessCookie = ResponseCookie
                 .from("accessToken", newAccessToken)
                 .httpOnly(true)
-//                .secure(true)
-//                .sameSite("Strict")
+                .secure(false) // for dev
+                .sameSite("None") // for dev
                 .path("/")
                 .maxAge(jwtAccessToken)
                 .build();
@@ -191,8 +190,8 @@ public class AuthServiceImpl implements AuthService {
         ResponseCookie newRefreshCookie = ResponseCookie
                 .from("refreshToken", newRefreshToken)
                 .httpOnly(true)
-//                .secure(true)
-//                .sameSite("Strict")
+                .secure(false) // for dev
+                .sameSite("None") // for dev
                 .path("/")
                 .maxAge(jwtRefreshToken)
                 .build();
@@ -248,7 +247,7 @@ public class AuthServiceImpl implements AuthService {
             currentUserLogin.setSavedJobs(currentUser.getSavedJobs());
             currentUserLogin.setFollowedRecruiters(currentUser.getFollowedRecruiters());
             currentUserLogin.setActorNotifications(currentUser.getActorNotifications());
-
+            currentUserLogin.setEnabled(currentUser.isEnabled());
             userGetAccount.setUser(currentUserLogin);
         }
 
