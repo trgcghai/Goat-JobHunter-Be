@@ -36,9 +36,6 @@ public class LoginResponse {
         private String type;
         private boolean enabled;
         private Role role;
-        private List<Job> savedJobs;
-        private List<Recruiter> followedRecruiters;
-        private List<Notification> actorNotifications;
     }
 
     @Getter

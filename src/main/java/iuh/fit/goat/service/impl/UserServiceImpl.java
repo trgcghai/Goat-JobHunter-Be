@@ -114,9 +114,6 @@ public class UserServiceImpl implements UserService {
             userLogin.setAvatar(res.getAvatar());
             userLogin.setType(res instanceof Applicant ? Role.APPLICANT.getValue() : Role.RECRUITER.getValue());
             userLogin.setRole(res.getRole());
-            userLogin.setSavedJobs(res.getSavedJobs());
-            userLogin.setFollowedRecruiters(res.getFollowedRecruiters());
-            userLogin.setActorNotifications(res.getActorNotifications());
             userLogin.setEnabled(res.isEnabled());
 
             loginResponse.setUser(userLogin);

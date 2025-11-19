@@ -320,9 +320,6 @@ public class AuthServiceImpl implements AuthService {
         currentUserLogin.setAvatar(Objects.requireNonNullElse(user.getAvatar(), ""));
         currentUserLogin.setType(user instanceof Applicant ? Role.APPLICANT.getValue() : Role.RECRUITER.getValue());
         currentUserLogin.setRole((iuh.fit.goat.entity.Role) Objects.requireNonNullElse(user.getRole(), ""));
-        currentUserLogin.setSavedJobs(Objects.requireNonNullElse(user.getSavedJobs(), new ArrayList<>()));
-        currentUserLogin.setFollowedRecruiters(Objects.requireNonNullElse(user.getFollowedRecruiters(), new ArrayList<>()));
-        currentUserLogin.setActorNotifications(Objects.requireNonNullElse(user.getActorNotifications(), new ArrayList<>()));
         currentUserLogin.setEnabled(user.isEnabled());
 
 
