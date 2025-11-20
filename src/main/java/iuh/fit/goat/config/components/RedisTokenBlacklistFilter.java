@@ -27,8 +27,8 @@ public class RedisTokenBlacklistFilter extends OncePerRequestFilter {
     ) throws ServletException, IOException {
 
         String[] whiteList = {
-                "/ping",                             // Kiểm tra trạng thái server
-                "/clear-cookies",                    // Xóa toàn bộ cookies trên FE
+                "/api/v1/ping",                       // Endpoint kiểm tra trạng thái server
+                "/api/v1/clear-cookies",              // Xóa toàn bộ cookies trên FE – không cần phân quyền
 
                 "/",                                  // Trang gốc
 
