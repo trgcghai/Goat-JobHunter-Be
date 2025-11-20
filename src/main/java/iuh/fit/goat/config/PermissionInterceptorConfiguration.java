@@ -38,7 +38,11 @@ public class PermissionInterceptorConfiguration implements WebMvcConfigurer {
                 "/api/v1/users",                     // Đăng ký hoặc truy vấn user – public
                 "/api/v1/comments/**",               // Bình luận (đọc/ghi) – public
                 "/api/v1/blogs/**",                  // Bài viết blog – public
-                "/api/v1/email/**"                   // Gửi email/liên hệ – public
+                "/api/v1/email/**",                  // Gửi email/liên hệ – public
+
+                "/v3/api-docs/**",                    // Tài liệu OpenAPI – public
+                "/swagger-ui/**",                     // Swagger UI – public
+                "/swagger-ui.html"                    // Trang Swagger – public
         };
 
         registry.addInterceptor(getPermissionInterceptor())
