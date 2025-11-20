@@ -1,5 +1,6 @@
 package iuh.fit.goat.controller;
 
+import jakarta.annotation.security.PermitAll;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -12,11 +13,13 @@ import org.springframework.web.bind.annotation.RestController;
 @RequiredArgsConstructor
 public class PingController {
 
+    @PermitAll
     @GetMapping("/ping")
     public ResponseEntity<String> ping() {
         return ResponseEntity.ok("Server is running");
     }
 
+    @PermitAll
     @GetMapping("/clear-cookies")
     public ResponseEntity<String> clearCookies(HttpServletRequest request, HttpServletResponse response) {
 
