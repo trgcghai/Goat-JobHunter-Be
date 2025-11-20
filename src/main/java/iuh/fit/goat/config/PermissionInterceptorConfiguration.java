@@ -18,7 +18,6 @@ public class PermissionInterceptorConfiguration implements WebMvcConfigurer {
         String[] whiteList = {
                 "/ping",                             // Endpoint kiểm tra trạng thái server
                 "/clear-cookies",                    // Xóa toàn bộ cookies trên FE – không cần phân quyền
-                "/api/v1/users/me/**",               // Endpoint lấy/chỉnh sửa thông tin người dùng hiện tại – cho phép trực tiếp
                 "/",                                 // Trang gốc – public
                 "/api/v1/auth/**",                   // Các endpoint xác thực (login, refresh token, logout) – phải public
                 "/storage/**",                       // Tải/hiển thị file tĩnh – public
@@ -29,13 +28,14 @@ public class PermissionInterceptorConfiguration implements WebMvcConfigurer {
                 "/api/v1/applications/**",           // Ứng tuyển công việc – cho ứng viên sử dụng trực tiếp
                 "/api/v1/careers/**",                // Dữ liệu ngành nghề – public
                 "/api/v1/roles/**",                  // Lấy danh sách role – không cần kiểm tra permission
-                "/api/v1/users",                     // Đăng ký hoặc truy vấn user – public
-                "/api/v1/users/update-password",     // Cập nhật mật khẩu bằng token – cần bỏ qua interceptor
-                "/api/v1/users/reset-password",      // Quên mật khẩu / reset mật khẩu – public
                 "/api/v1/subscribers/**",            // Đăng ký nhận bản tin – public
                 "/api/v1/dashboard/**",              // Dashboard thống kê public (nếu không yêu cầu phân quyền)
+                "/api/v1/users/me/**",               // Truy vấn, thao tác với resource của chính user đang login, không cần kiểm tra permission
+                "/api/v1/users/update-password",     // Cập nhật mật khẩu bằng token – cần bỏ qua interceptor
+                "/api/v1/users/reset-password",      // Quên mật khẩu / reset mật khẩu – public
                 "/api/v1/users/saved-jobs",          // Danh sách công việc đã lưu – cho phép FE sử dụng
                 "/api/v1/users/followed-recruiters", // Danh sách NTĐ đã theo dõi – cho phép FE sử dụng
+                "/api/v1/users",                     // Đăng ký hoặc truy vấn user – public
                 "/api/v1/comments/**",               // Bình luận (đọc/ghi) – public
                 "/api/v1/blogs/**",                  // Bài viết blog – public
                 "/api/v1/email/**"                   // Gửi email/liên hệ – public
