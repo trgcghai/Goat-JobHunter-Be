@@ -6,11 +6,13 @@ import iuh.fit.goat.dto.request.SaveJobRequest;
 import iuh.fit.goat.dto.request.VerifyUserRequest;
 import iuh.fit.goat.dto.response.ResultPaginationResponse;
 import iuh.fit.goat.dto.response.UserResponse;
+import iuh.fit.goat.entity.Job;
 import iuh.fit.goat.entity.User;
 import iuh.fit.goat.exception.InvalidException;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 
+import java.util.List;
 import java.util.Map;
 
 public interface UserService {
@@ -33,4 +35,12 @@ public interface UserService {
     UserResponse handleFollowRecruiters(FollowRecruiterRequest followRecruiterRequest);
 
     UserResponse convertToUserResponse(User user);
+
+    List<Job> handleGetCurrentUserSavedJobs();
+
+    List<Map<String, Object>> handleCheckJobsSaved(List<Long> jobIds);
+
+    UserResponse handleSaveJobsForCurrentUser(List<Long> jobIds);
+
+    UserResponse handleUnsaveJobsForCurrentUser(List<Long> jobIds);
 }

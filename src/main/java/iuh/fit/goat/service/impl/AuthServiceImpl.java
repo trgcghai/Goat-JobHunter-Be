@@ -80,6 +80,8 @@ public class AuthServiceImpl implements AuthService {
         String accessToken = this.securityUtil.createAccessToken(currentUser.getContact().getEmail(), loginResponse);
         String refreshToken = this.securityUtil.createRefreshToken(currentUser.getContact().getEmail(), loginResponse);
 
+        System.out.println("Refresh Token Created in Login: " + refreshToken);
+
         this.redisService.saveWithTTL(
                 "refresh:" + refreshToken,
                 currentUser.getContact().getEmail(),
@@ -102,7 +104,7 @@ public class AuthServiceImpl implements AuthService {
                 .secure(false) // for dev
                 .sameSite("Lax") // for dev
                 .path("/")
-                .maxAge(jwtAccessToken)
+                .maxAge(jwtRefreshToken)
                 .build();
 
         response.addHeader(HttpHeaders.SET_COOKIE, accessCookie.toString());
@@ -116,6 +118,7 @@ public class AuthServiceImpl implements AuthService {
         if(refreshToken.equalsIgnoreCase("missingValue")) {
             throw new InvalidException("You don't have a refresh token at cookie");
         }
+        System.out.println("Refresh Token in Redis: " + refreshToken);
         if (!this.redisService.hasKey("refresh:" + refreshToken)) {
             throw new InvalidException("Invalid or expired refresh token");
         }
@@ -145,7 +148,7 @@ public class AuthServiceImpl implements AuthService {
         loginResponse.setUser(createUserLogin(currentUser));
 
         String newAccessToken = this.securityUtil.createAccessToken(email, loginResponse);
-        String newRefreshToken = this.securityUtil.createAccessToken(email, loginResponse);
+        String newRefreshToken = this.securityUtil.createRefreshToken(email, loginResponse);
 
         this.redisService.replaceKey(
                 "refresh:" + refreshToken,
@@ -191,11 +194,17 @@ public class AuthServiceImpl implements AuthService {
         );
 
         ResponseCookie deleteAccessCookie = ResponseCookie.from("accessToken", "")
+                .httpOnly(true)
+                .secure(false) // for dev
+                .sameSite("Lax") // for dev
                 .path("/")
                 .maxAge(0)
                 .build();
 
         ResponseCookie deleteRefreshCookie = ResponseCookie.from("refreshToken", "")
+                .httpOnly(true)
+                .secure(false) // for dev
+                .sameSite("Lax") // for dev
                 .path("/")
                 .maxAge(0)
                 .build();

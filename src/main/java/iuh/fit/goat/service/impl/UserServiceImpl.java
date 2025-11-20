@@ -183,6 +183,105 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
+    public List<Job> handleGetCurrentUserSavedJobs() {
+        String currentEmail = SecurityUtil.getCurrentUserLogin().isPresent() ?
+                SecurityUtil.getCurrentUserLogin().get() : "";
+
+        if (currentEmail.isEmpty()) {
+            return new ArrayList<>();
+        }
+
+        User currentUser = this.handleGetUserByEmail(currentEmail);
+        if (currentUser == null || currentUser.getSavedJobs() == null) {
+            return new ArrayList<>();
+        }
+
+        return currentUser.getSavedJobs();
+    }
+
+    @Override
+    public List<Map<String, Object>> handleCheckJobsSaved(List<Long> jobIds) {
+        String currentEmail = SecurityUtil.getCurrentUserLogin().isPresent() ?
+                SecurityUtil.getCurrentUserLogin().get() : "";
+
+        if (currentEmail.isEmpty()) {
+            return new ArrayList<>();
+        }
+
+        User currentUser = this.handleGetUserByEmail(currentEmail);
+        List<Long> savedJobIds = currentUser.getSavedJobs() != null
+                ? currentUser.getSavedJobs().stream().map(Job::getJobId).toList()
+                : new ArrayList<>();
+
+        return jobIds.stream()
+                .map(jobId -> {
+                    Map<String, Object> result = new HashMap<>();
+                    result.put("jobId", jobId);
+                    result.put("result", savedJobIds.contains(jobId));
+                    return result;
+                })
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    public UserResponse handleSaveJobsForCurrentUser(List<Long> jobIds) {
+        String currentEmail = SecurityUtil.getCurrentUserLogin().isPresent() ?
+                SecurityUtil.getCurrentUserLogin().get() : "";
+
+        if (currentEmail.isEmpty()) {
+            return null;
+        }
+
+        User currentUser = this.handleGetUserByEmail(currentEmail);
+        if (currentUser == null) {
+            return null;
+        }
+
+        List<Job> currentSavedJobs = currentUser.getSavedJobs() != null
+                ? new ArrayList<>(currentUser.getSavedJobs())
+                : new ArrayList<>();
+
+        List<Job> jobsToAdd = this.jobRepository.findByJobIdIn(jobIds);
+
+        for (Job job : jobsToAdd) {
+            if (!currentSavedJobs.stream().anyMatch(j -> j.getJobId() == job.getJobId())) {
+                currentSavedJobs.add(job);
+            }
+        }
+
+        currentUser.setSavedJobs(currentSavedJobs);
+        this.userRepository.save(currentUser);
+
+        return this.convertToUserResponse(currentUser);
+    }
+
+    @Override
+    public UserResponse handleUnsaveJobsForCurrentUser(List<Long> jobIds) {
+        String currentEmail = SecurityUtil.getCurrentUserLogin().isPresent() ?
+                SecurityUtil.getCurrentUserLogin().get() : "";
+
+        if (currentEmail.isEmpty()) {
+            return null;
+        }
+
+        User currentUser = this.handleGetUserByEmail(currentEmail);
+        if (currentUser == null) {
+            return null;
+        }
+
+        List<Job> currentSavedJobs = currentUser.getSavedJobs() != null
+                ? new ArrayList<>(currentUser.getSavedJobs())
+                : new ArrayList<>();
+
+        currentSavedJobs.removeIf(job -> jobIds.contains(job.getJobId()));
+
+        currentUser.setSavedJobs(currentSavedJobs);
+        this.userRepository.save(currentUser);
+
+        return this.convertToUserResponse(currentUser);
+    }
+
+    @Override
     public UserResponse convertToUserResponse(User user) {
         UserResponse userResponse = new UserResponse();
 

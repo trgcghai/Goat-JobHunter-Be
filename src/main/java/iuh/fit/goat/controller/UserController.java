@@ -8,6 +8,7 @@ import iuh.fit.goat.dto.request.UpdatePasswordRequest;
 import iuh.fit.goat.dto.response.LoginResponse;
 import iuh.fit.goat.dto.response.ResultPaginationResponse;
 import iuh.fit.goat.dto.response.UserResponse;
+import iuh.fit.goat.entity.Job;
 import iuh.fit.goat.entity.User;
 import iuh.fit.goat.exception.InvalidException;
 import iuh.fit.goat.service.UserService;
@@ -23,6 +24,7 @@ import org.springframework.http.ResponseCookie;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
 import java.util.Map;
 
 @RestController
@@ -31,6 +33,8 @@ import java.util.Map;
 public class UserController {
     private final UserService userService;
 
+    @Value("${minhdat.jwt.access-token-validity-in-seconds}")
+    private long jwtAccessToken;
     @Value("${minhdat.jwt.refresh-token-validity-in-seconds}")
     private long jwtRefreshToken;
 
@@ -71,7 +75,7 @@ public class UserController {
                 .secure(false) // for dev
                 .sameSite("Lax") // for dev
                 .path("/")
-                .maxAge(jwtRefreshToken)
+                .maxAge(jwtAccessToken)
                 .build();
         ResponseCookie refreshTokenCookie = ResponseCookie
                 .from("refreshToken", result.get("refreshToken").toString())
@@ -101,16 +105,47 @@ public class UserController {
         }
     }
 
-    @PutMapping("/users/saved-jobs")
-    public ResponseEntity<UserResponse> saveJobs(@Valid @RequestBody SaveJobRequest saveJobRequest)
-            throws InvalidException
-    {
-        User user = this.userService.handleGetUserById(saveJobRequest.getUserId());
-        if(user == null) {
-            throw new InvalidException("User not found");
+    @GetMapping("/users/me/saved-jobs")
+    public ResponseEntity<List<Job>> getCurrentUserSavedJobs() {
+        List<Job> savedJobs = this.userService.handleGetCurrentUserSavedJobs();
+        return ResponseEntity.status(HttpStatus.OK).body(savedJobs);
+    }
+
+    @GetMapping("/users/me/saved-jobs/contains")
+    public ResponseEntity<List<Map<String, Object>>> checkJobsSaved(@RequestParam List<Long> jobIds) {
+        List<Map<String, Object>> result = this.userService.handleCheckJobsSaved(jobIds);
+        return ResponseEntity.status(HttpStatus.OK).body(result);
+    }
+
+    @PutMapping("/users/me/saved-jobs")
+    public ResponseEntity<UserResponse> saveJobsForCurrentUser(@RequestBody Map<String, List<Long>> request)
+            throws InvalidException {
+        List<Long> jobIds = request.get("jobIds");
+        if (jobIds == null || jobIds.isEmpty()) {
+            throw new InvalidException("Job IDs list cannot be empty");
         }
 
-        UserResponse userResponse = this.userService.handleSaveJobs(saveJobRequest);
+        UserResponse userResponse = this.userService.handleSaveJobsForCurrentUser(jobIds);
+        if (userResponse == null) {
+            throw new InvalidException("Failed to save jobs");
+        }
+
+        return ResponseEntity.status(HttpStatus.OK).body(userResponse);
+    }
+
+    @DeleteMapping("/users/me/saved-jobs")
+    public ResponseEntity<UserResponse> unsaveJobsForCurrentUser(@RequestBody Map<String, List<Long>> request)
+            throws InvalidException {
+        List<Long> jobIds = request.get("jobIds");
+        if (jobIds == null || jobIds.isEmpty()) {
+            throw new InvalidException("Job IDs list cannot be empty");
+        }
+
+        UserResponse userResponse = this.userService.handleUnsaveJobsForCurrentUser(jobIds);
+        if (userResponse == null) {
+            throw new InvalidException("Failed to unsave jobs");
+        }
+
         return ResponseEntity.status(HttpStatus.OK).body(userResponse);
     }
 
