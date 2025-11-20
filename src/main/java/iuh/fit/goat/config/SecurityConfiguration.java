@@ -101,13 +101,30 @@ public class SecurityConfiguration {
             RedisTokenBlacklistFilter redisTokenBlacklistFilter
     ) throws Exception {
         String[] whiteList = {
-                "/ping", "/clear-cookies",
-                "/", "/api/v1/auth/login", "/api/v1/auth/register/**", "/api/v1/auth/refresh",
-                "/api/v1/auth/verify/**", "/api/v1/auth/resend",
-                "/storage/**", "/api/v1/recruiters/**", "/api/v1/jobs/**",
-                "/api/v1/email/**", "/api/v1/blogs/**", "/api/v1/users/reset-password",
-                "/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html"
+                "/ping",                             // Kiểm tra trạng thái server
+                "/clear-cookies",                    // Xóa toàn bộ cookies trên FE
+
+                "/",                                  // Trang gốc
+
+                "/api/v1/auth/login",                 // Đăng nhập – public
+                "/api/v1/auth/register/**",           // Đăng ký tài khoản – public
+                "/api/v1/auth/refresh",               // Refresh token – không kiểm tra permission
+                "/api/v1/auth/verify/**",             // Xác minh email – public
+                "/api/v1/auth/resend",                // Gửi lại email xác minh – public
+
+                "/storage/**",                        // Truy cập file tĩnh – public
+                "/api/v1/recruiters/**",              // Danh sách/chi tiết nhà tuyển dụng – public
+                "/api/v1/jobs/**",                    // Danh sách/chi tiết công việc – public
+
+                "/api/v1/email/**",                   // Gửi email / form liên hệ – public
+                "/api/v1/blogs/**",                   // Nội dung blog – public
+                "/api/v1/users/reset-password",       // Quên mật khẩu / đặt lại mật khẩu – public
+
+                "/v3/api-docs/**",                    // Tài liệu OpenAPI – public
+                "/swagger-ui/**",                     // Swagger UI – public
+                "/swagger-ui.html"                    // Trang Swagger – public
         };
+
 
         http
                 .csrf(c -> c.disable())
