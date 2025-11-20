@@ -3,12 +3,12 @@ package iuh.fit.goat.controller;
 import com.turkraft.springfilter.boot.Filter;
 import iuh.fit.goat.dto.request.FollowRecruiterRequest;
 import iuh.fit.goat.dto.request.ResetPasswordRequest;
-import iuh.fit.goat.dto.request.SaveJobRequest;
 import iuh.fit.goat.dto.request.UpdatePasswordRequest;
 import iuh.fit.goat.dto.response.LoginResponse;
 import iuh.fit.goat.dto.response.ResultPaginationResponse;
 import iuh.fit.goat.dto.response.UserResponse;
 import iuh.fit.goat.entity.Job;
+import iuh.fit.goat.entity.Notification;
 import iuh.fit.goat.entity.User;
 import iuh.fit.goat.exception.InvalidException;
 import iuh.fit.goat.service.UserService;
@@ -93,8 +93,7 @@ public class UserController {
     }
 
     @PutMapping("/users/reset-password")
-    public ResponseEntity<?> resetPassword(@Valid @RequestBody ResetPasswordRequest resetPasswordRequest)
-            throws InvalidException {
+    public ResponseEntity<?> resetPassword(@Valid @RequestBody ResetPasswordRequest resetPasswordRequest) {
         try {
             this.userService.handleResetPassword(resetPasswordRequest);
             return ResponseEntity.status(HttpStatus.OK).body(
@@ -147,6 +146,35 @@ public class UserController {
         }
 
         return ResponseEntity.status(HttpStatus.OK).body(userResponse);
+    }
+
+    @GetMapping("/users/me/notifications")
+    public ResponseEntity<ResultPaginationResponse> getCurrentUserNotifications(Pageable pageable) {
+        ResultPaginationResponse result = this.userService.handleGetCurrentUserNotifications(pageable);
+        return ResponseEntity.status(HttpStatus.OK).body(result);
+    }
+
+    @GetMapping("/users/me/notifications/latest")
+    public ResponseEntity<List<Notification>> getLatestNotifications() {
+        List<Notification> notifications = this.userService.handleGetLatestNotifications();
+        return ResponseEntity.status(HttpStatus.OK).body(notifications);
+    }
+
+    @PutMapping("/users/me/notifications")
+    public ResponseEntity<Map<String, String>> markNotificationsAsSeen(
+            @RequestBody Map<String, List<Long>> request
+    ) throws InvalidException {
+        List<Long> notificationIds = request.get("notificationIds");
+
+        if (notificationIds == null || notificationIds.isEmpty()) {
+            throw new InvalidException("Notification IDs list cannot be empty");
+        }
+
+        this.userService.handleMarkNotificationsAsSeen(notificationIds);
+
+        return ResponseEntity.status(HttpStatus.OK).body(
+                Map.of("message", "Notifications marked as seen successfully")
+        );
     }
 
     @PutMapping("/users/followed-recruiters")

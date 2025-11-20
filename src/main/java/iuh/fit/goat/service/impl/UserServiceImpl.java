@@ -3,16 +3,13 @@ package iuh.fit.goat.service.impl;
 import iuh.fit.goat.common.Role;
 import iuh.fit.goat.dto.request.FollowRecruiterRequest;
 import iuh.fit.goat.dto.request.ResetPasswordRequest;
-import iuh.fit.goat.dto.request.SaveJobRequest;
 import iuh.fit.goat.dto.response.LoginResponse;
 import iuh.fit.goat.dto.response.ResultPaginationResponse;
 import iuh.fit.goat.dto.response.UserResponse;
-import iuh.fit.goat.entity.Applicant;
-import iuh.fit.goat.entity.Job;
-import iuh.fit.goat.entity.Recruiter;
-import iuh.fit.goat.entity.User;
+import iuh.fit.goat.entity.*;
 import iuh.fit.goat.exception.InvalidException;
 import iuh.fit.goat.repository.JobRepository;
+import iuh.fit.goat.repository.NotificationRepository;
 import iuh.fit.goat.repository.RecruiterRepository;
 import iuh.fit.goat.repository.UserRepository;
 import iuh.fit.goat.service.RedisService;
@@ -21,7 +18,9 @@ import iuh.fit.goat.util.SecurityUtil;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -39,6 +38,7 @@ public class UserServiceImpl implements UserService {
     private final UserRepository userRepository;
     private final JobRepository jobRepository;
     private final RecruiterRepository recruiterRepository;
+    private final NotificationRepository notificationRepository;
     private final RedisService redisService;
     private final PasswordEncoder passwordEncoder;
     private final SecurityUtil securityUtil;
@@ -150,22 +150,6 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public UserResponse handleSaveJobs(SaveJobRequest saveJobRequest) {
-        User user = this.userRepository.findById(saveJobRequest.getUserId()).orElse(null);
-
-        if(user != null) {
-            List<Long> jobIds = saveJobRequest.getSavedJobs().stream().map(Job::getJobId).toList();
-            List<Job> savedJobs = this.jobRepository.findByJobIdIn(jobIds);
-            user.setSavedJobs(savedJobs);
-            this.userRepository.save(user);
-
-            return this.convertToUserResponse(user);
-        }
-
-        return null;
-    }
-
-    @Override
     public UserResponse handleFollowRecruiters(FollowRecruiterRequest followRecruiterRequest) {
         User user = this.userRepository.findById(followRecruiterRequest.getUserId()).orElse(null);
 
@@ -244,7 +228,7 @@ public class UserServiceImpl implements UserService {
         List<Job> jobsToAdd = this.jobRepository.findByJobIdIn(jobIds);
 
         for (Job job : jobsToAdd) {
-            if (!currentSavedJobs.stream().anyMatch(j -> j.getJobId() == job.getJobId())) {
+            if (currentSavedJobs.stream().noneMatch(j -> j.getJobId() == job.getJobId())) {
                 currentSavedJobs.add(job);
             }
         }
@@ -279,6 +263,84 @@ public class UserServiceImpl implements UserService {
         this.userRepository.save(currentUser);
 
         return this.convertToUserResponse(currentUser);
+    }
+
+    @Override
+    public ResultPaginationResponse handleGetCurrentUserNotifications(Pageable pageable) {
+        String currentEmail = SecurityUtil.getCurrentUserLogin().isPresent() ?
+                SecurityUtil.getCurrentUserLogin().get() : "";
+
+        if (currentEmail.isEmpty()) {
+            return new ResultPaginationResponse(
+                    new ResultPaginationResponse.Meta(0, 0, 0, 0L),
+                    new ArrayList<>()
+            );
+        }
+
+        User currentUser = this.handleGetUserByEmail(currentEmail);
+        if (currentUser == null) {
+            return new ResultPaginationResponse(
+                    new ResultPaginationResponse.Meta(0, 0, 0, 0L),
+                    new ArrayList<>()
+            );
+        }
+
+        Page<Notification> page = this.notificationRepository
+                .findByRecipient_UserId(currentUser.getUserId(), pageable);
+
+        ResultPaginationResponse.Meta meta = new ResultPaginationResponse.Meta();
+        meta.setPage(pageable.getPageNumber() + 1);
+        meta.setPageSize(pageable.getPageSize());
+        meta.setPages(page.getTotalPages());
+        meta.setTotal(page.getTotalElements());
+
+        return new ResultPaginationResponse(meta, page.getContent());
+    }
+
+    @Override
+    public List<Notification> handleGetLatestNotifications() {
+        String currentEmail = SecurityUtil.getCurrentUserLogin().isPresent() ?
+                SecurityUtil.getCurrentUserLogin().get() : "";
+
+        if (currentEmail.isEmpty()) {
+            return new ArrayList<>();
+        }
+
+        User currentUser = this.handleGetUserByEmail(currentEmail);
+        if (currentUser == null) {
+            return new ArrayList<>();
+        }
+
+        PageRequest pageRequest = PageRequest.of(
+                0,
+                10,
+                Sort.by(Sort.Direction.DESC, "createdAt")
+        );
+
+        return this.notificationRepository
+                .findByRecipient_UserId(currentUser.getUserId(), pageRequest)
+                .getContent();
+    }
+
+    @Override
+    public void handleMarkNotificationsAsSeen(List<Long> notificationIds) {
+        String currentEmail = SecurityUtil.getCurrentUserLogin().isPresent() ?
+                SecurityUtil.getCurrentUserLogin().get() : "";
+
+        if (currentEmail.isEmpty()) {
+            return;
+        }
+
+        User currentUser = this.handleGetUserByEmail(currentEmail);
+        if (currentUser == null) {
+            return;
+        }
+
+        List<Notification> notifications = this.notificationRepository
+                .findByNotificationIdInAndRecipient_UserId(notificationIds, currentUser.getUserId());
+
+        notifications.forEach(notification -> notification.setSeen(true));
+        this.notificationRepository.saveAll(notifications);
     }
 
     @Override

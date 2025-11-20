@@ -2,11 +2,10 @@ package iuh.fit.goat.service;
 
 import iuh.fit.goat.dto.request.FollowRecruiterRequest;
 import iuh.fit.goat.dto.request.ResetPasswordRequest;
-import iuh.fit.goat.dto.request.SaveJobRequest;
-import iuh.fit.goat.dto.request.VerifyUserRequest;
 import iuh.fit.goat.dto.response.ResultPaginationResponse;
 import iuh.fit.goat.dto.response.UserResponse;
 import iuh.fit.goat.entity.Job;
+import iuh.fit.goat.entity.Notification;
 import iuh.fit.goat.entity.User;
 import iuh.fit.goat.exception.InvalidException;
 import org.springframework.data.domain.Pageable;
@@ -30,8 +29,6 @@ public interface UserService {
 
     void handleResetPassword(ResetPasswordRequest resetPasswordRequest) throws InvalidException;
 
-    UserResponse handleSaveJobs(SaveJobRequest saveJobRequest);
-
     UserResponse handleFollowRecruiters(FollowRecruiterRequest followRecruiterRequest);
 
     UserResponse convertToUserResponse(User user);
@@ -43,4 +40,11 @@ public interface UserService {
     UserResponse handleSaveJobsForCurrentUser(List<Long> jobIds);
 
     UserResponse handleUnsaveJobsForCurrentUser(List<Long> jobIds);
+
+    ResultPaginationResponse handleGetCurrentUserNotifications(Pageable pageable);
+
+    List<Notification> handleGetLatestNotifications();
+
+    void handleMarkNotificationsAsSeen(List<Long> notificationIds);
+
 }
