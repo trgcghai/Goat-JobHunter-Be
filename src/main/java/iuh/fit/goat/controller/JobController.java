@@ -77,7 +77,7 @@ public class JobController {
         return ResponseEntity.status(HttpStatus.OK).body(result);
     }
 
-    @GetMapping("/jobs/recruiters")
+    @GetMapping("/jobs/recruiters/count")
     public ResponseEntity<Map<Long, Long>> countJobByRecruiter() {
         Map<Long, Long> result = this.jobService.handleCountJobByRecruiter();
         return ResponseEntity.status(HttpStatus.OK).body(result);

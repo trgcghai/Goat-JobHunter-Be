@@ -3,8 +3,10 @@ package iuh.fit.goat.controller;
 import com.turkraft.springfilter.boot.Filter;
 import iuh.fit.goat.dto.response.RecruiterResponse;
 import iuh.fit.goat.dto.response.ResultPaginationResponse;
+import iuh.fit.goat.entity.Job;
 import iuh.fit.goat.entity.Recruiter;
 import iuh.fit.goat.exception.InvalidException;
+import iuh.fit.goat.service.JobService;
 import iuh.fit.goat.service.RecruiterService;
 import iuh.fit.goat.service.UserService;
 import iuh.fit.goat.util.annotation.ApiMessage;
@@ -26,6 +28,7 @@ public class RecruiterController {
     private final RecruiterService recruiterService;
     private final UserService userService;
     private final PasswordEncoder passwordEncoder;
+    private final JobService jobService;
 
     @PostMapping("/recruiters")
     public ResponseEntity<RecruiterResponse> createRecruiter(@Valid @RequestBody Recruiter recruiter)
@@ -87,6 +90,29 @@ public class RecruiterController {
                 criteriaBuilder.notEqual(root.get("userId"), 1L));
 
         ResultPaginationResponse result = this.recruiterService.handleGetAllRecruiters(finalSpec, pageable);
+        return ResponseEntity.status(HttpStatus.OK).body(result);
+    }
+
+    @GetMapping("/recruiters/me/jobs")
+    public ResponseEntity<ResultPaginationResponse> getJobsForCurrentRecruiter(
+            @Filter Specification<Job> spec, Pageable pageable
+    ) {
+        ResultPaginationResponse result = this.jobService.handleGetCurrentRecruiterJobs(spec, pageable);
+        return ResponseEntity.status(HttpStatus.OK).body(result);
+    }
+
+    @GetMapping("/recruiters/{id}/jobs")
+    public ResponseEntity<ResultPaginationResponse> getJobsByRecruiterId(
+            @PathVariable("id") String id,
+            @Filter Specification<Job> spec,
+            Pageable pageable
+    ) throws InvalidException {
+        Pattern pattern = Pattern.compile("^[0-9]+$");
+        if (!pattern.matcher(id).matches()) {
+            throw new InvalidException("Id is number");
+        }
+        Long recruiterId = Long.parseLong(id);
+        ResultPaginationResponse result = this.jobService.handleGetJobsByRecruiterId(recruiterId, spec, pageable);
         return ResponseEntity.status(HttpStatus.OK).body(result);
     }
 }
