@@ -87,8 +87,8 @@ public class SubscriberController {
         return ResponseEntity.status(HttpStatus.OK).body(result);
     }
 
-    @PostMapping("/subscribers/skills")
-    public ResponseEntity<Subscriber> getSubscribersSkill() {
+    @GetMapping("/subscribers/skills")
+    public ResponseEntity<Subscriber> getCurrentUserSubscribersSkill() {
         String email = SecurityUtil.getCurrentUserLogin().isPresent() ? SecurityUtil.getCurrentUserLogin().get() : "";
         return ResponseEntity.ok().body(this.subscriberService.handleGetSubscribersSkill(email));
     }
