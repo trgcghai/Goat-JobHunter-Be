@@ -9,6 +9,7 @@ import iuh.fit.goat.dto.response.ResultPaginationResponse;
 import iuh.fit.goat.dto.response.UserResponse;
 import iuh.fit.goat.entity.Job;
 import iuh.fit.goat.entity.Notification;
+import iuh.fit.goat.entity.Recruiter;
 import iuh.fit.goat.entity.User;
 import iuh.fit.goat.exception.InvalidException;
 import iuh.fit.goat.service.UserService;
@@ -49,7 +50,7 @@ public class UserController {
     @PostMapping("/users")
     public <T extends User> ResponseEntity<T> getUserByEmail() {
         String email = SecurityUtil.getCurrentUserLogin().isPresent() ? SecurityUtil.getCurrentUserLogin().get() : null;
-        User user =  this.userService.handleGetUserByEmail(email);
+        User user = this.userService.handleGetUserByEmail(email);
         return ResponseEntity.status(HttpStatus.OK).body((T) user);
     }
 
@@ -59,13 +60,13 @@ public class UserController {
             @Valid @RequestBody UpdatePasswordRequest updatePasswordRequest
     ) throws InvalidException {
         boolean checked = this.userService.handleCheckCurrentPassword(updatePasswordRequest.getCurrentPassword());
-        if(!checked) {
+        if (!checked) {
             throw new InvalidException("Current password is error");
         }
 
         Map<String, Object> result = this.userService
                 .handleUpdatePassword(updatePasswordRequest.getNewPassword(), refreshToken);
-        if(result == null) {
+        if (result == null) {
             throw new InvalidException("Updated password is failed");
         }
 
@@ -99,7 +100,7 @@ public class UserController {
             return ResponseEntity.status(HttpStatus.OK).body(
                     Map.of("message", "Reset password successful")
             );
-        } catch (Exception e){
+        } catch (Exception e) {
             return ResponseEntity.badRequest().body(e.getMessage());
         }
     }
@@ -177,16 +178,48 @@ public class UserController {
         );
     }
 
-    @PutMapping("/users/followed-recruiters")
-    public ResponseEntity<UserResponse> followRecruiters(@Valid @RequestBody FollowRecruiterRequest followRecruiterRequest)
-            throws InvalidException
-    {
-        User user = this.userService.handleGetUserById(followRecruiterRequest.getUserId());
-        if(user == null) {
-            throw new InvalidException("User not found");
+    // endpoints for follow recruiters feature
+    @GetMapping("/users/me/followed-recruiters")
+    public ResponseEntity<List<Recruiter>> getCurrentUserFollowedRecruiters() {
+        List<Recruiter> followed = this.userService.handleGetCurrentUserFollowedRecruiters();
+        return ResponseEntity.status(HttpStatus.OK).body(followed);
+    }
+
+    @GetMapping("/users/me/followed-recruiters/contains")
+    public ResponseEntity<List<Map<String, Object>>> checkRecruitersFollowed(@RequestParam List<Long> recruiterIds) {
+        List<Map<String, Object>> result = this.userService.handleCheckRecruitersFollowed(recruiterIds);
+        return ResponseEntity.status(HttpStatus.OK).body(result);
+    }
+
+    @PutMapping("/users/me/followed-recruiters")
+    public ResponseEntity<UserResponse> followRecruiters(@RequestBody Map<String, List<Long>> request)
+            throws InvalidException {
+        List<Long> recruiterIds = request.get("recruiterIds");
+        if (recruiterIds == null || recruiterIds.isEmpty()) {
+            throw new InvalidException("Recruiter IDs list cannot be empty");
         }
 
-        UserResponse userResponse = this.userService.handleFollowRecruiters(followRecruiterRequest);
+        UserResponse userResponse = this.userService.handleFollowRecruiters(recruiterIds);
+        if (userResponse == null) {
+            throw new InvalidException("Failed to follow recruiters");
+        }
+
+        return ResponseEntity.status(HttpStatus.OK).body(userResponse);
+    }
+
+    @DeleteMapping("/users/me/followed-recruiters")
+    public ResponseEntity<UserResponse> unfollowRecruiters(@RequestBody Map<String, List<Long>> request)
+            throws InvalidException {
+        List<Long> recruiterIds = request.get("recruiterIds");
+        if (recruiterIds == null || recruiterIds.isEmpty()) {
+            throw new InvalidException("Recruiter IDs list cannot be empty");
+        }
+
+        UserResponse userResponse = this.userService.handleUnfollowRecruiters(recruiterIds);
+        if (userResponse == null) {
+            throw new InvalidException("Failed to unfollow recruiters");
+        }
+
         return ResponseEntity.status(HttpStatus.OK).body(userResponse);
     }
 }
