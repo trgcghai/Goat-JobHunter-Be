@@ -1,5 +1,6 @@
 package iuh.fit.goat.service.impl;
 
+
 import iuh.fit.goat.common.Role;
 import iuh.fit.goat.dto.request.LoginRequest;
 import iuh.fit.goat.dto.request.VerifyUserRequest;
@@ -9,6 +10,7 @@ import iuh.fit.goat.dto.response.RecruiterResponse;
 import iuh.fit.goat.entity.Applicant;
 import iuh.fit.goat.entity.Recruiter;
 import iuh.fit.goat.entity.User;
+import iuh.fit.goat.entity.embeddable.Contact;
 import iuh.fit.goat.exception.InvalidException;
 import iuh.fit.goat.repository.RecruiterRepository;
 import iuh.fit.goat.repository.UserRepository;
@@ -18,6 +20,7 @@ import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseCookie;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -30,10 +33,8 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.stereotype.Service;
 
-import java.time.LocalDateTime;
-import java.util.Collections;
-import java.util.Map;
-import java.util.Optional;
+
+import java.util.*;
 import java.util.concurrent.TimeUnit;
 
 @Service
@@ -72,29 +73,14 @@ public class AuthServiceImpl implements AuthService {
             throw new InvalidException("Invalid account");
         }
         if(!currentUser.isEnabled()) {
-            return ResponseEntity.badRequest().body(
-                    Map.of(
-                            "message", "Account is locked"
-                    )
-            );
+            throw new InvalidException("Account is locked");
         }
-
-        LoginResponse.UserLogin userLogin = new LoginResponse.UserLogin(
-                currentUser.getUserId(), currentUser.getContact().getEmail(),
-                currentUser.getFullName() != null ? currentUser.getFullName() : "",
-                currentUser.getUsername() != null ? currentUser.getUsername() : "",
-                currentUser.getAvatar() != null ? currentUser.getAvatar() : "",
-                currentUser instanceof Applicant ? Role.APPLICANT.getValue() : Role.RECRUITER.getValue(),
-                true,
-                currentUser.getRole(),
-                Optional.ofNullable(currentUser.getSavedJobs()).orElse(Collections.emptyList()),
-                Optional.ofNullable(currentUser.getFollowedRecruiters()).orElse(Collections.emptyList()),
-                Optional.ofNullable(currentUser.getActorNotifications()).orElse(Collections.emptyList())
-        );
-        loginResponse.setUser(userLogin);
+        loginResponse.setUser(createUserLogin(currentUser));
 
         String accessToken = this.securityUtil.createAccessToken(currentUser.getContact().getEmail(), loginResponse);
         String refreshToken = this.securityUtil.createRefreshToken(currentUser.getContact().getEmail(), loginResponse);
+
+        System.out.println("Refresh Token Created in Login: " + refreshToken);
 
         this.redisService.saveWithTTL(
                 "refresh:" + refreshToken,
@@ -106,8 +92,8 @@ public class AuthServiceImpl implements AuthService {
         ResponseCookie accessCookie = ResponseCookie
                 .from("accessToken", accessToken)
                 .httpOnly(true)
-//                .secure(true)
-//                .sameSite("Strict")
+                .secure(false) // for dev
+                .sameSite("Lax") // for dev
                 .path("/")
                 .maxAge(jwtAccessToken)
                 .build();
@@ -115,9 +101,9 @@ public class AuthServiceImpl implements AuthService {
         ResponseCookie refreshCookie = ResponseCookie
                 .from("refreshToken", refreshToken)
                 .httpOnly(true)
-                .secure(true)
-//                .sameSite("Strict")
-//                .path("/")
+                .secure(false) // for dev
+                .sameSite("Lax") // for dev
+                .path("/")
                 .maxAge(jwtRefreshToken)
                 .build();
 
@@ -132,6 +118,7 @@ public class AuthServiceImpl implements AuthService {
         if(refreshToken.equalsIgnoreCase("missingValue")) {
             throw new InvalidException("You don't have a refresh token at cookie");
         }
+        System.out.println("Refresh Token in Redis: " + refreshToken);
         if (!this.redisService.hasKey("refresh:" + refreshToken)) {
             throw new InvalidException("Invalid or expired refresh token");
         }
@@ -158,18 +145,10 @@ public class AuthServiceImpl implements AuthService {
         SecurityContextHolder.getContext().setAuthentication(authentication);
 
         LoginResponse loginResponse = new LoginResponse();
-        LoginResponse.UserLogin currentUserLogin = new LoginResponse.UserLogin();
-        currentUserLogin.setUserId(currentUser.getUserId());
-        currentUserLogin.setFullName(currentUser.getFullName());
-        currentUserLogin.setEmail(currentUser.getContact().getEmail());
-        currentUserLogin.setRole(currentUser.getRole());
-        currentUserLogin.setSavedJobs(currentUser.getSavedJobs());
-        currentUserLogin.setFollowedRecruiters(currentUser.getFollowedRecruiters());
-        currentUserLogin.setActorNotifications(currentUser.getActorNotifications());
-        loginResponse.setUser(currentUserLogin);
+        loginResponse.setUser(createUserLogin(currentUser));
 
         String newAccessToken = this.securityUtil.createAccessToken(email, loginResponse);
-        String newRefreshToken = this.securityUtil.createAccessToken(email, loginResponse);
+        String newRefreshToken = this.securityUtil.createRefreshToken(email, loginResponse);
 
         this.redisService.replaceKey(
                 "refresh:" + refreshToken,
@@ -182,8 +161,8 @@ public class AuthServiceImpl implements AuthService {
         ResponseCookie newAccessCookie = ResponseCookie
                 .from("accessToken", newAccessToken)
                 .httpOnly(true)
-//                .secure(true)
-//                .sameSite("Strict")
+                .secure(false) // for dev
+                .sameSite("Lax") // for dev
                 .path("/")
                 .maxAge(jwtAccessToken)
                 .build();
@@ -191,8 +170,8 @@ public class AuthServiceImpl implements AuthService {
         ResponseCookie newRefreshCookie = ResponseCookie
                 .from("refreshToken", newRefreshToken)
                 .httpOnly(true)
-//                .secure(true)
-//                .sameSite("Strict")
+                .secure(false) // for dev
+                .sameSite("Lax") // for dev
                 .path("/")
                 .maxAge(jwtRefreshToken)
                 .build();
@@ -215,11 +194,17 @@ public class AuthServiceImpl implements AuthService {
         );
 
         ResponseCookie deleteAccessCookie = ResponseCookie.from("accessToken", "")
+                .httpOnly(true)
+                .secure(false) // for dev
+                .sameSite("Lax") // for dev
                 .path("/")
                 .maxAge(0)
                 .build();
 
         ResponseCookie deleteRefreshCookie = ResponseCookie.from("refreshToken", "")
+                .httpOnly(true)
+                .secure(false) // for dev
+                .sameSite("Lax") // for dev
                 .path("/")
                 .maxAge(0)
                 .build();
@@ -235,23 +220,10 @@ public class AuthServiceImpl implements AuthService {
                 : "";
 
         User currentUser = this.userService.handleGetUserByEmail(currentEmail);
-        LoginResponse.UserLogin currentUserLogin = new LoginResponse.UserLogin();
         LoginResponse.UserGetAccount userGetAccount = new LoginResponse.UserGetAccount();
         if(currentUser != null) {
-            currentUserLogin.setUserId(currentUser.getUserId());
-            currentUserLogin.setFullName(currentUser.getFullName());
-            currentUserLogin.setUsername(currentUser.getUsername());
-            currentUserLogin.setEmail(currentUser.getContact().getEmail());
-            currentUserLogin.setAvatar(currentUser.getAvatar());
-            currentUserLogin.setType(currentUser instanceof Applicant ? Role.APPLICANT.getValue() : Role.RECRUITER.getValue());
-            currentUserLogin.setRole(currentUser.getRole());
-            currentUserLogin.setSavedJobs(currentUser.getSavedJobs());
-            currentUserLogin.setFollowedRecruiters(currentUser.getFollowedRecruiters());
-            currentUserLogin.setActorNotifications(currentUser.getActorNotifications());
-
-            userGetAccount.setUser(currentUserLogin);
+            userGetAccount.setUser(createUserLogin(currentUser));
         }
-
         return userGetAccount;
     }
 
@@ -289,9 +261,8 @@ public class AuthServiceImpl implements AuthService {
         recruiter.setPassword(hashPassword);
 
         Recruiter newRecruiter = this.recruiterService.handleCreateRecruiter(recruiter);
-        RecruiterResponse recruiterResponse = this.recruiterService.convertToRecruiterResponse(newRecruiter);
 
-        return recruiterResponse;
+        return this.recruiterService.convertToRecruiterResponse(newRecruiter);
     }
 
     @Override
@@ -345,4 +316,22 @@ public class AuthServiceImpl implements AuthService {
         this.emailService.handleSendVerificationEmail(key, verificationCode);
     }
 
+    private LoginResponse.UserLogin createUserLogin(User user) {
+
+        LoginResponse.UserLogin currentUserLogin = new LoginResponse.UserLogin();
+
+        currentUserLogin.setUserId(user.getUserId());
+        currentUserLogin.setDob(user.getDob());
+        currentUserLogin.setGender(user.getGender());
+        currentUserLogin.setFullName(Objects.requireNonNullElse(user.getFullName(), ""));
+        currentUserLogin.setUsername(Objects.requireNonNullElse(user.getUsername(), ""));
+        currentUserLogin.setContact((Contact) Objects.requireNonNullElse(user.getContact(), ""));
+        currentUserLogin.setAvatar(Objects.requireNonNullElse(user.getAvatar(), ""));
+        currentUserLogin.setType(user instanceof Applicant ? Role.APPLICANT.getValue() : Role.RECRUITER.getValue());
+        currentUserLogin.setRole((iuh.fit.goat.entity.Role) Objects.requireNonNullElse(user.getRole(), ""));
+        currentUserLogin.setEnabled(user.isEnabled());
+
+
+        return currentUserLogin;
+    }
 }

@@ -155,6 +155,55 @@ public class JobServiceImpl implements JobService {
     }
 
     @Override
+    public ResultPaginationResponse handleGetCurrentRecruiterJobs(Specification<Job> spec, Pageable pageable) {
+        String email = SecurityUtil.getCurrentUserLogin().isPresent() ? SecurityUtil.getCurrentUserLogin().get() : "";
+        if (email.isEmpty()) {
+            return new ResultPaginationResponse(
+                    new ResultPaginationResponse.Meta(0, 0, 0, 0L),
+                    new ArrayList<>()
+            );
+        }
+        User currentUser = this.userRepository.findByContact_Email(email);
+        if (!(currentUser instanceof Recruiter)) {
+            return new ResultPaginationResponse(
+                    new ResultPaginationResponse.Meta(0, 0, 0, 0L),
+                    new ArrayList<>()
+            );
+        }
+        Long recruiterId = currentUser.getUserId();
+        return handleGetJobsByRecruiterId(recruiterId, spec, pageable);
+    }
+
+    @Override
+    public ResultPaginationResponse handleGetJobsByRecruiterId(Long recruiterId, Specification<Job> spec, Pageable pageable) {
+        if (recruiterId == null) {
+            return new ResultPaginationResponse(
+                    new ResultPaginationResponse.Meta(0, 0, 0, 0L),
+                    new ArrayList<>()
+            );
+        }
+
+        Specification<Job> recruiterSpec = (root, query, criteriaBuilder) ->
+                criteriaBuilder.equal(root.get("recruiter").get("userId"), recruiterId);
+
+        Specification<Job> finalSpec = (spec != null) ? spec.and(recruiterSpec) : recruiterSpec;
+
+        Page<Job> page = this.jobRepository.findAll(finalSpec, pageable);
+
+        ResultPaginationResponse.Meta meta = new ResultPaginationResponse.Meta();
+        meta.setPage(pageable.getPageNumber() + 1);
+        meta.setPageSize(pageable.getPageSize());
+        meta.setPages(page.getTotalPages());
+        meta.setTotal(page.getTotalElements());
+
+        List<JobResponse> responses = page.getContent().stream()
+                .map(this::convertToJobResponse)
+                .toList();
+
+        return new ResultPaginationResponse(meta, responses);
+    }
+
+    @Override
     public JobResponse convertToJobResponse(Job job) {
         JobResponse jobResponse = new JobResponse();
 

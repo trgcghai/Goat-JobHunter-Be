@@ -24,5 +24,9 @@ public interface JobService {
 
     List<Long> handleGetAllJobIdsByRecruiter();
 
+    ResultPaginationResponse handleGetCurrentRecruiterJobs(Specification<Job> spec, Pageable pageable);
+
+    ResultPaginationResponse handleGetJobsByRecruiterId(Long recruiterId, Specification<Job> spec, Pageable pageable);
+
     JobResponse convertToJobResponse(Job job);
 }
