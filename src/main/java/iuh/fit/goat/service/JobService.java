@@ -3,6 +3,7 @@ package iuh.fit.goat.service;
 import iuh.fit.goat.dto.request.CreateJobRequest;
 import iuh.fit.goat.dto.request.UpdateJobRequest;
 import iuh.fit.goat.dto.response.JobActivateResponse;
+import iuh.fit.goat.dto.response.JobApplicationCountResponse;
 import iuh.fit.goat.dto.response.JobResponse;
 import iuh.fit.goat.dto.response.ResultPaginationResponse;
 import iuh.fit.goat.entity.Job;
@@ -36,4 +37,6 @@ public interface JobService {
     List<JobActivateResponse> handleActivateJobs(List<Long> jobIds);
 
     List<JobActivateResponse> handleDeactivateJobs(List<Long> jobIds);
+
+    List<JobApplicationCountResponse> handleCountApplicationsByJobIds(List<Long> jobIds);
 }

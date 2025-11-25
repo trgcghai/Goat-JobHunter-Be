@@ -3,9 +3,9 @@ package iuh.fit.goat.service.impl;
 import iuh.fit.goat.common.Level;
 import iuh.fit.goat.common.WorkingType;
 import iuh.fit.goat.dto.request.CreateJobRequest;
-import iuh.fit.goat.dto.request.JobActivateRequest;
 import iuh.fit.goat.dto.request.UpdateJobRequest;
 import iuh.fit.goat.dto.response.JobActivateResponse;
+import iuh.fit.goat.dto.response.JobApplicationCountResponse;
 import iuh.fit.goat.service.JobService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -260,6 +260,33 @@ public class JobServiceImpl implements JobService {
                 boolean resultingState = job.isActive();
                 results.add(new JobActivateResponse(id, resultingState, "fail"));
             }
+        }
+
+        return results;
+    }
+
+    @Override
+    public List<JobApplicationCountResponse> handleCountApplicationsByJobIds(List<Long> jobIds) {
+        if (jobIds == null || jobIds.isEmpty()) {
+            return Collections.emptyList();
+        }
+
+        List<Job> existingJobs = this.jobRepository.findAllById(jobIds);
+        Map<Long, Job> jobMap = existingJobs.stream()
+                .collect(Collectors.toMap(Job::getJobId, j -> j));
+
+        List<JobApplicationCountResponse> results = new ArrayList<>(jobIds.size());
+
+        for (Long id : jobIds) {
+            Job job = jobMap.get(id);
+            if (job == null) {
+                results.add(new JobApplicationCountResponse(id, 0L));
+                continue;
+            }
+
+            List<Application> apps = this.applicationRepository.findByJob(job);
+            long count = (apps == null) ? 0L : apps.size();
+            results.add(new JobApplicationCountResponse(id, count));
         }
 
         return results;
