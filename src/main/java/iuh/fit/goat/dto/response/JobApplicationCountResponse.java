@@ -7,8 +7,7 @@ import lombok.NoArgsConstructor;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class JobActivateResponse {
+public class JobApplicationCountResponse {
     private Long jobId;
-    private boolean active;
-    private String status; // "success" or "fail"
+    private Long applications;
 }

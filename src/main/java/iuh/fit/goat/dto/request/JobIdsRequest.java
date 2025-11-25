@@ -13,7 +13,7 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class JobActivateRequest {
+public class JobIdsRequest {
     @NotEmpty(message = "jobIds must not be empty")
     private List<@NotNull(message = "jobId must not be null") Long> jobIds;
 }

@@ -2,9 +2,10 @@ package iuh.fit.goat.controller;
 
 import com.turkraft.springfilter.boot.Filter;
 import iuh.fit.goat.dto.request.CreateJobRequest;
-import iuh.fit.goat.dto.request.JobActivateRequest;
+import iuh.fit.goat.dto.request.JobIdsRequest;
 import iuh.fit.goat.dto.request.UpdateJobRequest;
 import iuh.fit.goat.dto.response.JobActivateResponse;
+import iuh.fit.goat.dto.response.JobApplicationCountResponse;
 import iuh.fit.goat.dto.response.JobResponse;
 import iuh.fit.goat.dto.response.ResultPaginationResponse;
 import iuh.fit.goat.entity.Job;
@@ -18,6 +19,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.regex.Pattern;
@@ -46,13 +49,13 @@ public class JobController {
     }
 
     @PutMapping("/jobs/activate")
-    public ResponseEntity<List<JobActivateResponse>> activateJobs(@Valid @RequestBody JobActivateRequest request) {
+    public ResponseEntity<List<JobActivateResponse>> activateJobs(@Valid @RequestBody JobIdsRequest request) {
         List<JobActivateResponse> result = this.jobService.handleActivateJobs(request.getJobIds());
         return ResponseEntity.ok(result);
     }
 
     @PutMapping("/jobs/deactivate")
-    public ResponseEntity<List<JobActivateResponse>> deactivateJobs(@Valid @RequestBody JobActivateRequest request) {
+    public ResponseEntity<List<JobActivateResponse>> deactivateJobs(@Valid @RequestBody JobIdsRequest request) {
         List<JobActivateResponse> result = this.jobService.handleDeactivateJobs(request.getJobIds());
         return ResponseEntity.ok(result);
     }
@@ -98,5 +101,34 @@ public class JobController {
     public ResponseEntity<Map<Long, Long>> countJobByRecruiter() {
         Map<Long, Long> result = this.jobService.handleCountJobByRecruiter();
         return ResponseEntity.status(HttpStatus.OK).body(result);
+    }
+
+    @GetMapping("/jobs/count-applications")
+    public ResponseEntity<List<JobApplicationCountResponse>> countApplications(
+            @RequestParam("jobIds") String jobIdsCsv
+    ) throws InvalidException {
+        if (jobIdsCsv == null || jobIdsCsv.trim().isEmpty()) {
+            throw new InvalidException("jobIds is required");
+        }
+
+        String[] parts = jobIdsCsv.split(",");
+        List<Long> jobIds = new ArrayList<>(parts.length);
+        try {
+            for (String p : parts) {
+                String trimmed = p.trim();
+                if (!trimmed.isEmpty()) {
+                    jobIds.add(Long.parseLong(trimmed));
+                }
+            }
+        } catch (NumberFormatException ex) {
+            throw new InvalidException("jobIds must be comma separated numbers");
+        }
+
+        if (jobIds.isEmpty()) {
+            return ResponseEntity.ok(Collections.emptyList());
+        }
+
+        List<JobApplicationCountResponse> result = this.jobService.handleCountApplicationsByJobIds(jobIds);
+        return ResponseEntity.ok(result);
     }
 }
