@@ -1,5 +1,9 @@
 package iuh.fit.goat.service.impl;
 
+import iuh.fit.goat.common.Level;
+import iuh.fit.goat.common.WorkingType;
+import iuh.fit.goat.dto.request.CreateJobRequest;
+import iuh.fit.goat.dto.request.UpdateJobRequest;
 import iuh.fit.goat.service.JobService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -25,22 +29,36 @@ public class JobServiceImpl implements JobService {
     private final UserRepository userRepository;
 
     @Override
-    public JobResponse handleCreateJob(Job job) {
-        if(job.getSkills() != null){
-            List<Long> skillIds = job.getSkills().stream().map(Skill::getSkillId).toList();
-            List<Skill> skills = this.skillRepository.findBySkillIdIn(skillIds);
+    public JobResponse handleCreateJob(CreateJobRequest request) {
+        Job job = new Job();
+        job.setTitle(request.getTitle());
+        job.setLocation(request.getLocation());
+        job.setSalary(request.getSalary());
+        job.setQuantity(request.getQuantity());
+        job.setDescription(request.getDescription());
+        job.setLevel(Level.valueOf(request.getLevel()));
+        job.setStartDate(request.getStartDate());
+        job.setEndDate(request.getEndDate());
+        job.setActive(request.getActive() != null ? request.getActive() : false);
+        job.setWorkingType(WorkingType.valueOf(request.getWorkingType()));
+
+        if (request.getSkillIds() != null && !request.getSkillIds().isEmpty()) {
+            List<Skill> skills = this.skillRepository.findBySkillIdIn(request.getSkillIds());
             job.setSkills(skills);
         }
-        if(job.getRecruiter() != null){
-            Optional<User> currentUser = this.userRepository.findById(job.getRecruiter().getUserId());
-            if(currentUser.isPresent() && currentUser.get() instanceof Recruiter recruiter){
+
+        if (request.getRecruiterId() != null) {
+            Optional<User> currentUser = this.userRepository.findById(request.getRecruiterId());
+            if (currentUser.isPresent() && currentUser.get() instanceof Recruiter recruiter) {
                 job.setRecruiter(recruiter);
             }
         }
-        if(job.getCareer() != null){
-            Optional<Career> currentCareer = this.careerRepository.findById(job.getCareer().getCareerId());
+
+        if (request.getCareerId() != null) {
+            Optional<Career> currentCareer = this.careerRepository.findById(request.getCareerId());
             currentCareer.ifPresent(job::setCareer);
         }
+
         Job res = this.jobRepository.save(job);
 
         JobResponse jobResponse = convertToJobResponse(res);
@@ -51,34 +69,34 @@ public class JobServiceImpl implements JobService {
     }
 
     @Override
-    public JobResponse handleUpdateJob(Job job) {
-        Job currentJob = this.handleGetJobById(job.getJobId());
+    public JobResponse handleUpdateJob(UpdateJobRequest request) {
+        Job currentJob = this.handleGetJobById(request.getJobId());
 
-        if(job.getSkills() != null){
-            List<Long> skillIds = job.getSkills().stream().map(Skill::getSkillId).toList();
-            List<Skill> skills = this.skillRepository.findBySkillIdIn(skillIds);
+        if (currentJob == null) {
+            return null;
+        }
+
+        if (request.getSkillIds() != null) {
+            List<Skill> skills = this.skillRepository.findBySkillIdIn(request.getSkillIds());
             currentJob.setSkills(skills);
         }
-        if(job.getRecruiter() != null){
-            Optional<User> currentUser = this.userRepository.findById(job.getRecruiter().getUserId());
-            if(currentUser.isPresent() && currentUser.get() instanceof Recruiter recruiter){
-                currentJob.setRecruiter(recruiter);
-            }
-        }
-        if(job.getCareer() != null){
-            Optional<Career> currentCareer = this.careerRepository.findById(job.getCareer().getCareerId());
+
+        if (request.getCareerId() != null) {
+            Optional<Career> currentCareer = this.careerRepository.findById(request.getCareerId());
             currentCareer.ifPresent(currentJob::setCareer);
         }
-        currentJob.setDescription(job.getDescription());
-        currentJob.setStartDate(job.getStartDate());
-        currentJob.setEndDate(job.getEndDate());
-        currentJob.setActive(job.isActive());
-        currentJob.setLevel(job.getLevel());
-        currentJob.setQuantity(job.getQuantity());
-        currentJob.setSalary(job.getSalary());
-        currentJob.setTitle(job.getTitle());
-        currentJob.setWorkingType(job.getWorkingType());
-        currentJob.setLocation(job.getLocation());
+
+        if (request.getDescription() != null) currentJob.setDescription(request.getDescription());
+        if (request.getStartDate() != null) currentJob.setStartDate(request.getStartDate());
+        if (request.getEndDate() != null) currentJob.setEndDate(request.getEndDate());
+        if (request.getActive() != null) currentJob.setActive(request.getActive());
+        if (request.getLevel() != null) currentJob.setLevel(Level.valueOf(request.getLevel()));
+        if (request.getQuantity() != null) currentJob.setQuantity(request.getQuantity());
+        if (request.getSalary() != null) currentJob.setSalary(request.getSalary());
+        if (request.getTitle() != null) currentJob.setTitle(request.getTitle());
+        if (request.getWorkingType() != null) currentJob.setWorkingType(WorkingType.valueOf(request.getWorkingType()));
+        if (request.getLocation() != null) currentJob.setLocation(request.getLocation());
+
         Job res = this.jobRepository.save(currentJob);
 
         JobResponse jobResponse = convertToJobResponse(res);

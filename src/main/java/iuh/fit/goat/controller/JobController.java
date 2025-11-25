@@ -1,6 +1,8 @@
 package iuh.fit.goat.controller;
 
 import com.turkraft.springfilter.boot.Filter;
+import iuh.fit.goat.dto.request.CreateJobRequest;
+import iuh.fit.goat.dto.request.UpdateJobRequest;
 import iuh.fit.goat.dto.response.JobResponse;
 import iuh.fit.goat.dto.response.ResultPaginationResponse;
 import iuh.fit.goat.entity.Job;
@@ -24,13 +26,13 @@ public class JobController {
     private final JobService jobService;
 
     @PostMapping("/jobs")
-    public ResponseEntity<JobResponse> createJob(@Valid @RequestBody Job job) {
+    public ResponseEntity<JobResponse> createJob(@Valid @RequestBody CreateJobRequest job) {
         JobResponse newJob = this.jobService.handleCreateJob(job);
         return ResponseEntity.status(HttpStatus.CREATED).body(newJob);
     }
 
     @PutMapping("/jobs")
-    public ResponseEntity<JobResponse> updateJob(@Valid @RequestBody Job job) throws InvalidException {
+    public ResponseEntity<JobResponse> updateJob(@Valid @RequestBody UpdateJobRequest job) throws InvalidException {
         Job currentJob = this.jobService.handleGetJobById(job.getJobId());
         if(currentJob != null){
             JobResponse updateJob = this.jobService.handleUpdateJob(job);

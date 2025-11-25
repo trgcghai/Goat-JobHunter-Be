@@ -1,5 +1,7 @@
 package iuh.fit.goat.service;
 
+import iuh.fit.goat.dto.request.CreateJobRequest;
+import iuh.fit.goat.dto.request.UpdateJobRequest;
 import iuh.fit.goat.dto.response.JobResponse;
 import iuh.fit.goat.dto.response.ResultPaginationResponse;
 import iuh.fit.goat.entity.Job;
@@ -10,9 +12,9 @@ import java.util.List;
 import java.util.Map;
 
 public interface JobService {
-    JobResponse handleCreateJob(Job job);
+    JobResponse handleCreateJob(CreateJobRequest job);
 
-    JobResponse handleUpdateJob(Job job);
+    JobResponse handleUpdateJob(UpdateJobRequest job);
 
     void handleDeleteJob(long id);
 
