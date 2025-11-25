@@ -108,6 +108,8 @@ public class DatabaseInitializer implements CommandLineRunner {
 //      JOB
         permissions.add(new Permission("Create job", "/api/v1/jobs", "POST", "JOBS"));
         permissions.add(new Permission("Update job", "/api/v1/jobs", "PUT", "JOBS"));
+        permissions.add(new Permission("Activate job", "/api/v1/jobs/activate", "PUT", "JOBS"));
+        permissions.add(new Permission("Deactivate job", "/api/v1/jobs/deactivate", "PUT", "JOBS"));
         permissions.add(new Permission("Delete job", "/api/v1/jobs/{id}", "DELETE", "JOBS"));
         permissions.add(new Permission("Get job", "/api/v1/jobs/{id}", "GET", "JOBS"));
         permissions.add(new Permission("Get all jobs", "/api/v1/jobs", "GET", "JOBS"));
@@ -212,6 +214,8 @@ public class DatabaseInitializer implements CommandLineRunner {
         hrPermissions.add(this.permissionRepository.findByName("Get all careers"));
         hrPermissions.add(this.permissionRepository.findByName("Create job"));
         hrPermissions.add(this.permissionRepository.findByName("Update job"));
+        hrPermissions.add(this.permissionRepository.findByName("Activate job"));
+        hrPermissions.add(this.permissionRepository.findByName("Deactivate job"));
         hrPermissions.add(this.permissionRepository.findByName("Delete job"));
         hrPermissions.add(this.permissionRepository.findByName("Get job"));
         hrPermissions.add(this.permissionRepository.findByName("Get all jobs"));
