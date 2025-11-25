@@ -2,6 +2,7 @@ package iuh.fit.goat.service;
 
 import iuh.fit.goat.dto.request.CreateJobRequest;
 import iuh.fit.goat.dto.request.UpdateJobRequest;
+import iuh.fit.goat.dto.response.JobActivateResponse;
 import iuh.fit.goat.dto.response.JobResponse;
 import iuh.fit.goat.dto.response.ResultPaginationResponse;
 import iuh.fit.goat.entity.Job;
@@ -31,4 +32,8 @@ public interface JobService {
     ResultPaginationResponse handleGetJobsByRecruiterId(Long recruiterId, Specification<Job> spec, Pageable pageable);
 
     JobResponse convertToJobResponse(Job job);
+
+    List<JobActivateResponse> handleActivateJobs(List<Long> jobIds);
+
+    List<JobActivateResponse> handleDeactivateJobs(List<Long> jobIds);
 }

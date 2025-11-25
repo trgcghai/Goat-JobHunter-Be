@@ -2,7 +2,9 @@ package iuh.fit.goat.controller;
 
 import com.turkraft.springfilter.boot.Filter;
 import iuh.fit.goat.dto.request.CreateJobRequest;
+import iuh.fit.goat.dto.request.JobActivateRequest;
 import iuh.fit.goat.dto.request.UpdateJobRequest;
+import iuh.fit.goat.dto.response.JobActivateResponse;
 import iuh.fit.goat.dto.response.JobResponse;
 import iuh.fit.goat.dto.response.ResultPaginationResponse;
 import iuh.fit.goat.entity.Job;
@@ -16,6 +18,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
 import java.util.Map;
 import java.util.regex.Pattern;
 
@@ -40,6 +43,18 @@ public class JobController {
         } else {
             throw new InvalidException("Job doesn't exist");
         }
+    }
+
+    @PutMapping("/jobs/activate")
+    public ResponseEntity<List<JobActivateResponse>> activateJobs(@Valid @RequestBody JobActivateRequest request) {
+        List<JobActivateResponse> result = this.jobService.handleActivateJobs(request.getJobIds());
+        return ResponseEntity.ok(result);
+    }
+
+    @PutMapping("/jobs/deactivate")
+    public ResponseEntity<List<JobActivateResponse>> deactivateJobs(@Valid @RequestBody JobActivateRequest request) {
+        List<JobActivateResponse> result = this.jobService.handleDeactivateJobs(request.getJobIds());
+        return ResponseEntity.ok(result);
     }
 
     @DeleteMapping("/jobs/{id}")

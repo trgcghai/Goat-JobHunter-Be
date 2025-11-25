@@ -3,7 +3,9 @@ package iuh.fit.goat.service.impl;
 import iuh.fit.goat.common.Level;
 import iuh.fit.goat.common.WorkingType;
 import iuh.fit.goat.dto.request.CreateJobRequest;
+import iuh.fit.goat.dto.request.JobActivateRequest;
 import iuh.fit.goat.dto.request.UpdateJobRequest;
+import iuh.fit.goat.dto.response.JobActivateResponse;
 import iuh.fit.goat.service.JobService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -219,6 +221,48 @@ public class JobServiceImpl implements JobService {
                 .toList();
 
         return new ResultPaginationResponse(meta, responses);
+    }
+
+    @Override
+    public List<JobActivateResponse> handleActivateJobs(List<Long> jobIds) {
+        return handleSetActiveForJobs(jobIds, true);
+    }
+
+    @Override
+    public List<JobActivateResponse> handleDeactivateJobs(List<Long> jobIds) {
+        return handleSetActiveForJobs(jobIds, false);
+    }
+
+    private List<JobActivateResponse> handleSetActiveForJobs(List<Long> jobIds, boolean activeFlag) {
+        if (jobIds == null || jobIds.isEmpty()) {
+            return Collections.emptyList();
+        }
+
+        List<Job> existingJobs = this.jobRepository.findAllById(jobIds);
+        Map<Long, Job> jobMap = existingJobs.stream()
+                .collect(Collectors.toMap(Job::getJobId, j -> j));
+
+        List<JobActivateResponse> results = new ArrayList<>(jobIds.size());
+
+        for (Long id : jobIds) {
+            Job job = jobMap.get(id);
+            if (job == null) {
+                results.add(new JobActivateResponse(id, false, "fail"));
+                continue;
+            }
+
+            try {
+                job.setActive(activeFlag);
+                this.jobRepository.save(job);
+                results.add(new JobActivateResponse(id, activeFlag, "success"));
+            } catch (Exception ex) {
+                // in case save fails, return current state as false and status fail
+                boolean resultingState = job.isActive();
+                results.add(new JobActivateResponse(id, resultingState, "fail"));
+            }
+        }
+
+        return results;
     }
 
     @Override
