@@ -44,12 +44,12 @@ public class Blog {
     @JoinColumn(name = "user_id")
     private User author;
 
-    @OneToMany(mappedBy = "blog", fetch = FetchType.LAZY)
+    @OneToMany(mappedBy = "blog", fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
     @ToString.Exclude
     @JsonIgnore
     private List<Comment> comments;
 
-    @OneToMany(mappedBy = "blog", fetch = FetchType.LAZY)
+    @OneToMany(mappedBy = "blog", fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
     @ToString.Exclude
     @JsonIgnore
     private List<Notification> notifications;

@@ -1,6 +1,7 @@
 package iuh.fit.goat.controller;
 
 import com.turkraft.springfilter.boot.Filter;
+import iuh.fit.goat.dto.request.BlogIdsRequest;
 import iuh.fit.goat.dto.request.LikeBlogRequest;
 import iuh.fit.goat.dto.response.BlogResponse;
 import iuh.fit.goat.dto.response.ResultPaginationResponse;
@@ -40,15 +41,9 @@ public class BlogController {
         return ResponseEntity.status(HttpStatus.OK).body(blogResponse);
     }
 
-    @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteBlog(@PathVariable("id") String id) throws InvalidException {
-        Pattern pattern = Pattern.compile("^[0-9]+$");
-        if(!pattern.matcher(id).matches()) throw new InvalidException("Id is number");
-
-        Blog res = this.blogService.handleGetBlogById(Long.parseLong(id));
-        if(res == null) throw new InvalidException("Blog doesn't exist");
-
-        this.blogService.handleDeleteBlog(Long.parseLong(id));
+    @DeleteMapping
+    public ResponseEntity<Void> deleteBlog(@Valid @RequestBody BlogIdsRequest request) {
+        this.blogService.handleDeleteBlog(request.getBlogIds(), request.getReason(), request.getMode());
         return ResponseEntity.status(HttpStatus.OK).body(null);
     }
 

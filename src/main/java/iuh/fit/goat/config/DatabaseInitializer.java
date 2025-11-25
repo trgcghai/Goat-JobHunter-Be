@@ -158,7 +158,7 @@ public class DatabaseInitializer implements CommandLineRunner {
 //      BLOG
         permissions.add(new Permission("Create a blog", "/api/v1/blogs", "POST", "BLOGS"));
         permissions.add(new Permission("Update a blog", "/api/v1/blogs", "PUT", "BLOGS"));
-        permissions.add(new Permission("Delete a blog", "/api/v1/blogs/{id}", "DELETE", "BLOGS"));
+        permissions.add(new Permission("Delete a blog", "/api/v1/blogs", "DELETE", "BLOGS"));
         permissions.add(new Permission("Get a blog by id", "/api/v1/blogs/{id}", "GET", "BLOGS"));
         permissions.add(new Permission("Get blogs with pagination", "/api/v1/blogs", "GET", "BLOGS"));
 

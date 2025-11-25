@@ -16,7 +16,7 @@ public interface BlogService {
 
     Blog handleUpdateBlog(Blog blog);
 
-    void handleDeleteBlog(long id);
+    void handleDeleteBlog(List<Long> blogIds, String reason, String mode);
 
     Blog handleGetBlogById(long id);
 

@@ -41,22 +41,22 @@ public class Comment {
     @JoinColumn(name = "parent_id")
     private Comment parent;
 
-    @OneToMany(mappedBy = "parent", fetch = FetchType.LAZY)
+    @OneToMany(mappedBy = "parent", fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
     @ToString.Exclude
     @JsonIgnore
     private List<Comment> children;
 
-    @OneToMany(mappedBy = "comment", fetch = FetchType.LAZY)
+    @OneToMany(mappedBy = "comment", fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
     @ToString.Exclude
     @JsonIgnore
     private List<Notification> commentNotifications;
 
-    @OneToMany(mappedBy = "reply", fetch = FetchType.LAZY)
+    @OneToMany(mappedBy = "reply", fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
     @ToString.Exclude
     @JsonIgnore
     private List<Notification> replyNotifications;
 
-    @OneToMany(mappedBy = "repliedOnComment", fetch = FetchType.LAZY)
+    @OneToMany(mappedBy = "repliedOnComment", fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
     @ToString.Exclude
     @JsonIgnore
     private List<Notification> repliedOnCommentNotifications;

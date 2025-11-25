@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8">
+  <title>Job Hunter</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background-color: #f4f6f8;
+      margin: 0;
+      padding: 0;
+      color: #333;
+    }
+    .container {
+      max-width: 600px;
+      margin: 40px auto;
+      background-color: #ffffff;
+      padding: 30px;
+      border-radius: 12px;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+    }
+    h2 {
+      margin-top: 0;
+      font-size: 22px;
+      font-weight: 600;
+    }
+    .delete { color: #d9534f; }
+    .reject { color: #f0ad4e; }
+    p {
+      font-size: 16px;
+      line-height: 1.6;
+    }
+    ul {
+      padding-left: 20px;
+    }
+    li {
+      margin-bottom: 8px;
+    }
+    .reason {
+      background-color: #f9f2f4;
+      border-left: 5px solid #d9534f;
+      padding: 10px 15px;
+      margin: 15px 0;
+      border-radius: 6px;
+      color: #555;
+      font-style: italic;
+    }
+    .footer {
+      font-size: 14px;
+      color: #888;
+      margin-top: 30px;
+    }
+    .btn-contact {
+      display: inline-block;
+      padding: 10px 20px;
+      background-color: #0275d8;
+      color: #fff !important;
+      text-decoration: none;
+      border-radius: 6px;
+      margin-top: 10px;
+      font-weight: bold;
+    }
+    .btn-contact:hover {
+      background-color: #025aa5;
+    }
+  </style>
+</head>
+<body>
+<div class="container">
+
+  <h2 th:if="${mode.equalsIgnoreCase('delete')}" class="delete">
+    Bài viết của bạn đã bị xóa
+  </h2>
+  <h2 th:if="${mode.equalsIgnoreCase('reject')}" class="reject">
+    Bài viết của bạn không được duyệt
+  </h2>
+
+  <p>Xin chào <strong th:text="${name}"></strong>,</p>
+
+  <p>Danh sách bài viết của bạn:</p>
+  <ul>
+    <li th:each="blog : ${blogs}" th:text="${blog.title}"></li>
+  </ul>
+
+  <p><strong>Lý do:</strong></p>
+  <div class="reason">
+    <span th:text="${reason}">Không có lý do</span>
+  </div>
+
+  <p>Nếu bạn cho rằng đây là nhầm lẫn, vui lòng liên hệ với bộ phận hỗ trợ:</p>
+  <a href="mailto:nguyenthangminhdat84@gmail.com" class="btn-contact">Liên hệ hỗ trợ</a>
+
+  <div class="footer">
+    <p>Trân trọng,<br>Đội ngũ GOAT</p>
+  </div>
+</div>
+</body>
+</html>

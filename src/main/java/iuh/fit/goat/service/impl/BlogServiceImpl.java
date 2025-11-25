@@ -1,6 +1,7 @@
 package iuh.fit.goat.service.impl;
 
 import iuh.fit.goat.common.NotificationType;
+import iuh.fit.goat.common.Role;
 import iuh.fit.goat.dto.request.LikeBlogRequest;
 import iuh.fit.goat.dto.response.BlogResponse;
 import iuh.fit.goat.dto.response.ResultPaginationResponse;
@@ -9,10 +10,11 @@ import iuh.fit.goat.entity.Comment;
 import iuh.fit.goat.entity.Notification;
 import iuh.fit.goat.entity.User;
 import iuh.fit.goat.repository.BlogRepository;
-import iuh.fit.goat.repository.CommentRepository;
 import iuh.fit.goat.repository.NotificationRepository;
 import iuh.fit.goat.repository.UserRepository;
 import iuh.fit.goat.service.BlogService;
+import iuh.fit.goat.service.EmailService;
+import iuh.fit.goat.service.UserService;
 import iuh.fit.goat.util.SecurityUtil;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -26,9 +28,10 @@ import java.util.Optional;
 @Service
 @RequiredArgsConstructor
 public class BlogServiceImpl implements BlogService {
+    private final UserService userService;
+    private final EmailService emailService;
     private final BlogRepository blogRepository;
     private final UserRepository userRepository;
-    private final CommentRepository commentRepository;
     private final NotificationRepository notificationRepository;
 
     @Override
@@ -60,42 +63,41 @@ public class BlogServiceImpl implements BlogService {
     }
 
     @Override
-    public void handleDeleteBlog(long id) {
-        Blog blog = this.handleGetBlogById(id);
-
-        if(blog.getComments() != null) {
-            List<Comment> comments = blog.getComments();
-            comments.forEach(this::deleteRecursively);
-        }
-        if(blog.getNotifications() != null) {
-            List<Notification> notifications = blog.getNotifications();
-            this.notificationRepository.deleteAll(notifications);
+    public void handleDeleteBlog(List<Long> blogIds, String reason, String mode) {
+        if(blogIds == null || blogIds.isEmpty()) {
+            return;
         }
 
-        this.blogRepository.delete(blog);
-    }
-
-    private void deleteRecursively(Comment comment) {
-        if (comment.getChildren() != null) {
-            for (Comment child : comment.getChildren()) {
-                deleteRecursively(child);
-            }
+        List<Blog> blogs = this.blogRepository.findAllById(blogIds);
+        if(blogs.isEmpty()) {
+            return;
         }
 
-        if(comment.getCommentNotifications() != null) {
-            List<Notification> notifications = comment.getCommentNotifications();
-            this.notificationRepository.deleteAll(notifications);
-        }
-        if(comment.getReplyNotifications() != null) {
-            List<Notification> notifications = comment.getReplyNotifications();
-            this.notificationRepository.deleteAll(notifications);
-        }
-        if(comment.getRepliedOnCommentNotifications() != null) {
-            List<Notification> notifications = comment.getRepliedOnCommentNotifications();
-            this.notificationRepository.deleteAll(notifications);
+        String currentEmail = SecurityUtil.getCurrentUserLogin().isPresent()
+                ? SecurityUtil.getCurrentUserLogin().get()
+                : "";
+        User currentUser = this.userService.handleGetUserByEmail(currentEmail);
+        if(currentUser == null) {
+            return;
         }
 
-        this.commentRepository.delete(comment);
+        if(!currentUser.isEnabled() || !currentUser.getRole().isActive()) {
+            return;
+        }
+
+        if(currentUser.getRole().getName().equalsIgnoreCase(Role.APPLICANT.getValue())) {
+            return;
+        }
+
+        this.blogRepository.deleteAllById(blogIds);
+
+        if(currentUser.getRole().getName().equalsIgnoreCase(Role.ADMIN.getValue())) {
+            this.emailService.handleSendBlogActionNotice(
+                    blogs.getFirst().getAuthor().getContact().getEmail(),
+                    blogs.getFirst().getAuthor().getUsername(),
+                    blogs, reason, mode
+            );
+        }
     }
 
     @Override
