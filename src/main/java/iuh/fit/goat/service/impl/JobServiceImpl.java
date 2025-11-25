@@ -233,38 +233,6 @@ public class JobServiceImpl implements JobService {
         return handleSetActiveForJobs(jobIds, false);
     }
 
-    private List<JobActivateResponse> handleSetActiveForJobs(List<Long> jobIds, boolean activeFlag) {
-        if (jobIds == null || jobIds.isEmpty()) {
-            return Collections.emptyList();
-        }
-
-        List<Job> existingJobs = this.jobRepository.findAllById(jobIds);
-        Map<Long, Job> jobMap = existingJobs.stream()
-                .collect(Collectors.toMap(Job::getJobId, j -> j));
-
-        List<JobActivateResponse> results = new ArrayList<>(jobIds.size());
-
-        for (Long id : jobIds) {
-            Job job = jobMap.get(id);
-            if (job == null) {
-                results.add(new JobActivateResponse(id, false, "fail"));
-                continue;
-            }
-
-            try {
-                job.setActive(activeFlag);
-                this.jobRepository.save(job);
-                results.add(new JobActivateResponse(id, activeFlag, "success"));
-            } catch (Exception ex) {
-                // in case save fails, return current state as false and status fail
-                boolean resultingState = job.isActive();
-                results.add(new JobActivateResponse(id, resultingState, "fail"));
-            }
-        }
-
-        return results;
-    }
-
     @Override
     public List<JobApplicationCountResponse> handleCountApplicationsByJobIds(List<Long> jobIds) {
         if (jobIds == null || jobIds.isEmpty()) {
@@ -325,6 +293,38 @@ public class JobServiceImpl implements JobService {
         }
 
         return jobResponse;
+    }
+
+    private List<JobActivateResponse> handleSetActiveForJobs(List<Long> jobIds, boolean activeFlag) {
+        if (jobIds == null || jobIds.isEmpty()) {
+            return Collections.emptyList();
+        }
+
+        List<Job> existingJobs = this.jobRepository.findAllById(jobIds);
+        Map<Long, Job> jobMap = existingJobs.stream()
+                .collect(Collectors.toMap(Job::getJobId, j -> j));
+
+        List<JobActivateResponse> results = new ArrayList<>(jobIds.size());
+
+        for (Long id : jobIds) {
+            Job job = jobMap.get(id);
+            if (job == null) {
+                results.add(new JobActivateResponse(id, false, "fail"));
+                continue;
+            }
+
+            try {
+                job.setActive(activeFlag);
+                this.jobRepository.save(job);
+                results.add(new JobActivateResponse(id, activeFlag, "success"));
+            } catch (Exception ex) {
+                // in case save fails, return current state as false and status fail
+                boolean resultingState = job.isActive();
+                results.add(new JobActivateResponse(id, resultingState, "fail"));
+            }
+        }
+
+        return results;
     }
 }
 

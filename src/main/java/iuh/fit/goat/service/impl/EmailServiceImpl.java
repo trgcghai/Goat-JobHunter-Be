@@ -1,5 +1,6 @@
 package iuh.fit.goat.service.impl;
 
+import iuh.fit.goat.common.BlogActionType;
 import iuh.fit.goat.entity.User;
 import iuh.fit.goat.service.EmailService;
 import jakarta.mail.internet.MimeMessage;
@@ -71,5 +72,23 @@ public class EmailServiceImpl implements EmailService {
         String content = this.templateEngine.process("verification", context);
 
         this.handleSendEmailSync(email, subject, content, false, true);
+    }
+
+    @Override
+    public void handleSendBlogActionNotice(
+            String recipient, String username, Object object, String reason, String mode
+    ) {
+        String subject = mode.equalsIgnoreCase(BlogActionType.DELETE.getValue())
+                ? "Bài viết của bạn đã bị xóa" : "Bài viết của bạn không được duyệt";
+
+        Context context = new Context();
+
+        context.setVariable("name", username);
+        context.setVariable("blogs", object);
+        context.setVariable("reason", reason);
+        context.setVariable("mode", mode);
+
+        String content = this.templateEngine.process("blog", context);
+        this.handleSendEmailSync(recipient, subject, content, false, true);
     }
 }

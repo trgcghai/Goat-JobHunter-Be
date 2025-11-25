@@ -20,5 +20,4 @@ public interface BlogRepository extends JpaRepository<Blog, Long>, JpaSpecificat
         order by count(t) desc
         """)
     List<Object[]> findAllTags(@Param("keyword") String keyword);
-
 }

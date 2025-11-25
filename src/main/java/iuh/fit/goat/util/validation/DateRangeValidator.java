@@ -1,5 +1,6 @@
-package iuh.fit.goat.dto.request.validation;
+package iuh.fit.goat.util.validation;
 
+import iuh.fit.goat.util.annotation.DateRange;
 import jakarta.validation.ConstraintValidator;
 import jakarta.validation.ConstraintValidatorContext;
 
