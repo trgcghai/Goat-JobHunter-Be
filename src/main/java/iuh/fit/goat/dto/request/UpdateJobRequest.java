@@ -1,5 +1,6 @@
 package iuh.fit.goat.dto.request;
 
+import iuh.fit.goat.util.annotation.DateRange;
 import jakarta.validation.constraints.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -13,7 +14,7 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-@iuh.fit.goat.dto.request.validation.DateRange
+@DateRange
 public class UpdateJobRequest {
     @NotNull(message = "jobId is required")
     private Long jobId;

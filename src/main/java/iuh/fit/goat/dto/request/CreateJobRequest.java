@@ -1,5 +1,6 @@
 package iuh.fit.goat.dto.request;
 
+import iuh.fit.goat.util.annotation.DateRange;
 import jakarta.validation.constraints.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -13,7 +14,7 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-@iuh.fit.goat.dto.request.validation.DateRange
+@DateRange
 public class CreateJobRequest {
     @NotBlank(message = "Tiêu đề không được để trống")
     @Size(min = 10, max = 200, message = "Tiêu đề phải có ít nhất 10 ký tự và không vượt quá 200 ký tự")
