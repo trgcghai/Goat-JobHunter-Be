@@ -1,6 +1,7 @@
 package iuh.fit.goat.service.impl;
 
 import iuh.fit.goat.common.BlogActionType;
+import iuh.fit.goat.common.Status;
 import iuh.fit.goat.entity.User;
 import iuh.fit.goat.service.EmailService;
 import jakarta.mail.internet.MimeMessage;
@@ -89,6 +90,34 @@ public class EmailServiceImpl implements EmailService {
         context.setVariable("mode", mode);
 
         String content = this.templateEngine.process("blog", context);
+        this.handleSendEmailSync(recipient, subject, content, false, true);
+    }
+
+    @Override
+    public void handelSendApplicationStatusEmail(
+            String recipient, String username, Object object, String status,
+            String interviewType, String interviewDate, String location, String note,
+            String reason
+    ) {
+        String subject = "Thông báo đơn ứng tuyển";
+        Context context = new Context();
+
+        context.setVariable("username", username);
+        context.setVariable("applications", object);
+        context.setVariable("status", status);
+
+        if (Status.ACCEPTED.getValue().equalsIgnoreCase(status)) {
+            context.setVariable("interviewDate", interviewDate);
+            context.setVariable("interviewType", interviewType);
+            context.setVariable("location", location);
+            context.setVariable("note", note);
+        }
+
+        if (Status.REJECTED.getValue().equalsIgnoreCase(status)) {
+            context.setVariable("reason", reason);
+        }
+
+        String content = this.templateEngine.process("application", context);
         this.handleSendEmailSync(recipient, subject, content, false, true);
     }
 }

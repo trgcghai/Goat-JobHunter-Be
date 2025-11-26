@@ -1,8 +1,13 @@
 package iuh.fit.goat.service.impl;
 
+import iuh.fit.goat.common.Status;
+import iuh.fit.goat.dto.request.ApplicationIdsRequest;
 import iuh.fit.goat.dto.response.ApplicationResponse;
+import iuh.fit.goat.dto.response.ApplicationStatusResponse;
 import iuh.fit.goat.dto.response.ResultPaginationResponse;
 import iuh.fit.goat.service.ApplicationService;
+import iuh.fit.goat.service.EmailService;
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -11,12 +16,16 @@ import org.springframework.stereotype.Service;
 import iuh.fit.goat.entity.*;
 import iuh.fit.goat.repository.*;
 
-import java.util.List;
-import java.util.Optional;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
+import java.util.*;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
 public class ApplicationServiceImp implements ApplicationService {
+    private final EmailService emailService;
     private final ApplicationRepository applicationRepository;
     private final JobRepository jobRepository;
     private final ApplicantRepository applicantRepository;
@@ -34,17 +43,49 @@ public class ApplicationServiceImp implements ApplicationService {
     }
 
     @Override
-    public ApplicationResponse handleUpdateApplication(Application application) {
-        Application resApplication = this.handleGetApplicationById(application.getApplicationId());
-        resApplication.setStatus(application.getStatus());
-        Application result = this.applicationRepository.save(resApplication);
+    @Transactional
+    public List<ApplicationStatusResponse> handleUpdateApplication(ApplicationIdsRequest request) {
+        List<Application> applications = this.applicationRepository.findAllById(request.getApplicationIds());
+        if (applications.isEmpty()) return Collections.emptyList();
 
-        ApplicationResponse applicationResponse = new ApplicationResponse();
-        applicationResponse.setApplicationId(result.getApplicationId());
-        applicationResponse.setUpdatedAt(result.getUpdatedAt());
-        applicationResponse.setUpdatedBy(result.getUpdatedBy());
+        Status status = Status.fromValue(request.getStatus());
 
-        return applicationResponse;
+        applications.forEach(app -> app.setStatus(status));
+        this.applicationRepository.saveAll(applications);
+
+        Map<String, List<Application>> applicationsByEmail =
+                applications.stream().collect(Collectors.groupingBy(Application::getEmail));
+
+        applicationsByEmail.forEach((email, apps) -> {
+            if(apps.isEmpty()) return;
+
+            String username = apps.getFirst().getApplicant().getUsername();
+            String formattedDate = request.getInterviewDate() != null
+                    ? request.getInterviewDate().format(DateTimeFormatter.ofPattern("dd/MM/yyyy"))
+                    : "";
+            String note = request.getNote() != null ? request.getNote() : null;
+
+            if(status == Status.ACCEPTED && !apps.isEmpty()) {
+                this.emailService.handelSendApplicationStatusEmail(
+                        email, username, apps, status.getValue(),
+                        request.getInterviewType(), formattedDate, request.getLocation(), note,
+                        null
+                );
+            } else if(status == Status.REJECTED && !apps.isEmpty()) {
+                this.emailService.handelSendApplicationStatusEmail(
+                        email, username, apps, status.getValue(),
+                        null, null, null, null,
+                        request.getReason()
+                );
+            }
+        });
+
+        return applications.stream()
+                .map(app -> new ApplicationStatusResponse(
+                        app.getApplicationId(),
+                        app.getStatus().getValue()
+                ))
+                .collect(Collectors.toList());
     }
 
     @Override

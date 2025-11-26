@@ -6,7 +6,9 @@ import com.turkraft.springfilter.converter.FilterSpecification;
 import com.turkraft.springfilter.converter.FilterSpecificationConverter;
 import com.turkraft.springfilter.parser.FilterParser;
 import com.turkraft.springfilter.parser.node.FilterNode;
+import iuh.fit.goat.dto.request.ApplicationIdsRequest;
 import iuh.fit.goat.dto.response.ApplicationResponse;
+import iuh.fit.goat.dto.response.ApplicationStatusResponse;
 import iuh.fit.goat.dto.response.ResultPaginationResponse;
 import iuh.fit.goat.util.annotation.ApiMessage;
 import jakarta.validation.Valid;
@@ -50,15 +52,11 @@ public class ApplicationController {
     }
 
     @PutMapping("/applications")
-    public ResponseEntity<ApplicationResponse> updateApplication(@Valid @RequestBody Application application)
-            throws InvalidException {
-        Application resApplication = this.applicationService.handleGetApplicationById(application.getApplicationId());
-        if(resApplication == null){
-            throw new InvalidException("Application doesn't exist");
-        }
-
-        ApplicationResponse applicationResponse = this.applicationService.handleUpdateApplication(application);
-        return ResponseEntity.status(HttpStatus.OK).body(applicationResponse);
+    public ResponseEntity<List<ApplicationStatusResponse>> updateApplication(
+            @Valid @RequestBody ApplicationIdsRequest request
+    ) {
+        List<ApplicationStatusResponse> result = this.applicationService.handleUpdateApplication(request);
+        return ResponseEntity.status(HttpStatus.OK).body(result);
     }
 
     @DeleteMapping("/applications/{id}")
