@@ -42,50 +42,6 @@ public class ApplicationServiceImp implements ApplicationService {
 
     @Override
     @Transactional
-    public List<ApplicationStatusResponse> handleUpdateApplication(ApplicationIdsRequest request) {
-        List<Application> applications = this.applicationRepository.findAllById(request.getApplicationIds());
-        if (applications.isEmpty()) return Collections.emptyList();
-
-        applications.forEach(app -> app.setStatus(request.getStatus()));
-        this.applicationRepository.saveAll(applications);
-
-        Map<String, List<Application>> applicationsByEmail =
-                applications.stream().collect(Collectors.groupingBy(Application::getEmail));
-
-        applicationsByEmail.forEach((email, apps) -> {
-            if(apps.isEmpty()) return;
-
-            String username = apps.getFirst().getApplicant().getUsername();
-            String formattedDate = request.getInterviewDate() != null
-                    ? request.getInterviewDate().format(DateTimeFormatter.ofPattern("dd/MM/yyyy"))
-                    : "";
-            String note = request.getNote() != null ? request.getNote() : null;
-
-            if(request.getStatus() == Status.ACCEPTED && !apps.isEmpty()) {
-                this.emailService.handelSendApplicationStatusEmail(
-                        email, username, apps, request.getStatus().getValue(),
-                        request.getInterviewType(), formattedDate, request.getLocation(), note,
-                        null
-                );
-            } else if(request.getStatus() == Status.REJECTED && !apps.isEmpty()) {
-                this.emailService.handelSendApplicationStatusEmail(
-                        email, username, apps, request.getStatus().getValue(),
-                        null, null, null, null,
-                        request.getReason()
-                );
-            }
-        });
-
-        return applications.stream()
-                .map(app -> new ApplicationStatusResponse(
-                        app.getApplicationId(),
-                        app.getStatus().getValue()
-                ))
-                .collect(Collectors.toList());
-    }
-
-    @Override
-    @Transactional
     public List<ApplicationStatusResponse> handleAcceptApplications(ApplicationIdsRequest request) {
         List<Application> applications = this.applicationRepository.findAllById(request.getApplicationIds());
         if (applications.isEmpty()) return Collections.emptyList();

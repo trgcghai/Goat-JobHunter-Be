@@ -51,24 +51,6 @@ public class ApplicationController {
         return ResponseEntity.status(HttpStatus.CREATED).body(applicationResponse);
     }
 
-    @PutMapping("/applications/accepted")
-    public ResponseEntity<List<ApplicationStatusResponse>> acceptApplications(
-            @Valid @RequestBody ApplicationIdsRequest request
-    ) {
-        request.setStatus(Status.ACCEPTED.getValue());
-        List<ApplicationStatusResponse> result = this.applicationService.handleUpdateApplication(request);
-        return ResponseEntity.ok(result);
-    }
-
-    @PutMapping("/applications/rejected")
-    public ResponseEntity<List<ApplicationStatusResponse>> rejectApplications(
-            @Valid @RequestBody ApplicationIdsRequest request
-    ) {
-        request.setStatus(Status.REJECTED.getValue());
-        List<ApplicationStatusResponse> result = this.applicationService.handleUpdateApplication(request);
-        return ResponseEntity.ok(result);
-    }
-
     @PutMapping("/applications/accept")
     public ResponseEntity<List<ApplicationStatusResponse>> acceptApplications(
             @Valid @RequestBody ApplicationIdsRequest request
