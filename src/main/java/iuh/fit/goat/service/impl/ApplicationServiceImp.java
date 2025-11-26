@@ -61,13 +61,11 @@ public class ApplicationServiceImp implements ApplicationService {
                     : "";
             String note = request.getNote() != null ? request.getNote() : null;
 
-            if(!apps.isEmpty()) {
-                this.emailService.handelSendApplicationStatusEmail(
-                        email, username, apps, Status.ACCEPTED.getValue(),
-                        request.getInterviewType(), formattedDate, request.getLocation(), note,
-                        null
-                );
-            }
+            this.emailService.handelSendApplicationStatusEmail(
+                    email, username, apps, Status.ACCEPTED.getValue(),
+                    request.getInterviewType(), formattedDate, request.getLocation(), note,
+                    null
+            );
         });
 
         return applications.stream()
@@ -95,13 +93,11 @@ public class ApplicationServiceImp implements ApplicationService {
 
             String username = apps.getFirst().getApplicant().getUsername();
 
-            if(!apps.isEmpty()) {
-                this.emailService.handelSendApplicationStatusEmail(
-                        email, username, apps, Status.REJECTED.getValue(),
-                        null, null, null, null,
-                        request.getReason()
-                );
-            }
+            this.emailService.handelSendApplicationStatusEmail(
+                    email, username, apps, Status.REJECTED.getValue(),
+                    null, null, null, null,
+                    request.getReason()
+            );
         });
 
         return applications.stream()
