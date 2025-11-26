@@ -6,6 +6,7 @@ import com.turkraft.springfilter.converter.FilterSpecification;
 import com.turkraft.springfilter.converter.FilterSpecificationConverter;
 import com.turkraft.springfilter.parser.FilterParser;
 import com.turkraft.springfilter.parser.node.FilterNode;
+import iuh.fit.goat.common.Status;
 import iuh.fit.goat.dto.request.ApplicationIdsRequest;
 import iuh.fit.goat.dto.response.ApplicationResponse;
 import iuh.fit.goat.dto.response.ApplicationStatusResponse;
@@ -51,12 +52,22 @@ public class ApplicationController {
         return ResponseEntity.status(HttpStatus.CREATED).body(applicationResponse);
     }
 
-    @PutMapping("/applications")
-    public ResponseEntity<List<ApplicationStatusResponse>> updateApplication(
+    @PutMapping("/applications/accepted")
+    public ResponseEntity<List<ApplicationStatusResponse>> acceptApplications(
             @Valid @RequestBody ApplicationIdsRequest request
     ) {
+        request.setStatus(Status.ACCEPTED.getValue());
         List<ApplicationStatusResponse> result = this.applicationService.handleUpdateApplication(request);
-        return ResponseEntity.status(HttpStatus.OK).body(result);
+        return ResponseEntity.ok(result);
+    }
+
+    @PutMapping("/applications/rejected")
+    public ResponseEntity<List<ApplicationStatusResponse>> rejectApplications(
+            @Valid @RequestBody ApplicationIdsRequest request
+    ) {
+        request.setStatus(Status.REJECTED.getValue());
+        List<ApplicationStatusResponse> result = this.applicationService.handleUpdateApplication(request);
+        return ResponseEntity.ok(result);
     }
 
     @DeleteMapping("/applications/{id}")
