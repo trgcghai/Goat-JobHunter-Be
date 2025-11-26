@@ -134,6 +134,8 @@ public class DatabaseInitializer implements CommandLineRunner {
 //      APPLICATION
         permissions.add(new Permission("Create application", "/api/v1/applications", "POST", "APPLICATIONS"));
         permissions.add(new Permission("Update application", "/api/v1/applications", "PUT", "APPLICATIONS"));
+        permissions.add(new Permission("Accept application", "/api/v1/applications/accept", "PUT", "APPLICATIONS"));
+        permissions.add(new Permission("Reject application", "/api/v1/applications/reject", "PUT", "APPLICATIONS"));
         permissions.add(new Permission("Delete application", "/api/v1/applications/{id}", "DELETE", "APPLICATIONS"));
         permissions.add(new Permission("Get application", "/api/v1/applications/{id}", "GET", "APPLICATIONS"));
         permissions.add(new Permission("Get all applications by recruiter", "/api/v1/applications", "GET", "APPLICATIONS"));
@@ -240,6 +242,8 @@ public class DatabaseInitializer implements CommandLineRunner {
         hrPermissions.add(this.permissionRepository.findByName("Delete a blog"));
         hrPermissions.add(this.permissionRepository.findByName("Get a blog by id"));
         hrPermissions.add(this.permissionRepository.findByName("Get blogs with pagination"));
+        hrPermissions.add(this.permissionRepository.findByName("Accept application"));
+        hrPermissions.add(this.permissionRepository.findByName("Reject application"));
 
         hrRole.setPermissions(hrPermissions);
         this.roleRepository.save(hrRole);
