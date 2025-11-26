@@ -1,12 +1,12 @@
 package iuh.fit.goat.repository;
 
-import iuh.fit.goat.entity.Career;
-import iuh.fit.goat.entity.Job;
-import iuh.fit.goat.entity.Recruiter;
-import iuh.fit.goat.entity.Skill;
+import iuh.fit.goat.entity.*;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;

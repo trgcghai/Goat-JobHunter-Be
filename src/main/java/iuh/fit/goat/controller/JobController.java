@@ -8,6 +8,7 @@ import iuh.fit.goat.dto.response.JobActivateResponse;
 import iuh.fit.goat.dto.response.JobApplicationCountResponse;
 import iuh.fit.goat.dto.response.JobResponse;
 import iuh.fit.goat.dto.response.ResultPaginationResponse;
+import iuh.fit.goat.entity.Applicant;
 import iuh.fit.goat.entity.Job;
 import iuh.fit.goat.exception.InvalidException;
 import iuh.fit.goat.service.JobService;
@@ -130,5 +131,24 @@ public class JobController {
 
         List<JobApplicationCountResponse> result = this.jobService.handleCountApplicationsByJobIds(jobIds);
         return ResponseEntity.ok(result);
+    }
+
+    @GetMapping("/jobs/{jobId}/applicants")
+    public ResponseEntity<ResultPaginationResponse> getApplicationsByJob(
+            @Filter Specification<Applicant> spec, Pageable pageable,
+            @PathVariable("jobId") String jobId
+    ) throws InvalidException {
+        Pattern pattern = Pattern.compile("^[0-9]+$");
+        if(!pattern.matcher(jobId).matches()){
+            throw new InvalidException("Id is number");
+        }
+
+        Job currentJob = this.jobService.handleGetJobById(Long.parseLong(jobId));
+        if (currentJob == null) {
+            throw new InvalidException("Job doesn't exist");
+        }
+
+        ResultPaginationResponse result = this.jobService.handleGetApplicantsForJob(spec, pageable, Long.parseLong(jobId));
+        return ResponseEntity.status(HttpStatus.OK).body(result);
     }
 }

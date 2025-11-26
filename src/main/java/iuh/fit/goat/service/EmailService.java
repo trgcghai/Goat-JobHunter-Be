@@ -4,6 +4,7 @@ import iuh.fit.goat.entity.User;
 import org.springframework.scheduling.annotation.Async;
 
 import java.time.LocalDate;
+import java.util.List;
 
 public interface EmailService {
     //    Send email with text
@@ -32,4 +33,6 @@ public interface EmailService {
             String interviewType, String interviewDate, String location, String note,
             String reason
     );
+
+    void handelSendJobInvitationEmail(List<Long> applicantIds, Long jobId);
 }
