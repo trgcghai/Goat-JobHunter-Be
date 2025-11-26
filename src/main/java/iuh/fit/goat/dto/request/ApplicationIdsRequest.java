@@ -1,7 +1,7 @@
 package iuh.fit.goat.dto.request;
 
+import iuh.fit.goat.common.Status;
 import iuh.fit.goat.util.annotation.ValidApplicationRequest;
-import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotEmpty;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -19,8 +19,7 @@ import java.util.List;
 public class ApplicationIdsRequest {
     @NotEmpty(message = "applicationIds is required")
     private List<Long> applicationIds;
-    @NotBlank(message = "status is required")
-    private String status;
+    private Status status;
     private LocalDate interviewDate;
     private String interviewType;
     private String location;

@@ -1,7 +1,6 @@
 package iuh.fit.goat.controller;
 
 import com.turkraft.springfilter.boot.Filter;
-import com.turkraft.springfilter.builder.FilterBuilder;
 import com.turkraft.springfilter.converter.FilterSpecification;
 import com.turkraft.springfilter.converter.FilterSpecificationConverter;
 import com.turkraft.springfilter.parser.FilterParser;
@@ -56,6 +55,22 @@ public class ApplicationController {
             @Valid @RequestBody ApplicationIdsRequest request
     ) {
         List<ApplicationStatusResponse> result = this.applicationService.handleUpdateApplication(request);
+        return ResponseEntity.status(HttpStatus.OK).body(result);
+    }
+
+    @PutMapping("/applications/accept")
+    public ResponseEntity<List<ApplicationStatusResponse>> acceptApplications(
+            @Valid @RequestBody ApplicationIdsRequest request
+    ) {
+        List<ApplicationStatusResponse> result = this.applicationService.handleAcceptApplications(request);
+        return ResponseEntity.status(HttpStatus.OK).body(result);
+    }
+
+    @PutMapping("/applications/reject")
+    public ResponseEntity<List<ApplicationStatusResponse>> rejectApplications(
+            @Valid @RequestBody ApplicationIdsRequest request
+    ) {
+        List<ApplicationStatusResponse> result = this.applicationService.handleRejectApplications(request);
         return ResponseEntity.status(HttpStatus.OK).body(result);
     }
 

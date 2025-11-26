@@ -10,13 +10,16 @@ import iuh.fit.goat.entity.Job;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 
-import java.time.LocalDate;
 import java.util.List;
 
 public interface ApplicationService {
     ApplicationResponse handleCreateApplication(Application application);
 
     List<ApplicationStatusResponse> handleUpdateApplication(ApplicationIdsRequest request);
+
+    List<ApplicationStatusResponse> handleAcceptApplications(ApplicationIdsRequest request);
+
+    List<ApplicationStatusResponse> handleRejectApplications(ApplicationIdsRequest request);
 
     void handleDeleteApplication(long id);
 

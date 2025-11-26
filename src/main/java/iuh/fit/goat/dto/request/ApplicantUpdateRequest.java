@@ -20,6 +20,8 @@ public class ApplicantUpdateRequest {
     private String fullName;
     private Contact contact;
     private String address;
+    private LocalDate dob;
+    private Gender gender;
     private Education education;
     private Level level;
     private String avatar;

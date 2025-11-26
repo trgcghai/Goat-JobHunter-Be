@@ -16,10 +16,8 @@ import org.springframework.stereotype.Service;
 import iuh.fit.goat.entity.*;
 import iuh.fit.goat.repository.*;
 
-import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
-import java.util.function.Function;
 import java.util.stream.Collectors;
 
 @Service
@@ -48,9 +46,7 @@ public class ApplicationServiceImp implements ApplicationService {
         List<Application> applications = this.applicationRepository.findAllById(request.getApplicationIds());
         if (applications.isEmpty()) return Collections.emptyList();
 
-        Status status = Status.fromValue(request.getStatus());
-
-        applications.forEach(app -> app.setStatus(status));
+        applications.forEach(app -> app.setStatus(request.getStatus()));
         this.applicationRepository.saveAll(applications);
 
         Map<String, List<Application>> applicationsByEmail =
@@ -65,15 +61,87 @@ public class ApplicationServiceImp implements ApplicationService {
                     : "";
             String note = request.getNote() != null ? request.getNote() : null;
 
-            if(status == Status.ACCEPTED && !apps.isEmpty()) {
+            if(request.getStatus() == Status.ACCEPTED && !apps.isEmpty()) {
                 this.emailService.handelSendApplicationStatusEmail(
-                        email, username, apps, status.getValue(),
+                        email, username, apps, request.getStatus().getValue(),
                         request.getInterviewType(), formattedDate, request.getLocation(), note,
                         null
                 );
-            } else if(status == Status.REJECTED && !apps.isEmpty()) {
+            } else if(request.getStatus() == Status.REJECTED && !apps.isEmpty()) {
                 this.emailService.handelSendApplicationStatusEmail(
-                        email, username, apps, status.getValue(),
+                        email, username, apps, request.getStatus().getValue(),
+                        null, null, null, null,
+                        request.getReason()
+                );
+            }
+        });
+
+        return applications.stream()
+                .map(app -> new ApplicationStatusResponse(
+                        app.getApplicationId(),
+                        app.getStatus().getValue()
+                ))
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    @Transactional
+    public List<ApplicationStatusResponse> handleAcceptApplications(ApplicationIdsRequest request) {
+        List<Application> applications = this.applicationRepository.findAllById(request.getApplicationIds());
+        if (applications.isEmpty()) return Collections.emptyList();
+
+        applications.forEach(app -> app.setStatus(Status.ACCEPTED));
+        this.applicationRepository.saveAll(applications);
+
+        Map<String, List<Application>> applicationsByEmail =
+                applications.stream().collect(Collectors.groupingBy(Application::getEmail));
+
+        applicationsByEmail.forEach((email, apps) -> {
+            if(apps.isEmpty()) return;
+
+            String username = apps.getFirst().getApplicant().getUsername();
+            String formattedDate = request.getInterviewDate() != null
+                    ? request.getInterviewDate().format(DateTimeFormatter.ofPattern("dd/MM/yyyy"))
+                    : "";
+            String note = request.getNote() != null ? request.getNote() : null;
+
+            if(!apps.isEmpty()) {
+                this.emailService.handelSendApplicationStatusEmail(
+                        email, username, apps, Status.ACCEPTED.getValue(),
+                        request.getInterviewType(), formattedDate, request.getLocation(), note,
+                        null
+                );
+            }
+        });
+
+        return applications.stream()
+                .map(app -> new ApplicationStatusResponse(
+                        app.getApplicationId(),
+                        app.getStatus().getValue()
+                ))
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    @Transactional
+    public List<ApplicationStatusResponse> handleRejectApplications(ApplicationIdsRequest request) {
+        List<Application> applications = this.applicationRepository.findAllById(request.getApplicationIds());
+        if (applications.isEmpty()) return Collections.emptyList();
+
+        applications.forEach(app -> app.setStatus(Status.REJECTED));
+        this.applicationRepository.saveAll(applications);
+
+        Map<String, List<Application>> applicationsByEmail =
+                applications.stream().collect(Collectors.groupingBy(Application::getEmail));
+
+        applicationsByEmail.forEach((email, apps) -> {
+            if(apps.isEmpty()) return;
+
+            String username = apps.getFirst().getApplicant().getUsername();
+
+            if(!apps.isEmpty()) {
+                this.emailService.handelSendApplicationStatusEmail(
+                        email, username, apps, Status.REJECTED.getValue(),
                         null, null, null, null,
                         request.getReason()
                 );

@@ -86,6 +86,12 @@ public class ApplicantServiceImpl implements ApplicantService {
         if (updateRequest.getAddress() != null) {
             currentApplicant.setAddress(updateRequest.getAddress());
         }
+        if (updateRequest.getDob() != null) {
+            currentApplicant.setDob(updateRequest.getDob());
+        }
+        if (updateRequest.getGender() != null) {
+            currentApplicant.setGender(updateRequest.getGender());
+        }
         if (updateRequest.getEducation() != null) {
             currentApplicant.setEducation(updateRequest.getEducation());
         }

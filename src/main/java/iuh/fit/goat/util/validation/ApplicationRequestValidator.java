@@ -23,20 +23,20 @@ public class ApplicationRequestValidator implements ConstraintValidator<ValidApp
             valid = false;
         }
 
-        if (req.getStatus() == null || req.getStatus().isBlank()) {
+        if (req.getStatus() == null) {
             context.buildConstraintViolationWithTemplate("status is required")
                     .addPropertyNode("status").addConstraintViolation();
             valid = false;
             return valid;
         }
 
-        if (Status.ACCEPTED.getValue().equalsIgnoreCase(req.getStatus())) {
+        if (Status.ACCEPTED.getValue().equalsIgnoreCase(req.getStatus().getValue())) {
             if (req.getInterviewDate() == null) {
                 context.buildConstraintViolationWithTemplate("interviewDate is required when status is accepted")
                         .addPropertyNode("interviewDate").addConstraintViolation();
                 valid = false;
             }
-            if (req.getInterviewType() == null || req.getInterviewType().isBlank()) {
+            if (req.getInterviewType() == null) {
                 context.buildConstraintViolationWithTemplate("interviewType is required when status is accepted")
                         .addPropertyNode("interviewType").addConstraintViolation();
                 valid = false;
@@ -48,7 +48,7 @@ public class ApplicationRequestValidator implements ConstraintValidator<ValidApp
             }
         }
 
-        if (Status.REJECTED.getValue().equalsIgnoreCase(req.getStatus())) {
+        if (Status.REJECTED.getValue().equalsIgnoreCase(req.getStatus().getValue())) {
             if (req.getReason() == null || req.getReason().isBlank()) {
                 context.buildConstraintViolationWithTemplate("reason is required when status is rejected")
                         .addPropertyNode("reason").addConstraintViolation();
