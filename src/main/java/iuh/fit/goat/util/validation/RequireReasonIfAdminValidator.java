@@ -23,7 +23,7 @@ public class RequireReasonIfAdminValidator implements ConstraintValidator<Requir
         String currentEmail = SecurityUtil.getCurrentUserLogin().orElse(null);
         if (currentEmail == null) return true;
 
-        User currentUser = userService.handleGetUserByEmail(currentEmail);
+        User currentUser = this.userService.handleGetUserByEmail(currentEmail);
         if (currentUser == null) return true;
 
         boolean isAdmin = currentUser.getRole().getName().equalsIgnoreCase(Role.ADMIN.getValue());
