@@ -1,6 +1,7 @@
 package iuh.fit.goat.controller;
 
 import com.turkraft.springfilter.boot.Filter;
+import iuh.fit.goat.dto.request.RecruiterUpdateRequest;
 import iuh.fit.goat.dto.response.RecruiterResponse;
 import iuh.fit.goat.dto.response.ResultPaginationResponse;
 import iuh.fit.goat.entity.Job;
@@ -33,7 +34,7 @@ public class RecruiterController {
     @PostMapping("/recruiters")
     public ResponseEntity<RecruiterResponse> createRecruiter(@Valid @RequestBody Recruiter recruiter)
             throws InvalidException {
-        if(userService.handleExistsByEmail(recruiter.getContact().getEmail())) {
+        if (userService.handleExistsByEmail(recruiter.getContact().getEmail())) {
             throw new InvalidException("Email exists: " + recruiter.getContact().getEmail());
         }
 
@@ -53,24 +54,27 @@ public class RecruiterController {
     }
 
     @PutMapping("/recruiters")
-    public ResponseEntity<RecruiterResponse> updateRecruiter(@Valid @RequestBody Recruiter recruiter)
-            throws InvalidException {
-        Recruiter newRecruiter = this.recruiterService.handleUpdateRecruiter(recruiter);
-        if(newRecruiter != null) {
-            RecruiterResponse recruiterResponse = this.recruiterService.convertToRecruiterResponse(newRecruiter);
+    public ResponseEntity<RecruiterResponse> updateRecruiter(
+            @Valid @RequestBody RecruiterUpdateRequest updateRequest) throws InvalidException {
+
+        Recruiter updatedRecruiter = this.recruiterService.handleUpdateRecruiter(updateRequest);
+
+        if (updatedRecruiter != null) {
+            RecruiterResponse recruiterResponse = this.recruiterService.convertToRecruiterResponse(updatedRecruiter);
             return ResponseEntity.status(HttpStatus.OK).body(recruiterResponse);
         } else {
             throw new InvalidException("Recruiter not found");
         }
     }
 
+
     @GetMapping("/recruiters/{id}")
     public ResponseEntity<RecruiterResponse> getRecruiterById(@PathVariable("id") String id) throws InvalidException {
         Pattern pattern = Pattern.compile("^[0-9]+$");
 
-        if(pattern.matcher(id).matches()){
+        if (pattern.matcher(id).matches()) {
             Recruiter recruiter = this.recruiterService.handleGetRecruiterById(Long.parseLong(id));
-            if(recruiter != null){
+            if (recruiter != null) {
                 RecruiterResponse recruiterResponse = this.recruiterService.convertToRecruiterResponse(recruiter);
                 return ResponseEntity.status(HttpStatus.OK).body(recruiterResponse);
             } else {

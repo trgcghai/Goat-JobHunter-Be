@@ -1,5 +1,6 @@
 package iuh.fit.goat.service;
 
+import iuh.fit.goat.dto.request.ApplicantUpdateRequest;
 import iuh.fit.goat.dto.response.ApplicantResponse;
 import iuh.fit.goat.dto.response.ResultPaginationResponse;
 import iuh.fit.goat.entity.Applicant;
@@ -11,7 +12,7 @@ public interface ApplicantService {
 
     void handleDeleteApplicant(long id);
 
-    Applicant handleUpdateApplicant(Applicant applicant);
+    Applicant handleUpdateApplicant(ApplicantUpdateRequest updateRequest);
 
     Applicant handleGetApplicantById(long id);
 
