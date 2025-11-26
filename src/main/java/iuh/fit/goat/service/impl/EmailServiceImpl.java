@@ -143,7 +143,7 @@ public class EmailServiceImpl implements EmailService {
         applicants.forEach(applicant -> {
             context.setVariable("applicant", applicant);
             String content = this.templateEngine.process("invitation", context);
-            this.handleSendEmailSync("nguyenthangdat84@gmail.com", subject, content, false, true);
+            this.handleSendEmailSync(applicant.getContact().getEmail(), subject, content, false, true);
         });
 
     }
