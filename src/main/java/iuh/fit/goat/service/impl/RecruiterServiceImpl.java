@@ -1,5 +1,6 @@
 package iuh.fit.goat.service.impl;
 
+import iuh.fit.goat.dto.request.RecruiterUpdateRequest;
 import iuh.fit.goat.dto.response.RecruiterResponse;
 import iuh.fit.goat.dto.response.ResultPaginationResponse;
 import iuh.fit.goat.dto.response.UserResponse;
@@ -17,7 +18,6 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 
-import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -35,7 +35,7 @@ public class RecruiterServiceImpl implements RecruiterService {
 
     @Override
     public Recruiter handleCreateRecruiter(Recruiter recruiter) {
-        Role role = null;
+        Role role;
         if(recruiter.getRole() != null) {
             role = this.roleService.handleGetRoleById(recruiter.getRole().getRoleId());
         } else {
@@ -79,31 +79,44 @@ public class RecruiterServiceImpl implements RecruiterService {
     }
 
     @Override
-    public Recruiter handleUpdateRecruiter(Recruiter updateRecruiter) {
-        Recruiter currentRecruiter = this.handleGetRecruiterById(updateRecruiter.getUserId());
+    public Recruiter handleUpdateRecruiter(RecruiterUpdateRequest updateRequest) {
+        Recruiter currentRecruiter = this.handleGetRecruiterById(updateRequest.getUserId());
 
-        if(currentRecruiter != null) {
-            currentRecruiter.setAddress(updateRecruiter.getAddress());
-            currentRecruiter.setContact(updateRecruiter.getContact());
-            currentRecruiter.setDob(updateRecruiter.getDob());
-            currentRecruiter.setFullName(updateRecruiter.getFullName());
-            currentRecruiter.setGender(updateRecruiter.getGender());
-            currentRecruiter.setUsername(updateRecruiter.getUsername());
-            currentRecruiter.setDescription(updateRecruiter.getDescription());
-            currentRecruiter.setAvatar(updateRecruiter.getAvatar());
-            currentRecruiter.setWebsite(updateRecruiter.getWebsite());
-            currentRecruiter.setEnabled(updateRecruiter.isEnabled());
-
-            if(updateRecruiter.getRole() != null) {
-                Role role = this.roleService.handleGetRoleById(updateRecruiter.getRole().getRoleId());
-                currentRecruiter.setRole(role);
-            }
-
-            return this.recruiterRepository.save(currentRecruiter);
+        if (currentRecruiter == null) {
+            return null;
         }
 
-        return null;
+        if (updateRequest.getUsername() != null) {
+            currentRecruiter.setUsername(updateRequest.getUsername());
+        }
+        if (updateRequest.getFullName() != null) {
+            currentRecruiter.setFullName(updateRequest.getFullName());
+        }
+        if (updateRequest.getContact() != null) {
+            currentRecruiter.setContact(updateRequest.getContact());
+        }
+        if (updateRequest.getAddress() != null) {
+            currentRecruiter.setAddress(updateRequest.getAddress());
+        }
+        if (updateRequest.getDob() != null) {
+            currentRecruiter.setDob(updateRequest.getDob());
+        }
+        if (updateRequest.getGender() != null) {
+            currentRecruiter.setGender(updateRequest.getGender());
+        }
+        if (updateRequest.getDescription() != null) {
+            currentRecruiter.setDescription(updateRequest.getDescription());
+        }
+        if (updateRequest.getWebsite() != null) {
+            currentRecruiter.setWebsite(updateRequest.getWebsite());
+        }
+        if (updateRequest.getAvatar() != null) {
+            currentRecruiter.setAvatar(updateRequest.getAvatar());
+        }
+
+        return this.recruiterRepository.save(currentRecruiter);
     }
+
 
     @Override
     public Recruiter handleGetRecruiterById(long id) {
@@ -112,6 +125,16 @@ public class RecruiterServiceImpl implements RecruiterService {
         return recruiter.orElse(null);
 
     }
+
+    @Override
+    public Recruiter handleGetCurrentRecruiter() {
+        String email = SecurityUtil.getCurrentUserLogin().orElse(null);
+        if (email == null) {
+            return null;
+        }
+        return this.recruiterRepository.findByContactEmail(email).orElse(null);
+    }
+
 
     @Override
     public ResultPaginationResponse handleGetAllRecruiters(Specification<Recruiter> spec, Pageable pageable) {

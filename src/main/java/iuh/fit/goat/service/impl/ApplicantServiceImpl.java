@@ -1,5 +1,6 @@
 package iuh.fit.goat.service.impl;
 
+import iuh.fit.goat.dto.request.ApplicantUpdateRequest;
 import iuh.fit.goat.dto.response.ApplicantResponse;
 import iuh.fit.goat.dto.response.ResultPaginationResponse;
 import iuh.fit.goat.dto.response.UserResponse;
@@ -15,7 +16,6 @@ import iuh.fit.goat.entity.*;
 import iuh.fit.goat.repository.*;
 import iuh.fit.goat.util.*;
 
-import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -32,7 +32,7 @@ public class ApplicantServiceImpl implements ApplicantService {
 
     @Override
     public Applicant handleCreateApplicant(Applicant applicant) {
-        Role role = null;
+        Role role;
         if(applicant.getRole() != null){
             role = this.roleService.handleGetRoleById(applicant.getRole().getRoleId());
         } else {
@@ -67,32 +67,44 @@ public class ApplicantServiceImpl implements ApplicantService {
     }
 
     @Override
-    public Applicant handleUpdateApplicant(Applicant applicant) {
-        Applicant currentApplicant = this.handleGetApplicantById(applicant.getUserId());
+    public Applicant handleUpdateApplicant(ApplicantUpdateRequest updateRequest) {
+        Applicant currentApplicant = this.handleGetApplicantById(updateRequest.getUserId());
 
-        if(currentApplicant != null) {
-            currentApplicant.setAddress(applicant.getAddress());
-            currentApplicant.setContact(applicant.getContact());
-            currentApplicant.setDob(applicant.getDob());
-            currentApplicant.setFullName(applicant.getFullName());
-            currentApplicant.setGender(applicant.getGender());
-            currentApplicant.setUsername(applicant.getUsername());
-            currentApplicant.setAvailableStatus(applicant.isAvailableStatus());
-            currentApplicant.setEducation(applicant.getEducation());
-            currentApplicant.setLevel(applicant.getLevel());
-            currentApplicant.setResumeUrl(applicant.getResumeUrl());
-            currentApplicant.setAvatar(applicant.getAvatar());
-
-            if(applicant.getRole() != null){
-                Role role = this.roleService.handleGetRoleById(applicant.getRole().getRoleId());
-                currentApplicant.setRole(role);
-            }
-
-            return this.applicantRepository.save(currentApplicant);
+        if (currentApplicant == null) {
+            return null;
         }
 
-        return null;
+        if (updateRequest.getUsername() != null) {
+            currentApplicant.setUsername(updateRequest.getUsername());
+        }
+        if (updateRequest.getFullName() != null) {
+            currentApplicant.setFullName(updateRequest.getFullName());
+        }
+        if (updateRequest.getContact() != null) {
+            currentApplicant.setContact(updateRequest.getContact());
+        }
+        if (updateRequest.getAddress() != null) {
+            currentApplicant.setAddress(updateRequest.getAddress());
+        }
+        if (updateRequest.getDob() != null) {
+            currentApplicant.setDob(updateRequest.getDob());
+        }
+        if (updateRequest.getGender() != null) {
+            currentApplicant.setGender(updateRequest.getGender());
+        }
+        if (updateRequest.getEducation() != null) {
+            currentApplicant.setEducation(updateRequest.getEducation());
+        }
+        if (updateRequest.getLevel() != null) {
+            currentApplicant.setLevel(updateRequest.getLevel());
+        }
+        if (updateRequest.getAvatar() != null) {
+            currentApplicant.setAvatar(updateRequest.getAvatar());
+        }
+
+        return this.applicantRepository.save(currentApplicant);
     }
+
 
     @Override
     public Applicant handleGetApplicantById(long id) {
@@ -100,6 +112,16 @@ public class ApplicantServiceImpl implements ApplicantService {
 
         return result.orElse(null);
     }
+
+    @Override
+    public Applicant handleGetCurrentApplicant() {
+        String email = SecurityUtil.getCurrentUserLogin().orElse(null);
+        if (email == null) {
+            return null;
+        }
+        return this.applicantRepository.findByContactEmail(email).orElse(null);
+    }
+
 
     @Override
     public ResultPaginationResponse handleGetAllApplicants(Specification<Applicant> spec, Pageable pageable) {

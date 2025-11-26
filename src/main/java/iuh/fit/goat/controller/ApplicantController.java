@@ -1,6 +1,7 @@
 package iuh.fit.goat.controller;
 
 import com.turkraft.springfilter.boot.Filter;
+import iuh.fit.goat.dto.request.ApplicantUpdateRequest;
 import iuh.fit.goat.dto.response.ApplicantResponse;
 import iuh.fit.goat.dto.response.ResultPaginationResponse;
 import iuh.fit.goat.util.annotation.ApiMessage;
@@ -29,7 +30,7 @@ public class ApplicantController {
 
     @PostMapping("/applicants")
     public ResponseEntity<ApplicantResponse> createApplicant(@Valid @RequestBody Applicant applicant) throws InvalidException {
-        if(this.userService.handleExistsByEmail(applicant.getContact().getEmail())) {
+        if (this.userService.handleExistsByEmail(applicant.getContact().getEmail())) {
             throw new InvalidException("Email exists: " + applicant.getContact().getEmail());
         }
 
@@ -49,11 +50,12 @@ public class ApplicantController {
     }
 
     @PutMapping("/applicants")
-    public ResponseEntity<ApplicantResponse> updateApplicant(@Valid @RequestBody Applicant applicant)
-            throws InvalidException {
-        Applicant updatedApplicant = this.applicantService.handleUpdateApplicant(applicant);
+    public ResponseEntity<ApplicantResponse> updateApplicant(
+            @Valid @RequestBody ApplicantUpdateRequest updateRequest) throws InvalidException {
 
-        if(updatedApplicant != null) {
+        Applicant updatedApplicant = this.applicantService.handleUpdateApplicant(updateRequest);
+
+        if (updatedApplicant != null) {
             ApplicantResponse applicantResponse = this.applicantService.convertToApplicantResponse(updatedApplicant);
             return ResponseEntity.status(HttpStatus.OK).body(applicantResponse);
         } else {
@@ -61,13 +63,26 @@ public class ApplicantController {
         }
     }
 
+    @GetMapping("/applicants/me")
+    public ResponseEntity<ApplicantResponse> getCurrentApplicant() throws InvalidException {
+        Applicant applicant = this.applicantService.handleGetCurrentApplicant();
+
+        if (applicant != null) {
+            ApplicantResponse applicantResponse = this.applicantService.convertToApplicantResponse(applicant);
+            return ResponseEntity.status(HttpStatus.OK).body(applicantResponse);
+        } else {
+            throw new InvalidException("Current user is not an applicant or not found");
+        }
+    }
+
+
     @GetMapping("/applicants/{id}")
     public ResponseEntity<ApplicantResponse> getApplicantById(@PathVariable("id") String id) throws InvalidException {
         Pattern pattern = Pattern.compile("^[0-9]+$");
 
-        if(pattern.matcher(id).matches()){
+        if (pattern.matcher(id).matches()) {
             Applicant applicant = this.applicantService.handleGetApplicantById(Long.parseLong(id));
-            if(applicant != null) {
+            if (applicant != null) {
                 ApplicantResponse applicantResponse = this.applicantService.convertToApplicantResponse(applicant);
                 return ResponseEntity.status(HttpStatus.OK).body(applicantResponse);
             } else {

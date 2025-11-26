@@ -1,7 +1,6 @@
 package iuh.fit.goat.service.impl;
 
 import iuh.fit.goat.common.Role;
-import iuh.fit.goat.dto.request.FollowRecruiterRequest;
 import iuh.fit.goat.dto.request.ResetPasswordRequest;
 import iuh.fit.goat.dto.response.LoginResponse;
 import iuh.fit.goat.dto.response.ResultPaginationResponse;
@@ -447,22 +446,6 @@ public class UserServiceImpl implements UserService {
             roleUser.setName(user.getRole().getName());
 
             userResponse.setRole(roleUser);
-        }
-        if (user.getSavedJobs() != null) {
-            List<UserResponse.SavedJob> savedJobs = new ArrayList<>();
-            user.getSavedJobs().forEach(savedJob -> {
-                savedJobs.add(new UserResponse.SavedJob(savedJob.getJobId(), savedJob.getTitle()));
-            });
-            userResponse.setSavedJobs(savedJobs);
-        }
-        if (user.getFollowedRecruiters() != null) {
-            List<UserResponse.FollowedRecruiter> followedRecruiters = new ArrayList<>();
-            user.getFollowedRecruiters().forEach(followedRecruiter -> {
-                followedRecruiters.add(new UserResponse.FollowedRecruiter(
-                        followedRecruiter.getUserId(), followedRecruiter.getFullName()
-                ));
-            });
-            userResponse.setFollowedRecruiters(followedRecruiters);
         }
 
         return userResponse;

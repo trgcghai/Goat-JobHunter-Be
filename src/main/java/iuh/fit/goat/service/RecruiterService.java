@@ -1,5 +1,6 @@
 package iuh.fit.goat.service;
 
+import iuh.fit.goat.dto.request.RecruiterUpdateRequest;
 import iuh.fit.goat.dto.response.RecruiterResponse;
 import iuh.fit.goat.dto.response.ResultPaginationResponse;
 import iuh.fit.goat.entity.Recruiter;
@@ -11,9 +12,11 @@ public interface RecruiterService {
 
     void handleDeleteRecruiter(long id);
 
-    Recruiter handleUpdateRecruiter(Recruiter updateRecruiter);
+    Recruiter handleUpdateRecruiter(RecruiterUpdateRequest updateRequest);
 
     Recruiter handleGetRecruiterById(long id);
+
+    Recruiter handleGetCurrentRecruiter();
 
     ResultPaginationResponse handleGetAllRecruiters(Specification<Recruiter> spec, Pageable pageable);
 
