@@ -46,11 +46,15 @@ public class ApplicationServiceImp implements ApplicationService {
         List<Application> applications = this.applicationRepository.findAllById(request.getApplicationIds());
         if (applications.isEmpty()) return Collections.emptyList();
 
-        applications.forEach(app -> app.setStatus(Status.ACCEPTED));
+        List<Application> pendingApplications = applications.stream()
+                .filter(app -> app.getStatus().getValue().equalsIgnoreCase(Status.PENDING.getValue()))
+                .toList();
+
+        pendingApplications.forEach(app -> app.setStatus(Status.ACCEPTED));
         this.applicationRepository.saveAll(applications);
 
         Map<String, List<Application>> applicationsByEmail =
-                applications.stream().collect(Collectors.groupingBy(Application::getEmail));
+                pendingApplications.stream().collect(Collectors.groupingBy(Application::getEmail));
 
         applicationsByEmail.forEach((email, apps) -> {
             if(apps.isEmpty()) return;
@@ -82,11 +86,15 @@ public class ApplicationServiceImp implements ApplicationService {
         List<Application> applications = this.applicationRepository.findAllById(request.getApplicationIds());
         if (applications.isEmpty()) return Collections.emptyList();
 
-        applications.forEach(app -> app.setStatus(Status.REJECTED));
+        List<Application> pendingApplications = applications.stream()
+                .filter(app -> app.getStatus().getValue().equalsIgnoreCase(Status.PENDING.getValue()))
+                .toList();
+
+        pendingApplications.forEach(app -> app.setStatus(Status.REJECTED));
         this.applicationRepository.saveAll(applications);
 
         Map<String, List<Application>> applicationsByEmail =
-                applications.stream().collect(Collectors.groupingBy(Application::getEmail));
+                pendingApplications.stream().collect(Collectors.groupingBy(Application::getEmail));
 
         applicationsByEmail.forEach((email, apps) -> {
             if(apps.isEmpty()) return;
