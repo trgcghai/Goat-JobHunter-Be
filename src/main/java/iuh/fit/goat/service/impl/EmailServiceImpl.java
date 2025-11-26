@@ -84,20 +84,30 @@ public class EmailServiceImpl implements EmailService {
 
     @Override
     public void handleSendBlogActionNotice(
-            String recipient, String username, Object object, String reason, String mode
+            String recipient, String username, Object object, String reason, BlogActionType mode
     ) {
-        String subject = mode.equalsIgnoreCase(BlogActionType.DELETE.getValue())
-                ? "Bài viết của bạn đã bị xóa" : "Bài viết của bạn không được duyệt";
+        String subject;
+
+        switch (mode) {
+            case ACCEPT -> subject = "Bài viết của bạn đã được duyệt";
+            case DELETE -> subject = "Bài viết của bạn đã bị xóa";
+            case REJECT -> subject = "Bài viết của bạn không được duyệt";
+            default -> subject = "Thông báo về bài viết của bạn";
+        }
 
         Context context = new Context();
-
-        context.setVariable("name", username);
+        context.setVariable("username", username);
         context.setVariable("blogs", object);
-        context.setVariable("reason", reason);
         context.setVariable("mode", mode);
 
+        if (mode == BlogActionType.DELETE || mode == BlogActionType.REJECT) {
+            context.setVariable("reason", reason);
+        } else {
+            context.setVariable("reason", null);
+        }
+
         String content = this.templateEngine.process("blog", context);
-        this.handleSendEmailSync(recipient, subject, content, false, true);
+        this.handleSendEmailSync("nguyenthangdat84@gmail.com", subject, content, false, true);
     }
 
     @Override

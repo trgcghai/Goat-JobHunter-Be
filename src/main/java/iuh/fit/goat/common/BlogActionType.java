@@ -4,7 +4,7 @@ import lombok.Getter;
 
 @Getter
 public enum BlogActionType {
-    DELETE("delete"), REJECT("reject");
+    DELETE("delete"), REJECT("reject"), ACCEPT("accept");
 
     private final String value;
 

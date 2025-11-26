@@ -1,7 +1,10 @@
 package iuh.fit.goat.service;
 
+import iuh.fit.goat.common.BlogActionType;
+import iuh.fit.goat.dto.request.BlogIdsRequest;
 import iuh.fit.goat.dto.request.LikeBlogRequest;
 import iuh.fit.goat.dto.response.BlogResponse;
+import iuh.fit.goat.dto.response.BlogStatusResponse;
 import iuh.fit.goat.dto.response.ResultPaginationResponse;
 import iuh.fit.goat.entity.Blog;
 import iuh.fit.goat.entity.Comment;
@@ -16,7 +19,7 @@ public interface BlogService {
 
     Blog handleUpdateBlog(Blog blog);
 
-    void handleDeleteBlog(List<Long> blogIds, String reason, String mode);
+    void handleDeleteBlog(BlogIdsRequest request);
 
     Blog handleGetBlogById(long id);
 
@@ -27,6 +30,10 @@ public interface BlogService {
     List<Notification> handleLikeBlog(LikeBlogRequest likeBlogRequest);
 
     List<Object[]> handleGetAllTags(String keyword);
+
+    List<BlogStatusResponse> handleAcceptBlogs(BlogIdsRequest request);
+
+    List<BlogStatusResponse> handleRejectBlogs(BlogIdsRequest request);
 
     BlogResponse convertToBlogResponse(Blog blog);
 }

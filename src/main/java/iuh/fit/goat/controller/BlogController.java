@@ -4,6 +4,7 @@ import com.turkraft.springfilter.boot.Filter;
 import iuh.fit.goat.dto.request.BlogIdsRequest;
 import iuh.fit.goat.dto.request.LikeBlogRequest;
 import iuh.fit.goat.dto.response.BlogResponse;
+import iuh.fit.goat.dto.response.BlogStatusResponse;
 import iuh.fit.goat.dto.response.ResultPaginationResponse;
 import iuh.fit.goat.entity.Blog;
 import iuh.fit.goat.entity.Notification;
@@ -43,7 +44,7 @@ public class BlogController {
 
     @DeleteMapping
     public ResponseEntity<Void> deleteBlog(@Valid @RequestBody BlogIdsRequest request) {
-        this.blogService.handleDeleteBlog(request.getBlogIds(), request.getReason(), request.getMode());
+        this.blogService.handleDeleteBlog(request);
         return ResponseEntity.status(HttpStatus.OK).body(null);
     }
 
@@ -78,5 +79,21 @@ public class BlogController {
     public ResponseEntity<List<Object[]>> getAllTags(String keyword) {
         List<Object[]> res = this.blogService.handleGetAllTags(keyword);
         return ResponseEntity.status(HttpStatus.OK).body(res);
+    }
+
+    @PutMapping("/accepted")
+    public ResponseEntity<List<BlogStatusResponse>> acceptBlogs(
+            @Valid @RequestBody BlogIdsRequest request
+    ) {
+        List<BlogStatusResponse> result = this.blogService.handleAcceptBlogs(request);
+        return ResponseEntity.status(HttpStatus.OK).body(result);
+    }
+
+    @PutMapping("/rejected")
+    public ResponseEntity<List<BlogStatusResponse>> rejectBlogs(
+            @Valid @RequestBody BlogIdsRequest request
+    ) {
+        List<BlogStatusResponse> result = this.blogService.handleRejectBlogs(request);
+        return ResponseEntity.status(HttpStatus.OK).body(result);
     }
 }

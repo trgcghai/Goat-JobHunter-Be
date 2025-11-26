@@ -1,7 +1,7 @@
 package iuh.fit.goat.dto.request;
 
+import iuh.fit.goat.common.BlogActionType;
 import iuh.fit.goat.util.annotation.RequireReasonIfAdmin;
-import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
@@ -21,6 +21,5 @@ public class BlogIdsRequest {
     private List<@NotNull(message = "blogId must not be null") Long> blogIds;
     private String reason;
     @NotNull(message = "mode must not be null")
-    @NotBlank(message = "mode is not empty")
-    private String mode;
+    private BlogActionType mode;
 }
