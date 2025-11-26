@@ -77,6 +77,11 @@ public class DatabaseInitializer implements CommandLineRunner {
         }
     }
 
+    private <T> T getRandom(List<T> list, Random random) {
+        if (list == null || list.isEmpty()) return null;
+        return list.get(random.nextInt(list.size()));
+    }
+
     private void initPermissions() {
         ArrayList<Permission> permissions = new ArrayList<>();
 
@@ -113,6 +118,7 @@ public class DatabaseInitializer implements CommandLineRunner {
         permissions.add(new Permission("Delete job", "/api/v1/jobs/{id}", "DELETE", "JOBS"));
         permissions.add(new Permission("Get job", "/api/v1/jobs/{id}", "GET", "JOBS"));
         permissions.add(new Permission("Get all jobs", "/api/v1/jobs", "GET", "JOBS"));
+        permissions.add(new Permission("Get all applicants for job", "/api/v1/jobs/{jobId}/applicants", "GET", "JOBS"));
 
 //      SKILL
         permissions.add(new Permission("Create skill", "/api/v1/skills", "POST", "SKILLS"));
@@ -766,7 +772,7 @@ public class DatabaseInitializer implements CommandLineRunner {
                 job.setTitle(faker.job().title());
                 job.setDescription(faker.lorem().paragraph());
                 job.setRecruiter(r);
-                job.setCareer(careers.get(random.nextInt(careers.size())));
+                job.setCareer(getRandom(careers, random));
                 job.setLocation(faker.address().city());
                 job.setSalary(10000000 + random.nextInt(15000000));
 
@@ -836,8 +842,8 @@ public class DatabaseInitializer implements CommandLineRunner {
                 blogs.add(blog);
 
                 for (int c = 0; c < 5; c++) {
-                    User commentAuthor = random.nextBoolean() ? recruiters.get(random.nextInt(recruiters.size()))
-                            : applicants.get(random.nextInt(applicants.size()));
+                    User commentAuthor = random.nextBoolean() ? getRandom(recruiters, random)
+                            : getRandom(applicants, random);
 
                     Comment parentComment = new Comment();
                     parentComment.setBlog(blog);
@@ -851,8 +857,8 @@ public class DatabaseInitializer implements CommandLineRunner {
                     blog.getActivity().setTotalParentComments(blog.getActivity().getTotalParentComments() + 1);
 
                     for (int cc = 0; cc < 5; cc++) {
-                        User childAuthor = random.nextBoolean() ? recruiters.get(random.nextInt(recruiters.size()))
-                                : applicants.get(random.nextInt(applicants.size()));
+                        User childAuthor = random.nextBoolean() ? getRandom(recruiters, random)
+                                : getRandom(applicants, random);
 
                         Comment child = new Comment();
                         child.setBlog(blog);
@@ -886,7 +892,7 @@ public class DatabaseInitializer implements CommandLineRunner {
         List<Job> jobs = this.jobRepository.findAll();
         for (Applicant a : applicants) {
             for (int j = 0; j < 5; j++) {
-                Job job = jobs.get(random.nextInt(jobs.size()));
+                Job job = getRandom(jobs, random);
 
                 Application app = new Application();
                 app.setJob(job);
@@ -921,7 +927,7 @@ public class DatabaseInitializer implements CommandLineRunner {
 
                 User actor;
                 do {
-                    actor = allUsers.get(random.nextInt(allUsers.size()));
+                    actor = getRandom(allUsers, random);
                 } while (actor.equals(recipient));
                 n.setActor(actor);
 
@@ -931,13 +937,13 @@ public class DatabaseInitializer implements CommandLineRunner {
                 n.setSeen(random.nextBoolean());
 
                 if (type == NotificationType.LIKE) {
-                    n.setBlog(blogs.get(random.nextInt(blogs.size())));
+                    n.setBlog(getRandom(blogs, random));
                 } else if (type == NotificationType.COMMENT) {
-                    Comment comment = comments.get(random.nextInt(comments.size()));
+                    Comment comment = getRandom(comments, random);
                     n.setComment(comment);
                     n.setBlog(comment.getBlog());
                 } else if (type == NotificationType.REPLY) {
-                    Comment reply = comments.get(random.nextInt(comments.size()));
+                    Comment reply = getRandom(comments, random);
                     n.setReply(reply);
                     n.setRepliedOnComment(reply.getParent());
                     n.setBlog(reply.getBlog());
