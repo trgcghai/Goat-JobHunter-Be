@@ -1,7 +1,6 @@
 package iuh.fit.goat.controller;
 
 import com.turkraft.springfilter.boot.Filter;
-import com.turkraft.springfilter.builder.FilterBuilder;
 import com.turkraft.springfilter.converter.FilterSpecification;
 import com.turkraft.springfilter.converter.FilterSpecificationConverter;
 import com.turkraft.springfilter.parser.FilterParser;
@@ -52,22 +51,20 @@ public class ApplicationController {
         return ResponseEntity.status(HttpStatus.CREATED).body(applicationResponse);
     }
 
-    @PutMapping("/applications/accepted")
+    @PutMapping("/applications/accept")
     public ResponseEntity<List<ApplicationStatusResponse>> acceptApplications(
             @Valid @RequestBody ApplicationIdsRequest request
     ) {
-        request.setStatus(Status.ACCEPTED.getValue());
-        List<ApplicationStatusResponse> result = this.applicationService.handleUpdateApplication(request);
-        return ResponseEntity.ok(result);
+        List<ApplicationStatusResponse> result = this.applicationService.handleAcceptApplications(request);
+        return ResponseEntity.status(HttpStatus.OK).body(result);
     }
 
-    @PutMapping("/applications/rejected")
+    @PutMapping("/applications/reject")
     public ResponseEntity<List<ApplicationStatusResponse>> rejectApplications(
             @Valid @RequestBody ApplicationIdsRequest request
     ) {
-        request.setStatus(Status.REJECTED.getValue());
-        List<ApplicationStatusResponse> result = this.applicationService.handleUpdateApplication(request);
-        return ResponseEntity.ok(result);
+        List<ApplicationStatusResponse> result = this.applicationService.handleRejectApplications(request);
+        return ResponseEntity.status(HttpStatus.OK).body(result);
     }
 
     @DeleteMapping("/applications/{id}")
