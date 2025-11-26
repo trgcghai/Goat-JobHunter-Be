@@ -4,16 +4,14 @@ import iuh.fit.goat.common.Level;
 import iuh.fit.goat.common.WorkingType;
 import iuh.fit.goat.dto.request.CreateJobRequest;
 import iuh.fit.goat.dto.request.UpdateJobRequest;
-import iuh.fit.goat.dto.response.JobActivateResponse;
-import iuh.fit.goat.dto.response.JobApplicationCountResponse;
+import iuh.fit.goat.dto.response.*;
+import iuh.fit.goat.service.ApplicantService;
 import iuh.fit.goat.service.JobService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
-import iuh.fit.goat.dto.response.JobResponse;
-import iuh.fit.goat.dto.response.ResultPaginationResponse;
 import iuh.fit.goat.entity.*;
 import iuh.fit.goat.repository.*;
 import iuh.fit.goat.util.SecurityUtil;
@@ -24,11 +22,14 @@ import java.util.stream.Collectors;
 @Service
 @RequiredArgsConstructor
 public class JobServiceImpl implements JobService {
+    private final ApplicantService applicantService;
+    private final ApplicantRepository applicantRepository;
     private final JobRepository jobRepository;
     private final SkillRepository skillRepository;
     private final CareerRepository careerRepository;
     private final ApplicationRepository applicationRepository;
     private final UserRepository userRepository;
+    private final SubscriberRepository subscriberRepository;
 
     @Override
     public JobResponse handleCreateJob(CreateJobRequest request) {
@@ -258,6 +259,48 @@ public class JobServiceImpl implements JobService {
         }
 
         return results;
+    }
+
+    @Override
+    public ResultPaginationResponse handleGetApplicantsForJob(Specification<Applicant> spec, Pageable pageable, Long jobId) {
+        Job job = this.handleGetJobById(jobId);
+
+        List<Applicant> applicants = this.applicantRepository.findAll(spec);
+
+        List<Subscriber> subscribers = this.subscriberRepository.findAll();
+        Map<String, Subscriber> emailSubscriberMap = subscribers.stream()
+                .collect(Collectors.toMap(Subscriber::getEmail, s -> s));
+
+        List<Applicant> matchedApplicants = applicants.stream()
+                .filter(a -> {
+                    boolean levelMatch = a.getLevel() != null && a.getLevel() == job.getLevel();
+
+                    Subscriber subscriber = emailSubscriberMap.get(a.getContact().getEmail());
+                    boolean skillMatch = false;
+                    if (subscriber != null && subscriber.getSkills() != null && !subscriber.getSkills().isEmpty()) {
+                        skillMatch = subscriber.getSkills().stream()
+                                .anyMatch(job.getSkills()::contains);
+                    }
+
+                    return levelMatch || skillMatch;
+                })
+                .toList();
+
+        int start = (int) pageable.getOffset();
+        int end = Math.min(start + pageable.getPageSize(), matchedApplicants.size());
+        List<Applicant> pageContent = start >= matchedApplicants.size() ? List.of() : matchedApplicants.subList(start, end);
+
+        ResultPaginationResponse.Meta meta = new ResultPaginationResponse.Meta();
+        meta.setPage(pageable.getPageNumber() + 1);
+        meta.setPageSize(pageable.getPageSize());
+        meta.setPages((int) Math.ceil((double) matchedApplicants.size() / pageable.getPageSize()));
+        meta.setTotal(matchedApplicants.size());
+
+        List<ApplicantResponse> result = pageContent.stream()
+                .map(this.applicantService::convertToApplicantResponse)
+                .toList();
+
+        return new ResultPaginationResponse(meta, result);
     }
 
     @Override

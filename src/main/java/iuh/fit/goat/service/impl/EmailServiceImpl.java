@@ -1,7 +1,12 @@
 package iuh.fit.goat.service.impl;
 
 import iuh.fit.goat.common.BlogActionType;
+import iuh.fit.goat.common.Status;
+import iuh.fit.goat.entity.Applicant;
+import iuh.fit.goat.entity.Job;
 import iuh.fit.goat.entity.User;
+import iuh.fit.goat.repository.ApplicantRepository;
+import iuh.fit.goat.repository.JobRepository;
 import iuh.fit.goat.service.EmailService;
 import jakarta.mail.internet.MimeMessage;
 import lombok.RequiredArgsConstructor;
@@ -15,6 +20,7 @@ import org.thymeleaf.context.Context;
 import org.thymeleaf.spring6.SpringTemplateEngine;
 
 import java.nio.charset.StandardCharsets;
+import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -22,6 +28,8 @@ public class EmailServiceImpl implements EmailService {
     private final MailSender mailSender;
     private final JavaMailSender javaMailSender;
     private final SpringTemplateEngine templateEngine;
+    private final ApplicantRepository applicantRepository;
+    private final JobRepository jobRepository;
 
     //    Send email with text
     @Override
@@ -90,5 +98,53 @@ public class EmailServiceImpl implements EmailService {
 
         String content = this.templateEngine.process("blog", context);
         this.handleSendEmailSync(recipient, subject, content, false, true);
+    }
+
+    @Override
+    public void handelSendApplicationStatusEmail(
+            String recipient, String username, Object object, String status,
+            String interviewType, String interviewDate, String location, String note,
+            String reason
+    ) {
+        String subject = "Thông báo đơn ứng tuyển";
+        Context context = new Context();
+
+        context.setVariable("username", username);
+        context.setVariable("applications", object);
+        context.setVariable("status", status);
+
+        if (Status.ACCEPTED.getValue().equalsIgnoreCase(status)) {
+            context.setVariable("interviewDate", interviewDate);
+            context.setVariable("interviewType", interviewType);
+            context.setVariable("location", location);
+            context.setVariable("note", note);
+        }
+
+        if (Status.REJECTED.getValue().equalsIgnoreCase(status)) {
+            context.setVariable("reason", reason);
+        }
+
+        String content = this.templateEngine.process("application", context);
+        this.handleSendEmailSync(recipient, subject, content, false, true);
+    }
+
+    @Override
+    public void handelSendJobInvitationEmail(List<Long> applicantIds, Long jobId) {
+        List<Applicant> applicants = this.applicantRepository.findAllById(applicantIds);
+        if(applicants.isEmpty()) return;
+
+        Job job = this.jobRepository.findById(jobId).orElse(null);
+        if(job == null) return;
+
+        String subject = "Thư mời ứng tuyển";
+        Context context = new Context();
+        context.setVariable("job", job);
+
+        applicants.forEach(applicant -> {
+            context.setVariable("applicant", applicant);
+            String content = this.templateEngine.process("invitation", context);
+            this.handleSendEmailSync("nguyenthangdat84@gmail.com", subject, content, false, true);
+        });
+
     }
 }

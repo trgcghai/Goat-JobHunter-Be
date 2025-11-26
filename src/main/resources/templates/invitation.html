@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8" />
+    <title>Job Hunter</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            color: #333333;
+        }
+        .container {
+            padding: 20px;
+            border: 1px solid #e6e6e6;
+            border-radius: 8px;
+            background: #fafafa;
+            width: 100%;
+            max-width: 600px;
+            margin: auto;
+        }
+        .btn {
+            display: inline-block;
+            padding: 10px 18px;
+            background-color: #007bff;
+            color: white !important;
+            border-radius: 5px;
+            text-decoration: none;
+            margin-top: 15px;
+        }
+        .footer {
+            font-size: 13px;
+            color: #999999;
+            margin-top: 25px;
+        }
+
+        .section-title {
+            font-weight: bold;
+            margin-top: 20px;
+        }
+
+        .job-info {
+            background: #fff;
+            padding: 12px 15px;
+            border-radius: 6px;
+            border: 1px solid #eeeeee;
+        }
+
+        .job-info p {
+            margin: 5px 0;
+        }
+
+    </style>
+</head>
+<body>
+
+<div class="container">
+
+    <h2 th:text="'📩 Lời mời ứng tuyển từ ' + ${job.recruiter.fullName}"></h2>
+
+    <p>Chào <strong th:text="${applicant.fullName}">Ứng viên</strong>,</p>
+
+    <p>
+        Chúng tôi rất ấn tượng với hồ sơ của bạn và muốn mời bạn ứng tuyển vị trí sau:
+    </p>
+
+    <h3 th:text="${job.title}">Tên công việc</h3>
+
+    <!-- Thông tin chi tiết job -->
+    <div class="job-info">
+
+        <p><strong>Mức lương:</strong>
+            <span th:text="${#numbers.formatDecimal(job.salary, 0, 'COMMA', 0, 'POINT')} + ' VNĐ'"></span>
+        </p>
+
+        <p><strong>Địa điểm:</strong>
+            <span th:text="${job.location}"></span>
+        </p>
+
+        <p><strong>Số lượng tuyển:</strong>
+            <span th:text="${job.quantity}"></span>
+        </p>
+
+        <p><strong>Cấp độ yêu cầu:</strong>
+            <span th:text="${job.level}"></span>
+        </p>
+
+        <p><strong>Hình thức làm việc:</strong>
+            <span th:text="${job.workingType.getValue()}"></span>
+        </p>
+
+        <p><strong>Ngày bắt đầu:</strong>
+            <span th:text="${#temporals.format(job.startDate, 'dd/MM/yyyy')}"></span>
+        </p>
+
+        <p><strong>Ngày kết thúc:</strong>
+            <span th:text="${#temporals.format(job.endDate, 'dd/MM/yyyy')}"></span>
+        </p>
+
+        <p><strong>Mô tả công việc:</strong></p>
+        <p th:utext="${job.description}">
+            Mô tả…
+        </p>
+
+    </div>
+
+    <p style="margin-top: 15px;">
+        Nếu bạn quan tâm, vui lòng phản hồi email này hoặc nộp đơn trực tiếp qua trang tuyển dụng.
+    </p>
+
+    <p>Trân trọng,<br/>
+        <strong th:text="${job.recruiter.fullName}">Công ty</strong>
+    </p>
+
+    <div class="footer">
+        Đây là email tự động, vui lòng không trả lời trực tiếp.
+    </div>
+
+</div>
+
+</body>
+</html>

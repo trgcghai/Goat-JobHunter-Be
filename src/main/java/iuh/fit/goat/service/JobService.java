@@ -6,6 +6,7 @@ import iuh.fit.goat.dto.response.JobActivateResponse;
 import iuh.fit.goat.dto.response.JobApplicationCountResponse;
 import iuh.fit.goat.dto.response.JobResponse;
 import iuh.fit.goat.dto.response.ResultPaginationResponse;
+import iuh.fit.goat.entity.Applicant;
 import iuh.fit.goat.entity.Job;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
@@ -39,4 +40,6 @@ public interface JobService {
     List<JobActivateResponse> handleDeactivateJobs(List<Long> jobIds);
 
     List<JobApplicationCountResponse> handleCountApplicationsByJobIds(List<Long> jobIds);
+
+    ResultPaginationResponse handleGetApplicantsForJob(Specification<Applicant> spec, Pageable pageable, Long jobId);
 }

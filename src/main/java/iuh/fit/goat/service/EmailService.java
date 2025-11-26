@@ -3,6 +3,9 @@ package iuh.fit.goat.service;
 import iuh.fit.goat.entity.User;
 import org.springframework.scheduling.annotation.Async;
 
+import java.time.LocalDate;
+import java.util.List;
+
 public interface EmailService {
     //    Send email with text
     void handleSendEmail();
@@ -24,4 +27,12 @@ public interface EmailService {
             String recipient, String username,
             Object object, String reason, String mode
     );
+
+    void handelSendApplicationStatusEmail(
+            String recipient, String username, Object object, String status,
+            String interviewType, String interviewDate, String location, String note,
+            String reason
+    );
+
+    void handelSendJobInvitationEmail(List<Long> applicantIds, Long jobId);
 }
