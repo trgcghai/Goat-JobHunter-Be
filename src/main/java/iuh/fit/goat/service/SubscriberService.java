@@ -1,6 +1,6 @@
 package iuh.fit.goat.service;
 
-import iuh.fit.goat.dto.response.EmailJobResponse;
+import iuh.fit.goat.dto.response.job.EmailJobResponse;
 import iuh.fit.goat.dto.response.ResultPaginationResponse;
 import iuh.fit.goat.entity.Job;
 import iuh.fit.goat.entity.Subscriber;

@@ -26,6 +26,7 @@
     }
     .delete { color: #d9534f; }
     .reject { color: #f0ad4e; }
+    .accept { color: #28a745; }
     p {
       font-size: 16px;
       line-height: 1.6;
@@ -68,30 +69,45 @@
 <body>
 <div class="container">
 
-  <h2 th:if="${mode.equalsIgnoreCase('delete')}" class="delete">
+  <!-- Tiêu đề cho DELETE -->
+  <h2 th:if="${mode.getValue() == 'delete'}" class="delete">
     Bài viết của bạn đã bị xóa
   </h2>
-  <h2 th:if="${mode.equalsIgnoreCase('reject')}" class="reject">
+
+  <!-- Tiêu đề cho REJECT -->
+  <h2 th:if="${mode.getValue() == 'reject'}" class="reject">
     Bài viết của bạn không được duyệt
   </h2>
 
-  <p>Xin chào <strong th:text="${name}"></strong>,</p>
+  <!-- Tiêu đề cho ACCEPT -->
+  <h2 th:if="${mode.getValue() == 'accept'}" class="accept">
+    Bài viết của bạn đã được duyệt
+  </h2>
+
+  <p>Xin chào <strong th:text="${username}"></strong>,</p>
+
+  <p th:if="${mode.getValue() == 'accept'}">
+    Chúc mừng! Bài viết của bạn đã được hệ thống phê duyệt.
+  </p>
 
   <p>Danh sách bài viết của bạn:</p>
   <ul>
     <li th:each="blog : ${blogs}" th:text="${blog.title}"></li>
   </ul>
 
-  <p><strong>Lý do:</strong></p>
-  <div class="reason">
-    <span th:text="${reason}">Không có lý do</span>
+  <!-- Chỉ hiển thị reason khi DELETE hoặc REJECT -->
+  <div th:if="${mode.getValue() == 'delete' || mode.getValue() == 'reject'}">
+    <p><strong>Lý do:</strong></p>
+    <div class="reason">
+      <span th:text="${reason}">Không có lý do</span>
+    </div>
+
+    <p>Nếu bạn cho rằng đây là nhầm lẫn, vui lòng liên hệ bộ phận hỗ trợ:</p>
+    <a href="mailto:nguyenthangdat84@gmail.com" class="btn-contact">Liên hệ hỗ trợ</a>
   </div>
 
-  <p>Nếu bạn cho rằng đây là nhầm lẫn, vui lòng liên hệ với bộ phận hỗ trợ:</p>
-  <a href="mailto:nguyenthangdat84@gmail.com" class="btn-contact">Liên hệ hỗ trợ</a>
-
   <div class="footer">
-    <p>Trân trọng,<br>Đội ngũ GOAT</p>
+    <p>Trân trọng,<br>GOAT</p>
   </div>
 </div>
 </body>

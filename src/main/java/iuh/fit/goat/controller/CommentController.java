@@ -1,7 +1,7 @@
 package iuh.fit.goat.controller;
 
 import com.turkraft.springfilter.boot.Filter;
-import iuh.fit.goat.dto.response.CommentResponse;
+import iuh.fit.goat.dto.response.comment.CommentResponse;
 import iuh.fit.goat.dto.response.ResultPaginationResponse;
 import iuh.fit.goat.entity.Blog;
 import iuh.fit.goat.entity.Comment;

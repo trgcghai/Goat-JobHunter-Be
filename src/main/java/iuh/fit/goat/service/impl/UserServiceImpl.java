@@ -1,10 +1,10 @@
 package iuh.fit.goat.service.impl;
 
 import iuh.fit.goat.common.Role;
-import iuh.fit.goat.dto.request.ResetPasswordRequest;
-import iuh.fit.goat.dto.response.LoginResponse;
+import iuh.fit.goat.dto.request.user.ResetPasswordRequest;
+import iuh.fit.goat.dto.response.auth.LoginResponse;
 import iuh.fit.goat.dto.response.ResultPaginationResponse;
-import iuh.fit.goat.dto.response.UserResponse;
+import iuh.fit.goat.dto.response.user.UserResponse;
 import iuh.fit.goat.entity.*;
 import iuh.fit.goat.exception.InvalidException;
 import iuh.fit.goat.repository.JobRepository;

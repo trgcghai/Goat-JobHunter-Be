@@ -1,9 +1,12 @@
 package iuh.fit.goat.service.impl;
 
+import iuh.fit.goat.common.BlogActionType;
 import iuh.fit.goat.common.NotificationType;
 import iuh.fit.goat.common.Role;
-import iuh.fit.goat.dto.request.LikeBlogRequest;
-import iuh.fit.goat.dto.response.BlogResponse;
+import iuh.fit.goat.dto.request.blog.BlogIdsRequest;
+import iuh.fit.goat.dto.request.user.LikeBlogRequest;
+import iuh.fit.goat.dto.response.blog.BlogResponse;
+import iuh.fit.goat.dto.response.blog.BlogStatusResponse;
 import iuh.fit.goat.dto.response.ResultPaginationResponse;
 import iuh.fit.goat.entity.Blog;
 import iuh.fit.goat.entity.Comment;
@@ -21,9 +24,13 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
+import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -63,40 +70,32 @@ public class BlogServiceImpl implements BlogService {
     }
 
     @Override
-    public void handleDeleteBlog(List<Long> blogIds, String reason, String mode) {
-        if(blogIds == null || blogIds.isEmpty()) {
-            return;
-        }
-
-        List<Blog> blogs = this.blogRepository.findAllById(blogIds);
-        if(blogs.isEmpty()) {
-            return;
-        }
+    public void handleDeleteBlog(BlogIdsRequest request) {
+        List<Blog> blogs = this.blogRepository.findAllById(request.getBlogIds());
+        if(blogs.isEmpty()) return;
 
         String currentEmail = SecurityUtil.getCurrentUserLogin().isPresent()
                 ? SecurityUtil.getCurrentUserLogin().get()
                 : "";
         User currentUser = this.userService.handleGetUserByEmail(currentEmail);
-        if(currentUser == null) {
-            return;
-        }
+        if(currentUser == null) return;
 
-        if(!currentUser.isEnabled() || !currentUser.getRole().isActive()) {
-            return;
-        }
+        if(!currentUser.isEnabled() || !currentUser.getRole().isActive()) return;
 
-        if(currentUser.getRole().getName().equalsIgnoreCase(Role.APPLICANT.getValue())) {
-            return;
-        }
-
-        this.blogRepository.deleteAllById(blogIds);
+        this.blogRepository.deleteAllById(request.getBlogIds());
 
         if(currentUser.getRole().getName().equalsIgnoreCase(Role.ADMIN.getValue())) {
-            this.emailService.handleSendBlogActionNotice(
-                    blogs.getFirst().getAuthor().getContact().getEmail(),
-                    blogs.getFirst().getAuthor().getUsername(),
-                    blogs, reason, mode
-            );
+            Map<String, List<Blog>> blogByEmail = blogs.stream()
+                    .collect(Collectors.groupingBy(blog -> blog.getAuthor().getContact().getEmail()));
+
+            blogByEmail.forEach((email, bs) -> {
+                if(bs.isEmpty()) return;
+
+                this.emailService.handleSendBlogActionNotice(
+                        email, bs.getFirst().getAuthor().getUsername(),
+                        bs, request.getReason(), BlogActionType.DELETE
+                );
+            });
         }
     }
 
@@ -165,6 +164,63 @@ public class BlogServiceImpl implements BlogService {
     @Override
     public List<Object[]> handleGetAllTags(String keyword) {
         return this.blogRepository.findAllTags(keyword);
+    }
+
+    @Override
+    @Transactional
+    public List<BlogStatusResponse> handleAcceptBlogs(BlogIdsRequest request) {
+        List<Blog> blogs = this.blogRepository.findAllById(request.getBlogIds());
+        if(blogs.isEmpty()) return Collections.emptyList();
+
+        blogs.forEach(blog -> blog.setEnabled(true));
+        this.blogRepository.saveAll(blogs);
+
+        Map<String, List<Blog>> blogByEmail =
+                blogs.stream().collect(Collectors.groupingBy(blog -> blog.getAuthor().getContact().getEmail()));
+
+        blogByEmail.forEach((email, bs) -> {
+            if(bs.isEmpty()) return;
+
+            this.emailService.handleSendBlogActionNotice(
+                    email, bs.getFirst().getAuthor().getUsername(),
+                    bs, null, BlogActionType.ACCEPT
+            );
+        });
+
+        return blogs.stream().map(
+                blog -> new BlogStatusResponse(
+                        blog.getBlogId(),
+                        blog.isEnabled()
+                )
+        ).collect(Collectors.toList());
+    }
+
+    @Override
+    public List<BlogStatusResponse> handleRejectBlogs(BlogIdsRequest request) {
+        List<Blog> blogs = this.blogRepository.findAllById(request.getBlogIds());
+        if(blogs.isEmpty()) return Collections.emptyList();
+
+        blogs.forEach(blog -> blog.setEnabled(false));
+        this.blogRepository.saveAll(blogs);
+
+        Map<String, List<Blog>> blogByEmail =
+                blogs.stream().collect(Collectors.groupingBy(blog -> blog.getAuthor().getContact().getEmail()));
+
+        blogByEmail.forEach((email, bs) -> {
+            if(bs.isEmpty()) return;
+
+            this.emailService.handleSendBlogActionNotice(
+                    email, bs.getFirst().getAuthor().getUsername(),
+                    bs, request.getReason(), BlogActionType.REJECT
+            );
+        });
+
+        return blogs.stream().map(
+                blog -> new BlogStatusResponse(
+                        blog.getBlogId(),
+                        blog.isEnabled()
+                )
+        ).collect(Collectors.toList());
     }
 
     @Override

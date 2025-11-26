@@ -32,7 +32,7 @@ public class Blog {
     @ElementCollection
     private List<String> tags;
     private boolean draft;
-    private boolean enabled;
+    private boolean enabled = false;
     @Embedded
     private BlogActivity activity = new BlogActivity();
     private Instant createdAt;

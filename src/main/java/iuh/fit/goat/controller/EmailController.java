@@ -1,12 +1,10 @@
 package iuh.fit.goat.controller;
 
-import iuh.fit.goat.dto.request.JobInvitationRequest;
+import iuh.fit.goat.dto.request.job.JobInvitationRequest;
 import iuh.fit.goat.service.EmailService;
 import iuh.fit.goat.service.SubscriberService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import org.springframework.scheduling.annotation.Scheduled;
-import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;

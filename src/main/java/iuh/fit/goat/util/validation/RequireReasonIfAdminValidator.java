@@ -1,7 +1,8 @@
 package iuh.fit.goat.util.validation;
 
+import iuh.fit.goat.common.BlogActionType;
 import iuh.fit.goat.common.Role;
-import iuh.fit.goat.dto.request.BlogIdsRequest;
+import iuh.fit.goat.dto.request.blog.BlogIdsRequest;
 import iuh.fit.goat.entity.User;
 import iuh.fit.goat.service.UserService;
 import iuh.fit.goat.util.SecurityUtil;
@@ -27,17 +28,24 @@ public class RequireReasonIfAdminValidator implements ConstraintValidator<Requir
         if (currentUser == null) return true;
 
         boolean isAdmin = currentUser.getRole().getName().equalsIgnoreCase(Role.ADMIN.getValue());
+        BlogActionType mode = request.getMode();
 
-        if (isAdmin && (request.getReason() == null || request.getReason().trim().isEmpty())) {
+        if (!isAdmin) {
+            return true;
+        }
+
+        boolean requireReason = (mode == BlogActionType.DELETE || mode == BlogActionType.REJECT);
+
+        if (requireReason && (request.getReason() == null || request.getReason().trim().isEmpty())) {
             context.disableDefaultConstraintViolation();
-            context.buildConstraintViolationWithTemplate("reason is required for ADMIN")
+            context.buildConstraintViolationWithTemplate("reason is required for ADMIN when mode is DELETE or REJECT")
                     .addPropertyNode("reason")
                     .addConstraintViolation();
-
             return false;
         }
 
         return true;
     }
+
 }
 

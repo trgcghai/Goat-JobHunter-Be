@@ -1,7 +1,7 @@
 package iuh.fit.goat.util;
 
 import com.nimbusds.jose.util.Base64;
-import iuh.fit.goat.dto.response.LoginResponse;
+import iuh.fit.goat.dto.response.auth.LoginResponse;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;

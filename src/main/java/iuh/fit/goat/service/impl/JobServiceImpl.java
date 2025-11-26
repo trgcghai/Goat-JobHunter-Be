@@ -2,9 +2,13 @@ package iuh.fit.goat.service.impl;
 
 import iuh.fit.goat.common.Level;
 import iuh.fit.goat.common.WorkingType;
-import iuh.fit.goat.dto.request.CreateJobRequest;
-import iuh.fit.goat.dto.request.UpdateJobRequest;
-import iuh.fit.goat.dto.response.*;
+import iuh.fit.goat.dto.request.job.CreateJobRequest;
+import iuh.fit.goat.dto.request.job.UpdateJobRequest;
+import iuh.fit.goat.dto.response.applicant.ApplicantResponse;
+import iuh.fit.goat.dto.response.ResultPaginationResponse;
+import iuh.fit.goat.dto.response.job.JobActivateResponse;
+import iuh.fit.goat.dto.response.job.JobApplicationCountResponse;
+import iuh.fit.goat.dto.response.job.JobResponse;
 import iuh.fit.goat.service.ApplicantService;
 import iuh.fit.goat.service.JobService;
 import lombok.RequiredArgsConstructor;

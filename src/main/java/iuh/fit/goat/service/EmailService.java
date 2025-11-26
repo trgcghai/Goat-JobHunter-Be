@@ -1,5 +1,6 @@
 package iuh.fit.goat.service;
 
+import iuh.fit.goat.common.BlogActionType;
 import iuh.fit.goat.entity.User;
 import org.springframework.scheduling.annotation.Async;
 
@@ -25,7 +26,7 @@ public interface EmailService {
 
     void handleSendBlogActionNotice(
             String recipient, String username,
-            Object object, String reason, String mode
+            Object object, String reason, BlogActionType mode
     );
 
     void handelSendApplicationStatusEmail(

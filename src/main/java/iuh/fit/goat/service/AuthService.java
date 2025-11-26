@@ -1,10 +1,10 @@
 package iuh.fit.goat.service;
 
-import iuh.fit.goat.dto.request.LoginRequest;
-import iuh.fit.goat.dto.request.VerifyUserRequest;
-import iuh.fit.goat.dto.response.ApplicantResponse;
-import iuh.fit.goat.dto.response.LoginResponse;
-import iuh.fit.goat.dto.response.RecruiterResponse;
+import iuh.fit.goat.dto.request.auth.LoginRequest;
+import iuh.fit.goat.dto.request.auth.VerifyUserRequest;
+import iuh.fit.goat.dto.response.applicant.ApplicantResponse;
+import iuh.fit.goat.dto.response.auth.LoginResponse;
+import iuh.fit.goat.dto.response.recruiter.RecruiterResponse;
 import iuh.fit.goat.entity.Applicant;
 import iuh.fit.goat.entity.Recruiter;
 import iuh.fit.goat.exception.InvalidException;

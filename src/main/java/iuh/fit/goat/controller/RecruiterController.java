@@ -1,8 +1,8 @@
 package iuh.fit.goat.controller;
 
 import com.turkraft.springfilter.boot.Filter;
-import iuh.fit.goat.dto.request.RecruiterUpdateRequest;
-import iuh.fit.goat.dto.response.RecruiterResponse;
+import iuh.fit.goat.dto.request.recruiter.RecruiterUpdateRequest;
+import iuh.fit.goat.dto.response.recruiter.RecruiterResponse;
 import iuh.fit.goat.dto.response.ResultPaginationResponse;
 import iuh.fit.goat.entity.Job;
 import iuh.fit.goat.entity.Recruiter;

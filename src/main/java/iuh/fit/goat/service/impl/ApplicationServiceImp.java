@@ -1,13 +1,12 @@
 package iuh.fit.goat.service.impl;
 
 import iuh.fit.goat.common.Status;
-import iuh.fit.goat.dto.request.ApplicationIdsRequest;
-import iuh.fit.goat.dto.response.ApplicationResponse;
-import iuh.fit.goat.dto.response.ApplicationStatusResponse;
+import iuh.fit.goat.dto.request.application.ApplicationIdsRequest;
+import iuh.fit.goat.dto.response.application.ApplicationResponse;
+import iuh.fit.goat.dto.response.application.ApplicationStatusResponse;
 import iuh.fit.goat.dto.response.ResultPaginationResponse;
 import iuh.fit.goat.service.ApplicationService;
 import iuh.fit.goat.service.EmailService;
-import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -15,6 +14,7 @@ import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import iuh.fit.goat.entity.*;
 import iuh.fit.goat.repository.*;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.format.DateTimeFormatter;
 import java.util.*;
@@ -51,7 +51,7 @@ public class ApplicationServiceImp implements ApplicationService {
                 .toList();
 
         pendingApplications.forEach(app -> app.setStatus(Status.ACCEPTED));
-        this.applicationRepository.saveAll(applications);
+        this.applicationRepository.saveAll(pendingApplications);
 
         Map<String, List<Application>> applicationsByEmail =
                 pendingApplications.stream().collect(Collectors.groupingBy(Application::getEmail));
@@ -65,16 +65,14 @@ public class ApplicationServiceImp implements ApplicationService {
                     : "";
             String note = request.getNote() != null ? request.getNote() : null;
 
-            if(!apps.isEmpty()) {
-                this.emailService.handelSendApplicationStatusEmail(
-                        email, username, apps, Status.ACCEPTED.getValue(),
-                        request.getInterviewType(), formattedDate, request.getLocation(), note,
-                        null
-                );
-            }
+            this.emailService.handelSendApplicationStatusEmail(
+                    email, username, apps, Status.ACCEPTED.getValue(),
+                    request.getInterviewType(), formattedDate, request.getLocation(), note,
+                    null
+            );
         });
 
-        return applications.stream()
+        return pendingApplications.stream()
                 .map(app -> new ApplicationStatusResponse(
                         app.getApplicationId(),
                         app.getStatus().getValue()
@@ -93,7 +91,7 @@ public class ApplicationServiceImp implements ApplicationService {
                 .toList();
 
         pendingApplications.forEach(app -> app.setStatus(Status.REJECTED));
-        this.applicationRepository.saveAll(applications);
+        this.applicationRepository.saveAll(pendingApplications);
 
         Map<String, List<Application>> applicationsByEmail =
                 pendingApplications.stream().collect(Collectors.groupingBy(Application::getEmail));
@@ -103,16 +101,14 @@ public class ApplicationServiceImp implements ApplicationService {
 
             String username = apps.getFirst().getApplicant().getUsername();
 
-            if(!apps.isEmpty()) {
-                this.emailService.handelSendApplicationStatusEmail(
-                        email, username, apps, Status.REJECTED.getValue(),
-                        null, null, null, null,
-                        request.getReason()
-                );
-            }
+            this.emailService.handelSendApplicationStatusEmail(
+                    email, username, apps, Status.REJECTED.getValue(),
+                    null, null, null, null,
+                    request.getReason()
+            );
         });
 
-        return applications.stream()
+        return pendingApplications.stream()
                 .map(app -> new ApplicationStatusResponse(
                         app.getApplicationId(),
                         app.getStatus().getValue()

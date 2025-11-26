@@ -1,6 +1,6 @@
 package iuh.fit.goat.service;
 
-import iuh.fit.goat.dto.response.CommentResponse;
+import iuh.fit.goat.dto.response.comment.CommentResponse;
 import iuh.fit.goat.dto.response.ResultPaginationResponse;
 import iuh.fit.goat.entity.Comment;
 import org.springframework.data.domain.Pageable;
