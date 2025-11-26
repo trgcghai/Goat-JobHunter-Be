@@ -1,7 +1,7 @@
 package iuh.fit.goat.service;
 
-import iuh.fit.goat.dto.request.ApplicantUpdateRequest;
-import iuh.fit.goat.dto.response.ApplicantResponse;
+import iuh.fit.goat.dto.request.applicant.ApplicantUpdateRequest;
+import iuh.fit.goat.dto.response.applicant.ApplicantResponse;
 import iuh.fit.goat.dto.response.ResultPaginationResponse;
 import iuh.fit.goat.entity.Applicant;
 import org.springframework.data.domain.Pageable;

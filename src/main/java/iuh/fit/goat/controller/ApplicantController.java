@@ -1,8 +1,8 @@
 package iuh.fit.goat.controller;
 
 import com.turkraft.springfilter.boot.Filter;
-import iuh.fit.goat.dto.request.ApplicantUpdateRequest;
-import iuh.fit.goat.dto.response.ApplicantResponse;
+import iuh.fit.goat.dto.request.applicant.ApplicantUpdateRequest;
+import iuh.fit.goat.dto.response.applicant.ApplicantResponse;
 import iuh.fit.goat.dto.response.ResultPaginationResponse;
 import iuh.fit.goat.util.annotation.ApiMessage;
 import jakarta.validation.Valid;

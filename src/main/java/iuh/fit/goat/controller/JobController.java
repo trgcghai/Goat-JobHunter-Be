@@ -1,12 +1,12 @@
 package iuh.fit.goat.controller;
 
 import com.turkraft.springfilter.boot.Filter;
-import iuh.fit.goat.dto.request.CreateJobRequest;
-import iuh.fit.goat.dto.request.JobIdsRequest;
-import iuh.fit.goat.dto.request.UpdateJobRequest;
-import iuh.fit.goat.dto.response.JobActivateResponse;
-import iuh.fit.goat.dto.response.JobApplicationCountResponse;
-import iuh.fit.goat.dto.response.JobResponse;
+import iuh.fit.goat.dto.request.job.CreateJobRequest;
+import iuh.fit.goat.dto.request.job.JobIdsRequest;
+import iuh.fit.goat.dto.request.job.UpdateJobRequest;
+import iuh.fit.goat.dto.response.job.JobActivateResponse;
+import iuh.fit.goat.dto.response.job.JobApplicationCountResponse;
+import iuh.fit.goat.dto.response.job.JobResponse;
 import iuh.fit.goat.dto.response.ResultPaginationResponse;
 import iuh.fit.goat.entity.Applicant;
 import iuh.fit.goat.entity.Job;

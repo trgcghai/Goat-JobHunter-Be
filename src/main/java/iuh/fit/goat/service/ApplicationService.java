@@ -1,8 +1,8 @@
 package iuh.fit.goat.service;
 
-import iuh.fit.goat.dto.request.ApplicationIdsRequest;
-import iuh.fit.goat.dto.response.ApplicationResponse;
-import iuh.fit.goat.dto.response.ApplicationStatusResponse;
+import iuh.fit.goat.dto.request.application.ApplicationIdsRequest;
+import iuh.fit.goat.dto.response.application.ApplicationResponse;
+import iuh.fit.goat.dto.response.application.ApplicationStatusResponse;
 import iuh.fit.goat.dto.response.ResultPaginationResponse;
 import iuh.fit.goat.entity.Applicant;
 import iuh.fit.goat.entity.Application;

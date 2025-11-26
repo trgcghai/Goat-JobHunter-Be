@@ -1,6 +1,6 @@
 package iuh.fit.goat.util.validation;
 
-import iuh.fit.goat.dto.request.ApplicationIdsRequest;
+import iuh.fit.goat.dto.request.application.ApplicationIdsRequest;
 import iuh.fit.goat.util.annotation.ValidApplicationRequest;
 import jakarta.validation.ConstraintValidator;
 import jakarta.validation.ConstraintValidatorContext;

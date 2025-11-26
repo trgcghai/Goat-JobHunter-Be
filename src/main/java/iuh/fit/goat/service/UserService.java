@@ -1,9 +1,8 @@
 package iuh.fit.goat.service;
 
-import iuh.fit.goat.dto.request.FollowRecruiterRequest;
-import iuh.fit.goat.dto.request.ResetPasswordRequest;
+import iuh.fit.goat.dto.request.user.ResetPasswordRequest;
 import iuh.fit.goat.dto.response.ResultPaginationResponse;
-import iuh.fit.goat.dto.response.UserResponse;
+import iuh.fit.goat.dto.response.user.UserResponse;
 import iuh.fit.goat.entity.Job;
 import iuh.fit.goat.entity.Notification;
 import iuh.fit.goat.entity.Recruiter;

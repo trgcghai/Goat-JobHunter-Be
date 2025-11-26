@@ -2,11 +2,11 @@ package iuh.fit.goat.service.impl;
 
 
 import iuh.fit.goat.common.Role;
-import iuh.fit.goat.dto.request.LoginRequest;
-import iuh.fit.goat.dto.request.VerifyUserRequest;
-import iuh.fit.goat.dto.response.ApplicantResponse;
-import iuh.fit.goat.dto.response.LoginResponse;
-import iuh.fit.goat.dto.response.RecruiterResponse;
+import iuh.fit.goat.dto.request.auth.LoginRequest;
+import iuh.fit.goat.dto.request.auth.VerifyUserRequest;
+import iuh.fit.goat.dto.response.applicant.ApplicantResponse;
+import iuh.fit.goat.dto.response.auth.LoginResponse;
+import iuh.fit.goat.dto.response.recruiter.RecruiterResponse;
 import iuh.fit.goat.entity.Applicant;
 import iuh.fit.goat.entity.Recruiter;
 import iuh.fit.goat.entity.User;
@@ -20,9 +20,7 @@ import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseCookie;
-import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
 import org.springframework.security.core.Authentication;
