@@ -51,7 +51,7 @@ public class ApplicationController {
         return ResponseEntity.status(HttpStatus.CREATED).body(applicationResponse);
     }
 
-    @PutMapping("/applications/accept")
+    @PutMapping("/applications/accepted")
     public ResponseEntity<List<ApplicationStatusResponse>> acceptApplications(
             @Valid @RequestBody ApplicationIdsRequest request
     ) {
@@ -59,7 +59,7 @@ public class ApplicationController {
         return ResponseEntity.status(HttpStatus.OK).body(result);
     }
 
-    @PutMapping("/applications/reject")
+    @PutMapping("/applications/rejected")
     public ResponseEntity<List<ApplicationStatusResponse>> rejectApplications(
             @Valid @RequestBody ApplicationIdsRequest request
     ) {
