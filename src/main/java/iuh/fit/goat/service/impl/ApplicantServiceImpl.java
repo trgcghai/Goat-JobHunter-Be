@@ -16,7 +16,6 @@ import iuh.fit.goat.entity.*;
 import iuh.fit.goat.repository.*;
 import iuh.fit.goat.util.*;
 
-import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -33,7 +32,7 @@ public class ApplicantServiceImpl implements ApplicantService {
 
     @Override
     public Applicant handleCreateApplicant(Applicant applicant) {
-        Role role = null;
+        Role role;
         if(applicant.getRole() != null){
             role = this.roleService.handleGetRoleById(applicant.getRole().getRoleId());
         } else {
@@ -113,6 +112,16 @@ public class ApplicantServiceImpl implements ApplicantService {
 
         return result.orElse(null);
     }
+
+    @Override
+    public Applicant handleGetCurrentApplicant() {
+        String email = SecurityUtil.getCurrentUserLogin().orElse(null);
+        if (email == null) {
+            return null;
+        }
+        return this.applicantRepository.findByContactEmail(email).orElse(null);
+    }
+
 
     @Override
     public ResultPaginationResponse handleGetAllApplicants(Specification<Applicant> spec, Pageable pageable) {

@@ -16,6 +16,8 @@ public interface RecruiterService {
 
     Recruiter handleGetRecruiterById(long id);
 
+    Recruiter handleGetCurrentRecruiter();
+
     ResultPaginationResponse handleGetAllRecruiters(Specification<Recruiter> spec, Pageable pageable);
 
     RecruiterResponse convertToRecruiterResponse(Recruiter recruiter);

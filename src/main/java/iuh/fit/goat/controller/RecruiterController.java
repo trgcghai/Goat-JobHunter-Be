@@ -97,6 +97,20 @@ public class RecruiterController {
         return ResponseEntity.status(HttpStatus.OK).body(result);
     }
 
+    @GetMapping("/recruiters/me")
+    @ApiMessage("Get current recruiter information")
+    public ResponseEntity<RecruiterResponse> getCurrentRecruiter() throws InvalidException {
+        Recruiter recruiter = this.recruiterService.handleGetCurrentRecruiter();
+
+        if (recruiter != null) {
+            RecruiterResponse recruiterResponse = this.recruiterService.convertToRecruiterResponse(recruiter);
+            return ResponseEntity.status(HttpStatus.OK).body(recruiterResponse);
+        } else {
+            throw new InvalidException("Current user is not a recruiter or not found");
+        }
+    }
+
+
     @GetMapping("/recruiters/me/jobs")
     public ResponseEntity<ResultPaginationResponse> getJobsForCurrentRecruiter(
             @Filter Specification<Job> spec, Pageable pageable

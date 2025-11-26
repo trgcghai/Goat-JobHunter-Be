@@ -63,6 +63,18 @@ public class ApplicantController {
         }
     }
 
+    @GetMapping("/applicants/me")
+    public ResponseEntity<ApplicantResponse> getCurrentApplicant() throws InvalidException {
+        Applicant applicant = this.applicantService.handleGetCurrentApplicant();
+
+        if (applicant != null) {
+            ApplicantResponse applicantResponse = this.applicantService.convertToApplicantResponse(applicant);
+            return ResponseEntity.status(HttpStatus.OK).body(applicantResponse);
+        } else {
+            throw new InvalidException("Current user is not an applicant or not found");
+        }
+    }
+
 
     @GetMapping("/applicants/{id}")
     public ResponseEntity<ApplicantResponse> getApplicantById(@PathVariable("id") String id) throws InvalidException {

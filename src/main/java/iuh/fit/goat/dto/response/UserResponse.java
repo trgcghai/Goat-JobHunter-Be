@@ -10,7 +10,6 @@ import lombok.Setter;
 
 import java.time.Instant;
 import java.time.LocalDate;
-import java.util.List;
 
 @Getter
 @Setter
@@ -28,8 +27,6 @@ public class UserResponse {
     private LocalDate dob;
     private boolean enabled;
     private RoleUser role;
-    private List<SavedJob> savedJobs;
-    private List<FollowedRecruiter> followedRecruiters;
     private Instant createdAt;
     private Instant updatedAt;
 
@@ -40,24 +37,6 @@ public class UserResponse {
     public static class RoleUser {
         private long roleId;
         private String name;
-    }
-
-    @Getter
-    @Setter
-    @NoArgsConstructor
-    @AllArgsConstructor
-    public static class SavedJob {
-        private long jobId;
-        private String title;
-    }
-
-    @Getter
-    @Setter
-    @NoArgsConstructor
-    @AllArgsConstructor
-    public static class FollowedRecruiter {
-        private long userId;
-        private String fullName;
     }
 }
 

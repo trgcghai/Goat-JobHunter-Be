@@ -18,7 +18,6 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 
-import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -36,7 +35,7 @@ public class RecruiterServiceImpl implements RecruiterService {
 
     @Override
     public Recruiter handleCreateRecruiter(Recruiter recruiter) {
-        Role role = null;
+        Role role;
         if(recruiter.getRole() != null) {
             role = this.roleService.handleGetRoleById(recruiter.getRole().getRoleId());
         } else {
@@ -126,6 +125,16 @@ public class RecruiterServiceImpl implements RecruiterService {
         return recruiter.orElse(null);
 
     }
+
+    @Override
+    public Recruiter handleGetCurrentRecruiter() {
+        String email = SecurityUtil.getCurrentUserLogin().orElse(null);
+        if (email == null) {
+            return null;
+        }
+        return this.recruiterRepository.findByContactEmail(email).orElse(null);
+    }
+
 
     @Override
     public ResultPaginationResponse handleGetAllRecruiters(Specification<Recruiter> spec, Pageable pageable) {

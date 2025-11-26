@@ -16,6 +16,8 @@ public interface ApplicantService {
 
     Applicant handleGetApplicantById(long id);
 
+    Applicant handleGetCurrentApplicant();
+
     ResultPaginationResponse handleGetAllApplicants(Specification<Applicant> spec, Pageable pageable);
 
     ApplicantResponse convertToApplicantResponse(Applicant applicant);
