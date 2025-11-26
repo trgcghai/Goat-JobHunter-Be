@@ -7,7 +7,6 @@ import iuh.fit.goat.dto.response.ApplicationStatusResponse;
 import iuh.fit.goat.dto.response.ResultPaginationResponse;
 import iuh.fit.goat.service.ApplicationService;
 import iuh.fit.goat.service.EmailService;
-import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -15,6 +14,7 @@ import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import iuh.fit.goat.entity.*;
 import iuh.fit.goat.repository.*;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.format.DateTimeFormatter;
 import java.util.*;
@@ -51,7 +51,7 @@ public class ApplicationServiceImp implements ApplicationService {
                 .toList();
 
         pendingApplications.forEach(app -> app.setStatus(Status.ACCEPTED));
-        this.applicationRepository.saveAll(applications);
+        this.applicationRepository.saveAll(pendingApplications);
 
         Map<String, List<Application>> applicationsByEmail =
                 pendingApplications.stream().collect(Collectors.groupingBy(Application::getEmail));
@@ -72,7 +72,7 @@ public class ApplicationServiceImp implements ApplicationService {
             );
         });
 
-        return applications.stream()
+        return pendingApplications.stream()
                 .map(app -> new ApplicationStatusResponse(
                         app.getApplicationId(),
                         app.getStatus().getValue()
@@ -91,7 +91,7 @@ public class ApplicationServiceImp implements ApplicationService {
                 .toList();
 
         pendingApplications.forEach(app -> app.setStatus(Status.REJECTED));
-        this.applicationRepository.saveAll(applications);
+        this.applicationRepository.saveAll(pendingApplications);
 
         Map<String, List<Application>> applicationsByEmail =
                 pendingApplications.stream().collect(Collectors.groupingBy(Application::getEmail));
@@ -108,7 +108,7 @@ public class ApplicationServiceImp implements ApplicationService {
             );
         });
 
-        return applications.stream()
+        return pendingApplications.stream()
                 .map(app -> new ApplicationStatusResponse(
                         app.getApplicationId(),
                         app.getStatus().getValue()
