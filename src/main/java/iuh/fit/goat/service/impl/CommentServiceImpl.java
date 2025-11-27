@@ -1,6 +1,6 @@
 package iuh.fit.goat.service.impl;
 
-import iuh.fit.goat.common.NotificationType;
+import iuh.fit.goat.config.components.RealTimeEventHub;
 import iuh.fit.goat.dto.response.comment.CommentResponse;
 import iuh.fit.goat.dto.response.ResultPaginationResponse;
 import iuh.fit.goat.entity.Blog;
@@ -18,9 +18,12 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
+import org.springframework.http.codec.ServerSentEvent;
 import org.springframework.stereotype.Service;
+import reactor.core.publisher.Flux;
 
 import java.util.List;
+import java.util.Objects;
 
 @Service
 @RequiredArgsConstructor
@@ -29,7 +32,20 @@ public class CommentServiceImpl implements CommentService {
     private final NotificationService notificationService;
     private final CommentRepository commentRepository;
     private final UserRepository userRepository;
-    private final NotificationRepository notificationRepository;
+    private final RealTimeEventHub eventHub;
+
+    @Override
+    public Flux<ServerSentEvent<String>> stream(Long blogId) {
+        Blog currentBlog = this.blogService.handleGetBlogById(blogId);
+        if(currentBlog == null) return Flux.empty();
+
+        return this.eventHub.stream(
+                "comment", Comment.class,
+                c -> c.getBlog() != null
+                        && Objects.equals(c.getBlog().getBlogId(), currentBlog.getBlogId()),
+                this::convertToCommentResponse
+        );
+    }
 
     @Override
     public Comment handleCreateComment(Comment comment) {
@@ -63,6 +79,8 @@ public class CommentServiceImpl implements CommentService {
         } else {
             this.notificationService.handleNotifyCommentBlog(newComment.getBlog(), newComment);
         }
+
+        this.eventHub.push("comment", newComment);
 
         return newComment;
     }

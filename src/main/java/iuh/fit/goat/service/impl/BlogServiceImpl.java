@@ -2,6 +2,7 @@ package iuh.fit.goat.service.impl;
 
 import iuh.fit.goat.common.BlogActionType;
 import iuh.fit.goat.common.Role;
+import iuh.fit.goat.config.components.RealTimeEventHub;
 import iuh.fit.goat.dto.request.blog.BlogIdsRequest;
 import iuh.fit.goat.dto.request.user.LikeBlogRequest;
 import iuh.fit.goat.dto.response.blog.BlogResponse;
@@ -22,12 +23,15 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
+import org.springframework.http.codec.ServerSentEvent;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import reactor.core.publisher.Flux;
 
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 @Service
@@ -38,6 +42,19 @@ public class BlogServiceImpl implements BlogService {
     private final NotificationService notificationService;
     private final BlogRepository blogRepository;
     private final UserRepository userRepository;
+    private final RealTimeEventHub eventHub;
+
+    @Override
+    public Flux<ServerSentEvent<String>> stream(Long blogId) {
+        Blog currentBlog = this.handleGetBlogById(blogId);
+        if(currentBlog == null) return Flux.empty();
+
+        return this.eventHub.stream(
+                "blog", Blog.class,
+                c -> Objects.equals(c.getBlogId(), currentBlog.getBlogId()),
+                this::convertToBlogResponse
+        );
+    }
 
     @Override
     public Blog handleCreateBlog(Blog blog) {
@@ -141,6 +158,8 @@ public class BlogServiceImpl implements BlogService {
         User currentUser = this.userRepository.findByContact_Email(email);
 
         this.notificationService.handleNotifyLikeBlog(updatedBlog);
+
+        this.eventHub.push("blog", updatedBlog);
 
         return currentUser.getRecipientNotifications();
     }

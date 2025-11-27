@@ -10,10 +10,14 @@ import iuh.fit.goat.entity.Comment;
 import iuh.fit.goat.entity.Notification;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
+import org.springframework.http.codec.ServerSentEvent;
+import reactor.core.publisher.Flux;
 
 import java.util.List;
 
 public interface BlogService {
+    Flux<ServerSentEvent<String>> stream(Long blogId);
+
     Blog handleCreateBlog(Blog blog);
 
     Blog handleUpdateBlog(Blog blog);
