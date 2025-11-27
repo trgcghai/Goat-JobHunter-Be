@@ -1,8 +1,7 @@
 package iuh.fit.goat.service.impl;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import iuh.fit.goat.common.NotificationType;
+import iuh.fit.goat.config.components.RealTimeEventHub;
 import iuh.fit.goat.dto.response.notification.NotificationResponse;
 import iuh.fit.goat.entity.Blog;
 import iuh.fit.goat.entity.Comment;
@@ -17,7 +16,6 @@ import org.springframework.http.codec.ServerSentEvent;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import reactor.core.publisher.Flux;
-import reactor.core.publisher.Sinks;
 
 import java.util.Collections;
 import java.util.List;
@@ -29,14 +27,7 @@ import java.util.Optional;
 public class NotificationServiceImpl implements NotificationService {
     private final NotificationRepository notificationRepository;
     private final UserRepository userRepository;
-
-    private final ObjectMapper objectMapper;
-
-    private final Sinks.Many<Notification> notificationSink = Sinks.many().multicast().onBackpressureBuffer();
-
-    private void handlePushTo(Notification notification) {
-        this.notificationSink.tryEmitNext(notification);
-    }
+    private final RealTimeEventHub eventHub;
 
     private User handleGetCurrentUser() {
         String currentEmail = SecurityUtil.getCurrentUserLogin().isPresent() ?
@@ -52,31 +43,12 @@ public class NotificationServiceImpl implements NotificationService {
             return Flux.empty();
         }
 
-        return this.notificationSink.asFlux()
-                .filter(n ->
-                        {
-                            if (n.getRecipient() == null) return false;
-                            return Objects.equals(
-                                    n.getRecipient().getUserId(),
-                                    currentUser.getUserId()
-                            );
-                        }
-                )
-                .<ServerSentEvent<String>>handle((n, sink) -> {
-                            try {
-                                NotificationResponse response = this.covertToNotificationResponse(n);
-                                String jsonData = this.objectMapper.writeValueAsString(response);
-                                sink.next(ServerSentEvent.<String>builder()
-                                        .event("notification-event")
-                                        .data(jsonData)
-                                        .build()
-                                );
-                            } catch (JsonProcessingException e) {
-                                sink.error(new RuntimeException("Error serializing notification", e));
-                            }
-                        })
-                .doOnError(Throwable::printStackTrace)
-                .onErrorResume(e -> Flux.empty());
+        return this.eventHub.stream(
+                "notification", Notification.class,
+                n -> n.getRecipient() != null
+                                && Objects.equals(n.getRecipient().getUserId(), currentUser.getUserId()),
+                this::covertToNotificationResponse
+        );
     }
 
     @Override
@@ -117,7 +89,7 @@ public class NotificationServiceImpl implements NotificationService {
         notification.setRecipient(recipient);
 
         this.notificationRepository.save(notification);
-        this.handlePushTo(notification);
+        this.eventHub.push("notification", notification);
     }
 
     @Override
@@ -138,7 +110,7 @@ public class NotificationServiceImpl implements NotificationService {
         notification.setRecipient(recipient);
 
         this.notificationRepository.save(notification);
-        this.handlePushTo(notification);
+        this.eventHub.push("notification", notification);
     }
 
     @Override
@@ -166,7 +138,7 @@ public class NotificationServiceImpl implements NotificationService {
         notification.setRecipient(recipient);
 
         this.notificationRepository.save(notification);
-        this.handlePushTo(notification);
+        this.eventHub.push("notification", notification);
     }
 
     private NotificationResponse covertToNotificationResponse(Notification notification) {
