@@ -11,6 +11,7 @@ import iuh.fit.goat.repository.*;
 import iuh.fit.goat.service.EmailService;
 import iuh.fit.goat.service.RecruiterService;
 import iuh.fit.goat.service.RoleService;
+import iuh.fit.goat.util.FileUploadUtil;
 import iuh.fit.goat.util.SecurityUtil;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -43,6 +44,10 @@ public class RecruiterServiceImpl implements RecruiterService {
         }
         recruiter.setRole(role);
         recruiter.setEnabled(false);
+
+        if(recruiter.getAvatar() == null) {
+            recruiter.setAvatar(FileUploadUtil.AVATAR + recruiter.getUsername());
+        }
 
         return this.recruiterRepository.save(recruiter);
     }

@@ -12,7 +12,7 @@ import lombok.Setter;
 @NoArgsConstructor
 @AllArgsConstructor
 public class LikeBlogRequest {
-    @NotNull(message = "liked blog must not be null")
-    private Blog blog;
+    @NotNull(message = "blogId must not be null")
+    private Long blogId;
     private boolean liked;
 }

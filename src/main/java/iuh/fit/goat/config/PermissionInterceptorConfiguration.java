@@ -40,12 +40,13 @@ public class PermissionInterceptorConfiguration implements WebMvcConfigurer {
                 "/api/v1/blogs/**",                  // Bài viết blog – public
                 "/api/v1/email/**",                  // Gửi email/liên hệ – public
 
-                "/v3/api-docs/**",                    // Tài liệu OpenAPI – public
-                "/swagger-ui/**",                     // Swagger UI – public
-                "/swagger-ui.html",                   // Trang Swagger – public
+                "/v3/api-docs/**",                   // Tài liệu OpenAPI – public
+                "/swagger-ui/**",                    // Swagger UI – public
+                "/swagger-ui.html",                  // Trang Swagger – public
 
                 "/api/v1/applicants/me",             // Truy vấn thông tin cá nhân của ứng viên đang đăng nhập – không cần kiểm tra permission
-                "/api/v1/recruiters/me"              // Truy vấn thông tin cá nhân của NTĐ đang đăng nhập – không cần kiểm tra permission
+                "/api/v1/recruiters/me",             // Truy vấn thông tin cá nhân của NTĐ đang đăng nhập – không cần kiểm tra permission
+                "/api/v1/notifications/**"           // Server sent event, nhận thông báo khi comment, reply, like blog
         };
 
         registry.addInterceptor(getPermissionInterceptor())

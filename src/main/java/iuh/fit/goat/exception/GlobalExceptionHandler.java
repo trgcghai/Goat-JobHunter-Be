@@ -16,7 +16,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 @ControllerAdvice
-public class GlobalExceptionHandle {
+public class GlobalExceptionHandler {
 
     @ExceptionHandler(Exception.class)
     ResponseEntity<RestResponse<Object>> handleAllExceptions(Exception e){

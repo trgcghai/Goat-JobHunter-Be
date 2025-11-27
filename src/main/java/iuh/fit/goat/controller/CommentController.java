@@ -14,7 +14,9 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.http.codec.ServerSentEvent;
 import org.springframework.web.bind.annotation.*;
+import reactor.core.publisher.Flux;
 
 import java.util.List;
 import java.util.regex.Pattern;
@@ -25,6 +27,11 @@ import java.util.regex.Pattern;
 public class CommentController {
     private final CommentService commentService;
     private final BlogService blogService;
+
+    @GetMapping("/stream/{blogId}")
+    public Flux<ServerSentEvent<String>> stream(@PathVariable("blogId") Long blogId) {
+        return this.commentService.stream(blogId);
+    }
 
     @PostMapping
     public ResponseEntity<CommentResponse> createComment(@Valid @RequestBody Comment comment) throws InvalidException {

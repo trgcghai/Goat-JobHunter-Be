@@ -41,6 +41,10 @@ public class ApplicantServiceImpl implements ApplicantService {
         applicant.setRole(role);
         applicant.setEnabled(false);
 
+        if(applicant.getAvatar() == null) {
+            applicant.setAvatar(FileUploadUtil.AVATAR + applicant.getUsername());
+        }
+
         return this.applicantRepository.save(applicant);
     }
 
