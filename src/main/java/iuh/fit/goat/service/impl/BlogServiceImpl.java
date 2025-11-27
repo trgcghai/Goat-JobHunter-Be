@@ -1,7 +1,6 @@
 package iuh.fit.goat.service.impl;
 
 import iuh.fit.goat.common.BlogActionType;
-import iuh.fit.goat.common.NotificationType;
 import iuh.fit.goat.common.Role;
 import iuh.fit.goat.dto.request.blog.BlogIdsRequest;
 import iuh.fit.goat.dto.request.user.LikeBlogRequest;
@@ -13,10 +12,10 @@ import iuh.fit.goat.entity.Comment;
 import iuh.fit.goat.entity.Notification;
 import iuh.fit.goat.entity.User;
 import iuh.fit.goat.repository.BlogRepository;
-import iuh.fit.goat.repository.NotificationRepository;
 import iuh.fit.goat.repository.UserRepository;
 import iuh.fit.goat.service.BlogService;
 import iuh.fit.goat.service.EmailService;
+import iuh.fit.goat.service.NotificationService;
 import iuh.fit.goat.service.UserService;
 import iuh.fit.goat.util.SecurityUtil;
 import lombok.RequiredArgsConstructor;
@@ -29,7 +28,6 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
@@ -37,9 +35,9 @@ import java.util.stream.Collectors;
 public class BlogServiceImpl implements BlogService {
     private final UserService userService;
     private final EmailService emailService;
+    private final NotificationService notificationService;
     private final BlogRepository blogRepository;
     private final UserRepository userRepository;
-    private final NotificationRepository notificationRepository;
 
     @Override
     public Blog handleCreateBlog(Blog blog) {
@@ -134,7 +132,7 @@ public class BlogServiceImpl implements BlogService {
     @Override
     public List<Notification> handleLikeBlog(LikeBlogRequest likeBlogRequest) {
         int incrementVal = likeBlogRequest.isLiked() ? 1 : -1;
-        Blog blog = this.handleGetBlogById(likeBlogRequest.getBlog().getBlogId());
+        Blog blog = this.handleGetBlogById(likeBlogRequest.getBlogId());
         long newTotalLikes = blog.getActivity().getTotalLikes() + incrementVal;
         blog.getActivity().setTotalLikes(Math.max(newTotalLikes, 0));
         Blog updatedBlog = this.blogRepository.save(blog);
@@ -142,23 +140,9 @@ public class BlogServiceImpl implements BlogService {
         String email = SecurityUtil.getCurrentUserLogin().isPresent() ? SecurityUtil.getCurrentUserLogin().get() : "";
         User currentUser = this.userRepository.findByContact_Email(email);
 
-        if(likeBlogRequest.isLiked()) {
-            Notification notification = new Notification();
-            notification.setType(NotificationType.LIKE);
-            notification.setSeen(false);
-            notification.setBlog(updatedBlog);
-            notification.setActor(currentUser);
-            notification.setRecipient(blog.getAuthor());
+        this.notificationService.handleNotifyLikeBlog(updatedBlog);
 
-            this.notificationRepository.save(notification);
-        } else {
-            Optional<Notification> optNotification = this.notificationRepository.findByTypeAndActorAndBlogAndRecipient(
-                    NotificationType.LIKE, currentUser, updatedBlog,  blog.getAuthor()
-            );
-            optNotification.ifPresent(this.notificationRepository :: delete);
-        }
-
-        return currentUser.getActorNotifications();
+        return currentUser.getRecipientNotifications();
     }
 
     @Override

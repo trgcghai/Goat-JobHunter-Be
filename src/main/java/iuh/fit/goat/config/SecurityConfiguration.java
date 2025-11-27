@@ -120,7 +120,7 @@ public class SecurityConfiguration {
 
                 "/v3/api-docs/**",                    // Tài liệu OpenAPI – public
                 "/swagger-ui/**",                     // Swagger UI – public
-                "/swagger-ui.html"                    // Trang Swagger – public
+                "/swagger-ui.html",                   // Trang Swagger – public
         };
 
 
@@ -137,6 +137,7 @@ public class SecurityConfiguration {
                                 .requestMatchers(HttpMethod.POST, "/api/v1/users/**").permitAll()
                                 .requestMatchers(HttpMethod.PUT, "/api/v1/users/**").permitAll()
                                 .requestMatchers(HttpMethod.GET, "/api/v1/blogs/**").permitAll()
+                                .requestMatchers(HttpMethod.GET, "/api/v1/comments/**").permitAll()
                                 .anyRequest().authenticated()
                 )
                 .oauth2ResourceServer(oauth2 ->

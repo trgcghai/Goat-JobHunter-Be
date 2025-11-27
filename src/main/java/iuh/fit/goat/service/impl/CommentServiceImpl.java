@@ -12,6 +12,7 @@ import iuh.fit.goat.repository.NotificationRepository;
 import iuh.fit.goat.repository.UserRepository;
 import iuh.fit.goat.service.BlogService;
 import iuh.fit.goat.service.CommentService;
+import iuh.fit.goat.service.NotificationService;
 import iuh.fit.goat.util.SecurityUtil;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -24,10 +25,11 @@ import java.util.List;
 @Service
 @RequiredArgsConstructor
 public class CommentServiceImpl implements CommentService {
+    private final BlogService blogService;
+    private final NotificationService notificationService;
     private final CommentRepository commentRepository;
     private final UserRepository userRepository;
     private final NotificationRepository notificationRepository;
-    private final BlogService blogService;
 
     @Override
     public Comment handleCreateComment(Comment comment) {
@@ -45,6 +47,9 @@ public class CommentServiceImpl implements CommentService {
             if(parentComment != null) {
                 comment.setParent(parentComment);
                 comment.setReply(true);
+            } else {
+                comment.setParent(null);
+                comment.setReply(false);
             }
         } else {
             comment.setReply(false);
@@ -53,20 +58,11 @@ public class CommentServiceImpl implements CommentService {
 
         this.blogService.handleIncrementTotalValue(newComment);
 
-        Notification notification = new Notification();
-        notification.setSeen(false);
-        notification.setBlog(newComment.getBlog());
-        notification.setActor(currentUser);
-        notification.setRecipient(newComment.getBlog().getAuthor());
         if(newComment.getParent() != null) {
-            notification.setType(NotificationType.REPLY);
-            notification.setReply(newComment);
-            notification.setRepliedOnComment(newComment.getParent());
+            this.notificationService.handleNotifyReplyComment(newComment.getParent(), newComment);
         } else {
-            notification.setType(NotificationType.COMMENT);
-            notification.setComment(newComment);
+            this.notificationService.handleNotifyCommentBlog(newComment.getBlog(), newComment);
         }
-        this.notificationRepository.save(notification);
 
         return newComment;
     }
@@ -90,32 +86,9 @@ public class CommentServiceImpl implements CommentService {
         if(!comment.isReply()) {
             blog.getActivity().setTotalParentComments(blog.getActivity().getTotalParentComments() - 1);
         }
-        this.blogService.handleUpdateBlog(blog);
-    }
 
-    private int deleteRecursively(Comment comment) {
-        int count = 1;
-        if (comment.getChildren() != null) {
-            for (Comment child : comment.getChildren()) {
-                count += deleteRecursively(child);
-            }
-        }
-
-        if(comment.getCommentNotifications() != null) {
-            List<Notification> notifications = comment.getCommentNotifications();
-            this.notificationRepository.deleteAll(notifications);
-        }
-        if(comment.getReplyNotifications() != null) {
-            List<Notification> notifications = comment.getReplyNotifications();
-            this.notificationRepository.deleteAll(notifications);
-        }
-        if(comment.getRepliedOnCommentNotifications() != null) {
-            List<Notification> notifications = comment.getRepliedOnCommentNotifications();
-            this.notificationRepository.deleteAll(notifications);
-        }
         this.commentRepository.delete(comment);
-
-        return count;
+        this.blogService.handleUpdateBlog(blog);
     }
 
     @Override
@@ -183,6 +156,17 @@ public class CommentServiceImpl implements CommentService {
         }
 
         return commentResponse;
+    }
+
+    private int deleteRecursively(Comment comment) {
+        int count = 1;
+        if (comment.getChildren() != null) {
+            for (Comment child : comment.getChildren()) {
+                count += deleteRecursively(child);
+            }
+        }
+
+        return count;
     }
 
 }

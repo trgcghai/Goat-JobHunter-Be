@@ -7,11 +7,13 @@ import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.core.MethodParameter;
 import org.springframework.core.io.Resource;
 import org.springframework.http.MediaType;
+import org.springframework.http.codec.ServerSentEvent;
 import org.springframework.http.server.ServerHttpRequest;
 import org.springframework.http.server.ServerHttpResponse;
 import org.springframework.http.server.ServletServerHttpResponse;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.servlet.mvc.method.annotation.ResponseBodyAdvice;
+import reactor.core.publisher.Flux;
 
 @ControllerAdvice
 public class FormatResponse implements ResponseBodyAdvice<Object> {
@@ -25,7 +27,11 @@ public class FormatResponse implements ResponseBodyAdvice<Object> {
     @Nullable
     public Object beforeBodyWrite(@Nullable Object body, MethodParameter returnType,
               MediaType selectedContentType, Class selectedConverterType,
-              ServerHttpRequest request, ServerHttpResponse response) {
+              ServerHttpRequest request, ServerHttpResponse response
+    ) {
+        if (body instanceof ServerSentEvent<?> || body instanceof Flux) {
+            return body;
+        }
 
         HttpServletResponse httpResponse = ((ServletServerHttpResponse) response).getServletResponse();
         int statusCode = httpResponse.getStatus();

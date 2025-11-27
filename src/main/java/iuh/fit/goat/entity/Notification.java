@@ -20,9 +20,8 @@ public class Notification {
     private long notificationId;
     @Enumerated(EnumType.STRING)
     private NotificationType type;
-    private boolean seen;
+    private boolean seen = false;
     private Instant createdAt;
-    private String createdBy;
 
     @ManyToOne
     @JoinColumn(name = "blog_id")
@@ -32,7 +31,7 @@ public class Notification {
     @JoinColumn(name = "actor_id")
     private User actor;
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "recipient_id")
     private User recipient;
 
@@ -51,8 +50,5 @@ public class Notification {
     @PrePersist
     public void handleBeforeCreate(){
         this.createdAt = Instant.now();
-        this.createdBy = SecurityUtil.getCurrentUserLogin().isPresent()
-                ? SecurityUtil.getCurrentUserLogin().get()
-                : "";
     }
 }
