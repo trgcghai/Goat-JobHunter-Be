@@ -3,6 +3,7 @@ package iuh.fit.goat.service.impl;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import iuh.fit.goat.common.NotificationType;
+import iuh.fit.goat.dto.response.notification.NotificationResponse;
 import iuh.fit.goat.entity.Blog;
 import iuh.fit.goat.entity.Comment;
 import iuh.fit.goat.entity.Notification;
@@ -63,11 +64,13 @@ public class NotificationServiceImpl implements NotificationService {
                 )
                 .<ServerSentEvent<String>>handle((n, sink) -> {
                             try {
-                                String jsonData = this.objectMapper.writeValueAsString(n);
+                                NotificationResponse response = this.covertToNotificationResponse(n);
+                                String jsonData = this.objectMapper.writeValueAsString(response);
                                 sink.next(ServerSentEvent.<String>builder()
                                         .event("notification-event")
                                         .data(jsonData)
-                                        .build());
+                                        .build()
+                                );
                             } catch (JsonProcessingException e) {
                                 sink.error(new RuntimeException("Error serializing notification", e));
                             }
@@ -164,5 +167,59 @@ public class NotificationServiceImpl implements NotificationService {
 
         this.notificationRepository.save(notification);
         this.handlePushTo(notification);
+    }
+
+    private NotificationResponse covertToNotificationResponse(Notification notification) {
+        NotificationResponse response = new NotificationResponse();
+
+        response.setNotificationId(notification.getNotificationId());
+        response.setType(notification.getType());
+        response.setSeen(notification.isSeen());
+
+        NotificationResponse.BlogNotification blog = new NotificationResponse.BlogNotification(
+                notification.getBlog().getBlogId(),
+                notification.getBlog().getTitle()
+        );
+        response.setBlog(blog);
+
+        NotificationResponse.UserNotification actor = new NotificationResponse.UserNotification(
+                notification.getActor().getUserId(),
+                notification.getActor().getFullName() == null ? "" : notification.getActor().getFullName(),
+                notification.getActor().getUsername(), notification.getActor().getAvatar()
+        );
+        response.setActor(actor);
+
+        NotificationResponse.UserNotification recipient = new NotificationResponse.UserNotification(
+                notification.getRecipient().getUserId(),
+                notification.getRecipient().getFullName() == null ? "" : notification.getRecipient().getFullName(),
+                notification.getRecipient().getUsername(), notification.getRecipient().getAvatar()
+        );
+        response.setRecipient(recipient);
+
+        if(notification.getComment() != null) {
+            NotificationResponse.CommentNotification comment = new NotificationResponse.CommentNotification(
+                    notification.getComment().getCommentId(),
+                    notification.getComment().getComment()
+            );
+            response.setComment(comment);
+        }
+
+        if(notification.getReply() != null) {
+            NotificationResponse.CommentNotification reply = new NotificationResponse.CommentNotification(
+                    notification.getReply().getCommentId(),
+                    notification.getReply().getComment()
+            );
+            response.setReply(reply);
+        }
+
+        if(notification.getRepliedOnComment() != null) {
+            NotificationResponse.CommentNotification repliedOnComment = new NotificationResponse.CommentNotification(
+                    notification.getRepliedOnComment().getCommentId(),
+                    notification.getRepliedOnComment().getComment()
+            );
+            response.setRepliedOnComment(repliedOnComment);
+        }
+
+        return response;
     }
 }
