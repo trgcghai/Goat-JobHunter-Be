@@ -32,8 +32,9 @@ public class RecruiterController {
     private final JobService jobService;
 
     @PostMapping("/recruiters")
-    public ResponseEntity<RecruiterResponse> createRecruiter(@Valid @RequestBody Recruiter recruiter)
-            throws InvalidException {
+    public ResponseEntity<RecruiterResponse> createRecruiter(
+            @Valid @RequestBody Recruiter recruiter
+    ) throws InvalidException {
         if (userService.handleExistsByEmail(recruiter.getContact().getEmail())) {
             throw new InvalidException("Email exists: " + recruiter.getContact().getEmail());
         }
@@ -55,7 +56,8 @@ public class RecruiterController {
 
     @PutMapping("/recruiters")
     public ResponseEntity<RecruiterResponse> updateRecruiter(
-            @Valid @RequestBody RecruiterUpdateRequest updateRequest) throws InvalidException {
+            @Valid @RequestBody RecruiterUpdateRequest updateRequest
+    ) throws InvalidException {
 
         Recruiter updatedRecruiter = this.recruiterService.handleUpdateRecruiter(updateRequest);
 

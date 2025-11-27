@@ -15,6 +15,7 @@ public class FileUploadUtil {
     public static final String FILE_PATTERN = "([^\\s]+(\\.(?i)(jpg|jpeg|png|gif|bmp|pdf|doc|docx))$)";
     public static final String DATE_FORMAT = "ddMMyyyyHHmmss";
     public static final String FILE_NAME_FORMAT = "%s_%s";
+    public static final String AVATAR = "https://api.dicebear.com/7.x/avataaars/png?seed=";
 
     public static boolean isAllowedExtension(String fileName, String pattern){
         Matcher matcher = Pattern.compile(pattern, Pattern.CASE_INSENSITIVE).matcher(fileName);
