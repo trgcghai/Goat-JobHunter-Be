@@ -6,7 +6,7 @@ import iuh.fit.goat.dto.response.application.ApplicationResponse;
 import iuh.fit.goat.dto.response.application.ApplicationStatusResponse;
 import iuh.fit.goat.dto.response.ResultPaginationResponse;
 import iuh.fit.goat.service.ApplicationService;
-import iuh.fit.goat.service.EmailService;
+import iuh.fit.goat.service.EmailNotificationService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -23,7 +23,7 @@ import java.util.stream.Collectors;
 @Service
 @RequiredArgsConstructor
 public class ApplicationServiceImp implements ApplicationService {
-    private final EmailService emailService;
+    private final EmailNotificationService emailNotificationService;
     private final ApplicationRepository applicationRepository;
     private final JobRepository jobRepository;
     private final ApplicantRepository applicantRepository;
@@ -65,7 +65,7 @@ public class ApplicationServiceImp implements ApplicationService {
                     : "";
             String note = request.getNote() != null ? request.getNote() : null;
 
-            this.emailService.handelSendApplicationStatusEmail(
+            this.emailNotificationService.handleSendApplicationStatusEmail(
                     email, username, apps, Status.ACCEPTED.getValue(),
                     request.getInterviewType(), formattedDate, request.getLocation(), note,
                     null
@@ -101,7 +101,7 @@ public class ApplicationServiceImp implements ApplicationService {
 
             String username = apps.getFirst().getApplicant().getUsername();
 
-            this.emailService.handelSendApplicationStatusEmail(
+            this.emailNotificationService.handleSendApplicationStatusEmail(
                     email, username, apps, Status.REJECTED.getValue(),
                     null, null, null, null,
                     request.getReason()

@@ -8,7 +8,6 @@ import iuh.fit.goat.entity.Job;
 import iuh.fit.goat.entity.Recruiter;
 import iuh.fit.goat.entity.Role;
 import iuh.fit.goat.repository.*;
-import iuh.fit.goat.service.EmailService;
 import iuh.fit.goat.service.RecruiterService;
 import iuh.fit.goat.service.RoleService;
 import iuh.fit.goat.util.FileUploadUtil;
@@ -31,7 +30,6 @@ public class RecruiterServiceImpl implements RecruiterService {
     private final BlogRepository blogRepository;
     private final NotificationRepository notificationRepository;
     private final RoleService roleService;
-    private final EmailService emailService;
     private final String HR = "HR";
 
     @Override

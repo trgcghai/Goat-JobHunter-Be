@@ -7,7 +7,7 @@ import iuh.fit.goat.repository.JobRepository;
 import iuh.fit.goat.repository.SkillRepository;
 import iuh.fit.goat.repository.SubscriberRepository;
 import iuh.fit.goat.repository.UserRepository;
-import iuh.fit.goat.service.EmailService;
+import iuh.fit.goat.service.EmailNotificationService;
 import iuh.fit.goat.service.SubscriberService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -29,7 +29,7 @@ public class SubscriberServiceImpl implements SubscriberService {
     private final SkillRepository skillRepository;
     private final JobRepository jobRepository;
     private final UserRepository userRepository;
-    private final EmailService emailService;
+    private final EmailNotificationService emailNotificationService;
 
     @Override
     public Subscriber handleCreateSubscriber(Subscriber subscriber) {
@@ -103,7 +103,7 @@ public class SubscriberServiceImpl implements SubscriberService {
                         List<EmailJobResponse> arr = listJobs.stream().map(
                                 this::convertJobToSendEmail).collect(Collectors.toList()
                         );
-                        this.emailService.handleSendEmailWithTemplate(
+                        this.emailNotificationService.handleSendEmailWithTemplate(
                                 sub.getEmail(),
                                 "Cơ hội việc làm hot đang chờ đón bạn, khám phá ngay",
                                 "job",
@@ -139,7 +139,7 @@ public class SubscriberServiceImpl implements SubscriberService {
                 List<EmailJobResponse> arr = allRecentJobs.stream().map(
                                 this::convertJobToSendEmail)
                         .collect(Collectors.toList());
-                this.emailService.handleSendEmailWithTemplate(
+                this.emailNotificationService.handleSendEmailWithTemplate(
                         user.getContact().getEmail(),
                         "Cơ hội việc làm hot đang chờ đón bạn, khám phá ngay",
                         "job",

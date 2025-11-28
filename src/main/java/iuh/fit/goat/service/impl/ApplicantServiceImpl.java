@@ -5,7 +5,6 @@ import iuh.fit.goat.dto.response.applicant.ApplicantResponse;
 import iuh.fit.goat.dto.response.ResultPaginationResponse;
 import iuh.fit.goat.dto.response.user.UserResponse;
 import iuh.fit.goat.service.ApplicantService;
-import iuh.fit.goat.service.EmailService;
 import iuh.fit.goat.service.RoleService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -27,7 +26,6 @@ public class ApplicantServiceImpl implements ApplicantService {
     private final CommentRepository commentRepository;
     private final NotificationRepository notificationRepository;
     private final RoleService roleService;
-    private final EmailService emailService;
     private final String APPLICANT = "APPLICANT";
 
     @Override

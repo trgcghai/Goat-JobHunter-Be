@@ -1,21 +1,18 @@
 package iuh.fit.goat.controller;
 
 import iuh.fit.goat.dto.request.job.JobInvitationRequest;
-import iuh.fit.goat.service.EmailService;
+import iuh.fit.goat.service.EmailNotificationService;
 import iuh.fit.goat.service.SubscriberService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/api/v1")
 @RequiredArgsConstructor
 public class EmailController {
     private final SubscriberService subscriberService;
-    private final EmailService emailService;
+    private final EmailNotificationService emailNotificationService;
 
     @GetMapping("/email")
 //    @Scheduled(cron = "*/10 * * * * *")
@@ -25,9 +22,9 @@ public class EmailController {
         this.subscriberService.handleSendFollowersEmailJobs();
     }
 
-    @GetMapping("email/jobs")
+    @PostMapping("email/jobs")
     public void sendJobInvitation(@Valid @RequestBody JobInvitationRequest request) {
-        this.emailService.handelSendJobInvitationEmail(request.getApplicantIds(), request.getJobId());
+        this.emailNotificationService.handleSendJobInvitationEmail(request.getApplicantIds(), request.getJobId());
     }
 
 }
