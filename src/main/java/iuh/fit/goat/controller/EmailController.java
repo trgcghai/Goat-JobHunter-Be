@@ -27,4 +27,8 @@ public class EmailController {
         this.emailNotificationService.handleSendJobInvitationEmail(request.getApplicantIds(), request.getJobId());
     }
 
+    @PostMapping("email/invitations")
+    public void sendInterviewInvitation(@Valid @RequestBody JobInvitationRequest request) {
+        this.emailNotificationService.handleSendJobInvitationEmail(request.getApplicantIds(), request.getJobId());
+    }
 }

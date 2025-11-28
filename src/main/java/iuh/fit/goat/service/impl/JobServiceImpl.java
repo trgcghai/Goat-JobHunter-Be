@@ -286,7 +286,7 @@ public class JobServiceImpl implements JobService {
                                 .anyMatch(job.getSkills()::contains);
                     }
 
-                    return levelMatch || skillMatch;
+                    return (levelMatch || skillMatch) && a.isAvailableStatus(); // only include available applicants
                 })
                 .toList();
 
