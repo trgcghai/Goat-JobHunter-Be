@@ -15,7 +15,7 @@ import iuh.fit.goat.entity.User;
 import iuh.fit.goat.repository.BlogRepository;
 import iuh.fit.goat.repository.UserRepository;
 import iuh.fit.goat.service.BlogService;
-import iuh.fit.goat.service.EmailService;
+import iuh.fit.goat.service.EmailNotificationService;
 import iuh.fit.goat.service.NotificationService;
 import iuh.fit.goat.service.UserService;
 import iuh.fit.goat.util.SecurityUtil;
@@ -38,7 +38,7 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class BlogServiceImpl implements BlogService {
     private final UserService userService;
-    private final EmailService emailService;
+    private final EmailNotificationService emailNotificationService;
     private final NotificationService notificationService;
     private final BlogRepository blogRepository;
     private final UserRepository userRepository;
@@ -106,7 +106,7 @@ public class BlogServiceImpl implements BlogService {
             blogByEmail.forEach((email, bs) -> {
                 if(bs.isEmpty()) return;
 
-                this.emailService.handleSendBlogActionNotice(
+                this.emailNotificationService.handleSendBlogActionNotice(
                         email, bs.getFirst().getAuthor().getUsername(),
                         bs, request.getReason(), BlogActionType.DELETE
                 );
@@ -184,7 +184,7 @@ public class BlogServiceImpl implements BlogService {
         blogByEmail.forEach((email, bs) -> {
             if(bs.isEmpty()) return;
 
-            this.emailService.handleSendBlogActionNotice(
+            this.emailNotificationService.handleSendBlogActionNotice(
                     email, bs.getFirst().getAuthor().getUsername(),
                     bs, null, BlogActionType.ACCEPT
             );
@@ -212,7 +212,7 @@ public class BlogServiceImpl implements BlogService {
         blogByEmail.forEach((email, bs) -> {
             if(bs.isEmpty()) return;
 
-            this.emailService.handleSendBlogActionNotice(
+            this.emailNotificationService.handleSendBlogActionNotice(
                     email, bs.getFirst().getAuthor().getUsername(),
                     bs, request.getReason(), BlogActionType.REJECT
             );

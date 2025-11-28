@@ -41,7 +41,7 @@ public class AuthServiceImpl implements AuthService {
     private final AuthenticationManagerBuilder authenticationManagerBuilder;
     private final UserService userService;
     private final RedisService redisService;
-    private final EmailService emailService;
+    private final EmailNotificationService emailNotificationService;
     private final ApplicantService applicantService;
     private final RecruiterService recruiterService;
     private final SecurityUtil securityUtil;
@@ -244,7 +244,7 @@ public class AuthServiceImpl implements AuthService {
                 validityInSeconds,
                 TimeUnit.SECONDS
         );
-        this.emailService.handleSendVerificationEmail(newApplicant.getContact().getEmail(), verificationCode);
+        this.emailNotificationService.handleSendVerificationEmail(newApplicant.getContact().getEmail(), verificationCode);
 
         return applicantResponse;
     }
@@ -311,7 +311,7 @@ public class AuthServiceImpl implements AuthService {
                 validityInSeconds,
                 TimeUnit.SECONDS
         );
-        this.emailService.handleSendVerificationEmail(key, verificationCode);
+        this.emailNotificationService.handleSendVerificationEmail(key, verificationCode);
     }
 
     private LoginResponse.UserLogin createUserLogin(User user) {
