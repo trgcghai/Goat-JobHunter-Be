@@ -227,6 +227,40 @@ public class BlogServiceImpl implements BlogService {
     }
 
     @Override
+    public ResultPaginationResponse handleGetBlogsByCurrentUser(Specification<Blog> spec, Pageable pageable) {
+        String email = SecurityUtil.getCurrentUserLogin()
+                .orElseThrow(() -> new RuntimeException("User not authenticated"));
+
+        User currentUser = this.userRepository.findByContact_Email(email);
+        if (currentUser == null) {
+            throw new RuntimeException("User not found");
+        }
+
+        // Combine spec with author filter
+        Specification<Blog> authorSpec = (root, query, criteriaBuilder) ->
+                criteriaBuilder.equal(root.get("author"), currentUser);
+
+        Specification<Blog> combinedSpec = spec != null
+                ? spec.and(authorSpec)
+                : authorSpec;
+
+        Page<Blog> page = this.blogRepository.findAll(combinedSpec, pageable);
+
+        ResultPaginationResponse.Meta meta = new ResultPaginationResponse.Meta();
+        meta.setPage(page.getNumber() + 1);
+        meta.setPageSize(page.getSize());
+        meta.setPages(page.getTotalPages());
+        meta.setTotal(page.getTotalElements());
+
+        List<BlogResponse> blogResponses = page.getContent().stream()
+                .map(this::convertToBlogResponse)
+                .toList();
+
+        return new ResultPaginationResponse(meta, blogResponses);
+    }
+
+
+    @Override
     public BlogResponse convertToBlogResponse(Blog blog) {
         BlogResponse response = new BlogResponse();
 

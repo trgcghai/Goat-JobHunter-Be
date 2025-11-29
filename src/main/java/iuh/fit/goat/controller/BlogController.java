@@ -103,4 +103,13 @@ public class BlogController {
         List<BlogStatusResponse> result = this.blogService.handleRejectBlogs(request);
         return ResponseEntity.status(HttpStatus.OK).body(result);
     }
+
+    @GetMapping("/me")
+    public ResponseEntity<ResultPaginationResponse> getCurrentUserBlogs(
+            @Filter Specification<Blog> spec,
+            Pageable pageable
+    ) {
+        ResultPaginationResponse res = this.blogService.handleGetBlogsByCurrentUser(spec, pageable);
+        return ResponseEntity.status(HttpStatus.OK).body(res);
+    }
 }

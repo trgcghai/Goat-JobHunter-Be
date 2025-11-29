@@ -38,5 +38,7 @@ public interface BlogService {
 
     List<BlogStatusResponse> handleRejectBlogs(BlogIdsRequest request);
 
+    ResultPaginationResponse handleGetBlogsByCurrentUser(Specification<Blog> spec, Pageable pageable);
+
     BlogResponse convertToBlogResponse(Blog blog);
 }
