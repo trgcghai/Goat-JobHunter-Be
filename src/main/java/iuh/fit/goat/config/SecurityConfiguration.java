@@ -121,6 +121,8 @@ public class SecurityConfiguration {
                 "/v3/api-docs/**",                    // Tài liệu OpenAPI – public
                 "/swagger-ui/**",                     // Swagger UI – public
                 "/swagger-ui.html",                   // Trang Swagger – public
+
+                "/api/v1/ai/**",                      // Role cũng có thể dùng chat
         };
 
 
