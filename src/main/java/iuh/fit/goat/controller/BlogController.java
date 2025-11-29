@@ -1,7 +1,9 @@
 package iuh.fit.goat.controller;
 
 import com.turkraft.springfilter.boot.Filter;
+import iuh.fit.goat.dto.request.blog.BlogCreateRequest;
 import iuh.fit.goat.dto.request.blog.BlogIdsRequest;
+import iuh.fit.goat.dto.request.blog.BlogUpdateRequest;
 import iuh.fit.goat.dto.request.user.LikeBlogRequest;
 import iuh.fit.goat.dto.response.blog.BlogResponse;
 import iuh.fit.goat.dto.response.blog.BlogStatusResponse;
@@ -35,15 +37,15 @@ public class BlogController {
     }
 
     @PostMapping
-    public ResponseEntity<?> createBlog(@Valid @RequestBody Blog blog) {
-        Blog res = this.blogService.handleCreateBlog(blog);
+    public ResponseEntity<?> createBlog(@Valid @RequestBody BlogCreateRequest request) {
+        Blog res = this.blogService.handleCreateBlog(request);
         BlogResponse blogResponse = this.blogService.convertToBlogResponse(res);
         return ResponseEntity.status(HttpStatus.CREATED).body(blogResponse);
     }
 
     @PutMapping
-    public ResponseEntity<?> updateBlog(@Valid @RequestBody Blog blog) throws InvalidException {
-        Blog res = this.blogService.handleUpdateBlog(blog);
+    public ResponseEntity<?> updateBlog(@Valid @RequestBody BlogUpdateRequest request) throws InvalidException {
+        Blog res = this.blogService.handleUpdateBlog(request);
         if(res == null) throw new InvalidException("Blog doesn't exist");
         BlogResponse blogResponse = this.blogService.convertToBlogResponse(res);
         return ResponseEntity.status(HttpStatus.OK).body(blogResponse);

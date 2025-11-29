@@ -1,6 +1,8 @@
 package iuh.fit.goat.service;
 
+import iuh.fit.goat.dto.request.blog.BlogCreateRequest;
 import iuh.fit.goat.dto.request.blog.BlogIdsRequest;
+import iuh.fit.goat.dto.request.blog.BlogUpdateRequest;
 import iuh.fit.goat.dto.request.user.LikeBlogRequest;
 import iuh.fit.goat.dto.response.blog.BlogResponse;
 import iuh.fit.goat.dto.response.blog.BlogStatusResponse;
@@ -19,9 +21,11 @@ import java.util.List;
 public interface BlogService {
     Flux<ServerSentEvent<String>> stream(Long blogId);
 
-    Blog handleCreateBlog(Blog blog);
+    Blog handleCreateBlog(BlogCreateRequest request);
 
-    Blog handleUpdateBlog(Blog blog);
+    Blog handleUpdateBlog(BlogUpdateRequest request);
+
+    void handleUpdateBlogActivity(Blog blog);
 
     void handleDeleteBlog(BlogIdsRequest blogIds);
 

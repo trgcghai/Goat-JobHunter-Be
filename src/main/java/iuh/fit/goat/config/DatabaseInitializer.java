@@ -826,11 +826,7 @@ public class DatabaseInitializer implements CommandLineRunner {
                 blog.setBanner("https://boringapi.com/api/v1/static/photos/" + random.nextInt(300) + ".jpeg");
                 blog.setDescription(faker.lorem().paragraph());
 
-                List<String> contentList = new ArrayList<>();
-                for (int p = 0; p < 5; p++) {
-                    contentList.add(faker.lorem().paragraph());
-                }
-                blog.setContent(contentList);
+                blog.setContent(faker.lorem().paragraph(10));
 
                 List<String> tags = new ArrayList<>();
                 int tagCount = 3 + random.nextInt(3);

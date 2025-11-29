@@ -3,7 +3,9 @@ package iuh.fit.goat.service.impl;
 import iuh.fit.goat.common.BlogActionType;
 import iuh.fit.goat.common.Role;
 import iuh.fit.goat.config.components.RealTimeEventHub;
+import iuh.fit.goat.dto.request.blog.BlogCreateRequest;
 import iuh.fit.goat.dto.request.blog.BlogIdsRequest;
+import iuh.fit.goat.dto.request.blog.BlogUpdateRequest;
 import iuh.fit.goat.dto.request.user.LikeBlogRequest;
 import iuh.fit.goat.dto.response.blog.BlogResponse;
 import iuh.fit.goat.dto.response.blog.BlogStatusResponse;
@@ -58,31 +60,44 @@ public class BlogServiceImpl implements BlogService {
     }
 
     @Override
-    public Blog handleCreateBlog(Blog blog) {
+    public Blog handleCreateBlog(BlogCreateRequest request) {
         String email = SecurityUtil.getCurrentUserLogin().isPresent() ? SecurityUtil.getCurrentUserLogin().get() : "";
         User currentUser = this.userRepository.findByContact_Email(email);
+
+        Blog blog = new Blog();
+        blog.setTitle(request.getTitle());
+        blog.setBanner(request.getBanner());
+        blog.setDescription(request.getDescription());
+        blog.setContent(request.getContent());
+        blog.setTags(request.getTags());
+        blog.setDraft(request.getDraft());
         blog.setAuthor(currentUser);
+        blog.setEnabled(false); // wait for admin to enable
+
         return this.blogRepository.save(blog);
     }
 
     @Override
-    public Blog handleUpdateBlog(Blog blog) {
-        Blog currentBlog = this.handleGetBlogById(blog.getBlogId());
+    public Blog handleUpdateBlog(BlogUpdateRequest request) {
+        Blog currentBlog = this.handleGetBlogById(request.getBlogId());
 
         if(currentBlog != null) {
-            currentBlog.setTitle(blog.getTitle());
-            currentBlog.setBanner(blog.getBanner());
-            currentBlog.setDescription(blog.getDescription());
-            currentBlog.setContent(blog.getContent());
-            currentBlog.setTags(blog.getTags());
-            currentBlog.setDraft(blog.isDraft());
-            currentBlog.setEnabled(blog.isEnabled());
-            currentBlog.setActivity(blog.getActivity());
+            currentBlog.setTitle(request.getTitle());
+            currentBlog.setBanner(request.getBanner());
+            currentBlog.setDescription(request.getDescription());
+            currentBlog.setContent(request.getContent());
+            currentBlog.setTags(request.getTags());
+            currentBlog.setDraft(request.getDraft());
 
             return this.blogRepository.save(currentBlog);
         }
 
         return null;
+    }
+
+    @Override
+    public void handleUpdateBlogActivity(Blog blog) {
+        this.blogRepository.save(blog);
     }
 
     @Override

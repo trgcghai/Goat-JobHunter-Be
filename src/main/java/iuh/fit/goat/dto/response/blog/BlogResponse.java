@@ -20,7 +20,7 @@ public class BlogResponse {
     private String title;
     private String banner;
     private String description;
-    private List<String> content;
+    private String content;
     private List<String> tags;
     private boolean draft;
     private boolean enabled;
