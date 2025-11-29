@@ -88,19 +88,19 @@ public class BlogController {
         return ResponseEntity.status(HttpStatus.OK).body(res);
     }
 
-    @PutMapping("/accepted")
+    @PutMapping("/enabled")
     public ResponseEntity<List<BlogStatusResponse>> acceptBlogs(
             @Valid @RequestBody BlogIdsRequest request
     ) {
-        List<BlogStatusResponse> result = this.blogService.handleAcceptBlogs(request);
+        List<BlogStatusResponse> result = this.blogService.handleEnableBlogs(request);
         return ResponseEntity.status(HttpStatus.OK).body(result);
     }
 
-    @PutMapping("/rejected")
+    @PutMapping("/disabled")
     public ResponseEntity<List<BlogStatusResponse>> rejectBlogs(
             @Valid @RequestBody BlogIdsRequest request
     ) {
-        List<BlogStatusResponse> result = this.blogService.handleRejectBlogs(request);
+        List<BlogStatusResponse> result = this.blogService.handleDisableBlogs(request);
         return ResponseEntity.status(HttpStatus.OK).body(result);
     }
 
@@ -108,7 +108,7 @@ public class BlogController {
     public ResponseEntity<ResultPaginationResponse> getCurrentUserBlogs(
             @Filter Specification<Blog> spec,
             Pageable pageable
-    ) {
+    ) throws InvalidException {
         ResultPaginationResponse res = this.blogService.handleGetBlogsByCurrentUser(spec, pageable);
         return ResponseEntity.status(HttpStatus.OK).body(res);
     }

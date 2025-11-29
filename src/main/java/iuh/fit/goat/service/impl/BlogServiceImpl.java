@@ -12,6 +12,7 @@ import iuh.fit.goat.entity.Blog;
 import iuh.fit.goat.entity.Comment;
 import iuh.fit.goat.entity.Notification;
 import iuh.fit.goat.entity.User;
+import iuh.fit.goat.exception.InvalidException;
 import iuh.fit.goat.repository.BlogRepository;
 import iuh.fit.goat.repository.UserRepository;
 import iuh.fit.goat.service.BlogService;
@@ -171,7 +172,7 @@ public class BlogServiceImpl implements BlogService {
 
     @Override
     @Transactional
-    public List<BlogStatusResponse> handleAcceptBlogs(BlogIdsRequest request) {
+    public List<BlogStatusResponse> handleEnableBlogs(BlogIdsRequest request) {
         List<Blog> blogs = this.blogRepository.findAllById(request.getBlogIds());
         if(blogs.isEmpty()) return Collections.emptyList();
 
@@ -199,7 +200,7 @@ public class BlogServiceImpl implements BlogService {
     }
 
     @Override
-    public List<BlogStatusResponse> handleRejectBlogs(BlogIdsRequest request) {
+    public List<BlogStatusResponse> handleDisableBlogs(BlogIdsRequest request) {
         List<Blog> blogs = this.blogRepository.findAllById(request.getBlogIds());
         if(blogs.isEmpty()) return Collections.emptyList();
 
@@ -227,13 +228,13 @@ public class BlogServiceImpl implements BlogService {
     }
 
     @Override
-    public ResultPaginationResponse handleGetBlogsByCurrentUser(Specification<Blog> spec, Pageable pageable) {
+    public ResultPaginationResponse handleGetBlogsByCurrentUser(Specification<Blog> spec, Pageable pageable) throws InvalidException {
         String email = SecurityUtil.getCurrentUserLogin()
-                .orElseThrow(() -> new RuntimeException("User not authenticated"));
+                .orElseThrow(() -> new InvalidException("User not authenticated"));
 
         User currentUser = this.userRepository.findByContact_Email(email);
         if (currentUser == null) {
-            throw new RuntimeException("User not found");
+            throw new InvalidException("User not found");
         }
 
         // Combine spec with author filter
@@ -258,7 +259,6 @@ public class BlogServiceImpl implements BlogService {
 
         return new ResultPaginationResponse(meta, blogResponses);
     }
-
 
     @Override
     public BlogResponse convertToBlogResponse(Blog blog) {
