@@ -1,0 +1,24 @@
+package iuh.fit.goat.controller;
+
+import iuh.fit.goat.dto.request.ai.ChatRequest;
+import iuh.fit.goat.service.AiService;
+import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+
+@RestController
+@RequestMapping("/api/v1/ai")
+@RequiredArgsConstructor
+public class AiController {
+    private final AiService aiService;
+
+    @PostMapping("/chat")
+    public ResponseEntity<String> chatWithAi(@Valid @RequestBody ChatRequest request) {
+        String aiResponse = this.aiService.chatWithAi(request.getMessage());
+        return ResponseEntity.ok(aiResponse);
+    }
+}

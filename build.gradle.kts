@@ -56,6 +56,9 @@ dependencies {
 	// https://mvnrepository.com/artifact/org.springframework/spring-webflux
 	implementation("org.springframework:spring-webflux:7.0.1")
 
+	// https://mvnrepository.com/artifact/com.google.genai/google-genai
+	implementation("com.google.genai:google-genai:1.28.0")
+
 	testImplementation("org.springframework.boot:spring-boot-starter-test")
 	testImplementation("org.springframework.security:spring-security-test")
 	testRuntimeOnly("org.junit.platform:junit-platform-launcher")
