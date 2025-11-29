@@ -1,5 +1,7 @@
 package iuh.fit.goat.service;
 
+import iuh.fit.goat.dto.request.subscriber.SubscriberCreateDto;
+import iuh.fit.goat.dto.request.subscriber.SubscriberUpdateDto;
 import iuh.fit.goat.dto.response.job.EmailJobResponse;
 import iuh.fit.goat.dto.response.ResultPaginationResponse;
 import iuh.fit.goat.entity.Job;
@@ -10,9 +12,9 @@ import org.springframework.data.jpa.domain.Specification;
 import java.time.Instant;
 
 public interface SubscriberService {
-    Subscriber handleCreateSubscriber(Subscriber subscriber);
+    Subscriber handleCreateSubscriber(SubscriberCreateDto subscriber);
 
-    Subscriber handleUpdateSubscriber(Subscriber subscriber);
+    Subscriber handleUpdateSubscriber(SubscriberUpdateDto subscriber);
 
     void handleDeleteSubscriber(long id);
 

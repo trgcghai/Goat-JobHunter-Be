@@ -1,5 +1,7 @@
 package iuh.fit.goat.service.impl;
 
+import iuh.fit.goat.dto.request.subscriber.SubscriberCreateDto;
+import iuh.fit.goat.dto.request.subscriber.SubscriberUpdateDto;
 import iuh.fit.goat.dto.response.job.EmailJobResponse;
 import iuh.fit.goat.dto.response.ResultPaginationResponse;
 import iuh.fit.goat.entity.*;
@@ -32,27 +34,35 @@ public class SubscriberServiceImpl implements SubscriberService {
     private final EmailNotificationService emailNotificationService;
 
     @Override
-    public Subscriber handleCreateSubscriber(Subscriber subscriber) {
-        if (subscriber.getSkills() != null) {
-            List<Long> idSkills = subscriber.getSkills().stream().map(Skill::getSkillId)
-                    .collect(Collectors.toList());
-            List<Skill> skills = this.skillRepository.findBySkillIdIn(idSkills);
+    public Subscriber handleCreateSubscriber(SubscriberCreateDto dto) {
+        Subscriber subscriber = new Subscriber();
+        subscriber.setName(dto.getName());
+        subscriber.setEmail(dto.getEmail());
+
+        if (dto.getSkillIds() != null && !dto.getSkillIds().isEmpty()) {
+            List<Skill> skills = this.skillRepository.findBySkillIdIn(dto.getSkillIds());
             subscriber.setSkills(skills);
         }
+
         return this.subscriberRepository.save(subscriber);
     }
 
     @Override
-    public Subscriber handleUpdateSubscriber(Subscriber subscriber) {
-        Subscriber currentSubscriber = this.handleGetSubscriberById(subscriber.getSubscriberId());
+    public Subscriber handleUpdateSubscriber(SubscriberUpdateDto dto) {
+        Subscriber currentSubscriber = this.handleGetSubscriberById(dto.getSubscriberId());
 
-        if (subscriber.getSkills() != null) {
-            List<Long> idSkills = subscriber.getSkills().stream().map(Skill::getSkillId)
-                    .collect(Collectors.toList());
-            List<Skill> skills = this.skillRepository.findBySkillIdIn(idSkills);
-            subscriber.setSkills(skills);
+        if (dto.getName() != null) {
+            currentSubscriber.setName(dto.getName());
         }
-        currentSubscriber.setSkills(subscriber.getSkills());
+
+        if (dto.getEmail() != null) {
+            currentSubscriber.setEmail(dto.getEmail());
+        }
+
+        if (dto.getSkillIds() != null) {
+            List<Skill> skills = this.skillRepository.findBySkillIdIn(dto.getSkillIds());
+            currentSubscriber.setSkills(skills);
+        }
 
         return this.subscriberRepository.save(currentSubscriber);
     }

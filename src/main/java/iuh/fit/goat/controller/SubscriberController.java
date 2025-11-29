@@ -2,6 +2,8 @@ package iuh.fit.goat.controller;
 
 
 import com.turkraft.springfilter.boot.Filter;
+import iuh.fit.goat.dto.request.subscriber.SubscriberCreateDto;
+import iuh.fit.goat.dto.request.subscriber.SubscriberUpdateDto;
 import iuh.fit.goat.dto.response.ResultPaginationResponse;
 import iuh.fit.goat.entity.Subscriber;
 import iuh.fit.goat.exception.InvalidException;
@@ -24,22 +26,22 @@ public class SubscriberController {
     private final SubscriberService subscriberService;
 
     @PostMapping("/subscribers")
-    public ResponseEntity<Subscriber> createSubscriber(@Valid @RequestBody Subscriber subscriber)
+    public ResponseEntity<Subscriber> createSubscriber(@Valid @RequestBody SubscriberCreateDto dto)
             throws InvalidException {
-        if (this.subscriberService.handleGetSubscriberByEmail(subscriber.getEmail()) == null) {
+        if (this.subscriberService.handleGetSubscriberByEmail(dto.getEmail()) == null) {
             return ResponseEntity.status(HttpStatus.CREATED)
-                    .body(this.subscriberService.handleCreateSubscriber(subscriber));
+                    .body(this.subscriberService.handleCreateSubscriber(dto));
         } else {
             throw new InvalidException("Email exists");
         }
     }
 
     @PutMapping("/subscribers")
-    public ResponseEntity<Subscriber> updateSubscriber(@RequestBody Subscriber subscriber)
+    public ResponseEntity<Subscriber> updateSubscriber(@Valid @RequestBody SubscriberUpdateDto dto)
             throws InvalidException {
-        if (this.subscriberService.handleGetSubscriberById(subscriber.getSubscriberId()) != null) {
+        if (this.subscriberService.handleGetSubscriberById(dto.getSubscriberId()) != null) {
             return ResponseEntity.ok()
-                    .body(this.subscriberService.handleUpdateSubscriber(subscriber));
+                    .body(this.subscriberService.handleUpdateSubscriber(dto));
         } else {
             throw new InvalidException("Subscriber doesn't exist");
         }
