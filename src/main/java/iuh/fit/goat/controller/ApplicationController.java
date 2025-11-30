@@ -122,4 +122,21 @@ public class ApplicationController {
         ResultPaginationResponse result = this.applicationService.handleGetAllApplications(spec, pageable);
         return ResponseEntity.status(HttpStatus.OK).body(result);
     }
+
+    @GetMapping("/applications/by-applicant/{applicantId}")
+    public ResponseEntity<ResultPaginationResponse> getApplicationsByApplicantId(
+            @PathVariable("applicantId") String applicantId,
+            Pageable pageable) throws InvalidException {
+        Pattern pattern = Pattern.compile("^[0-9]+$");
+        if (!pattern.matcher(applicantId).matches()) {
+            throw new InvalidException("Id is number");
+        }
+
+        long id = Long.parseLong(applicantId);
+        Specification<Application> specification = (root, query, cb) ->
+                cb.equal(root.get("applicant").get("userId"), id);
+
+        ResultPaginationResponse result = this.applicationService.handleGetAllApplications(specification, pageable);
+        return ResponseEntity.status(HttpStatus.OK).body(result);
+    }
 }
