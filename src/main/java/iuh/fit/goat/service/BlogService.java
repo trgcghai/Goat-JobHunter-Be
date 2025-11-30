@@ -1,6 +1,8 @@
 package iuh.fit.goat.service;
 
+import iuh.fit.goat.dto.request.blog.BlogCreateRequest;
 import iuh.fit.goat.dto.request.blog.BlogIdsRequest;
+import iuh.fit.goat.dto.request.blog.BlogUpdateRequest;
 import iuh.fit.goat.dto.request.user.LikeBlogRequest;
 import iuh.fit.goat.dto.response.blog.BlogResponse;
 import iuh.fit.goat.dto.response.blog.BlogStatusResponse;
@@ -8,6 +10,7 @@ import iuh.fit.goat.dto.response.ResultPaginationResponse;
 import iuh.fit.goat.entity.Blog;
 import iuh.fit.goat.entity.Comment;
 import iuh.fit.goat.entity.Notification;
+import iuh.fit.goat.exception.InvalidException;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.http.codec.ServerSentEvent;
@@ -18,11 +21,13 @@ import java.util.List;
 public interface BlogService {
     Flux<ServerSentEvent<String>> stream(Long blogId);
 
-    Blog handleCreateBlog(Blog blog);
+    Blog handleCreateBlog(BlogCreateRequest request);
 
-    Blog handleUpdateBlog(Blog blog);
+    Blog handleUpdateBlog(BlogUpdateRequest request);
 
-    void handleDeleteBlog(BlogIdsRequest request);
+    void handleUpdateBlogActivity(Blog blog);
+
+    void handleDeleteBlog(BlogIdsRequest blogIds);
 
     Blog handleGetBlogById(long id);
 
@@ -34,9 +39,11 @@ public interface BlogService {
 
     List<Object[]> handleGetAllTags(String keyword);
 
-    List<BlogStatusResponse> handleAcceptBlogs(BlogIdsRequest request);
+    List<BlogStatusResponse> handleEnableBlogs(BlogIdsRequest request);
 
-    List<BlogStatusResponse> handleRejectBlogs(BlogIdsRequest request);
+    List<BlogStatusResponse> handleDisableBlogs(BlogIdsRequest request);
+
+    ResultPaginationResponse handleGetBlogsByCurrentUser(Specification<Blog> spec, Pageable pageable) throws InvalidException;
 
     BlogResponse convertToBlogResponse(Blog blog);
 }

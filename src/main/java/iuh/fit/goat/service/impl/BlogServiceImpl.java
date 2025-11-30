@@ -3,7 +3,9 @@ package iuh.fit.goat.service.impl;
 import iuh.fit.goat.common.BlogActionType;
 import iuh.fit.goat.common.Role;
 import iuh.fit.goat.config.components.RealTimeEventHub;
+import iuh.fit.goat.dto.request.blog.BlogCreateRequest;
 import iuh.fit.goat.dto.request.blog.BlogIdsRequest;
+import iuh.fit.goat.dto.request.blog.BlogUpdateRequest;
 import iuh.fit.goat.dto.request.user.LikeBlogRequest;
 import iuh.fit.goat.dto.response.blog.BlogResponse;
 import iuh.fit.goat.dto.response.blog.BlogStatusResponse;
@@ -12,6 +14,7 @@ import iuh.fit.goat.entity.Blog;
 import iuh.fit.goat.entity.Comment;
 import iuh.fit.goat.entity.Notification;
 import iuh.fit.goat.entity.User;
+import iuh.fit.goat.exception.InvalidException;
 import iuh.fit.goat.repository.BlogRepository;
 import iuh.fit.goat.repository.UserRepository;
 import iuh.fit.goat.service.BlogService;
@@ -57,31 +60,44 @@ public class BlogServiceImpl implements BlogService {
     }
 
     @Override
-    public Blog handleCreateBlog(Blog blog) {
+    public Blog handleCreateBlog(BlogCreateRequest request) {
         String email = SecurityUtil.getCurrentUserLogin().isPresent() ? SecurityUtil.getCurrentUserLogin().get() : "";
         User currentUser = this.userRepository.findByContact_Email(email);
+
+        Blog blog = new Blog();
+        blog.setTitle(request.getTitle());
+        blog.setBanner(request.getBanner());
+        blog.setDescription(request.getDescription());
+        blog.setContent(request.getContent());
+        blog.setTags(request.getTags());
+        blog.setDraft(request.getDraft());
         blog.setAuthor(currentUser);
+        blog.setEnabled(false); // wait for admin to enable
+
         return this.blogRepository.save(blog);
     }
 
     @Override
-    public Blog handleUpdateBlog(Blog blog) {
-        Blog currentBlog = this.handleGetBlogById(blog.getBlogId());
+    public Blog handleUpdateBlog(BlogUpdateRequest request) {
+        Blog currentBlog = this.handleGetBlogById(request.getBlogId());
 
         if(currentBlog != null) {
-            currentBlog.setTitle(blog.getTitle());
-            currentBlog.setBanner(blog.getBanner());
-            currentBlog.setDescription(blog.getDescription());
-            currentBlog.setContent(blog.getContent());
-            currentBlog.setTags(blog.getTags());
-            currentBlog.setDraft(blog.isDraft());
-            currentBlog.setEnabled(blog.isEnabled());
-            currentBlog.setActivity(blog.getActivity());
+            currentBlog.setTitle(request.getTitle());
+            currentBlog.setBanner(request.getBanner());
+            currentBlog.setDescription(request.getDescription());
+            currentBlog.setContent(request.getContent());
+            currentBlog.setTags(request.getTags());
+            currentBlog.setDraft(request.getDraft());
 
             return this.blogRepository.save(currentBlog);
         }
 
         return null;
+    }
+
+    @Override
+    public void handleUpdateBlogActivity(Blog blog) {
+        this.blogRepository.save(blog);
     }
 
     @Override
@@ -171,7 +187,7 @@ public class BlogServiceImpl implements BlogService {
 
     @Override
     @Transactional
-    public List<BlogStatusResponse> handleAcceptBlogs(BlogIdsRequest request) {
+    public List<BlogStatusResponse> handleEnableBlogs(BlogIdsRequest request) {
         List<Blog> blogs = this.blogRepository.findAllById(request.getBlogIds());
         if(blogs.isEmpty()) return Collections.emptyList();
 
@@ -199,7 +215,7 @@ public class BlogServiceImpl implements BlogService {
     }
 
     @Override
-    public List<BlogStatusResponse> handleRejectBlogs(BlogIdsRequest request) {
+    public List<BlogStatusResponse> handleDisableBlogs(BlogIdsRequest request) {
         List<Blog> blogs = this.blogRepository.findAllById(request.getBlogIds());
         if(blogs.isEmpty()) return Collections.emptyList();
 
@@ -224,6 +240,39 @@ public class BlogServiceImpl implements BlogService {
                         blog.isEnabled()
                 )
         ).collect(Collectors.toList());
+    }
+
+    @Override
+    public ResultPaginationResponse handleGetBlogsByCurrentUser(Specification<Blog> spec, Pageable pageable) throws InvalidException {
+        String email = SecurityUtil.getCurrentUserLogin()
+                .orElseThrow(() -> new InvalidException("User not authenticated"));
+
+        User currentUser = this.userRepository.findByContact_Email(email);
+        if (currentUser == null) {
+            throw new InvalidException("User not found");
+        }
+
+        // Combine spec with author filter
+        Specification<Blog> authorSpec = (root, query, criteriaBuilder) ->
+                criteriaBuilder.equal(root.get("author"), currentUser);
+
+        Specification<Blog> combinedSpec = spec != null
+                ? spec.and(authorSpec)
+                : authorSpec;
+
+        Page<Blog> page = this.blogRepository.findAll(combinedSpec, pageable);
+
+        ResultPaginationResponse.Meta meta = new ResultPaginationResponse.Meta();
+        meta.setPage(page.getNumber() + 1);
+        meta.setPageSize(page.getSize());
+        meta.setPages(page.getTotalPages());
+        meta.setTotal(page.getTotalElements());
+
+        List<BlogResponse> blogResponses = page.getContent().stream()
+                .map(this::convertToBlogResponse)
+                .toList();
+
+        return new ResultPaginationResponse(meta, blogResponses);
     }
 
     @Override

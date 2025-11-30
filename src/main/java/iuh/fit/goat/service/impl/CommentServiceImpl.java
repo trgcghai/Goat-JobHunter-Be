@@ -5,10 +5,8 @@ import iuh.fit.goat.dto.response.comment.CommentResponse;
 import iuh.fit.goat.dto.response.ResultPaginationResponse;
 import iuh.fit.goat.entity.Blog;
 import iuh.fit.goat.entity.Comment;
-import iuh.fit.goat.entity.Notification;
 import iuh.fit.goat.entity.User;
 import iuh.fit.goat.repository.CommentRepository;
-import iuh.fit.goat.repository.NotificationRepository;
 import iuh.fit.goat.repository.UserRepository;
 import iuh.fit.goat.service.BlogService;
 import iuh.fit.goat.service.CommentService;
@@ -106,7 +104,7 @@ public class CommentServiceImpl implements CommentService {
         }
 
         this.commentRepository.delete(comment);
-        this.blogService.handleUpdateBlog(blog);
+        this.blogService.handleUpdateBlogActivity(blog);
     }
 
     @Override

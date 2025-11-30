@@ -26,9 +26,8 @@ public class Blog {
     private String banner;
     @Column(columnDefinition = "MEDIUMTEXT")
     private String description;
-    @ElementCollection
     @Column(columnDefinition = "MEDIUMTEXT")
-    private List<String> content;
+    private String content;
     @ElementCollection
     private List<String> tags;
     private boolean draft;
