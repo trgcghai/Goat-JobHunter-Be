@@ -78,6 +78,20 @@ public class BlogController {
         return ResponseEntity.status(HttpStatus.OK).body(res);
     }
 
+    @GetMapping("/available")
+    public ResponseEntity<ResultPaginationResponse> getAllAvailableBlogs(
+            @Filter Specification<Blog> spec, Pageable pageable
+    ) {
+        Specification<Blog> baseSpec = (spec != null) ? spec : Specification.unrestricted();
+
+        Specification<Blog> finalSpec = baseSpec
+                .and((root, query, criteriaBuilder) -> criteriaBuilder.isFalse(root.get("draft")))
+                .and((root, query, criteriaBuilder) -> criteriaBuilder.isTrue(root.get("enabled")));
+
+        ResultPaginationResponse res = this.blogService.handleGetAllBlogs(finalSpec, pageable);
+        return ResponseEntity.status(HttpStatus.OK).body(res);
+    }
+
     @PutMapping("/liked-blogs")
     public ResponseEntity<List<Notification>> likeBlogs(@Valid @RequestBody LikeBlogRequest likeBlogRequest) {
         List<Notification> res = this.blogService.handleLikeBlog(likeBlogRequest);
