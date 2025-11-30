@@ -5,6 +5,7 @@ import iuh.fit.goat.dto.request.user.ResetPasswordRequest;
 import iuh.fit.goat.dto.request.user.UpdatePasswordRequest;
 import iuh.fit.goat.dto.response.auth.LoginResponse;
 import iuh.fit.goat.dto.response.ResultPaginationResponse;
+import iuh.fit.goat.dto.response.user.UserEnabledResponse;
 import iuh.fit.goat.dto.response.user.UserResponse;
 import iuh.fit.goat.entity.Job;
 import iuh.fit.goat.entity.Notification;
@@ -220,5 +221,27 @@ public class UserController {
         }
 
         return ResponseEntity.status(HttpStatus.OK).body(userResponse);
+    }
+
+    @PutMapping("/users/activate")
+    public ResponseEntity<List<UserEnabledResponse>> activateUsers(@RequestBody Map<String, List<Long>> request)
+            throws InvalidException {
+        List<Long> userIds = request.get("userIds");
+        if (userIds == null || userIds.isEmpty()) {
+            throw new InvalidException("User IDs list cannot be empty");
+        }
+        List<UserEnabledResponse> res = this.userService.handleActivateUsers(userIds);
+        return ResponseEntity.status(HttpStatus.OK).body(res);
+    }
+
+    @PutMapping("/users/deactivate")
+    public ResponseEntity<List<UserEnabledResponse>> deactivateUsers(@RequestBody Map<String, List<Long>> request)
+            throws InvalidException {
+        List<Long> userIds = request.get("userIds");
+        if (userIds == null || userIds.isEmpty()) {
+            throw new InvalidException("User IDs list cannot be empty");
+        }
+        List<UserEnabledResponse> res = this.userService.handleDeactivateUsers(userIds);
+        return ResponseEntity.status(HttpStatus.OK).body(res);
     }
 }

@@ -101,6 +101,8 @@ public class DatabaseInitializer implements CommandLineRunner {
 
 //      USER
         permissions.add(new Permission("Get all users", "/api/v1/users", "GET", "USERS"));
+        permissions.add(new Permission("Activate users", "/api/v1/users/activate", "PUT", "USERS"));
+        permissions.add(new Permission("Deactivate users", "/api/v1/users/deactivate", "PUT", "USERS"));
         permissions.add(new Permission("Update password", "/api/v1/users/update-password", "PUT", "USERS"));
 
 //      CAREER
