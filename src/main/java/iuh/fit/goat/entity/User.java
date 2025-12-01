@@ -16,6 +16,7 @@ import iuh.fit.goat.util.annotation.RequireAddressIfRecruiter;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 
 @Entity
@@ -72,7 +73,7 @@ public abstract class User {
     )
     @JsonIgnore
     @ToString.Exclude
-    private List<Job> savedJobs;
+    private List<Job> savedJobs = new ArrayList<>();
 
     @ManyToMany(fetch = FetchType.LAZY)
     @JoinTable(
@@ -82,27 +83,27 @@ public abstract class User {
     )
     @JsonIgnore
     @ToString.Exclude
-    private List<Recruiter> followedRecruiters;
+    private List<Recruiter> followedRecruiters = new ArrayList<>();
 
     @OneToMany(mappedBy = "author", fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
     @ToString.Exclude
     @JsonIgnore
-    private List<Blog> blogs;
+    private List<Blog> blogs = new ArrayList<>();
 
     @OneToMany(mappedBy = "commentedBy", fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
     @ToString.Exclude
     @JsonIgnore
-    private List<Comment> comments;
+    private List<Comment> comments = new ArrayList<>();
 
     @OneToMany(mappedBy = "actor", fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
     @ToString.Exclude
     @JsonIgnore
-    private List<Notification> actorNotifications;
+    private List<Notification> actorNotifications = new ArrayList<>();
 
     @OneToMany(mappedBy = "recipient", fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
     @ToString.Exclude
     @JsonIgnore
-    private List<Notification> recipientNotifications;
+    private List<Notification> recipientNotifications = new ArrayList<>();
 
     @PrePersist
     public void handleBeforeCreate(){

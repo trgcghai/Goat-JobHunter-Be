@@ -5,12 +5,14 @@ import iuh.fit.goat.entity.*;
 import iuh.fit.goat.entity.Role;
 import iuh.fit.goat.entity.embeddable.Contact;
 import iuh.fit.goat.repository.*;
+import iuh.fit.goat.util.FileUploadUtil;
 import lombok.RequiredArgsConstructor;
 import net.datafaker.Faker;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import java.io.IOException;
 import java.time.LocalDate;
 import java.util.*;
 
@@ -32,8 +34,18 @@ public class DatabaseInitializer implements CommandLineRunner {
 
     private final Faker faker = new Faker(new Locale("vi"));
     private final Random random = new Random();
+
+    private final List<Permission> permissions = new ArrayList<>();
     private final List<Recruiter> recruiters = new ArrayList<>();
     private final List<Applicant> applicants = new ArrayList<>();
+    private final List<Skill> skills = new ArrayList<>();
+    private final List<Career> careers = new ArrayList<>();
+    private final List<Job> jobs = new ArrayList<>();
+    private final List<Blog> blogs = new ArrayList<>();
+    private final List<Comment> comments = new ArrayList<>();
+    private final List<Application> applications = new ArrayList<>();
+    private final List<Notification> notifications = new ArrayList<>();
+    private final List<Subscriber> subscribers = new ArrayList<>();
 
     @Override
     public void run(String... args) throws Exception {
@@ -83,34 +95,56 @@ public class DatabaseInitializer implements CommandLineRunner {
     }
 
     private void initPermissions() {
-        ArrayList<Permission> permissions = new ArrayList<>();
+        // PERMISSION
+        permissions.add(new Permission("Create permission", "/api/v1/permissions", "POST", "PERMISSIONS"));
+        permissions.add(new Permission("Update permission", "/api/v1/permissions", "PUT", "PERMISSIONS"));
+        permissions.add(new Permission("Delete permission", "/api/v1/permissions/{id}", "DELETE", "PERMISSIONS"));
+        permissions.add(new Permission("Get permission", "/api/v1/permissions/{id}", "GET", "PERMISSIONS"));
+        permissions.add(new Permission("Get all permissions", "/api/v1/permissions", "GET", "PERMISSIONS"));
 
-//      RECRUITER
+        // ROLE
+        permissions.add(new Permission("Create role", "/api/v1/roles", "POST", "ROLES"));
+        permissions.add(new Permission("Update role", "/api/v1/roles", "PUT", "ROLES"));
+        permissions.add(new Permission("Delete role", "/api/v1/roles/{id}", "DELETE", "ROLES"));
+        permissions.add(new Permission("Get role", "/api/v1/roles/{id}", "GET", "ROLES"));
+        permissions.add(new Permission("Get all roles", "/api/v1/roles", "GET", "ROLES"));
+
+        // USER
+        permissions.add(new Permission("Update password", "/api/v1/users/update-password", "PUT", "USERS"));
+        permissions.add(new Permission("Reset password", "/api/v1/users/reset-password", "PUT", "USERS"));
+        permissions.add(new Permission("Get all users", "/api/v1/users", "GET", "USERS"));
+        permissions.add(new Permission("Activate users", "/api/v1/users/activate", "PUT", "USERS"));
+        permissions.add(new Permission("Deactivate users", "/api/v1/users/deactivate", "PUT", "USERS"));
+
+        // RECRUITER
         permissions.add(new Permission("Create recruiter", "/api/v1/recruiters", "POST", "RECRUITERS"));
         permissions.add(new Permission("Update recruiter", "/api/v1/recruiters", "PUT", "RECRUITERS"));
         permissions.add(new Permission("Delete recruiter", "/api/v1/recruiters/{id}", "DELETE", "RECRUITERS"));
         permissions.add(new Permission("Get recruiter", "/api/v1/recruiters/{id}", "GET", "RECRUITERS"));
         permissions.add(new Permission("Get all recruiters", "/api/v1/recruiters", "GET", "RECRUITERS"));
 
-//      APPLICANT
+        // APPLICANT
         permissions.add(new Permission("Create applicant", "/api/v1/applicants", "POST", "APPLICANTS"));
         permissions.add(new Permission("Update applicant", "/api/v1/applicants", "PUT", "APPLICANTS"));
         permissions.add(new Permission("Delete applicant", "/api/v1/applicants/{id}", "DELETE", "APPLICANTS"));
         permissions.add(new Permission("Get applicant", "/api/v1/applicants/{id}", "GET", "APPLICANTS"));
         permissions.add(new Permission("Get all applicants", "/api/v1/applicants", "GET", "APPLICANTS"));
 
-//      USER
-        permissions.add(new Permission("Get all users", "/api/v1/users", "GET", "USERS"));
-        permissions.add(new Permission("Update password", "/api/v1/users/update-password", "PUT", "USERS"));
-
-//      CAREER
+        // CAREER
         permissions.add(new Permission("Create career", "/api/v1/careers", "POST", "CAREERS"));
         permissions.add(new Permission("Update career", "/api/v1/careers", "PUT", "CAREERS"));
         permissions.add(new Permission("Delete career", "/api/v1/careers/{id}", "DELETE", "CAREERS"));
         permissions.add(new Permission("Get career", "/api/v1/careers/{id}", "GET", "CAREERS"));
         permissions.add(new Permission("Get all careers", "/api/v1/careers", "GET", "CAREERS"));
 
-//      JOB
+        // SKILL
+        permissions.add(new Permission("Create skill", "/api/v1/skills", "POST", "SKILLS"));
+        permissions.add(new Permission("Update skill", "/api/v1/skills", "PUT", "SKILLS"));
+        permissions.add(new Permission("Delete skill", "/api/v1/skills/{id}", "DELETE", "SKILLS"));
+        permissions.add(new Permission("Get skill", "/api/v1/skills/{id}", "GET", "SKILLS"));
+        permissions.add(new Permission("Get all skills", "/api/v1/skills", "GET", "SKILLS"));
+
+        // JOB
         permissions.add(new Permission("Create job", "/api/v1/jobs", "POST", "JOBS"));
         permissions.add(new Permission("Update job", "/api/v1/jobs", "PUT", "JOBS"));
         permissions.add(new Permission("Activate job", "/api/v1/jobs/activate", "PUT", "JOBS"));
@@ -119,19 +153,14 @@ public class DatabaseInitializer implements CommandLineRunner {
         permissions.add(new Permission("Get job", "/api/v1/jobs/{id}", "GET", "JOBS"));
         permissions.add(new Permission("Get all jobs", "/api/v1/jobs", "GET", "JOBS"));
         permissions.add(new Permission("Get all applicants for job", "/api/v1/jobs/{jobId}/applicants", "GET", "JOBS"));
+        permissions.add(new Permission("Count jobs for recruiter", "/api/v1/jobs/recruiters/count", "GET", "JOBS"));
+        permissions.add(new Permission("Count applications for job", "/api/v1/jobs/count-applications", "GET", "JOBS"));
 
-//      SKILL
-        permissions.add(new Permission("Create skill", "/api/v1/skills", "POST", "SKILLS"));
-        permissions.add(new Permission("Update skill", "/api/v1/skills", "PUT", "SKILLS"));
-        permissions.add(new Permission("Delete skill", "/api/v1/skills/{id}", "DELETE", "SKILLS"));
-        permissions.add(new Permission("Get skill", "/api/v1/skills/{id}", "GET", "SKILLS"));
-        permissions.add(new Permission("Get all skills", "/api/v1/skills", "GET", "SKILLS"));
-
-//      FILE
+        // FILE
         permissions.add(new Permission("Upload file", "/api/v1/files", "POST", "FILES"));
         permissions.add(new Permission("Download file", "/api/v1/files", "GET", "FILES"));
 
-//      APPLICATION
+        // APPLICATION
         permissions.add(new Permission("Create application", "/api/v1/applications", "POST", "APPLICATIONS"));
         permissions.add(new Permission("Update application", "/api/v1/applications", "PUT", "APPLICATIONS"));
         permissions.add(new Permission("Accept application", "/api/v1/applications/accepted", "PUT", "APPLICATIONS"));
@@ -142,33 +171,42 @@ public class DatabaseInitializer implements CommandLineRunner {
         permissions.add(new Permission("Get all applications by applicant", "/api/v1/applications/by-applicant", "GET", "APPLICATIONS"));
         permissions.add(new Permission("Get all applications", "/api/v1/all-applications", "GET", "APPLICATIONS"));
 
-//      PERMISSION
-        permissions.add(new Permission("Create permission", "/api/v1/permissions", "POST", "PERMISSIONS"));
-        permissions.add(new Permission("Update permission", "/api/v1/permissions", "PUT", "PERMISSIONS"));
-        permissions.add(new Permission("Delete permission", "/api/v1/permissions/{id}", "DELETE", "PERMISSIONS"));
-        permissions.add(new Permission("Get permission", "/api/v1/permissions/{id}", "GET", "PERMISSIONS"));
-        permissions.add(new Permission("Get all permissions", "/api/v1/permissions", "GET", "PERMISSIONS"));
+        // NOTIFICATION
+        permissions.add(new Permission("Get all notifications", "/api/v1/notifications", "GET", "NOTIFICATIONS"));
+        permissions.add(new Permission("Mark seen notifications", "/api/v1/notifications", "PUT", "NOTIFICATIONS"));
 
-//      ROLE
-        permissions.add(new Permission("Create role", "/api/v1/roles", "POST", "ROLES"));
-        permissions.add(new Permission("Update role", "/api/v1/roles", "PUT", "ROLES"));
-        permissions.add(new Permission("Delete role", "/api/v1/roles/{id}", "DELETE", "ROLES"));
-        permissions.add(new Permission("Get role", "/api/v1/roles/{id}", "GET", "ROLES"));
-        permissions.add(new Permission("Get all roles", "/api/v1/roles", "GET", "ROLES"));
-
-//      SUBSCRIBER
+        // SUBSCRIBER
         permissions.add(new Permission("Create a subscriber", "/api/v1/subscribers", "POST", "SUBSCRIBERS"));
         permissions.add(new Permission("Update a subscriber", "/api/v1/subscribers", "PUT", "SUBSCRIBERS"));
         permissions.add(new Permission("Delete a subscriber", "/api/v1/subscribers/{id}", "DELETE", "SUBSCRIBERS"));
         permissions.add(new Permission("Get a subscriber by id", "/api/v1/subscribers/{id}", "GET", "SUBSCRIBERS"));
         permissions.add(new Permission("Get subscribers with pagination", "/api/v1/subscribers", "GET", "SUBSCRIBERS"));
 
-//      BLOG
+        // BLOG
         permissions.add(new Permission("Create a blog", "/api/v1/blogs", "POST", "BLOGS"));
         permissions.add(new Permission("Update a blog", "/api/v1/blogs", "PUT", "BLOGS"));
         permissions.add(new Permission("Delete a blog", "/api/v1/blogs", "DELETE", "BLOGS"));
         permissions.add(new Permission("Get a blog by id", "/api/v1/blogs/{id}", "GET", "BLOGS"));
         permissions.add(new Permission("Get blogs with pagination", "/api/v1/blogs", "GET", "BLOGS"));
+        permissions.add(new Permission("Like blogs", "/api/v1/blogs/liked-blogs", "PUT", "BLOGS"));
+        permissions.add(new Permission("Enable blogs", "/api/v1/blogs/enabled", "PUT", "BLOGS"));
+        permissions.add(new Permission("Disable blogs", "/api/v1/blogs/disabled", "PUT", "BLOGS"));
+
+        // COMMENT
+        permissions.add(new Permission("Create a comment", "/api/v1/comments", "POST", "COMMENTS"));
+        permissions.add(new Permission("Update a comment", "/api/v1/comments", "PUT", "COMMENTS"));
+        permissions.add(new Permission("Delete a comment", "/api/v1/comments/{id}", "DELETE", "COMMENTS"));
+        permissions.add(new Permission("Get comments with pagination", "/api/v1/comments", "GET", "COMMENTS"));
+        permissions.add(new Permission("Get a comment by id", "/api/v1/comments/{id}", "GET", "COMMENTS"));
+
+        // AUTH
+        permissions.add(new Permission("Verify recruiter", "/api/v1/auth/verify/recruiter/{id}", "PATCH", "AUTH"));
+
+        // DASHBOARD
+        permissions.add(new Permission("User dashboard", "/api/v1/dashboard/users", "GET", "DASHBOARD"));
+        permissions.add(new Permission("Job dashboard", "/api/v1/dashboard/jobs", "GET", "DASHBOARD"));
+        permissions.add(new Permission("Applications dashboard", "/api/v1/dashboard/applications", "GET", "DASHBOARD"));
+        permissions.add(new Permission("Applications year dashboard", "/api/v1/dashboard/applications-year", "GET", "DASHBOARD"));
 
         this.permissionRepository.saveAll(permissions);
 
@@ -176,8 +214,6 @@ public class DatabaseInitializer implements CommandLineRunner {
     }
 
     private void initRoles() {
-        List<Permission> permissions = this.permissionRepository.findAll();
-
 //      SUPER_ADMIN
         Role superAdmin = new Role();
         superAdmin.setName("SUPER_ADMIN");
@@ -193,17 +229,24 @@ public class DatabaseInitializer implements CommandLineRunner {
         applicantRole.setActive(true);
 
         List<Permission> applicantPermissions = new ArrayList<>();
-        applicantPermissions.add(this.permissionRepository.findByName("Update applicant"));
         applicantPermissions.add(this.permissionRepository.findByName("Update password"));
+        applicantPermissions.add(this.permissionRepository.findByName("Reset password"));
+        applicantPermissions.add(this.permissionRepository.findByName("Update applicant"));
         applicantPermissions.add(this.permissionRepository.findByName("Upload file"));
         applicantPermissions.add(this.permissionRepository.findByName("Download file"));
         applicantPermissions.add(this.permissionRepository.findByName("Create application"));
         applicantPermissions.add(this.permissionRepository.findByName("Get all applications by applicant"));
+        applicantPermissions.add(this.permissionRepository.findByName("Get all notifications"));
+        applicantPermissions.add(this.permissionRepository.findByName("Mark seen notifications"));
         applicantPermissions.add(this.permissionRepository.findByName("Create a subscriber"));
         applicantPermissions.add(this.permissionRepository.findByName("Update a subscriber"));
         applicantPermissions.add(this.permissionRepository.findByName("Delete a subscriber"));
         applicantPermissions.add(this.permissionRepository.findByName("Get a subscriber by id"));
         applicantPermissions.add(this.permissionRepository.findByName("Get subscribers with pagination"));
+        applicantPermissions.add(this.permissionRepository.findByName("Like blogs"));
+        applicantPermissions.add(this.permissionRepository.findByName("Create a comment"));
+        applicantPermissions.add(this.permissionRepository.findByName("Update a comment"));
+        applicantPermissions.add(this.permissionRepository.findByName("Delete a comment"));
 
         applicantRole.setPermissions(applicantPermissions);
         this.roleRepository.save(applicantRole);
@@ -215,23 +258,34 @@ public class DatabaseInitializer implements CommandLineRunner {
         hrRole.setActive(true);
 
         List<Permission> hrPermissions = new ArrayList<>();
-        hrPermissions.add(this.permissionRepository.findByName("Update recruiter"));
         hrPermissions.add(this.permissionRepository.findByName("Update password"));
+        hrPermissions.add(this.permissionRepository.findByName("Reset password"));
+        hrPermissions.add(this.permissionRepository.findByName("Update recruiter"));
         hrPermissions.add(this.permissionRepository.findByName("Create career"));
         hrPermissions.add(this.permissionRepository.findByName("Get career"));
         hrPermissions.add(this.permissionRepository.findByName("Get all careers"));
-        hrPermissions.add(this.permissionRepository.findByName("Create job"));
-        hrPermissions.add(this.permissionRepository.findByName("Update job"));
-        hrPermissions.add(this.permissionRepository.findByName("Activate job"));
-        hrPermissions.add(this.permissionRepository.findByName("Deactivate job"));
-        hrPermissions.add(this.permissionRepository.findByName("Delete job"));
-        hrPermissions.add(this.permissionRepository.findByName("Get job"));
-        hrPermissions.add(this.permissionRepository.findByName("Get all jobs"));
         hrPermissions.add(this.permissionRepository.findByName("Create skill"));
         hrPermissions.add(this.permissionRepository.findByName("Get skill"));
         hrPermissions.add(this.permissionRepository.findByName("Get all skills"));
+        hrPermissions.add(this.permissionRepository.findByName("Create job"));
+        hrPermissions.add(this.permissionRepository.findByName("Update job"));
+        hrPermissions.add(this.permissionRepository.findByName("Delete job"));
+        hrPermissions.add(this.permissionRepository.findByName("Activate job"));
+        hrPermissions.add(this.permissionRepository.findByName("Deactivate job"));
+        hrPermissions.add(this.permissionRepository.findByName("Get job"));
+        hrPermissions.add(this.permissionRepository.findByName("Get all jobs"));
+        hrPermissions.add(this.permissionRepository.findByName("Get all applicants for job"));
+        hrPermissions.add(this.permissionRepository.findByName("Count jobs for recruiter"));
+        hrPermissions.add(this.permissionRepository.findByName("Count applications for job"));
         hrPermissions.add(this.permissionRepository.findByName("Upload file"));
         hrPermissions.add(this.permissionRepository.findByName("Download file"));
+        hrPermissions.add(this.permissionRepository.findByName("Update application"));
+        hrPermissions.add(this.permissionRepository.findByName("Accept application"));
+        hrPermissions.add(this.permissionRepository.findByName("Reject application"));
+        hrPermissions.add(this.permissionRepository.findByName("Get application"));
+        hrPermissions.add(this.permissionRepository.findByName("Get all applications by recruiter"));
+        hrPermissions.add(this.permissionRepository.findByName("Get all notifications"));
+        hrPermissions.add(this.permissionRepository.findByName("Mark seen notifications"));
         hrPermissions.add(this.permissionRepository.findByName("Create a subscriber"));
         hrPermissions.add(this.permissionRepository.findByName("Update a subscriber"));
         hrPermissions.add(this.permissionRepository.findByName("Delete a subscriber"));
@@ -242,8 +296,13 @@ public class DatabaseInitializer implements CommandLineRunner {
         hrPermissions.add(this.permissionRepository.findByName("Delete a blog"));
         hrPermissions.add(this.permissionRepository.findByName("Get a blog by id"));
         hrPermissions.add(this.permissionRepository.findByName("Get blogs with pagination"));
-        hrPermissions.add(this.permissionRepository.findByName("Accept application"));
-        hrPermissions.add(this.permissionRepository.findByName("Reject application"));
+        hrPermissions.add(this.permissionRepository.findByName("Like blogs"));
+        hrPermissions.add(this.permissionRepository.findByName("Create a comment"));
+        hrPermissions.add(this.permissionRepository.findByName("Update a comment"));
+        hrPermissions.add(this.permissionRepository.findByName("Delete a comment"));
+        hrPermissions.add(this.permissionRepository.findByName("Job dashboard"));
+        hrPermissions.add(this.permissionRepository.findByName("Applications dashboard"));
+        hrPermissions.add(this.permissionRepository.findByName("Applications year dashboard"));
 
         hrRole.setPermissions(hrPermissions);
         this.roleRepository.save(hrRole);
@@ -252,8 +311,6 @@ public class DatabaseInitializer implements CommandLineRunner {
     }
 
     private void initSkills() {
-        ArrayList<Skill> skills = new ArrayList<>();
-
         skills.add(new Skill("3ds Max"));
         skills.add(new Skill("ABAP"));
         skills.add(new Skill("Adobe"));
@@ -651,8 +708,6 @@ public class DatabaseInitializer implements CommandLineRunner {
     }
 
     private void initCareers() {
-        ArrayList<Career> careers = new ArrayList<>();
-
         careers.add(new Career("Công nghệ thông tin"));
         careers.add(new Career("Thiết kế đồ họa"));
         careers.add(new Career("Thiết kế UI/UX"));
@@ -713,14 +768,14 @@ public class DatabaseInitializer implements CommandLineRunner {
         System.out.println("Initialized careers.");
     }
 
-    private void initUsers() {
+    private void initUsers() throws IOException {
 //      ADMIN
         Role role = this.roleRepository.findByName("SUPER_ADMIN");
 
         User user = new Recruiter();
-        user.setAddress("137/20 Phước Long, Nha Trang, Khánh Hòa");
+        user.setAddress("12 Nguyễn Văn Bảo, Gò Vấp, Thành phồ Hồ Chí Minh");
         user.setContact(new Contact("admin@gmail.com", "0987654321"));
-        user.setDob(LocalDate.of(2003, 12, 13));
+        user.setDob(LocalDate.of(1956, 11, 11));
         user.setFullName("Admin");
         user.setGender(Gender.MALE);
         user.setUsername("admin");
@@ -731,14 +786,16 @@ public class DatabaseInitializer implements CommandLineRunner {
         this.userRepository.save(user);
 
 //      RECRUITERS
-        for (int i = 1; i <= 10; i++) {
+        List<String> usernameRecruiters = FileUploadUtil.getUsernameRecruiters();
+        for (int i = 1; i <= usernameRecruiters.size(); i++) {
             Recruiter r = new Recruiter();
-            r.setUsername(faker.twitter().userName());
-            r.setFullName(faker.name().fullName());
-            r.setContact(new Contact(faker.internet().emailAddress(), faker.phoneNumber().cellPhone()));
+            r.setUsername(usernameRecruiters.get(i - 1));
+            r.setFullName(usernameRecruiters.get(i - 1).toUpperCase());
+            r.setContact(new Contact(usernameRecruiters.get(i - 1) + "@gmail.com", faker.phoneNumber().cellPhone()));
             r.setAddress(faker.address().fullAddress());
             r.setDob(LocalDate.of(1980 + random.nextInt(20), 1 + random.nextInt(12), 1 + random.nextInt(28)));
             r.setGender(random.nextBoolean() ? Gender.MALE : Gender.FEMALE);
+            r.setAvatar(FileUploadUtil.getAvatarRecruiter(usernameRecruiters.get(i-1)));
             r.setPassword(this.passwordEncoder.encode("12345678"));
             r.setRole(this.roleRepository.findByName("HR"));
             r.setEnabled(true);
@@ -747,14 +804,16 @@ public class DatabaseInitializer implements CommandLineRunner {
         this.userRepository.saveAll(recruiters);
 
 //      APPLICANTS
-        for (int i = 1; i <= 10; i++) {
+        List<String> emails = FileUploadUtil.getEmailApplicants();
+        for (int i = 1; i <= emails.size(); i++) {
             Applicant a = new Applicant();
             a.setUsername(faker.twitter().userName());
             a.setFullName(faker.name().fullName());
-            a.setContact(new Contact(faker.internet().emailAddress(), faker.phoneNumber().cellPhone()));
+            a.setContact(new Contact(emails.get(i - 1), faker.phoneNumber().cellPhone()));
             a.setAddress(faker.address().fullAddress());
             a.setDob(LocalDate.of(1990 + random.nextInt(10), 1 + random.nextInt(12), 1 + random.nextInt(28)));
             a.setGender(random.nextBoolean() ? Gender.MALE : Gender.FEMALE);
+            a.setAvatar(FileUploadUtil.AVATAR + faker.twitter().userName());
             a.setPassword(passwordEncoder.encode("12345678"));
             a.setRole(this.roleRepository.findByName("APPLICANT"));
             a.setEnabled(true);
@@ -766,12 +825,8 @@ public class DatabaseInitializer implements CommandLineRunner {
     }
 
     private void initJobs() {
-        List<Career> careers = this.careerRepository.findAll();
-        List<Skill> allSkills = this.skillRepository.findAll();
-        List<Job> jobs = new ArrayList<>();
-
         for (Recruiter r : recruiters) {
-            for (int j = 0; j < 5; j++) {
+            for (int j = 0; j < 10; j++) {
                 Job job = new Job();
                 job.setTitle(faker.job().title());
                 job.setDescription(faker.lorem().paragraph());
@@ -799,7 +854,7 @@ public class DatabaseInitializer implements CommandLineRunner {
                 List<Skill> jobSkills = new ArrayList<>();
                 int skillCount = 3 + random.nextInt(3);
                 for (int k = 0; k < skillCount; k++) {
-                    Skill skill = allSkills.get(random.nextInt(allSkills.size()));
+                    Skill skill = skills.get(random.nextInt(skills.size()));
                     if(!jobSkills.contains(skill)){
                         jobSkills.add(skill);
                     }
@@ -816,16 +871,12 @@ public class DatabaseInitializer implements CommandLineRunner {
     }
 
     private void initBlogsAndComments() {
-        List<Blog> blogs = new ArrayList<>();
-        List<Comment> comments = new ArrayList<>();
-
         for (Recruiter r : recruiters) {
             for (int b = 0; b < 10; b++) {
                 Blog blog = new Blog();
                 blog.setTitle(faker.book().title());
                 blog.setBanner("https://boringapi.com/api/v1/static/photos/" + random.nextInt(300) + ".jpeg");
                 blog.setDescription(faker.lorem().paragraph());
-
                 blog.setContent(faker.lorem().paragraph(10));
 
                 List<String> tags = new ArrayList<>();
@@ -839,56 +890,77 @@ public class DatabaseInitializer implements CommandLineRunner {
                 blog.setEnabled(true);
                 blog.setAuthor(r);
                 blog.getActivity().setTotalReads(random.nextInt(1000));
+                blog.getActivity().setTotalParentComments(0);
                 blogs.add(blog);
+            }
+        }
 
-                for (int c = 0; c < 5; c++) {
-                    User commentAuthor = random.nextBoolean() ? getRandom(recruiters, random)
+        blogRepository.saveAll(blogs);
+        blogRepository.flush();
+
+        List<Comment> parentComments = new ArrayList<>();
+        List<Comment> childComments = new ArrayList<>();
+
+        for (Blog blog : blogs) {
+            for (int c = 0; c < 5; c++) {
+                User commentAuthor = random.nextBoolean() ? getRandom(recruiters, random)
+                        : getRandom(applicants, random);
+
+                Comment parentComment = new Comment();
+                parentComment.setBlog(blog);
+                parentComment.setComment(faker.lorem().sentence(12));
+                parentComment.setCommentedBy(commentAuthor);
+                parentComment.setReply(false);
+                parentComment.setParent(null);
+                parentComment.setChildren(new ArrayList<>());
+                parentComments.add(parentComment);
+
+                blog.getActivity().setTotalParentComments(blog.getActivity().getTotalParentComments() + 1);
+
+                for (int cc = 0; cc < 5; cc++) {
+                    User childAuthor = random.nextBoolean() ? getRandom(recruiters, random)
                             : getRandom(applicants, random);
 
-                    Comment parentComment = new Comment();
-                    parentComment.setBlog(blog);
-                    parentComment.setComment(faker.lorem().sentence(12));
-                    parentComment.setCommentedBy(commentAuthor);
-                    parentComment.setReply(false);
-                    parentComment.setParent(null);
-                    parentComment.setChildren(new ArrayList<>());
-                    comments.add(parentComment);
+                    Comment child = new Comment();
+                    child.setBlog(blog);
+                    child.setComment(faker.lorem().sentence(10));
+                    child.setCommentedBy(childAuthor);
+                    child.setReply(true);
+                    child.setParent(parentComment);
+                    child.setChildren(new ArrayList<>());
+                    childComments.add(child);
 
-                    blog.getActivity().setTotalParentComments(blog.getActivity().getTotalParentComments() + 1);
-
-                    for (int cc = 0; cc < 5; cc++) {
-                        User childAuthor = random.nextBoolean() ? getRandom(recruiters, random)
-                                : getRandom(applicants, random);
-
-                        Comment child = new Comment();
-                        child.setBlog(blog);
-                        child.setComment(faker.lorem().sentence(10));
-                        child.setCommentedBy(childAuthor);
-                        child.setReply(true);
-                        child.setParent(parentComment);
-                        child.setChildren(new ArrayList<>());
-
-                        parentComment.getChildren().add(child);
-                        comments.add(child);
-                    }
+                    parentComment.getChildren().add(child);
                 }
             }
         }
 
-        this.blogRepository.saveAll(blogs);
-        this.commentRepository.saveAll(comments);
+        commentRepository.saveAll(parentComments);
+        commentRepository.flush();
+
+        commentRepository.saveAll(childComments);
+        commentRepository.flush();
+
+        for (Comment c : parentComments) {
+            Blog blog = c.getBlog();
+            blog.getComments().add(c);
+        }
+        for (Comment c : childComments) {
+            Blog blog = c.getBlog();
+            blog.getComments().add(c);
+        }
 
         for (Blog blog : blogs) {
-            long totalComments = comments.stream().filter(c -> c.getBlog().equals(blog)).count();
+            long totalComments = blog.getComments().size();
             blog.getActivity().setTotalComments(totalComments);
         }
 
-        this.blogRepository.saveAll(blogs);
+        blogRepository.saveAll(blogs);
+
         System.out.println("Initialized blogs and comments.");
     }
 
     private void initApplications() {
-        List<Application> applications = new ArrayList<>();
         List<Job> jobs = this.jobRepository.findAll();
         for (Applicant a : applicants) {
             for (int j = 0; j < 5; j++) {
@@ -898,7 +970,7 @@ public class DatabaseInitializer implements CommandLineRunner {
                 app.setJob(job);
                 app.setApplicant(a);
                 app.setEmail(a.getContact().getEmail());
-                app.setResumeUrl("https://www.example.com/resume/" + faker.internet().uuid() + ".pdf");
+                app.setResumeUrl("https://res.cloudinary.com/dfwttyfwk/image/upload/v1754836676/jobhunter/resumes/sample-corporate-resume_10082025213751.pdf");
 
                 Status[] types = Status.values();
                 app.setStatus(types[random.nextInt(types.length)]);
@@ -912,12 +984,11 @@ public class DatabaseInitializer implements CommandLineRunner {
     }
 
     private void initNotifications() {
-        List<Notification> notifications = new ArrayList<>();
         List<User> allUsers = new ArrayList<>();
-        List<Blog> blogs = this.blogRepository.findAll();
-        List<Comment> comments = this.commentRepository.findAll();
         allUsers.addAll(recruiters);
         allUsers.addAll(applicants);
+
+        List<Comment> commentSaved = this.commentRepository.findAll();
 
         for (User recipient : allUsers) {
             for (int i = 0; i < 3; i++) {
@@ -939,14 +1010,14 @@ public class DatabaseInitializer implements CommandLineRunner {
                 if (type == NotificationType.LIKE) {
                     n.setBlog(getRandom(blogs, random));
                 } else if (type == NotificationType.COMMENT) {
-                    Comment comment = getRandom(comments, random);
+                    Comment comment = getRandom(commentSaved, random);
                     n.setComment(comment);
-                    n.setBlog(comment.getBlog());
+                    n.setBlog(comment != null && comment.getBlog() != null ? comment.getBlog() : blogs.getFirst());
                 } else if (type == NotificationType.REPLY) {
-                    Comment reply = getRandom(comments, random);
+                    Comment reply = getRandom(commentSaved, random);
                     n.setReply(reply);
-                    n.setRepliedOnComment(reply.getParent());
-                    n.setBlog(reply.getBlog());
+                    n.setRepliedOnComment(reply != null && reply.getParent() != null ? reply.getParent() : commentSaved.getFirst());
+                    n.setBlog(reply != null && reply.getBlog() != null ? reply.getBlog() : blogs.getFirst());
                 }
 
                 notifications.add(n);
@@ -958,7 +1029,6 @@ public class DatabaseInitializer implements CommandLineRunner {
     }
 
     private void initSubscribers() {
-        List<Subscriber> subscribers = new ArrayList<>();
         List<Skill> allSkills = this.skillRepository.findAll();
 
         for (Applicant a : applicants) {

@@ -6,6 +6,7 @@ import iuh.fit.goat.common.Level;
 import jakarta.persistence.*;
 import lombok.*;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @Entity
@@ -26,5 +27,5 @@ public class Applicant extends User{
     @OneToMany(mappedBy = "applicant", fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
     @JsonIgnore
     @ToString.Exclude
-    private List<Application> applications;
+    private List<Application> applications = new ArrayList<>();
 }

@@ -7,6 +7,7 @@ import jakarta.validation.constraints.NotBlank;
 import lombok.*;
 
 import java.time.Instant;
+import java.util.ArrayList;
 import java.util.List;
 
 @Entity
@@ -44,22 +45,22 @@ public class Comment {
     @OneToMany(mappedBy = "parent", fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
     @ToString.Exclude
     @JsonIgnore
-    private List<Comment> children;
+    private List<Comment> children = new ArrayList<>();
 
     @OneToMany(mappedBy = "comment", fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
     @ToString.Exclude
     @JsonIgnore
-    private List<Notification> commentNotifications;
+    private List<Notification> commentNotifications = new ArrayList<>();
 
     @OneToMany(mappedBy = "reply", fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
     @ToString.Exclude
     @JsonIgnore
-    private List<Notification> replyNotifications;
+    private List<Notification> replyNotifications = new ArrayList<>();
 
     @OneToMany(mappedBy = "repliedOnComment", fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
     @ToString.Exclude
     @JsonIgnore
-    private List<Notification> repliedOnCommentNotifications;
+    private List<Notification> repliedOnCommentNotifications = new ArrayList<>();
 
     @PrePersist
     public void handleBeforeCreate(){

@@ -11,6 +11,7 @@ import lombok.*;
 
 import java.time.Instant;
 import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.List;
 
 @Entity
@@ -57,12 +58,12 @@ public class Job {
     )
     @JsonIgnoreProperties(value = {"jobs"})
     @ToString.Exclude
-    private List<Skill> skills;
+    private List<Skill> skills = new ArrayList<>();
 
     @OneToMany(mappedBy = "job", fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
     @JsonIgnore
     @ToString.Exclude
-    private List<Application> applications;
+    private List<Application> applications = new ArrayList<>();
 
     @ManyToOne
     @JoinColumn(name = "career_id")
@@ -71,7 +72,7 @@ public class Job {
     @ManyToMany(mappedBy = "savedJobs", fetch = FetchType.LAZY)
     @JsonIgnore
     @ToString.Exclude
-    private List<User> users;
+    private List<User> users = new ArrayList<>();
 
     @PrePersist
     public void handleBeforeCreate(){

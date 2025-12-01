@@ -2,12 +2,18 @@ package iuh.fit.goat.util;
 
 import iuh.fit.goat.exception.InvalidException;
 import lombok.experimental.UtilityClass;
+import org.springframework.core.io.ClassPathResource;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
+import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 @UtilityClass
 public class FileUploadUtil {
@@ -16,6 +22,8 @@ public class FileUploadUtil {
     public static final String DATE_FORMAT = "ddMMyyyyHHmmss";
     public static final String FILE_NAME_FORMAT = "%s_%s";
     public static final String AVATAR = "https://api.dicebear.com/7.x/avataaars/png?seed=";
+    public static final String AVATAR_RECRUITER
+            = "https://t2.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url=http://";
 
     public static boolean isAllowedExtension(String fileName, String pattern){
         Matcher matcher = Pattern.compile(pattern, Pattern.CASE_INSENSITIVE).matcher(fileName);
@@ -38,5 +46,33 @@ public class FileUploadUtil {
         DateFormat dateFormat = new SimpleDateFormat(DATE_FORMAT);
         String date = dateFormat.format(System.currentTimeMillis());
         return String.format(FILE_NAME_FORMAT, name, date);
+    }
+
+    public static String getAvatarRecruiter(String username) {
+        return AVATAR_RECRUITER + username + ".com&size=128";
+    }
+
+    public static List<String> getEmailApplicants() throws IOException {
+        ClassPathResource resource = new ClassPathResource("text/email.txt");
+
+        try (BufferedReader br = new BufferedReader(new InputStreamReader(resource.getInputStream()))) {
+            return br.lines()
+                    .map(String::trim)
+                    .filter(line -> !line.isEmpty())
+                    .collect(Collectors.toList());
+        }
+
+    }
+
+    public static List<String> getUsernameRecruiters() throws IOException {
+        ClassPathResource resource = new ClassPathResource("text/recruiter.txt");
+
+        try (BufferedReader br = new BufferedReader(new InputStreamReader(resource.getInputStream()))) {
+            return br.lines()
+                    .map(String::trim)
+                    .filter(line -> !line.isEmpty())
+                    .collect(Collectors.toList());
+        }
+
     }
 }

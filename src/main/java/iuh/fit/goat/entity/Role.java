@@ -8,6 +8,7 @@ import jakarta.validation.constraints.NotBlank;
 import lombok.*;
 
 import java.time.Instant;
+import java.util.ArrayList;
 import java.util.List;
 
 @Entity
@@ -40,12 +41,12 @@ public class Role {
     )
     @JsonIgnoreProperties(value = {"roles"})
     @ToString.Exclude
-    private List<Permission> permissions;
+    private List<Permission> permissions = new ArrayList<>();
 
     @OneToMany(mappedBy = "role", fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
     @JsonIgnore
     @ToString.Exclude
-    private List<User> users;
+    private List<User> users = new ArrayList<>();
 
     @PrePersist
     public void handleBeforeCreate(){
