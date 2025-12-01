@@ -7,6 +7,7 @@ import jakarta.validation.constraints.NotBlank;
 import lombok.*;
 
 import java.time.Instant;
+import java.util.ArrayList;
 import java.util.List;
 
 @Entity
@@ -31,12 +32,12 @@ public class Skill {
     @ManyToMany(mappedBy = "skills", fetch = FetchType.LAZY)
     @JsonIgnore
     @ToString.Exclude
-    private List<Job> jobs;
+    private List<Job> jobs = new ArrayList<>();
 
     @ManyToMany(mappedBy = "skills", fetch = FetchType.LAZY)
     @JsonIgnore
     @ToString.Exclude
-    private List<Subscriber> subscribers;
+    private List<Subscriber> subscribers = new ArrayList<>();
 
     public Skill(String name) {
         this.name = name;

@@ -7,6 +7,7 @@ import jakarta.validation.constraints.NotBlank;
 import lombok.*;
 
 import java.time.Instant;
+import java.util.ArrayList;
 import java.util.List;
 
 @Entity
@@ -43,7 +44,7 @@ public class Permission {
     @ManyToMany(mappedBy = "permissions", fetch = FetchType.LAZY)
     @JsonIgnore
     @ToString.Exclude
-    private List<Role> roles;
+    private List<Role> roles = new ArrayList<>();
 
     @PrePersist
     public void handleBeforeCreate(){

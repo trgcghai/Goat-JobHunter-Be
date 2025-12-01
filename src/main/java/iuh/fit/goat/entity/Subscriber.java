@@ -7,6 +7,7 @@ import jakarta.validation.constraints.NotBlank;
 import lombok.*;
 
 import java.time.Instant;
+import java.util.ArrayList;
 import java.util.List;
 
 @Getter
@@ -27,7 +28,7 @@ public class Subscriber {
             joinColumns = @JoinColumn(name = "subscriber_id"), inverseJoinColumns = @JoinColumn(name = "skill_id")
     )
     @JsonIgnoreProperties(value = { "subscribers" })
-    private List<Skill> skills;
+    private List<Skill> skills = new ArrayList<>();
 
     private Instant createdAt;
     private Instant updatedAt;

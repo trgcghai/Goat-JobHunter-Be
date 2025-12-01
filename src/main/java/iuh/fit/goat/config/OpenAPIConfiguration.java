@@ -28,17 +28,17 @@ public class OpenAPIConfiguration {
 
     private Info createAPIInfo() {
         return new Info()
-                .title("Job Hunter API")
+                .title("GOAT API")
                 .version("1.0")
                 .contact(createContact())
-                .description("This API exposes all endpoints (job hunter)")
+                .description("This API exposes all endpoints (goat)")
                 .license(createLicense());
     }
 
     private Contact createContact() {
         return new Contact()
                 .email("nguyenthangdat84@gmail.com")
-                .name("Nguyễn Thắng Minh Đạt")
+                .name("GOAT")
                 .url("nguyenthangdat84@gmail.com");
     }
 

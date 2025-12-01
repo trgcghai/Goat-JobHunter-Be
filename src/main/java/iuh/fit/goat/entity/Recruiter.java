@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.*;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @Entity
@@ -18,13 +19,13 @@ public class Recruiter extends User{
     private String description;
     private String website;
 
-    @OneToMany(mappedBy = "recruiter", fetch = FetchType.LAZY)
+    @OneToMany(mappedBy = "recruiter", fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
     @JsonIgnore
     @ToString.Exclude
-    private List<Job> jobs;
+    private List<Job> jobs = new ArrayList<>();
 
     @ManyToMany(mappedBy = "followedRecruiters", fetch = FetchType.LAZY)
     @JsonIgnore
     @ToString.Exclude
-    private List<User> users;
+    private List<User> users = new ArrayList<>();
 }
