@@ -2,6 +2,7 @@ package iuh.fit.goat.service;
 
 import iuh.fit.goat.dto.request.user.ResetPasswordRequest;
 import iuh.fit.goat.dto.response.ResultPaginationResponse;
+import iuh.fit.goat.dto.response.user.UserEnabledResponse;
 import iuh.fit.goat.dto.response.user.UserResponse;
 import iuh.fit.goat.entity.Job;
 import iuh.fit.goat.entity.Notification;
@@ -50,6 +51,10 @@ public interface UserService {
     List<Map<String, Object>> handleCheckRecruitersFollowed(List<Long> recruiterIds);
 
     UserResponse handleFollowRecruiters(List<Long> recruiterIds);
+
+    List<UserEnabledResponse> handleActivateUsers(List<Long> userIds);
+
+    List<UserEnabledResponse> handleDeactivateUsers(List<Long> userIds);
 
     UserResponse handleUnfollowRecruiters(List<Long> recruiterIds);
 }

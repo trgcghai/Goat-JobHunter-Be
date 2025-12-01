@@ -4,6 +4,7 @@ import iuh.fit.goat.common.Role;
 import iuh.fit.goat.dto.request.user.ResetPasswordRequest;
 import iuh.fit.goat.dto.response.auth.LoginResponse;
 import iuh.fit.goat.dto.response.ResultPaginationResponse;
+import iuh.fit.goat.dto.response.user.UserEnabledResponse;
 import iuh.fit.goat.dto.response.user.UserResponse;
 import iuh.fit.goat.entity.*;
 import iuh.fit.goat.exception.InvalidException;
@@ -424,6 +425,34 @@ public class UserServiceImpl implements UserService {
         this.userRepository.save(currentUser);
 
         return this.convertToUserResponse(currentUser);
+    }
+
+    @Override
+    public List<UserEnabledResponse> handleActivateUsers(List<Long> userIds) {
+        return this.setUsersEnabled(userIds, true);
+    }
+
+    @Override
+    public List<UserEnabledResponse> handleDeactivateUsers(List<Long> userIds) {
+        return this.setUsersEnabled(userIds, false);
+    }
+
+    private List<UserEnabledResponse> setUsersEnabled(List<Long> userIds, boolean enabled) {
+        if (userIds == null || userIds.isEmpty()) {
+            return new ArrayList<>();
+        }
+
+        List<User> users = this.userRepository.findAllById(userIds);
+        if (users.isEmpty()) {
+            return new ArrayList<>();
+        }
+
+        users.forEach(u -> u.setEnabled(enabled));
+        this.userRepository.saveAll(users);
+
+        return users.stream()
+                .map(u -> new UserEnabledResponse(u.getUserId(), u.isEnabled()))
+                .collect(Collectors.toList());
     }
 
     @Override
