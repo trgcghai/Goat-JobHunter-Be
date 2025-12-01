@@ -23,7 +23,7 @@ public class Applicant extends User{
     private Level level;
     private String resumeUrl;
 
-    @OneToMany(mappedBy = "applicant", fetch = FetchType.LAZY)
+    @OneToMany(mappedBy = "applicant", fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
     @JsonIgnore
     @ToString.Exclude
     private List<Application> applications;

@@ -84,22 +84,22 @@ public abstract class User {
     @ToString.Exclude
     private List<Recruiter> followedRecruiters;
 
-    @OneToMany(mappedBy = "author", fetch = FetchType.LAZY)
+    @OneToMany(mappedBy = "author", fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
     @ToString.Exclude
     @JsonIgnore
     private List<Blog> blogs;
 
-    @OneToMany(mappedBy = "commentedBy", fetch = FetchType.LAZY)
+    @OneToMany(mappedBy = "commentedBy", fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
     @ToString.Exclude
     @JsonIgnore
     private List<Comment> comments;
 
-    @OneToMany(mappedBy = "actor", fetch = FetchType.LAZY)
+    @OneToMany(mappedBy = "actor", fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
     @ToString.Exclude
     @JsonIgnore
     private List<Notification> actorNotifications;
 
-    @OneToMany(mappedBy = "recipient", fetch = FetchType.LAZY)
+    @OneToMany(mappedBy = "recipient", fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
     @ToString.Exclude
     @JsonIgnore
     private List<Notification> recipientNotifications;

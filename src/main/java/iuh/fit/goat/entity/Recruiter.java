@@ -18,7 +18,7 @@ public class Recruiter extends User{
     private String description;
     private String website;
 
-    @OneToMany(mappedBy = "recruiter", fetch = FetchType.LAZY)
+    @OneToMany(mappedBy = "recruiter", fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
     @JsonIgnore
     @ToString.Exclude
     private List<Job> jobs;

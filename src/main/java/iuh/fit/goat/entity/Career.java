@@ -28,7 +28,7 @@ public class Career {
     private Instant updatedAt;
     private String updatedBy;
 
-    @OneToMany(mappedBy = "career", fetch = FetchType.LAZY)
+    @OneToMany(mappedBy = "career", fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
     @JsonIgnore
     @ToString.Exclude
     private List<Job> jobs;
