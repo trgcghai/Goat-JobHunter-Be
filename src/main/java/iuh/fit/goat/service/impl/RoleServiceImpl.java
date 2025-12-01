@@ -1,5 +1,6 @@
 package iuh.fit.goat.service.impl;
 
+import iuh.fit.goat.dto.request.role.RoleCreateRequest;
 import iuh.fit.goat.dto.response.ResultPaginationResponse;
 import iuh.fit.goat.entity.Permission;
 import iuh.fit.goat.entity.Role;
@@ -23,12 +24,16 @@ public class RoleServiceImpl implements RoleService {
     private final UserRepository userRepository;
 
     @Override
-    public Role handleCreateRole(Role role) {
-        if(role.getPermissions() != null){
-            List<Long> permissionIds = role.getPermissions().stream().map(Permission::getPermissionId).toList();
-            List<Permission> permissions = this.permissionRepository.findByPermissionIdIn(permissionIds);
-            role.setPermissions(permissions);
+    public Role handleCreateRole(RoleCreateRequest request) {
+        Role role = new Role();
+        role.setName(request.getName());
+        if (request.getDescription() != null) {
+            role.setDescription(request.getDescription());
+        } else {
+            role.setDescription("");
         }
+        role.setActive(true);
+        role.setPermissions(List.of());
         return this.roleRepository.save(role);
     }
 
@@ -83,10 +88,5 @@ public class RoleServiceImpl implements RoleService {
         meta.setPages(page.getTotalPages());
 
         return new ResultPaginationResponse(meta, page.getContent());
-    }
-
-    @Override
-    public boolean handleExistRole(Role role) {
-        return this.roleRepository.existsByName(role.getName());
     }
 }
