@@ -37,6 +37,26 @@ public class RoleController {
         return ResponseEntity.status(HttpStatus.OK).body(res);
     }
 
+    @PutMapping("/roles/{id}/activate")
+    public ResponseEntity<Role> activateRole(@PathVariable("id") String id) throws InvalidException {
+        Pattern pattern = Pattern.compile("^[0-9]+$");
+        if(!pattern.matcher(id).matches()){
+            throw new InvalidException("Id is number");
+        }
+        Role res = this.roleService.handleActivateRole(Long.parseLong(id));
+        return ResponseEntity.status(HttpStatus.OK).body(res);
+    }
+
+    @PutMapping("/roles/{id}/deactivate")
+    public ResponseEntity<Role> deactivateRole(@PathVariable("id") String id) throws InvalidException {
+        Pattern pattern = Pattern.compile("^[0-9]+$");
+        if(!pattern.matcher(id).matches()){
+            throw new InvalidException("Id is number");
+        }
+        Role res = this.roleService.handleDeactivateRole(Long.parseLong(id));
+        return ResponseEntity.status(HttpStatus.OK).body(res);
+    }
+
     @DeleteMapping("/roles/{id}")
     public ResponseEntity<Void> deleteRole(@PathVariable("id") String id) throws InvalidException {
         Pattern pattern = Pattern.compile("^[0-9]+$");

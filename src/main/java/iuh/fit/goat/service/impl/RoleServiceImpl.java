@@ -4,6 +4,7 @@ import iuh.fit.goat.dto.request.role.RoleCreateRequest;
 import iuh.fit.goat.dto.response.ResultPaginationResponse;
 import iuh.fit.goat.entity.Permission;
 import iuh.fit.goat.entity.Role;
+import iuh.fit.goat.exception.InvalidException;
 import iuh.fit.goat.repository.PermissionRepository;
 import iuh.fit.goat.repository.RoleRepository;
 import iuh.fit.goat.repository.UserRepository;
@@ -53,6 +54,28 @@ public class RoleServiceImpl implements RoleService {
         resRole.setPermissions(role.getPermissions());
 
         return this.roleRepository.save(resRole);
+    }
+
+    @Override
+    public Role handleActivateRole(long id) throws InvalidException {
+        Role role = this.roleRepository.findById(id)
+                .orElseThrow(() -> new InvalidException("Role doesn't exist"));
+        if (!role.isActive()) {
+            role.setActive(true);
+            return this.roleRepository.save(role);
+        }
+        return role;
+    }
+
+    @Override
+    public Role handleDeactivateRole(long id) throws InvalidException {
+        Role role = this.roleRepository.findById(id)
+                .orElseThrow(() -> new InvalidException("Role doesn't exist"));
+        if (role.isActive()) {
+            role.setActive(false);
+            return this.roleRepository.save(role);
+        }
+        return role;
     }
 
     @Override
