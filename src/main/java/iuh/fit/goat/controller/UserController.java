@@ -163,12 +163,16 @@ public class UserController {
 
     @PutMapping("/users/me/notifications")
     public ResponseEntity<Map<String, String>> markNotificationsAsSeen(
-            @RequestBody Map<String, List<Long>> request
+            @RequestBody List<Long> notificationIds
     ) throws InvalidException {
-        List<Long> notificationIds = request.get("notificationIds");
+        if (notificationIds == null) {
+            throw new InvalidException("Notification IDs list cannot be null");
+        }
 
-        if (notificationIds == null || notificationIds.isEmpty()) {
-            throw new InvalidException("Notification IDs list cannot be empty");
+        if (notificationIds.isEmpty()) {
+            return ResponseEntity.status(HttpStatus.OK).body(
+                    Map.of("message", "No notifications to mark as seen")
+            );
         }
 
         this.userService.handleMarkNotificationsAsSeen(notificationIds);
