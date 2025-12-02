@@ -208,6 +208,9 @@ public class DatabaseInitializer implements CommandLineRunner {
         permissions.add(new Permission("Applications dashboard", "/api/v1/dashboard/applications", "GET", "DASHBOARD"));
         permissions.add(new Permission("Applications year dashboard", "/api/v1/dashboard/applications-year", "GET", "DASHBOARD"));
 
+        // ADMIN
+        permissions.add(new Permission("Backup Database", "/api/v1/admin/backup", "GET", "ADMIN"));
+
         this.permissionRepository.saveAll(permissions);
 
         System.out.println("Initialized permissions.");
