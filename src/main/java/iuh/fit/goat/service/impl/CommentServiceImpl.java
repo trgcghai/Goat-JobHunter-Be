@@ -1,6 +1,7 @@
 package iuh.fit.goat.service.impl;
 
 import iuh.fit.goat.config.components.RealTimeEventHub;
+import iuh.fit.goat.dto.request.CreateCommentRequest;
 import iuh.fit.goat.dto.response.comment.CommentResponse;
 import iuh.fit.goat.dto.response.ResultPaginationResponse;
 import iuh.fit.goat.entity.Blog;
@@ -46,35 +47,43 @@ public class CommentServiceImpl implements CommentService {
     }
 
     @Override
-    public Comment handleCreateComment(Comment comment) {
+    public Comment handleCreateComment(CreateCommentRequest request) {
         String email = SecurityUtil.getCurrentUserLogin().isPresent() ? SecurityUtil.getCurrentUserLogin().get() : "";
         User currentUser = this.userRepository.findByContact_Email(email);
+
+        Blog blog = this.blogService.handleGetBlogById(request.getBlogId());
+
+        // Create new comment
+        Comment comment = new Comment();
+        comment.setComment(request.getComment());
         comment.setCommentedBy(currentUser);
-        if(comment.getBlog() != null) {
-            Blog blog = this.blogService.handleGetBlogById(comment.getBlog().getBlogId());
-            if(blog != null) {
-                comment.setBlog(blog);
-            }
-        }
-        if(comment.getParent() != null) {
-            Comment parentComment = this.handleGetCommentById(comment.getParent().getCommentId());
+        comment.setBlog(blog);
+
+        // check if the comment is a reply to another comment
+        if(request.getReplyTo() != null) {
+            Comment parentComment = this.handleGetCommentById(request.getReplyTo());
             if(parentComment != null) {
                 comment.setParent(parentComment);
                 comment.setReply(true);
             } else {
-                comment.setParent(null);
                 comment.setReply(false);
             }
         } else {
             comment.setReply(false);
         }
+
+        // Save comment
         Comment newComment = this.commentRepository.save(comment);
 
+        // Update blog activity
         this.blogService.handleIncrementTotalValue(newComment);
 
-        if(newComment.getParent() != null) {
+        // Handle notifications
+        if(request.getReplyTo() != null) {
+            // It's a reply to another comment, notify the parent comment's owner
             this.notificationService.handleNotifyReplyComment(newComment.getParent(), newComment);
         } else {
+            // It's a parent comment, notify the blog owner
             this.notificationService.handleNotifyCommentBlog(newComment.getBlog(), newComment);
         }
 
@@ -145,6 +154,7 @@ public class CommentServiceImpl implements CommentService {
         commentResponse.setCommentId(comment.getCommentId());
         commentResponse.setComment(comment.getComment());
         commentResponse.setReply(comment.isReply());
+        commentResponse.setCreatedAt(comment.getCreatedAt());
 
         if(comment.getBlog() != null) {
             CommentResponse.BlogComment blog = new CommentResponse.BlogComment(
@@ -157,7 +167,9 @@ public class CommentServiceImpl implements CommentService {
         if(comment.getCommentedBy() != null) {
             CommentResponse.UserCommented commentedBy = new CommentResponse.UserCommented(
                     comment.getCommentedBy().getUserId(),
-                    comment.getCommentedBy().getContact().getEmail()
+                    comment.getCommentedBy().getFullName(),
+                    comment.getCommentedBy().getUsername(),
+                    comment.getCommentedBy().getAvatar()
             );
             commentResponse.setCommentedBy(commentedBy);
 
@@ -166,7 +178,13 @@ public class CommentServiceImpl implements CommentService {
         if(comment.getParent() != null) {
             CommentResponse.ParentComment parent = new CommentResponse.ParentComment(
                     comment.getParent().getCommentId(),
-                    comment.getParent().getComment()
+                    comment.getParent().getComment(),
+                    new CommentResponse.UserCommented(
+                            comment.getParent().getCommentedBy().getUserId(),
+                            comment.getParent().getCommentedBy().getFullName(),
+                            comment.getParent().getCommentedBy().getUsername(),
+                            comment.getParent().getCommentedBy().getAvatar()
+                    )
             );
             commentResponse.setParent(parent);
         }

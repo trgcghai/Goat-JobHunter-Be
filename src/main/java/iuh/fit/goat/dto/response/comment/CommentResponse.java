@@ -6,6 +6,8 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+import java.time.Instant;
+
 @Getter
 @Setter
 @NoArgsConstructor
@@ -18,6 +20,7 @@ public class CommentResponse {
     private BlogComment blog;
     private UserCommented commentedBy;
     private ParentComment parent;
+    private Instant createdAt;
 
     @Getter
     @Setter
@@ -34,7 +37,9 @@ public class CommentResponse {
     @AllArgsConstructor
     public static class UserCommented {
         private long userId;
-        private String email;
+        private String fullName;
+        private String username;
+        private String avatar;
     }
 
     @Getter
@@ -44,5 +49,6 @@ public class CommentResponse {
     public static class ParentComment {
         private long commentId;
         private String comment;
+        private UserCommented commentedBy;
     }
 }
