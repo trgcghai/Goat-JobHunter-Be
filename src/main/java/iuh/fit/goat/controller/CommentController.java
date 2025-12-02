@@ -1,6 +1,7 @@
 package iuh.fit.goat.controller;
 
 import com.turkraft.springfilter.boot.Filter;
+import iuh.fit.goat.dto.request.CreateCommentRequest;
 import iuh.fit.goat.dto.response.comment.CommentResponse;
 import iuh.fit.goat.dto.response.ResultPaginationResponse;
 import iuh.fit.goat.entity.Blog;
@@ -34,8 +35,8 @@ public class CommentController {
     }
 
     @PostMapping
-    public ResponseEntity<CommentResponse> createComment(@Valid @RequestBody Comment comment) throws InvalidException {
-        Blog blog = this.blogService.handleGetBlogById(comment.getBlog().getBlogId());
+    public ResponseEntity<CommentResponse> createComment(@Valid @RequestBody CreateCommentRequest comment) throws InvalidException {
+        Blog blog = this.blogService.handleGetBlogById(comment.getBlogId());
         if(blog == null) throw new InvalidException("Blog doesn't exist");
 
         Comment res = this.commentService.handleCreateComment(comment);

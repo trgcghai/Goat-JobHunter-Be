@@ -1,5 +1,6 @@
 package iuh.fit.goat.service;
 
+import iuh.fit.goat.dto.request.CreateCommentRequest;
 import iuh.fit.goat.dto.response.comment.CommentResponse;
 import iuh.fit.goat.dto.response.ResultPaginationResponse;
 import iuh.fit.goat.entity.Comment;
@@ -13,7 +14,7 @@ import java.util.List;
 public interface CommentService {
     Flux<ServerSentEvent<String>> stream(Long blogId);
 
-    Comment handleCreateComment(Comment comment);
+    Comment handleCreateComment(CreateCommentRequest comment);
 
     Comment handleUpdateComment(Comment comment);
 

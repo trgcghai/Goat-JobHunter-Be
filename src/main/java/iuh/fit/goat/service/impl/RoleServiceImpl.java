@@ -1,8 +1,10 @@
 package iuh.fit.goat.service.impl;
 
+import iuh.fit.goat.dto.request.role.RoleCreateRequest;
 import iuh.fit.goat.dto.response.ResultPaginationResponse;
 import iuh.fit.goat.entity.Permission;
 import iuh.fit.goat.entity.Role;
+import iuh.fit.goat.exception.InvalidException;
 import iuh.fit.goat.repository.PermissionRepository;
 import iuh.fit.goat.repository.RoleRepository;
 import iuh.fit.goat.repository.UserRepository;
@@ -23,12 +25,16 @@ public class RoleServiceImpl implements RoleService {
     private final UserRepository userRepository;
 
     @Override
-    public Role handleCreateRole(Role role) {
-        if(role.getPermissions() != null){
-            List<Long> permissionIds = role.getPermissions().stream().map(Permission::getPermissionId).toList();
-            List<Permission> permissions = this.permissionRepository.findByPermissionIdIn(permissionIds);
-            role.setPermissions(permissions);
+    public Role handleCreateRole(RoleCreateRequest request) {
+        Role role = new Role();
+        role.setName(request.getName());
+        if (request.getDescription() != null) {
+            role.setDescription(request.getDescription());
+        } else {
+            role.setDescription("");
         }
+        role.setActive(true);
+        role.setPermissions(List.of());
         return this.roleRepository.save(role);
     }
 
@@ -48,6 +54,28 @@ public class RoleServiceImpl implements RoleService {
         resRole.setPermissions(role.getPermissions());
 
         return this.roleRepository.save(resRole);
+    }
+
+    @Override
+    public Role handleActivateRole(long id) throws InvalidException {
+        Role role = this.roleRepository.findById(id)
+                .orElseThrow(() -> new InvalidException("Role doesn't exist"));
+        if (!role.isActive()) {
+            role.setActive(true);
+            return this.roleRepository.save(role);
+        }
+        return role;
+    }
+
+    @Override
+    public Role handleDeactivateRole(long id) throws InvalidException {
+        Role role = this.roleRepository.findById(id)
+                .orElseThrow(() -> new InvalidException("Role doesn't exist"));
+        if (role.isActive()) {
+            role.setActive(false);
+            return this.roleRepository.save(role);
+        }
+        return role;
     }
 
     @Override
@@ -83,10 +111,5 @@ public class RoleServiceImpl implements RoleService {
         meta.setPages(page.getTotalPages());
 
         return new ResultPaginationResponse(meta, page.getContent());
-    }
-
-    @Override
-    public boolean handleExistRole(Role role) {
-        return this.roleRepository.existsByName(role.getName());
     }
 }

@@ -1,6 +1,7 @@
 package iuh.fit.goat.controller;
 
 import com.turkraft.springfilter.boot.Filter;
+import iuh.fit.goat.dto.request.role.RoleCreateRequest;
 import iuh.fit.goat.dto.response.ResultPaginationResponse;
 import iuh.fit.goat.entity.Role;
 import iuh.fit.goat.exception.InvalidException;
@@ -22,10 +23,7 @@ public class RoleController {
     private final RoleService roleService;
 
     @PostMapping("/roles")
-    public ResponseEntity<Role> createRole(@Valid @RequestBody Role role) throws InvalidException {
-        if(this.roleService.handleExistRole(role)) {
-            throw new InvalidException("Role exists");
-        }
+    public ResponseEntity<Role> createRole(@Valid @RequestBody RoleCreateRequest role) {
         Role res = this.roleService.handleCreateRole(role);
         return ResponseEntity.status(HttpStatus.CREATED).body(res);
     }
@@ -36,6 +34,26 @@ public class RoleController {
             throw new InvalidException("Role doesn't exist");
         }
         Role res = this.roleService.handleUpdateRole(role);
+        return ResponseEntity.status(HttpStatus.OK).body(res);
+    }
+
+    @PutMapping("/roles/{id}/activate")
+    public ResponseEntity<Role> activateRole(@PathVariable("id") String id) throws InvalidException {
+        Pattern pattern = Pattern.compile("^[0-9]+$");
+        if(!pattern.matcher(id).matches()){
+            throw new InvalidException("Id is number");
+        }
+        Role res = this.roleService.handleActivateRole(Long.parseLong(id));
+        return ResponseEntity.status(HttpStatus.OK).body(res);
+    }
+
+    @PutMapping("/roles/{id}/deactivate")
+    public ResponseEntity<Role> deactivateRole(@PathVariable("id") String id) throws InvalidException {
+        Pattern pattern = Pattern.compile("^[0-9]+$");
+        if(!pattern.matcher(id).matches()){
+            throw new InvalidException("Id is number");
+        }
+        Role res = this.roleService.handleDeactivateRole(Long.parseLong(id));
         return ResponseEntity.status(HttpStatus.OK).body(res);
     }
 
