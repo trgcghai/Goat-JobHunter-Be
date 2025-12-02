@@ -105,6 +105,11 @@ public abstract class User {
     @JsonIgnore
     private List<Notification> recipientNotifications = new ArrayList<>();
 
+    @OneToMany(mappedBy = "user", fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
+    @ToString.Exclude
+    @JsonIgnore
+    private List<Conversation> conversations = new ArrayList<>();
+
     @PrePersist
     public void handleBeforeCreate(){
         this.createdAt = Instant.now();

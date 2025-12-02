@@ -2,19 +2,20 @@ package iuh.fit.goat.service.impl;
 
 import com.google.genai.Client;
 import com.google.genai.types.GenerateContentResponse;
+import iuh.fit.goat.common.MessageRole;
 import iuh.fit.goat.common.Role;
+import iuh.fit.goat.dto.request.ai.ChatRequest;
+import iuh.fit.goat.dto.request.message.MessageCreateRequest;
 import iuh.fit.goat.entity.*;
-import iuh.fit.goat.repository.ApplicantRepository;
-import iuh.fit.goat.repository.ApplicationRepository;
-import iuh.fit.goat.repository.JobRepository;
-import iuh.fit.goat.repository.RecruiterRepository;
+import iuh.fit.goat.repository.*;
 import iuh.fit.goat.service.AiService;
+import iuh.fit.goat.service.ConversationService;
+import iuh.fit.goat.service.MessageService;
 import iuh.fit.goat.service.UserService;
 import iuh.fit.goat.util.SecurityUtil;
 import lombok.RequiredArgsConstructor;
+import org.jetbrains.annotations.NotNull;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -27,19 +28,22 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class AiServiceImpl implements AiService {
     private final Client client;
+
+    private final UserService userService;
+    private final ConversationService conversationService;
+    private final MessageService messageService;
+
     private final JobRepository jobRepository;
     private final ApplicantRepository applicantRepository;
     private final RecruiterRepository recruiterRepository;
     private final ApplicationRepository applicationRepository;
-    private final UserService userService;
 
     @Value("${google.api.model}")
     private String MODEL;
 
     @Override
-    @Transactional(readOnly = true)
-    public String chatWithAi(String userMessageContent) {
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+    @Transactional
+    public String chatWithAi(ChatRequest request) {
         String currentUserEmail = SecurityUtil.getCurrentUserLogin().orElse(null);
 
         User currentUser = null;
@@ -71,6 +75,7 @@ public class AiServiceImpl implements AiService {
             5. Nếu câu hỏi yêu cầu ví dụ, minh họa hoặc phân tích, hãy đưa ví dụ ngắn gọn, dễ hiểu.
             6. Không nói rằng bạn không biết trừ khi thông tin thực sự không có (ví dụ dữ liệu thời gian thực mà AI không thể cập nhật).
             7. Khi trả lời câu hỏi GOAT, chỉ sử dụng dữ liệu mà người dùng có quyền xem dựa trên vai trò của họ (ADMIN, RECRUITER, APPLICANT, GUEST).
+            8. Tham khảo lịch sử hội thoại trước đó để trả lời mạch lạc, liên tục và có ngữ cảnh.
             """
             .formatted(new Date().toString());
 
@@ -124,6 +129,11 @@ public class AiServiceImpl implements AiService {
             jobContext = getAllJobsContext();
         }
 
+        String conversationHistory = "";
+        if(request.getConversationId() != null && currentUser != null) {
+            conversationHistory = getConversationHistory(request.getConversationId());
+        }
+
         String finalPrompt = systemPromptPreamble + """
 
             --- DỮ LIỆU NGỮ CẢNH ---
@@ -138,15 +148,38 @@ public class AiServiceImpl implements AiService {
 
             [APPLICATIONS]
             %s
+            %s
 
             Hãy trả lời đúng dựa trên dữ liệu NGỮ CẢNH ở trên.
             """
-                .formatted(jobContext, applicantContext, recruiterContext, applicationContext);
+                .formatted(jobContext, applicantContext, recruiterContext, applicationContext, conversationHistory);
 
-        GenerateContentResponse response = this.client.models
-                .generateContent(MODEL, finalPrompt + "\n\nUser: " + userMessageContent, null);
+        if(request.getConversationId() != null && currentUser != null) {
+            this.messageService.handleCreateMessage(new MessageCreateRequest(
+                    request.getConversationId(), MessageRole.USER, request.getMessage()
+            ));
+        }
 
-        return response.text();
+        String aiResponse;
+        try {
+            GenerateContentResponse response = this.client.models
+                    .generateContent(MODEL, finalPrompt + "\n\nUser: " + request.getMessage(), null);
+            aiResponse = response.text();
+        } catch (Exception e) {
+            e.printStackTrace();
+            aiResponse = "Xin lỗi, hiện tại tôi không thể xử lý yêu cầu. Vui lòng thử lại sau.";
+        }
+
+        if(request.getConversationId() != null && currentUser != null) {
+            this.messageService.handleCreateMessage(new MessageCreateRequest(
+                    request.getConversationId(), MessageRole.AI, aiResponse
+            ));
+            this.conversationService.handleUpdateTitleIfFirstAiMessage(
+                    request.getConversationId(), aiResponse
+            );
+        }
+
+        return aiResponse;
     }
 
     @Override
@@ -282,5 +315,34 @@ public class AiServiceImpl implements AiService {
                         app.getStatus()
                 ))
                 .collect(Collectors.joining("\n"));
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public String getConversationHistory(Long conversationId) {
+        String conversationHistory = "";
+        Conversation conversation = this.conversationService.handleGetConversationById(conversationId);
+        List<Message> messages = conversation.getMessages();
+
+        if (messages != null && !messages.isEmpty()) {
+            StringBuilder historyBuilder = getStringBuilder(messages);
+            conversationHistory = historyBuilder.toString();
+        }
+        return conversationHistory;
+    }
+
+    @NotNull
+    private static StringBuilder getStringBuilder(List<Message> messages) {
+        StringBuilder historyBuilder = new StringBuilder();
+        historyBuilder.append("\n--- LỊCH SỬ HỘI THOẠI ---\n");
+
+        int startIndex = Math.max(0, messages.size() - 50);
+        for (int i = startIndex; i < messages.size(); i++) {
+            Message msg = messages.get(i);
+            String role = msg.getRole() == MessageRole.USER ? "User" : "AI";
+            historyBuilder.append(String.format("%s: %s\n", role, msg.getContent()));
+        }
+
+        return historyBuilder;
     }
 }

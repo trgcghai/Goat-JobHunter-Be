@@ -6,6 +6,7 @@ import lombok.Data;
 
 @Data
 public class ChatRequest {
+    private Long conversationId;
     @NotNull(message = "Message is required")
     @NotBlank(message = "Message is not empty")
     private String message;
