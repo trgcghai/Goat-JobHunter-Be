@@ -1,10 +1,11 @@
 package iuh.fit.goat.service;
 
+import iuh.fit.goat.dto.request.ai.ChatRequest;
 import iuh.fit.goat.entity.Applicant;
 import iuh.fit.goat.entity.Recruiter;
 
 public interface AiService {
-    String chatWithAi(String userMessageContent);
+    String chatWithAi(ChatRequest request);
 
     String getAllJobsContext();
 
@@ -19,4 +20,6 @@ public interface AiService {
     String getApplicationsContextForRecruiter(Recruiter recruiter);
 
     String getApplicationsContextForApplicant(Applicant applicant);
+
+    String getConversationHistory(Long conversationId);
 }
