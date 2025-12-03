@@ -231,6 +231,7 @@ public class BlogServiceImpl implements BlogService {
     }
 
     @Override
+    @Transactional
     public List<BlogStatusResponse> handleDisableBlogs(BlogIdsRequest request) {
         List<Blog> blogs = this.blogRepository.findAllById(request.getBlogIds());
         if(blogs.isEmpty()) return Collections.emptyList();
