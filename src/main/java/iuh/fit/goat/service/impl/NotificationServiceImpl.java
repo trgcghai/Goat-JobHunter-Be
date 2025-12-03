@@ -144,6 +144,7 @@ public class NotificationServiceImpl implements NotificationService {
         response.setNotificationId(notification.getNotificationId());
         response.setType(notification.getType());
         response.setSeen(notification.isSeen());
+        response.setCreatedAt(notification.getCreatedAt());
 
         NotificationResponse.BlogNotification blog = new NotificationResponse.BlogNotification(
                 notification.getBlog().getBlogId(),

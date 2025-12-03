@@ -7,6 +7,8 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+import java.time.Instant;
+
 @Getter
 @Setter
 @NoArgsConstructor
@@ -22,6 +24,7 @@ public class NotificationResponse {
     private CommentNotification comment;
     private CommentNotification reply;
     private CommentNotification repliedOnComment;
+    private Instant createdAt;
 
     @Getter
     @Setter
