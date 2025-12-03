@@ -1,6 +1,7 @@
 package iuh.fit.goat.service.impl;
 
 import iuh.fit.goat.common.BlogActionType;
+import iuh.fit.goat.common.NotificationType;
 import iuh.fit.goat.common.Role;
 import iuh.fit.goat.dto.request.blog.BlogCreateRequest;
 import iuh.fit.goat.dto.request.blog.BlogIdsRequest;
@@ -15,6 +16,7 @@ import iuh.fit.goat.entity.Notification;
 import iuh.fit.goat.entity.User;
 import iuh.fit.goat.exception.InvalidException;
 import iuh.fit.goat.repository.BlogRepository;
+import iuh.fit.goat.repository.NotificationRepository;
 import iuh.fit.goat.repository.UserRepository;
 import iuh.fit.goat.service.BlogService;
 import iuh.fit.goat.service.EmailNotificationService;
@@ -32,6 +34,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
@@ -42,6 +45,7 @@ public class BlogServiceImpl implements BlogService {
     private final NotificationService notificationService;
     private final BlogRepository blogRepository;
     private final UserRepository userRepository;
+    private final NotificationRepository notificationRepository;
     private final SimpMessagingTemplate messagingTemplate;
 
     @Override
@@ -175,6 +179,21 @@ public class BlogServiceImpl implements BlogService {
         );
 
         return currentUser.getRecipientNotifications();
+    }
+
+    @Override
+    public boolean checkUserLikedBlog(Long blogId) {
+        Blog blog = this.handleGetBlogById(blogId);
+        if (blog == null || blog.getAuthor() == null) return false;
+
+        String currentEmail = SecurityUtil.getCurrentUserLogin().orElse("");
+        User actor = this.userRepository.findByContact_Email(currentEmail);
+        if (actor == null) return false;
+
+        Optional<Notification> opt = this.notificationRepository
+                .findByTypeAndActorAndBlogAndRecipient(NotificationType.LIKE, actor, blog, blog.getAuthor());
+
+        return opt.isPresent();
     }
 
     @Override

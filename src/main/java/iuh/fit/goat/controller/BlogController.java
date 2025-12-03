@@ -91,6 +91,12 @@ public class BlogController {
         return ResponseEntity.status(HttpStatus.OK).body(res);
     }
 
+    @GetMapping("/liked-blogs/{id}")
+    public ResponseEntity<Boolean> likeBlogs(@PathVariable("id") Long id) {
+        Boolean res = this.blogService.checkUserLikedBlog(id);
+        return ResponseEntity.status(HttpStatus.OK).body(res);
+    }
+
     @GetMapping("/tags")
     public ResponseEntity<List<Object[]>> getAllTags(String keyword) {
         List<Object[]> res = this.blogService.handleGetAllTags(keyword);
