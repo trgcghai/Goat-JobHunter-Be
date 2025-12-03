@@ -13,14 +13,10 @@ import iuh.fit.goat.entity.Notification;
 import iuh.fit.goat.exception.InvalidException;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
-import org.springframework.http.codec.ServerSentEvent;
-import reactor.core.publisher.Flux;
 
 import java.util.List;
 
 public interface BlogService {
-    Flux<ServerSentEvent<String>> stream(Long blogId);
-
     Blog handleCreateBlog(BlogCreateRequest request);
 
     Blog handleUpdateBlog(BlogUpdateRequest request);

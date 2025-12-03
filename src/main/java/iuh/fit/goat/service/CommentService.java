@@ -6,14 +6,10 @@ import iuh.fit.goat.dto.response.ResultPaginationResponse;
 import iuh.fit.goat.entity.Comment;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
-import org.springframework.http.codec.ServerSentEvent;
-import reactor.core.publisher.Flux;
 
 import java.util.List;
 
 public interface CommentService {
-    Flux<ServerSentEvent<String>> stream(Long blogId);
-
     Comment handleCreateComment(CreateCommentRequest comment);
 
     Comment handleUpdateComment(Comment comment);

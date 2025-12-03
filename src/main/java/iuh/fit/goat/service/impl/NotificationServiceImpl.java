@@ -1,7 +1,6 @@
 package iuh.fit.goat.service.impl;
 
 import iuh.fit.goat.common.NotificationType;
-import iuh.fit.goat.config.components.RealTimeEventHub;
 import iuh.fit.goat.dto.response.notification.NotificationResponse;
 import iuh.fit.goat.entity.Blog;
 import iuh.fit.goat.entity.Comment;
@@ -12,43 +11,27 @@ import iuh.fit.goat.repository.UserRepository;
 import iuh.fit.goat.service.NotificationService;
 import iuh.fit.goat.util.SecurityUtil;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.codec.ServerSentEvent;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import reactor.core.publisher.Flux;
 
 import java.util.Collections;
 import java.util.List;
-import java.util.Objects;
 import java.util.Optional;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class NotificationServiceImpl implements NotificationService {
     private final NotificationRepository notificationRepository;
     private final UserRepository userRepository;
-    private final RealTimeEventHub eventHub;
+    private final SimpMessagingTemplate messagingTemplate;
 
     private User handleGetCurrentUser() {
-        String currentEmail = SecurityUtil.getCurrentUserLogin().isPresent() ?
-                SecurityUtil.getCurrentUserLogin().get() : "";
-
+        String currentEmail = SecurityUtil.getCurrentUserLogin()
+                .orElse("");
         return this.userRepository.findByContact_Email(currentEmail);
-    }
-
-    @Override
-    public Flux<ServerSentEvent<String>> stream() {
-        User currentUser = this.handleGetCurrentUser();
-        if(currentUser == null) {
-            return Flux.empty();
-        }
-
-        return this.eventHub.stream(
-                "notification", Notification.class,
-                n -> n.getRecipient() != null
-                                && Objects.equals(n.getRecipient().getUserId(), currentUser.getUserId()),
-                this::covertToNotificationResponse
-        );
     }
 
     @Override
@@ -56,7 +39,8 @@ public class NotificationServiceImpl implements NotificationService {
         User currentUser = this.handleGetCurrentUser();
         if(currentUser == null) return Collections.emptyList();
 
-        return this.notificationRepository.findByRecipient_UserIdOrderByCreatedAtDesc(currentUser.getUserId());
+        return this.notificationRepository
+                .findByRecipient_UserIdOrderByCreatedAtDesc(currentUser.getUserId());
     }
 
     @Override
@@ -78,7 +62,6 @@ public class NotificationServiceImpl implements NotificationService {
         if(actor == null) return;
 
         User recipient = blog.getAuthor();
-
         if (actor.getUserId() == recipient.getUserId()) return;
 
         Notification notification = new Notification();
@@ -88,8 +71,8 @@ public class NotificationServiceImpl implements NotificationService {
         notification.setActor(actor);
         notification.setRecipient(recipient);
 
-        this.notificationRepository.save(notification);
-        this.eventHub.push("notification", notification);
+        Notification saved = this.notificationRepository.save(notification);
+        this.sendNotificationToUser(recipient, saved);
     }
 
     @Override
@@ -98,7 +81,6 @@ public class NotificationServiceImpl implements NotificationService {
         if(actor == null) return;
 
         User recipient = parent.getCommentedBy();
-
         if (actor.getUserId() == recipient.getUserId()) return;
 
         Notification notification = new Notification();
@@ -109,8 +91,11 @@ public class NotificationServiceImpl implements NotificationService {
         notification.setActor(actor);
         notification.setRecipient(recipient);
 
-        this.notificationRepository.save(notification);
-        this.eventHub.push("notification", notification);
+        Notification saved = this.notificationRepository.save(notification);
+
+        log.info("Reply to comment success. Now sending notification.");
+
+        this.sendNotificationToUser(recipient, saved);
     }
 
     @Override
@@ -119,12 +104,12 @@ public class NotificationServiceImpl implements NotificationService {
         if(actor == null || blog == null || blog.getAuthor() == null) return;
 
         User recipient = blog.getAuthor();
-
         if (actor.getUserId() == recipient.getUserId()) return;
 
-        Optional<Notification> optNotification = this.notificationRepository.findByTypeAndActorAndBlogAndRecipient(
-                NotificationType.LIKE, actor, blog, recipient
-        );
+        Optional<Notification> optNotification = this.notificationRepository
+                .findByTypeAndActorAndBlogAndRecipient(
+                        NotificationType.LIKE, actor, blog, recipient
+                );
 
         if(optNotification.isPresent()) {
             this.notificationRepository.delete(optNotification.get());
@@ -137,11 +122,23 @@ public class NotificationServiceImpl implements NotificationService {
         notification.setActor(actor);
         notification.setRecipient(recipient);
 
-        this.notificationRepository.save(notification);
-        this.eventHub.push("notification", notification);
+        Notification saved = this.notificationRepository.save(notification);
+        this.sendNotificationToUser(recipient, saved);
     }
 
-    private NotificationResponse covertToNotificationResponse(Notification notification) {
+    private void sendNotificationToUser(User user, Notification notification) {
+
+        log.info("Sending notification to user {}: {}", user, notification);
+
+        NotificationResponse response = convertToNotificationResponse(notification);
+        messagingTemplate.convertAndSendToUser(
+                user.getContact().getEmail(),
+                "/queue/notifications",
+                response
+        );
+    }
+
+    private NotificationResponse convertToNotificationResponse(Notification notification) {
         NotificationResponse response = new NotificationResponse();
 
         response.setNotificationId(notification.getNotificationId());
@@ -157,14 +154,16 @@ public class NotificationServiceImpl implements NotificationService {
         NotificationResponse.UserNotification actor = new NotificationResponse.UserNotification(
                 notification.getActor().getUserId(),
                 notification.getActor().getFullName() == null ? "" : notification.getActor().getFullName(),
-                notification.getActor().getUsername(), notification.getActor().getAvatar()
+                notification.getActor().getUsername(),
+                notification.getActor().getAvatar()
         );
         response.setActor(actor);
 
         NotificationResponse.UserNotification recipient = new NotificationResponse.UserNotification(
                 notification.getRecipient().getUserId(),
                 notification.getRecipient().getFullName() == null ? "" : notification.getRecipient().getFullName(),
-                notification.getRecipient().getUsername(), notification.getRecipient().getAvatar()
+                notification.getRecipient().getUsername(),
+                notification.getRecipient().getAvatar()
         );
         response.setRecipient(recipient);
 

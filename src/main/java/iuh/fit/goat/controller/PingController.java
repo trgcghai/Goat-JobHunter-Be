@@ -14,7 +14,6 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping("/api/v1")
 @RequiredArgsConstructor
 public class PingController {
-
     @PermitAll
     @GetMapping("/ping")
     public ResponseEntity<String> ping() {

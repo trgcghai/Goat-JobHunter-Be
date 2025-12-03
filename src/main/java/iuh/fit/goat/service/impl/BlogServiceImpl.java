@@ -2,7 +2,6 @@ package iuh.fit.goat.service.impl;
 
 import iuh.fit.goat.common.BlogActionType;
 import iuh.fit.goat.common.Role;
-import iuh.fit.goat.config.components.RealTimeEventHub;
 import iuh.fit.goat.dto.request.blog.BlogCreateRequest;
 import iuh.fit.goat.dto.request.blog.BlogIdsRequest;
 import iuh.fit.goat.dto.request.blog.BlogUpdateRequest;
@@ -26,15 +25,13 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
-import org.springframework.http.codec.ServerSentEvent;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import reactor.core.publisher.Flux;
 
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.stream.Collectors;
 
 @Service
@@ -45,19 +42,7 @@ public class BlogServiceImpl implements BlogService {
     private final NotificationService notificationService;
     private final BlogRepository blogRepository;
     private final UserRepository userRepository;
-    private final RealTimeEventHub eventHub;
-
-    @Override
-    public Flux<ServerSentEvent<String>> stream(Long blogId) {
-        Blog currentBlog = this.handleGetBlogById(blogId);
-        if(currentBlog == null) return Flux.empty();
-
-        return this.eventHub.stream(
-                "blog", Blog.class,
-                c -> Objects.equals(c.getBlogId(), currentBlog.getBlogId()),
-                this::convertToBlogResponse
-        );
-    }
+    private final SimpMessagingTemplate messagingTemplate;
 
     @Override
     public Blog handleCreateBlog(BlogCreateRequest request) {
@@ -72,7 +57,7 @@ public class BlogServiceImpl implements BlogService {
         blog.setTags(request.getTags());
         blog.setDraft(request.getDraft());
         blog.setAuthor(currentUser);
-        blog.setEnabled(false); // wait for admin to enable
+        blog.setEnabled(false);
 
         return this.blogRepository.save(blog);
     }
@@ -159,7 +144,14 @@ public class BlogServiceImpl implements BlogService {
         if(!comment.isReply()) {
             blog.getActivity().setTotalParentComments(blog.getActivity().getTotalParentComments() + 1);
         }
-        this.blogRepository.save(blog);
+        Blog updatedBlog = this.blogRepository.save(blog);
+
+        // Broadcast blog update to subscribers
+        BlogResponse response = convertToBlogResponse(updatedBlog);
+        messagingTemplate.convertAndSend(
+                "/topic/blog/" + updatedBlog.getBlogId(),
+                response
+        );
     }
 
     @Override
@@ -175,7 +167,12 @@ public class BlogServiceImpl implements BlogService {
 
         this.notificationService.handleNotifyLikeBlog(updatedBlog);
 
-        this.eventHub.push("blog", updatedBlog);
+        // Broadcast blog update to subscribers
+        BlogResponse response = convertToBlogResponse(updatedBlog);
+        messagingTemplate.convertAndSend(
+                "/topic/blog/" + updatedBlog.getBlogId(),
+                response
+        );
 
         return currentUser.getRecipientNotifications();
     }
@@ -252,7 +249,6 @@ public class BlogServiceImpl implements BlogService {
             throw new InvalidException("User not found");
         }
 
-        // Combine spec with author filter
         Specification<Blog> authorSpec = (root, query, criteriaBuilder) ->
                 criteriaBuilder.equal(root.get("author"), currentUser);
 
@@ -301,5 +297,4 @@ public class BlogServiceImpl implements BlogService {
 
         return response;
     }
-
 }
