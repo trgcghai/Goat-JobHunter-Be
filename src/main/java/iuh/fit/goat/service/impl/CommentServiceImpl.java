@@ -1,6 +1,5 @@
 package iuh.fit.goat.service.impl;
 
-import iuh.fit.goat.config.components.RealTimeEventHub;
 import iuh.fit.goat.dto.request.CreateCommentRequest;
 import iuh.fit.goat.dto.response.comment.CommentResponse;
 import iuh.fit.goat.dto.response.ResultPaginationResponse;
@@ -17,12 +16,11 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
-import org.springframework.http.codec.ServerSentEvent;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
-import reactor.core.publisher.Flux;
 
 import java.util.List;
-import java.util.Objects;
+import java.util.Map;
 
 @Service
 @RequiredArgsConstructor
@@ -31,20 +29,7 @@ public class CommentServiceImpl implements CommentService {
     private final NotificationService notificationService;
     private final CommentRepository commentRepository;
     private final UserRepository userRepository;
-    private final RealTimeEventHub eventHub;
-
-    @Override
-    public Flux<ServerSentEvent<String>> stream(Long blogId) {
-        Blog currentBlog = this.blogService.handleGetBlogById(blogId);
-        if(currentBlog == null) return Flux.empty();
-
-        return this.eventHub.stream(
-                "comment", Comment.class,
-                c -> c.getBlog() != null
-                        && Objects.equals(c.getBlog().getBlogId(), currentBlog.getBlogId()),
-                this::convertToCommentResponse
-        );
-    }
+    private final SimpMessagingTemplate messagingTemplate;
 
     @Override
     public Comment handleCreateComment(CreateCommentRequest request) {
@@ -53,13 +38,11 @@ public class CommentServiceImpl implements CommentService {
 
         Blog blog = this.blogService.handleGetBlogById(request.getBlogId());
 
-        // Create new comment
         Comment comment = new Comment();
         comment.setComment(request.getComment());
         comment.setCommentedBy(currentUser);
         comment.setBlog(blog);
 
-        // check if the comment is a reply to another comment
         if(request.getReplyTo() != null) {
             Comment parentComment = this.handleGetCommentById(request.getReplyTo());
             if(parentComment != null) {
@@ -72,22 +55,22 @@ public class CommentServiceImpl implements CommentService {
             comment.setReply(false);
         }
 
-        // Save comment
         Comment newComment = this.commentRepository.save(comment);
 
-        // Update blog activity
         this.blogService.handleIncrementTotalValue(newComment);
 
-        // Handle notifications
         if(request.getReplyTo() != null) {
-            // It's a reply to another comment, notify the parent comment's owner
             this.notificationService.handleNotifyReplyComment(newComment.getParent(), newComment);
         } else {
-            // It's a parent comment, notify the blog owner
             this.notificationService.handleNotifyCommentBlog(newComment.getBlog(), newComment);
         }
 
-        this.eventHub.push("comment", newComment);
+        // Broadcast comment to subscribers of this blog
+        CommentResponse response = convertToCommentResponse(newComment);
+        messagingTemplate.convertAndSend(
+                "/topic/comments/" + blog.getBlogId(),
+                response
+        );
 
         return newComment;
     }
@@ -98,7 +81,16 @@ public class CommentServiceImpl implements CommentService {
         if(currentComment == null) return null;
 
         currentComment.setComment(comment.getComment());
-        return this.commentRepository.save(currentComment);
+        Comment updated = this.commentRepository.save(currentComment);
+
+        // Broadcast update
+        CommentResponse response = convertToCommentResponse(updated);
+        messagingTemplate.convertAndSend(
+                "/topic/comments/" + updated.getBlog().getBlogId(),
+                response
+        );
+
+        return updated;
     }
 
     @Override
@@ -114,6 +106,12 @@ public class CommentServiceImpl implements CommentService {
 
         this.commentRepository.delete(comment);
         this.blogService.handleUpdateBlogActivity(blog);
+
+        // Broadcast deletion
+        messagingTemplate.convertAndSend(
+                "/topic/comments/" + blog.getBlogId(),
+                Map.of("action", "delete", "commentId", id)
+        );
     }
 
     @Override
@@ -172,7 +170,6 @@ public class CommentServiceImpl implements CommentService {
                     comment.getCommentedBy().getAvatar()
             );
             commentResponse.setCommentedBy(commentedBy);
-
         }
 
         if(comment.getParent() != null) {
@@ -199,8 +196,6 @@ public class CommentServiceImpl implements CommentService {
                 count += deleteRecursively(child);
             }
         }
-
         return count;
     }
-
 }

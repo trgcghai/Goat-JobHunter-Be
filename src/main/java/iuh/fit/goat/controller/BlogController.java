@@ -18,9 +18,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.http.codec.ServerSentEvent;
 import org.springframework.web.bind.annotation.*;
-import reactor.core.publisher.Flux;
 
 import java.util.List;
 import java.util.regex.Pattern;
@@ -30,11 +28,6 @@ import java.util.regex.Pattern;
 @RequiredArgsConstructor
 public class BlogController {
     private final BlogService blogService;
-
-    @GetMapping("/stream/liked/{blogId}")
-    public Flux<ServerSentEvent<String>> streamLikes(@PathVariable("blogId") Long blogId) {
-        return this.blogService.stream(blogId);
-    }
 
     @PostMapping
     public ResponseEntity<?> createBlog(@Valid @RequestBody BlogCreateRequest request) {
@@ -95,6 +88,12 @@ public class BlogController {
     @PutMapping("/liked-blogs")
     public ResponseEntity<List<Notification>> likeBlogs(@Valid @RequestBody LikeBlogRequest likeBlogRequest) {
         List<Notification> res = this.blogService.handleLikeBlog(likeBlogRequest);
+        return ResponseEntity.status(HttpStatus.OK).body(res);
+    }
+
+    @GetMapping("/liked-blogs/{id}")
+    public ResponseEntity<Boolean> likeBlogs(@PathVariable("id") Long id) {
+        Boolean res = this.blogService.checkUserLikedBlog(id);
         return ResponseEntity.status(HttpStatus.OK).body(res);
     }
 
