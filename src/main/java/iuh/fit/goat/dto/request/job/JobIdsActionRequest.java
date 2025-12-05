@@ -1,4 +1,4 @@
-package iuh.fit.goat.dto.request.blog;
+package iuh.fit.goat.dto.request.job;
 
 import iuh.fit.goat.common.ActionType;
 import iuh.fit.goat.util.annotation.RequireReasonIfAdmin;
@@ -16,9 +16,9 @@ import java.util.List;
 @AllArgsConstructor
 @Builder
 @RequireReasonIfAdmin
-public class BlogIdsRequest {
-    @NotEmpty(message = "blogIds must not be empty")
-    private List<@NotNull(message = "blogId must not be null") Long> blogIds;
+public class JobIdsActionRequest {
+    @NotEmpty(message = "jobIds must not be empty")
+    private List<@NotNull(message = "jobId must not be null") Long> jobIds;
     private String reason;
     @NotNull(message = "mode must not be null")
     private ActionType mode;

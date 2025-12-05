@@ -3,12 +3,12 @@ package iuh.fit.goat.common;
 import lombok.Getter;
 
 @Getter
-public enum BlogActionType {
+public enum ActionType {
     DELETE("delete"), REJECT("reject"), ACCEPT("accept");
 
     private final String value;
 
-    BlogActionType(String value) {
+    ActionType(String value) {
         this.value = value;
     }
 }

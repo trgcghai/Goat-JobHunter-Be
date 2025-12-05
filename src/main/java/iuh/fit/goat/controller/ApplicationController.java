@@ -23,7 +23,9 @@ import iuh.fit.goat.service.*;
 import iuh.fit.goat.util.*;
 
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.regex.Pattern;
 
 @RestController
@@ -42,6 +44,15 @@ public class ApplicationController {
         if(!checkUserAndJob){
             throw new InvalidException("User or Job doesn't exist");
         }
+
+        boolean checkCanApplyToJob = this.applicationService.handleCanApplyToJob(
+                application.getApplicant().getUserId(),
+                application.getJob().getJobId()
+        );
+        if(!checkCanApplyToJob){
+            throw new InvalidException("You can submit a maximum of 3 applications for this job.");
+        }
+
         Applicant applicant = this.applicationService.handleGetApplicant(application);
 
         application.setEmail(applicant.getContact().getEmail());
@@ -138,5 +149,17 @@ public class ApplicationController {
 
         ResultPaginationResponse result = this.applicationService.handleGetAllApplications(specification, pageable);
         return ResponseEntity.status(HttpStatus.OK).body(result);
+    }
+
+    @GetMapping("/applications/count")
+    public ResponseEntity<Map<String, Object>> countApplications(
+            @RequestParam Long applicantId,
+            @RequestParam Long jobId
+    ) {
+        Long count = this.applicationService.handleCountApplicationsByApplicantForJob(applicantId, jobId);
+        Map<String, Object> response = new HashMap<>();
+        response.put("submittedApplications", count);
+
+        return ResponseEntity.ok(response);
     }
 }

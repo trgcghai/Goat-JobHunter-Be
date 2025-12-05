@@ -2,10 +2,12 @@ package iuh.fit.goat.controller;
 
 import com.turkraft.springfilter.boot.Filter;
 import iuh.fit.goat.dto.request.job.CreateJobRequest;
+import iuh.fit.goat.dto.request.job.JobIdsActionRequest;
 import iuh.fit.goat.dto.request.job.JobIdsRequest;
 import iuh.fit.goat.dto.request.job.UpdateJobRequest;
 import iuh.fit.goat.dto.response.job.JobActivateResponse;
 import iuh.fit.goat.dto.response.job.JobApplicationCountResponse;
+import iuh.fit.goat.dto.response.job.JobEnabledResponse;
 import iuh.fit.goat.dto.response.job.JobResponse;
 import iuh.fit.goat.dto.response.ResultPaginationResponse;
 import iuh.fit.goat.entity.Applicant;
@@ -61,19 +63,10 @@ public class JobController {
         return ResponseEntity.ok(result);
     }
 
-    @DeleteMapping("/jobs/{id}")
-    public ResponseEntity<Void> deleteJob(@PathVariable("id") String id) throws InvalidException {
-        Pattern pattern = Pattern.compile("^[0-9]+$");
-        if (pattern.matcher(id).matches()) {
-            if (this.jobService.handleGetJobById(Long.parseLong(id)) != null) {
-                this.jobService.handleDeleteJob(Long.parseLong(id));
-                return ResponseEntity.status(HttpStatus.OK).body(null);
-            } else {
-                throw new InvalidException("Job doesn't exist");
-            }
-        } else {
-            throw new InvalidException("Id is number");
-        }
+    @DeleteMapping("/jobs")
+    public ResponseEntity<Void> deleteJob(@Valid @RequestBody JobIdsActionRequest request) {
+        this.jobService.handleDeleteJob(request);
+        return ResponseEntity.status(HttpStatus.OK).body(null);
     }
 
     @GetMapping("/jobs/{id}")
@@ -149,6 +142,22 @@ public class JobController {
         }
 
         ResultPaginationResponse result = this.jobService.handleGetApplicantsForJob(spec, pageable, Long.parseLong(jobId));
+        return ResponseEntity.status(HttpStatus.OK).body(result);
+    }
+
+    @PatchMapping("/jobs/enabled")
+    public ResponseEntity<List<JobEnabledResponse>> enableJobs(
+            @Valid @RequestBody JobIdsActionRequest request
+    ) {
+        List<JobEnabledResponse> result = this.jobService.handleEnabledJobs(request);
+        return ResponseEntity.status(HttpStatus.OK).body(result);
+    }
+
+    @PatchMapping("/jobs/disabled")
+    public ResponseEntity<List<JobEnabledResponse>> disableJobs(
+            @Valid @RequestBody JobIdsActionRequest request
+    ) {
+        List<JobEnabledResponse> result = this.jobService.handleDisabledJobs(request);
         return ResponseEntity.status(HttpStatus.OK).body(result);
     }
 }
