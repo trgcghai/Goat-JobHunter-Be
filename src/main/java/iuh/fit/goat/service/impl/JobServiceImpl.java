@@ -20,6 +20,7 @@ import iuh.fit.goat.entity.*;
 import iuh.fit.goat.repository.*;
 import iuh.fit.goat.util.SecurityUtil;
 
+import java.time.LocalDate;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -356,18 +357,30 @@ public class JobServiceImpl implements JobService {
         for (Long id : jobIds) {
             Job job = jobMap.get(id);
             if (job == null) {
-                results.add(new JobActivateResponse(id, false, "fail"));
+                results.add(new JobActivateResponse(id, false, "fail", "Job not found"));
                 continue;
             }
 
             try {
+                // if set active = true, need to check if current date is after end date
+                // if true, cannot activate the job
+                // if set active = false, can always deactivate
+                if (activeFlag) {
+                    if (job.getEndDate() != null) {
+                        LocalDate currentDate = LocalDate.now();
+                        if (currentDate.isAfter(job.getEndDate())) {
+                            results.add(new JobActivateResponse(id, job.isActive(), "fail", "End date has passed"));
+                            continue;
+                        }
+                    }
+                }
                 job.setActive(activeFlag);
                 this.jobRepository.save(job);
-                results.add(new JobActivateResponse(id, activeFlag, "success"));
+                results.add(new JobActivateResponse(id, activeFlag, "success", "Successfully updated"));
             } catch (Exception ex) {
                 // in case save fails, return current state as false and status fail
                 boolean resultingState = job.isActive();
-                results.add(new JobActivateResponse(id, resultingState, "fail"));
+                results.add(new JobActivateResponse(id, resultingState, "fail", "Error updating job"));
             }
         }
 
