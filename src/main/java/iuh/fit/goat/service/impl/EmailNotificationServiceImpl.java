@@ -1,6 +1,6 @@
 package iuh.fit.goat.service.impl;
 
-import iuh.fit.goat.common.BlogActionType;
+import iuh.fit.goat.common.ActionType;
 import iuh.fit.goat.common.Status;
 import iuh.fit.goat.entity.Applicant;
 import iuh.fit.goat.entity.Job;
@@ -50,7 +50,7 @@ public class EmailNotificationServiceImpl implements EmailNotificationService {
 
     @Override
     public void handleSendBlogActionNotice(
-            String recipient, String username, Object object, String reason, BlogActionType mode
+            String recipient, String username, Object object, String reason, ActionType mode
     ) {
         String subject;
 
@@ -66,13 +66,39 @@ public class EmailNotificationServiceImpl implements EmailNotificationService {
         context.setVariable("blogs", object);
         context.setVariable("mode", mode);
 
-        if (mode == BlogActionType.DELETE || mode == BlogActionType.REJECT) {
+        if (mode == ActionType.DELETE || mode == ActionType.REJECT) {
             context.setVariable("reason", reason);
         } else {
             context.setVariable("reason", null);
         }
 
         String content = this.templateEngine.process("blog", context);
+        this.asyncEmailService.handleSendEmailSync("nguyenthangdat84@gmail.com", subject, content, false, true);
+    }
+
+    @Override
+    public void handleSendJobActionNotice(String recipient, String username, Object object, String reason, ActionType mode) {
+        String subject;
+
+        switch (mode) {
+            case ACCEPT -> subject = "Việc làm của bạn đã được duyệt";
+            case DELETE -> subject = "Việc làm của bạn đã bị xóa";
+            case REJECT -> subject = "Việc làm của bạn không được duyệt";
+            default -> subject = "Thông báo về việc làm của bạn";
+        }
+
+        Context context = new Context();
+        context.setVariable("username", username);
+        context.setVariable("jobs", object);
+        context.setVariable("mode", mode);
+
+        if (mode == ActionType.DELETE || mode == ActionType.REJECT) {
+            context.setVariable("reason", reason);
+        } else {
+            context.setVariable("reason", "");
+        }
+
+        String content = this.templateEngine.process("job_status", context);
         this.asyncEmailService.handleSendEmailSync("nguyenthangdat84@gmail.com", subject, content, false, true);
     }
 
