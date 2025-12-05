@@ -25,4 +25,5 @@ public class ApplicantUpdateRequest {
     private Education education;
     private Level level;
     private String avatar;
+    private boolean availableStatus;
 }

@@ -12,6 +12,7 @@ import iuh.fit.goat.repository.JobRepository;
 import iuh.fit.goat.repository.NotificationRepository;
 import iuh.fit.goat.repository.RecruiterRepository;
 import iuh.fit.goat.repository.UserRepository;
+import iuh.fit.goat.service.NotificationService;
 import iuh.fit.goat.service.RedisService;
 import iuh.fit.goat.service.UserService;
 import iuh.fit.goat.util.SecurityUtil;
@@ -42,6 +43,7 @@ public class UserServiceImpl implements UserService {
     private final RedisService redisService;
     private final PasswordEncoder passwordEncoder;
     private final SecurityUtil securityUtil;
+    private final NotificationService notificationService;
 
     @Value("${minhdat.jwt.refresh-token-validity-in-seconds}")
     private long jwtRefreshToken;
@@ -392,6 +394,7 @@ public class UserServiceImpl implements UserService {
         for (Recruiter r : recruitersToAdd) {
             if (currentFollowed.stream().noneMatch(fr -> fr.getUserId() == r.getUserId())) {
                 currentFollowed.add(r);
+                this.notificationService.handleNotifyFollowRecruiter(r);
             }
         }
 
@@ -419,7 +422,13 @@ public class UserServiceImpl implements UserService {
                 ? new ArrayList<>(currentUser.getFollowedRecruiters())
                 : new ArrayList<>();
 
-        currentFollowed.removeIf(r -> recruiterIds.contains(r.getUserId()));
+        List<Recruiter> recruitersToUnfollow = this.recruiterRepository.findByUserIdIn(recruiterIds);
+
+        for (Recruiter r : recruitersToUnfollow) {
+            if (currentFollowed.removeIf(fr -> fr.getUserId() == r.getUserId())) {
+                this.notificationService.handleNotifyUnfollowRecruiter(r);
+            }
+        }
 
         currentUser.setFollowedRecruiters(currentFollowed);
         this.userRepository.save(currentUser);

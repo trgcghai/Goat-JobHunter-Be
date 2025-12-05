@@ -103,6 +103,9 @@ public class ApplicantServiceImpl implements ApplicantService {
         if (updateRequest.getAvatar() != null) {
             currentApplicant.setAvatar(updateRequest.getAvatar());
         }
+        if (updateRequest.isAvailableStatus() != currentApplicant.isAvailableStatus()) {
+            currentApplicant.setAvailableStatus(updateRequest.isAvailableStatus());
+        }
 
         return this.applicantRepository.save(currentApplicant);
     }

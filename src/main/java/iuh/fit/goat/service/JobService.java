@@ -45,6 +45,7 @@ public interface JobService {
 
     ResultPaginationResponse handleGetApplicantsForJob(Specification<Applicant> spec, Pageable pageable, Long jobId);
 
+    ResultPaginationResponse handleGetApplicants(Specification<Applicant> spec, Pageable pageable);
     List<JobEnabledResponse> handleEnabledJobs(JobIdsActionRequest request);
 
     List<JobEnabledResponse> handleDisabledJobs(JobIdsActionRequest request);

@@ -127,13 +127,14 @@ public class JobController {
     }
 
     @GetMapping("/jobs/{jobId}/applicants")
-    public ResponseEntity<ResultPaginationResponse> getApplicationsByJob(
+    public ResponseEntity<ResultPaginationResponse> getSuitableApplicantsForJob(
             @Filter Specification<Applicant> spec, Pageable pageable,
             @PathVariable("jobId") String jobId
     ) throws InvalidException {
         Pattern pattern = Pattern.compile("^[0-9]+$");
         if(!pattern.matcher(jobId).matches()){
-            throw new InvalidException("Id is number");
+            ResultPaginationResponse result = this.jobService.handleGetApplicants(spec, pageable);
+            return ResponseEntity.status(HttpStatus.OK).body(result);
         }
 
         Job currentJob = this.jobService.handleGetJobById(Long.parseLong(jobId));
