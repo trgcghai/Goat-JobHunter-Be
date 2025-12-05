@@ -80,6 +80,10 @@ public class Job {
         this.createdBy = SecurityUtil.getCurrentUserLogin().isPresent()
                 ? SecurityUtil.getCurrentUserLogin().get()
                 : "";
+
+        if(this.endDate != null && this.endDate.isBefore(LocalDate.now())){
+            this.active = false;
+        }
     }
     @PreUpdate
     public void handleBeforeUpdate(){
@@ -87,5 +91,9 @@ public class Job {
         this.updatedBy = SecurityUtil.getCurrentUserLogin().isPresent()
                 ? SecurityUtil.getCurrentUserLogin().get()
                 : "";
+
+        if(this.endDate != null && this.endDate.isBefore(LocalDate.now())){
+            this.active = false;
+        }
     }
 }
