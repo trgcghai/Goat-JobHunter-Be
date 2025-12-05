@@ -17,6 +17,7 @@ public interface JobRepository extends JpaRepository<Job, Long>, JpaSpecificatio
     List<Job> findByCareer(Career career);
     List<Job> findBySkillsIn(List<Skill> skills);
     List<Job> findByJobIdIn(List<Long> jobIds);
+    Long countByActive(boolean active);
 
     @Query("SELECT j.recruiter.userId, COUNT(j) FROM Job j GROUP BY j.recruiter.userId")
     List<Object[]> countJobs();
