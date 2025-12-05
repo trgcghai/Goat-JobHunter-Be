@@ -15,10 +15,12 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import iuh.fit.goat.entity.*;
 import iuh.fit.goat.repository.*;
 import iuh.fit.goat.util.SecurityUtil;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.util.*;
@@ -362,9 +364,6 @@ public class JobServiceImpl implements JobService {
             }
 
             try {
-                // if set active = true, need to check if current date is after end date
-                // if true, cannot activate the job
-                // if set active = false, can always deactivate
                 if (activeFlag) {
                     if (job.getEndDate() != null) {
                         LocalDate currentDate = LocalDate.now();
@@ -385,6 +384,21 @@ public class JobServiceImpl implements JobService {
         }
 
         return results;
+    }
+
+    @Scheduled(cron = "0 0 0 * * *")
+    @Transactional
+    public void handleDeactivateExpiredJobs() {
+        LocalDate today = LocalDate.now();
+        List<Job> jobs = this.jobRepository.findAll();
+
+        jobs.forEach(job -> {
+            if(job.getEndDate() != null && job.getEndDate().isBefore(today)){
+                job.setActive(false);
+            }
+        });
+
+        this.jobRepository.saveAll(jobs);
     }
 }
 
