@@ -42,4 +42,6 @@ public interface JobService {
     List<JobApplicationCountResponse> handleCountApplicationsByJobIds(List<Long> jobIds);
 
     ResultPaginationResponse handleGetApplicantsForJob(Specification<Applicant> spec, Pageable pageable, Long jobId);
+
+    ResultPaginationResponse handleGetApplicants(Specification<Applicant> spec, Pageable pageable);
 }

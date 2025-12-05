@@ -310,6 +310,29 @@ public class JobServiceImpl implements JobService {
         return new ResultPaginationResponse(meta, result);
     }
 
+
+    @Override
+    public ResultPaginationResponse handleGetApplicants(Specification<Applicant> spec, Pageable pageable) {
+        Page<Applicant> page = this.applicantRepository.findAll(spec, pageable);
+
+        List<Applicant> availableApplicants = page.getContent().stream()
+                .filter(Applicant::isAvailableStatus)
+                .toList();
+
+        ResultPaginationResponse.Meta meta = new ResultPaginationResponse.Meta();
+        meta.setPage(pageable.getPageNumber() + 1);
+        meta.setPageSize(pageable.getPageSize());
+        meta.setPages(page.getTotalPages());
+        meta.setTotal(page.getTotalElements());
+
+        List<ApplicantResponse> result = availableApplicants.stream()
+                .map(this.applicantService::convertToApplicantResponse)
+                .toList();
+
+        return new ResultPaginationResponse(meta, result);
+    }
+
+
     @Override
     public JobResponse convertToJobResponse(Job job) {
         JobResponse jobResponse = new JobResponse();
