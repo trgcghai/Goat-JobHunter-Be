@@ -11,4 +11,5 @@ public class JobActivateResponse {
     private Long jobId;
     private boolean active;
     private String status; // "success" or "fail"
+    private String message;
 }
