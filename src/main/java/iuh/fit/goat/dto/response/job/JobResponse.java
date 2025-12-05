@@ -31,6 +31,7 @@ public class JobResponse {
     private LocalDate startDate;
     private LocalDate endDate;
     private boolean active;
+    private boolean enabled;
     private List<Skill> skills;
     private Career career;
     private RecruiterJob recruiter;

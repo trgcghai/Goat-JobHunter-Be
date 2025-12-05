@@ -1,9 +1,11 @@
 package iuh.fit.goat.service;
 
 import iuh.fit.goat.dto.request.job.CreateJobRequest;
+import iuh.fit.goat.dto.request.job.JobIdsActionRequest;
 import iuh.fit.goat.dto.request.job.UpdateJobRequest;
 import iuh.fit.goat.dto.response.job.JobActivateResponse;
 import iuh.fit.goat.dto.response.job.JobApplicationCountResponse;
+import iuh.fit.goat.dto.response.job.JobEnabledResponse;
 import iuh.fit.goat.dto.response.job.JobResponse;
 import iuh.fit.goat.dto.response.ResultPaginationResponse;
 import iuh.fit.goat.entity.Applicant;
@@ -19,7 +21,7 @@ public interface JobService {
 
     JobResponse handleUpdateJob(UpdateJobRequest job);
 
-    void handleDeleteJob(long id);
+    void handleDeleteJob(JobIdsActionRequest request);
 
     Job handleGetJobById(long id);
 
@@ -44,4 +46,7 @@ public interface JobService {
     ResultPaginationResponse handleGetApplicantsForJob(Specification<Applicant> spec, Pageable pageable, Long jobId);
 
     ResultPaginationResponse handleGetApplicants(Specification<Applicant> spec, Pageable pageable);
+    List<JobEnabledResponse> handleEnabledJobs(JobIdsActionRequest request);
+
+    List<JobEnabledResponse> handleDisabledJobs(JobIdsActionRequest request);
 }
