@@ -21,12 +21,11 @@ public interface AiService {
 
     String getAllCareersContext();
 
-    String getConversationHistory(Long conversationId);
+    String getSystemStatsContext();
+
+    String getJobMarketOverview();
 
     String generateBlogDescription(String content);
 
     List<String> generateBlogTags(String content);
-    String getSystemStatsContext();
-
-    String getJobMarketOverview();
 }
