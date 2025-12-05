@@ -1,5 +1,6 @@
 package iuh.fit.goat.controller;
 
+import iuh.fit.goat.dto.request.ai.BlogContentRequest;
 import iuh.fit.goat.dto.request.ai.ChatRequest;
 import iuh.fit.goat.entity.Conversation;
 import iuh.fit.goat.exception.InvalidException;
@@ -12,6 +13,8 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+
+import java.util.List;
 
 @RestController
 @RequestMapping("/api/v1/ai")
@@ -29,5 +32,21 @@ public class AiController {
 
         String aiResponse = this.aiService.chatWithAi(request);
         return ResponseEntity.ok(aiResponse);
+    }
+
+    @PostMapping("/generate/blogs/description")
+    public ResponseEntity<String> generateBlogDescription(
+            @Valid @RequestBody BlogContentRequest request
+    ) {
+        String description = this.aiService.generateBlogDescription(request.getContent());
+        return ResponseEntity.ok(description);
+    }
+
+    @PostMapping("/generate/blogs/tags")
+    public ResponseEntity<List<String>> generateBlogTags(
+            @Valid @RequestBody BlogContentRequest request
+    ) {
+        List<String> tags = this.aiService.generateBlogTags(request.getContent());
+        return ResponseEntity.ok(tags);
     }
 }
