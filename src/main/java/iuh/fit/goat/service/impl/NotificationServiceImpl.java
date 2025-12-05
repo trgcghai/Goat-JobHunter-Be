@@ -2,10 +2,7 @@ package iuh.fit.goat.service.impl;
 
 import iuh.fit.goat.common.NotificationType;
 import iuh.fit.goat.dto.response.notification.NotificationResponse;
-import iuh.fit.goat.entity.Blog;
-import iuh.fit.goat.entity.Comment;
-import iuh.fit.goat.entity.Notification;
-import iuh.fit.goat.entity.User;
+import iuh.fit.goat.entity.*;
 import iuh.fit.goat.repository.NotificationRepository;
 import iuh.fit.goat.repository.UserRepository;
 import iuh.fit.goat.service.NotificationService;
@@ -126,6 +123,48 @@ public class NotificationServiceImpl implements NotificationService {
         this.sendNotificationToUser(recipient, saved);
     }
 
+    @Override
+    public void handleNotifyFollowRecruiter(Recruiter recruiter) {
+        User actor = this.handleGetCurrentUser();
+        if(actor == null || recruiter == null) return;
+
+        if (actor.getUserId() == recruiter.getUserId()) return;
+
+        Optional<Notification> optNotification = this.notificationRepository
+                .findByTypeAndActorAndRecipient(
+                        NotificationType.FOLLOW, actor, recruiter
+                );
+
+        if(optNotification.isPresent()) {
+            this.notificationRepository.delete(optNotification.get());
+            return;
+        }
+
+        Notification notification = new Notification();
+        notification.setType(NotificationType.FOLLOW);
+        notification.setActor(actor);
+        notification.setRecipient(recruiter);
+
+        Notification saved = this.notificationRepository.save(notification);
+        this.sendNotificationToUser(recruiter, saved);
+    }
+
+    @Override
+    public void handleNotifyUnfollowRecruiter(Recruiter recruiter) {
+        User actor = this.handleGetCurrentUser();
+        if(actor == null || recruiter == null) return;
+
+        if (actor.getUserId() == recruiter.getUserId()) return;
+
+        // Find and delete the notification
+        Optional<Notification> optNotification = this.notificationRepository
+                .findByTypeAndActorAndRecipient(
+                        NotificationType.FOLLOW, actor, recruiter
+                );
+
+        optNotification.ifPresent(this.notificationRepository::delete);
+    }
+
     private void sendNotificationToUser(User user, Notification notification) {
 
         log.info("Sending notification to user {}: {}", user, notification);
@@ -146,11 +185,13 @@ public class NotificationServiceImpl implements NotificationService {
         response.setSeen(notification.isSeen());
         response.setCreatedAt(notification.getCreatedAt());
 
-        NotificationResponse.BlogNotification blog = new NotificationResponse.BlogNotification(
-                notification.getBlog().getBlogId(),
-                notification.getBlog().getTitle()
-        );
-        response.setBlog(blog);
+        if(notification.getBlog() != null) {
+            NotificationResponse.BlogNotification blog = new NotificationResponse.BlogNotification(
+                    notification.getBlog().getBlogId(),
+                    notification.getBlog().getTitle()
+            );
+            response.setBlog(blog);
+        }
 
         NotificationResponse.UserNotification actor = new NotificationResponse.UserNotification(
                 notification.getActor().getUserId(),
