@@ -5,6 +5,8 @@ import iuh.fit.goat.service.EmailNotificationService;
 import iuh.fit.goat.service.SubscriberService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.scheduling.annotation.Scheduled;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -15,8 +17,8 @@ public class EmailController {
     private final EmailNotificationService emailNotificationService;
 
     @GetMapping("/email")
-//    @Scheduled(cron = "*/10 * * * * *")
-//    @Transactional
+    @Scheduled(cron = "0 0 */12 * * *")
+    @Transactional
     public void sendEmail(){
         this.subscriberService.handleSendSubscribersEmailJobs();
         this.subscriberService.handleSendFollowersEmailJobs();
