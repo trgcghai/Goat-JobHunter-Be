@@ -2,7 +2,7 @@ package iuh.fit.goat.service.impl;
 
 import com.google.genai.Client;
 import com.google.genai.types.GenerateContentResponse;
-import iuh.fit.goat.common.MessageRole;
+import iuh.fit.goat.enumeration.MessageRole;
 import iuh.fit.goat.enumeration.Role;
 import iuh.fit.goat.dto.request.ai.ChatRequest;
 import iuh.fit.goat.dto.request.message.MessageCreateRequest;

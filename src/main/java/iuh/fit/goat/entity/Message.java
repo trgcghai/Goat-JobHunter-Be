@@ -1,6 +1,6 @@
 package iuh.fit.goat.entity;
 
-import iuh.fit.goat.common.MessageRole;
+import iuh.fit.goat.enumeration.MessageRole;
 import iuh.fit.goat.util.SecurityUtil;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
