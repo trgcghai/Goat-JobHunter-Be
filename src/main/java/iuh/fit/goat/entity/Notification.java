@@ -1,7 +1,6 @@
 package iuh.fit.goat.entity;
 
-import iuh.fit.goat.common.NotificationType;
-import iuh.fit.goat.util.SecurityUtil;
+import iuh.fit.goat.enumeration.NotificationType;
 import jakarta.persistence.*;
 import lombok.*;
 

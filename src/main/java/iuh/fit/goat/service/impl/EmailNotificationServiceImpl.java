@@ -1,7 +1,7 @@
 package iuh.fit.goat.service.impl;
 
 import iuh.fit.goat.common.ActionType;
-import iuh.fit.goat.common.Status;
+import iuh.fit.goat.enumeration.Status;
 import iuh.fit.goat.entity.Applicant;
 import iuh.fit.goat.entity.Job;
 import iuh.fit.goat.repository.ApplicantRepository;

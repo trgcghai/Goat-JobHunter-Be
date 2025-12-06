@@ -1,8 +1,8 @@
 package iuh.fit.goat.service.impl;
 
 import iuh.fit.goat.common.ActionType;
-import iuh.fit.goat.common.NotificationType;
-import iuh.fit.goat.common.Role;
+import iuh.fit.goat.enumeration.NotificationType;
+import iuh.fit.goat.enumeration.Role;
 import iuh.fit.goat.dto.request.blog.BlogCreateRequest;
 import iuh.fit.goat.dto.request.blog.BlogIdsRequest;
 import iuh.fit.goat.dto.request.blog.BlogUpdateRequest;

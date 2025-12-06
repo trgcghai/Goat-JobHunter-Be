@@ -3,7 +3,7 @@ package iuh.fit.goat.entity;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
-import iuh.fit.goat.common.Gender;
+import iuh.fit.goat.enumeration.Gender;
 import iuh.fit.goat.entity.embeddable.Contact;
 import iuh.fit.goat.util.SecurityUtil;
 import jakarta.persistence.*;
@@ -15,7 +15,6 @@ import iuh.fit.goat.util.annotation.RequireAddressIfRecruiter;
 
 import java.time.Instant;
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 

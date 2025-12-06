@@ -1,9 +1,9 @@
 package iuh.fit.goat.config;
 
-import iuh.fit.goat.common.*;
 import iuh.fit.goat.entity.*;
 import iuh.fit.goat.entity.Role;
 import iuh.fit.goat.entity.embeddable.Contact;
+import iuh.fit.goat.enumeration.*;
 import iuh.fit.goat.repository.*;
 import iuh.fit.goat.util.FileUploadUtil;
 import lombok.RequiredArgsConstructor;
@@ -811,6 +811,7 @@ public class DatabaseInitializer implements CommandLineRunner {
         user.setPassword(this.passwordEncoder.encode("12345678"));
         user.setRole(role);
         user.setEnabled(true);
+        user.setAvatar("https://res.cloudinary.com/dfwttyfwk/image/upload/v1765005016/logo_irwjdg.png");
 
         this.userRepository.save(user);
 

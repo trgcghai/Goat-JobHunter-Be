@@ -124,7 +124,7 @@ public class ApplicantServiceImpl implements ApplicantService {
         if (email == null) {
             return null;
         }
-        return this.applicantRepository.findByContactEmail(email).orElse(null);
+        return this.applicantRepository.findByContact_Email(email).orElse(null);
     }
 
 

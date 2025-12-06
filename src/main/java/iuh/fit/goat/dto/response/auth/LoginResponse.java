@@ -1,6 +1,6 @@
 package iuh.fit.goat.dto.response.auth;
 
-import iuh.fit.goat.common.Gender;
+import iuh.fit.goat.enumeration.Gender;
 import iuh.fit.goat.entity.Role;
 import iuh.fit.goat.entity.embeddable.Contact;
 import lombok.AllArgsConstructor;

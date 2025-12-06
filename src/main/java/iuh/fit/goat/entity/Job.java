@@ -2,8 +2,8 @@ package iuh.fit.goat.entity;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import iuh.fit.goat.common.Level;
-import iuh.fit.goat.common.WorkingType;
+import iuh.fit.goat.enumeration.Level;
+import iuh.fit.goat.enumeration.WorkingType;
 import iuh.fit.goat.util.SecurityUtil;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;

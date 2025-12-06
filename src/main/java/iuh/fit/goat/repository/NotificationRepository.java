@@ -1,6 +1,6 @@
 package iuh.fit.goat.repository;
 
-import iuh.fit.goat.common.NotificationType;
+import iuh.fit.goat.enumeration.NotificationType;
 import iuh.fit.goat.entity.Blog;
 import iuh.fit.goat.entity.Notification;
 import iuh.fit.goat.entity.User;

@@ -1,6 +1,6 @@
 package iuh.fit.goat.service.impl;
 
-import iuh.fit.goat.common.Role;
+import iuh.fit.goat.enumeration.Role;
 import iuh.fit.goat.dto.request.user.ResetPasswordRequest;
 import iuh.fit.goat.dto.response.auth.LoginResponse;
 import iuh.fit.goat.dto.response.ResultPaginationResponse;

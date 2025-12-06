@@ -1,6 +1,6 @@
 package iuh.fit.goat.service.impl;
 
-import iuh.fit.goat.common.NotificationType;
+import iuh.fit.goat.enumeration.NotificationType;
 import iuh.fit.goat.dto.response.notification.NotificationResponse;
 import iuh.fit.goat.entity.*;
 import iuh.fit.goat.repository.NotificationRepository;

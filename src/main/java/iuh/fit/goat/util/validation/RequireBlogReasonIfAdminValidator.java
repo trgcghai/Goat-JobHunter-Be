@@ -1,7 +1,7 @@
 package iuh.fit.goat.util.validation;
 
 import iuh.fit.goat.common.ActionType;
-import iuh.fit.goat.common.Role;
+import iuh.fit.goat.enumeration.Role;
 import iuh.fit.goat.dto.request.blog.BlogIdsRequest;
 import iuh.fit.goat.entity.User;
 import iuh.fit.goat.service.UserService;
