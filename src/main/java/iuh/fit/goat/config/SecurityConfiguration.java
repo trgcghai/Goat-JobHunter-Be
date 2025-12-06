@@ -123,6 +123,10 @@ public class SecurityConfiguration {
                 "/swagger-ui.html",                   // Trang Swagger – public
 
                 "/api/v1/ai/**",                      // Role cũng có thể dùng chat
+
+                "/actuator",
+                "/actuator/health",                      // Actuator để kiểm tra sức khỏe ứng dụng – public
+                "/actuator/health/**"                        // Actuator để kiểm tra sức khỏe ứng dụng – public
         };
 
 
