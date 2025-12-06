@@ -12,6 +12,7 @@ import iuh.fit.goat.repository.JobRepository;
 import iuh.fit.goat.repository.NotificationRepository;
 import iuh.fit.goat.repository.RecruiterRepository;
 import iuh.fit.goat.repository.UserRepository;
+import iuh.fit.goat.service.EmailNotificationService;
 import iuh.fit.goat.service.NotificationService;
 import iuh.fit.goat.service.RedisService;
 import iuh.fit.goat.service.UserService;
@@ -36,14 +37,17 @@ import java.util.stream.Collectors;
 @Service
 @RequiredArgsConstructor
 public class UserServiceImpl implements UserService {
+    private final RedisService redisService;
+    private final NotificationService notificationService;
+    private final EmailNotificationService emailNotificationService;
+
     private final UserRepository userRepository;
     private final JobRepository jobRepository;
     private final RecruiterRepository recruiterRepository;
     private final NotificationRepository notificationRepository;
-    private final RedisService redisService;
+
     private final PasswordEncoder passwordEncoder;
     private final SecurityUtil securityUtil;
-    private final NotificationService notificationService;
 
     @Value("${minhdat.jwt.refresh-token-validity-in-seconds}")
     private long jwtRefreshToken;
@@ -483,7 +487,12 @@ public class UserServiceImpl implements UserService {
             return new ArrayList<>();
         }
 
-        users.forEach(u -> u.setEnabled(enabled));
+        users.forEach(u -> {
+            u.setEnabled(enabled);
+            this.emailNotificationService.handleSendUserEnabledEmail(
+                    u.getContact().getEmail(), u.getUsername(), enabled
+            );
+        });
         this.userRepository.saveAll(users);
 
         return users.stream()

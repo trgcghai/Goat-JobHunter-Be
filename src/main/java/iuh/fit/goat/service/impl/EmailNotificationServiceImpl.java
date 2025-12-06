@@ -149,4 +149,17 @@ public class EmailNotificationServiceImpl implements EmailNotificationService {
             this.asyncEmailService.handleSendEmailSync(applicant.getContact().getEmail(), subject, content, false, true);
         });
     }
+
+    @Override
+    public void handleSendUserEnabledEmail(String recipient, String username, boolean enabled) {
+        String subject = "Xác thực tài khoản";
+
+        Context context = new Context();
+        context.setVariable("username", username);
+        context.setVariable("enabled", enabled);
+
+        String content = this.templateEngine.process("user", context);
+
+        this.asyncEmailService.handleSendEmailSync(recipient, subject, content, false, true);
+    }
 }
