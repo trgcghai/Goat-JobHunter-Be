@@ -1,6 +1,6 @@
 package iuh.fit.goat.dto.request.message;
 
-import iuh.fit.goat.common.MessageRole;
+import iuh.fit.goat.enumeration.MessageRole;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
