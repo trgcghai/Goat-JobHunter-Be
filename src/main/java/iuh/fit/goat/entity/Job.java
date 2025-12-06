@@ -40,6 +40,7 @@ public class Job {
     private WorkingType workingType;
     @NotBlank(message = "Location is not empty")
     private String location;
+    private boolean enabled = false;
 
     private Instant createdAt;
     private String createdBy;

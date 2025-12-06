@@ -1,6 +1,6 @@
 package iuh.fit.goat.service.impl;
 
-import iuh.fit.goat.common.BlogActionType;
+import iuh.fit.goat.common.ActionType;
 import iuh.fit.goat.common.NotificationType;
 import iuh.fit.goat.common.Role;
 import iuh.fit.goat.dto.request.blog.BlogCreateRequest;
@@ -123,7 +123,7 @@ public class BlogServiceImpl implements BlogService {
 
                 this.emailNotificationService.handleSendBlogActionNotice(
                         email, bs.getFirst().getAuthor().getUsername(),
-                        bs, request.getReason(), BlogActionType.DELETE
+                        bs, request.getReason(), ActionType.DELETE
                 );
             });
         }
@@ -228,7 +228,7 @@ public class BlogServiceImpl implements BlogService {
 
             this.emailNotificationService.handleSendBlogActionNotice(
                     email, bs.getFirst().getAuthor().getUsername(),
-                    bs, null, BlogActionType.ACCEPT
+                    bs, null, ActionType.ACCEPT
             );
         });
 
@@ -257,7 +257,7 @@ public class BlogServiceImpl implements BlogService {
 
             this.emailNotificationService.handleSendBlogActionNotice(
                     email, bs.getFirst().getAuthor().getUsername(),
-                    bs, request.getReason(), BlogActionType.REJECT
+                    bs, request.getReason(), ActionType.REJECT
             );
         });
 

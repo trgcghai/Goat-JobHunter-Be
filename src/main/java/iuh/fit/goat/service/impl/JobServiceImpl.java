@@ -1,16 +1,22 @@
 package iuh.fit.goat.service.impl;
 
+import iuh.fit.goat.common.ActionType;
 import iuh.fit.goat.common.Level;
+import iuh.fit.goat.common.Role;
 import iuh.fit.goat.common.WorkingType;
 import iuh.fit.goat.dto.request.job.CreateJobRequest;
+import iuh.fit.goat.dto.request.job.JobIdsActionRequest;
 import iuh.fit.goat.dto.request.job.UpdateJobRequest;
 import iuh.fit.goat.dto.response.applicant.ApplicantResponse;
 import iuh.fit.goat.dto.response.ResultPaginationResponse;
 import iuh.fit.goat.dto.response.job.JobActivateResponse;
 import iuh.fit.goat.dto.response.job.JobApplicationCountResponse;
+import iuh.fit.goat.dto.response.job.JobEnabledResponse;
 import iuh.fit.goat.dto.response.job.JobResponse;
 import iuh.fit.goat.service.ApplicantService;
+import iuh.fit.goat.service.EmailNotificationService;
 import iuh.fit.goat.service.JobService;
+import iuh.fit.goat.service.UserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -29,7 +35,9 @@ import java.util.stream.Collectors;
 @Service
 @RequiredArgsConstructor
 public class JobServiceImpl implements JobService {
+    private final UserService userService;
     private final ApplicantService applicantService;
+    private final EmailNotificationService emailNotificationService;
     private final ApplicantRepository applicantRepository;
     private final JobRepository jobRepository;
     private final SkillRepository skillRepository;
@@ -117,18 +125,34 @@ public class JobServiceImpl implements JobService {
     }
 
     @Override
-    public void handleDeleteJob(long id) {
-        Job job = this.handleGetJobById(id);
+    public void handleDeleteJob(JobIdsActionRequest request) {
+        List<Job> jobs = this.jobRepository.findAllById(request.getJobIds());
+        if(jobs.isEmpty()) return;
 
-        if(job.getApplications() != null){
-            List<Application> applications = this.applicationRepository.findByJob(job);
-            this.applicationRepository.deleteAll(applications);
-        }
-        if(job.getUsers() != null){
-            job.getUsers().forEach(user -> {user.getSavedJobs().remove(job);});
+        String currentEmail = SecurityUtil.getCurrentUserLogin().isPresent()
+                ? SecurityUtil.getCurrentUserLogin().get()
+                : "";
+        User currentUser = this.userService.handleGetUserByEmail(currentEmail);
+        if(currentUser == null) return;
+
+        if(!currentUser.isEnabled() || !currentUser.getRole().isActive()) return;
+
+        this.jobRepository.deleteAllById(request.getJobIds());
+
+        if(currentUser.getRole().getName().equalsIgnoreCase(Role.ADMIN.getValue())) {
+            Map<String, List<Job>> jobByEmail = jobs.stream()
+                    .collect(Collectors.groupingBy(job -> job.getRecruiter().getContact().getEmail()));
+
+            jobByEmail.forEach((email, js) -> {
+                if(js.isEmpty()) return;
+
+                this.emailNotificationService.handleSendJobActionNotice(
+                        email, js.getFirst().getRecruiter().getUsername(),
+                        js, request.getReason(), ActionType.DELETE
+                );
+            });
         }
 
-        this.jobRepository.deleteById(id);
     }
 
     @Override
@@ -334,6 +358,64 @@ public class JobServiceImpl implements JobService {
 
 
     @Override
+    @Transactional
+    public List<JobEnabledResponse> handleEnabledJobs(JobIdsActionRequest request) {
+        List<Job> jobs = this.jobRepository.findAllById(request.getJobIds());
+        if(jobs.isEmpty()) return Collections.emptyList();
+
+        jobs.forEach(job -> job.setEnabled(true));
+        this.jobRepository.saveAll(jobs);
+
+        Map<String, List<Job>> jobByEmail =
+                jobs.stream().collect(Collectors.groupingBy(job -> job.getRecruiter().getContact().getEmail()));
+
+        jobByEmail.forEach((email, js) -> {
+            if(js.isEmpty()) return;
+
+            this.emailNotificationService.handleSendJobActionNotice(
+                    email, js.getFirst().getRecruiter().getUsername(),
+                    js, null, ActionType.ACCEPT
+            );
+        });
+
+        return jobs.stream().map(
+                job -> new JobEnabledResponse(
+                        job.getJobId(),
+                        job.isEnabled()
+                )
+        ).collect(Collectors.toList());
+    }
+
+    @Override
+    @Transactional
+    public List<JobEnabledResponse> handleDisabledJobs(JobIdsActionRequest request) {
+        List<Job> jobs = this.jobRepository.findAllById(request.getJobIds());
+        if(jobs.isEmpty()) return Collections.emptyList();
+
+        jobs.forEach(job -> job.setEnabled(false));
+        this.jobRepository.saveAll(jobs);
+
+        Map<String, List<Job>> jobByEmail =
+                jobs.stream().collect(Collectors.groupingBy(job -> job.getRecruiter().getContact().getEmail()));
+
+        jobByEmail.forEach((email, js) -> {
+            if(js.isEmpty()) return;
+
+            this.emailNotificationService.handleSendJobActionNotice(
+                    email, js.getFirst().getRecruiter().getUsername(),
+                    js, request.getReason(), ActionType.REJECT
+            );
+        });
+
+        return jobs.stream().map(
+                job -> new JobEnabledResponse(
+                        job.getJobId(),
+                        job.isEnabled()
+                )
+        ).collect(Collectors.toList());
+    }
+
+    @Override
     public JobResponse convertToJobResponse(Job job) {
         JobResponse jobResponse = new JobResponse();
 
@@ -347,6 +429,7 @@ public class JobServiceImpl implements JobService {
         jobResponse.setStartDate(job.getStartDate());
         jobResponse.setEndDate(job.getEndDate());
         jobResponse.setActive(job.isActive());
+        jobResponse.setEnabled(job.isEnabled());
         jobResponse.setWorkingType(job.getWorkingType());
 
         if(job.getSkills() != null){

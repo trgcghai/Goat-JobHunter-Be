@@ -29,9 +29,14 @@ public interface ApplicationService {
 
     boolean checkApplicantAndJobExist(Application application);
 
+    boolean handleCanApplyToJob(Long applicantId, Long jobId);
+
+    Long handleCountApplicationsByApplicantForJob(Long applicantId, Long jobId);
+
     Applicant handleGetApplicant(Application application);
 
     Job handleGetJob(Application application);
+
 
     ApplicationResponse convertToApplicationResponse(Application application);
 }

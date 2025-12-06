@@ -159,6 +159,24 @@ public class ApplicationServiceImp implements ApplicationService {
     }
 
     @Override
+    public boolean handleCanApplyToJob(Long applicantId, Long jobId) {
+        if (applicantId == null || jobId == null) return false;
+
+        return this.handleCountApplicationsByApplicantForJob(applicantId, jobId) < 3;
+    }
+
+    @Override
+    public Long handleCountApplicationsByApplicantForJob(Long applicantId, Long jobId) {
+        if (applicantId == null || jobId == null) return 0L;
+
+        return this.applicationRepository.findAll()
+                .stream()
+                .filter(app -> app.getApplicant() != null && app.getApplicant().getUserId() == applicantId)
+                .filter(app -> app.getJob() != null && app.getJob().getJobId() == jobId)
+                .count();
+    }
+
+    @Override
     public Applicant handleGetApplicant(Application application) {
         Optional<Applicant> applicant = this.applicantRepository.findById(application.getApplicant().getUserId());
         return applicant.orElse(null);

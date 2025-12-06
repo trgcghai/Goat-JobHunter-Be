@@ -155,6 +155,9 @@ public class DatabaseInitializer implements CommandLineRunner {
         permissions.add(new Permission("Get all applicants for job", "/api/v1/jobs/{jobId}/applicants", "GET", "JOBS"));
         permissions.add(new Permission("Count jobs for recruiter", "/api/v1/jobs/recruiters/count", "GET", "JOBS"));
         permissions.add(new Permission("Count applications for job", "/api/v1/jobs/count-applications", "GET", "JOBS"));
+        permissions.add(new Permission("Enable jobs", "/api/v1/jobs/enabled", "PATCH", "JOBS"));
+        permissions.add(new Permission("Disable jobs", "/api/v1/jobs/disabled", "PATCH", "JOBS"));
+
 
         // FILE
         permissions.add(new Permission("Upload file", "/api/v1/files", "POST", "FILES"));

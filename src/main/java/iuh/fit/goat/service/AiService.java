@@ -1,29 +1,29 @@
 package iuh.fit.goat.service;
 
 import iuh.fit.goat.dto.request.ai.ChatRequest;
-import iuh.fit.goat.entity.Applicant;
-import iuh.fit.goat.entity.Recruiter;
 
 import java.util.List;
 
 public interface AiService {
     String chatWithAi(ChatRequest request);
 
-    String getAllJobsContext();
+    String getTopJobsContext();
 
-    String getAllApplicantsContext();
+    String getTopApplicantsContext();
 
-    String getAllRecruitersContext();
+    String getTopRecruitersContext();
 
-    String getAllApplicationsContext();
+    String getRecentApplicationsContext();
 
-    String getJobsContextForRecruiter(Recruiter recruiter);
+    String getTopSkillsContext();
 
-    String getApplicationsContextForRecruiter(Recruiter recruiter);
+    String getRecentBlogsContext();
 
-    String getApplicationsContextForApplicant(Applicant applicant);
+    String getAllCareersContext();
 
-    String getConversationHistory(Long conversationId);
+    String getSystemStatsContext();
+
+    String getJobMarketOverview();
 
     String generateBlogDescription(String content);
 

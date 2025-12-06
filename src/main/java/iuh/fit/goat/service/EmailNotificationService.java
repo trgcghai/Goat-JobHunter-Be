@@ -1,6 +1,7 @@
 package iuh.fit.goat.service;
 
-import iuh.fit.goat.common.BlogActionType;
+import iuh.fit.goat.common.ActionType;
+
 import java.util.List;
 
 public interface EmailNotificationService {
@@ -11,7 +12,11 @@ public interface EmailNotificationService {
     void handleSendVerificationEmail(String email, String verificationCode);
 
     void handleSendBlogActionNotice(
-            String recipient, String username, Object object, String reason, BlogActionType mode
+            String recipient, String username, Object object, String reason, ActionType mode
+    );
+
+    void handleSendJobActionNotice(
+            String recipient, String username, Object object, String reason, ActionType mode
     );
 
     void handleSendApplicationStatusEmail(
