@@ -1,9 +1,9 @@
 package iuh.fit.goat.service.impl;
 
 import iuh.fit.goat.common.ActionType;
-import iuh.fit.goat.common.Level;
-import iuh.fit.goat.common.Role;
-import iuh.fit.goat.common.WorkingType;
+import iuh.fit.goat.enumeration.Level;
+import iuh.fit.goat.enumeration.Role;
+import iuh.fit.goat.enumeration.WorkingType;
 import iuh.fit.goat.dto.request.job.CreateJobRequest;
 import iuh.fit.goat.dto.request.job.JobIdsActionRequest;
 import iuh.fit.goat.dto.request.job.UpdateJobRequest;

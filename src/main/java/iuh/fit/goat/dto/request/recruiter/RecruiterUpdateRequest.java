@@ -1,7 +1,7 @@
 package iuh.fit.goat.dto.request.recruiter;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
-import iuh.fit.goat.common.Gender;
+import iuh.fit.goat.enumeration.Gender;
 import iuh.fit.goat.entity.embeddable.Contact;
 import jakarta.validation.constraints.NotNull;
 import lombok.Data;

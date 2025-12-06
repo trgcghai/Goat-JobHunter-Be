@@ -1,6 +1,6 @@
 package iuh.fit.goat.service.impl;
 
-import iuh.fit.goat.common.Status;
+import iuh.fit.goat.enumeration.Status;
 import iuh.fit.goat.dto.request.application.ApplicationIdsRequest;
 import iuh.fit.goat.dto.response.application.ApplicationResponse;
 import iuh.fit.goat.dto.response.application.ApplicationStatusResponse;

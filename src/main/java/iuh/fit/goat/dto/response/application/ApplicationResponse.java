@@ -1,13 +1,13 @@
 package iuh.fit.goat.dto.response.application;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
+import iuh.fit.goat.enumeration.Status;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-import iuh.fit.goat.common.*;
 
 import java.time.Instant;
 

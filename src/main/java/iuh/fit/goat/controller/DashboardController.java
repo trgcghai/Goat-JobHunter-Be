@@ -1,7 +1,7 @@
 package iuh.fit.goat.controller;
 
 import com.turkraft.springfilter.boot.Filter;
-import iuh.fit.goat.common.Status;
+import iuh.fit.goat.enumeration.Status;
 import iuh.fit.goat.dto.response.dashboard.TopBlogResponse;
 import iuh.fit.goat.dto.response.dashboard.TotalStatisticsResponse;
 import iuh.fit.goat.entity.Application;

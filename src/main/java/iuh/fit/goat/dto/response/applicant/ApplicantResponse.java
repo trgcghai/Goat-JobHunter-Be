@@ -5,8 +5,8 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-import iuh.fit.goat.common.Education;
-import iuh.fit.goat.common.Level;
+import iuh.fit.goat.enumeration.Education;
+import iuh.fit.goat.enumeration.Level;
 
 @Getter
 @Setter

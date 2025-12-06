@@ -1,7 +1,7 @@
 package iuh.fit.goat.service.impl;
 
 
-import iuh.fit.goat.common.Role;
+import iuh.fit.goat.enumeration.Role;
 import iuh.fit.goat.dto.request.auth.LoginRequest;
 import iuh.fit.goat.dto.request.auth.VerifyUserRequest;
 import iuh.fit.goat.dto.response.applicant.ApplicantResponse;

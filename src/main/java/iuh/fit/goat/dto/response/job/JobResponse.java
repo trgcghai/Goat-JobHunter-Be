@@ -6,8 +6,8 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-import iuh.fit.goat.common.Level;
-import iuh.fit.goat.common.WorkingType;
+import iuh.fit.goat.enumeration.Level;
+import iuh.fit.goat.enumeration.WorkingType;
 import iuh.fit.goat.entity.Career;
 
 import java.time.Instant;

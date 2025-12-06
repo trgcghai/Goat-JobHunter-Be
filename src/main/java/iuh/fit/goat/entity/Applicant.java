@@ -1,8 +1,8 @@
 package iuh.fit.goat.entity;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import iuh.fit.goat.common.Education;
-import iuh.fit.goat.common.Level;
+import iuh.fit.goat.enumeration.Education;
+import iuh.fit.goat.enumeration.Level;
 import jakarta.persistence.*;
 import lombok.*;
 

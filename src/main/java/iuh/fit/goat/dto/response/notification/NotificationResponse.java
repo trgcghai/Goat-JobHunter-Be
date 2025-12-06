@@ -1,7 +1,7 @@
 package iuh.fit.goat.dto.response.notification;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
-import iuh.fit.goat.common.NotificationType;
+import iuh.fit.goat.enumeration.NotificationType;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;

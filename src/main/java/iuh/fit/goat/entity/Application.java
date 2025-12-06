@@ -1,6 +1,6 @@
 package iuh.fit.goat.entity;
 
-import iuh.fit.goat.common.Status;
+import iuh.fit.goat.enumeration.Status;
 import iuh.fit.goat.util.SecurityUtil;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
