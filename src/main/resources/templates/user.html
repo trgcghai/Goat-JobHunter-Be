@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Job Hunter</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f4f6f8;
+            margin: 0;
+            padding: 0;
+            color: #333;
+        }
+        .container {
+            max-width: 600px;
+            margin: 40px auto;
+            background-color: #ffffff;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+        }
+        h2 {
+            margin-top: 0;
+            font-size: 22px;
+            font-weight: 600;
+        }
+        .activated { color: #28a745; }
+        .disabled { color: #d9534f; }
+        p {
+            font-size: 16px;
+            line-height: 1.6;
+        }
+        .footer {
+            font-size: 14px;
+            color: #888;
+            margin-top: 30px;
+        }
+        .btn-contact {
+            display: inline-block;
+            padding: 10px 20px;
+            background-color: #0275d8;
+            color: #fff !important;
+            text-decoration: none;
+            border-radius: 6px;
+            margin-top: 10px;
+            font-weight: bold;
+        }
+        .btn-contact:hover {
+            background-color: #025aa5;
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+
+    <!-- Title enabled -->
+    <h2 th:if="${enabled == true}" class="activated">
+        Tài khoản của bạn đã được kích hoạt
+    </h2>
+
+    <!-- Title disabled -->
+    <h2 th:if="${enabled == false}" class="disabled">
+        Tài khoản của bạn đã bị khóa
+    </h2>
+
+    <p>Xin chào <strong th:text="${username}"></strong>,</p>
+
+    <p th:if="${enabled == true}">
+        Chúc mừng! Tài khoản của bạn đã được kích hoạt và bạn có thể bắt đầu sử dụng hệ thống ngay bây giờ.
+    </p>
+
+    <p th:if="${enabled == false}">
+        Rất tiếc, tài khoản của bạn đã bị khóa. Điều này có thể xảy ra do vi phạm chính sách hoặc yêu cầu từ quản trị viên.
+    </p>
+
+    <!-- Show support button only when disabled -->
+    <div th:if="${enabled == false}">
+        <p>Nếu bạn cho rằng đây là nhầm lẫn, vui lòng liên hệ bộ phận hỗ trợ:</p>
+        <a href="mailto:nguyenthangdat84@gmail.com" class="btn-contact">Liên hệ hỗ trợ</a>
+    </div>
+
+    <div class="footer">
+        <p>Trân trọng,<br>GOAT</p>
+    </div>
+
+</div>
+</body>
+</html>
