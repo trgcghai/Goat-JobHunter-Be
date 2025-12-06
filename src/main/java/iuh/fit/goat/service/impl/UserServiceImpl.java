@@ -152,20 +152,47 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public List<Job> handleGetCurrentUserSavedJobs() {
+    public ResultPaginationResponse handleGetCurrentUserSavedJobs(Pageable pageable) {
         String currentEmail = SecurityUtil.getCurrentUserLogin().isPresent() ?
                 SecurityUtil.getCurrentUserLogin().get() : "";
 
         if (currentEmail.isEmpty()) {
-            return new ArrayList<>();
+            return new ResultPaginationResponse(
+                    new ResultPaginationResponse.Meta(0, 0, 0, 0L),
+                    new ArrayList<>()
+            );
         }
 
         User currentUser = this.handleGetUserByEmail(currentEmail);
         if (currentUser == null || currentUser.getSavedJobs() == null) {
-            return new ArrayList<>();
+            return new ResultPaginationResponse(
+                    new ResultPaginationResponse.Meta(0, 0, 0, 0L),
+                    new ArrayList<>()
+            );
         }
 
-        return currentUser.getSavedJobs();
+        List<Job> savedJobs = currentUser.getSavedJobs();
+        int total = savedJobs.size();
+        int pageNumber = pageable.getPageNumber();
+        int pageSize = pageable.getPageSize();
+        int start = pageNumber * pageSize;
+        List<Job> content;
+
+        if (start >= total || pageSize <= 0) {
+            content = new ArrayList<>();
+        } else {
+            int end = Math.min(start + pageSize, total);
+            content = savedJobs.subList(start, end);
+        }
+
+        ResultPaginationResponse.Meta meta = new ResultPaginationResponse.Meta();
+        meta.setPage(pageNumber + 1);
+        meta.setPageSize(pageSize);
+        int pages = pageSize > 0 ? (int) Math.ceil((double) total / pageSize) : 0;
+        meta.setPages(pages);
+        meta.setTotal((long) total);
+
+        return new ResultPaginationResponse(meta, content);
     }
 
     @Override
