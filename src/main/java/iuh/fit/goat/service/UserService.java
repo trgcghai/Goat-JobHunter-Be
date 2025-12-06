@@ -32,7 +32,7 @@ public interface UserService {
 
     UserResponse convertToUserResponse(User user);
 
-    List<Job> handleGetCurrentUserSavedJobs();
+    ResultPaginationResponse handleGetCurrentUserSavedJobs(Pageable pageable);
 
     List<Map<String, Object>> handleCheckJobsSaved(List<Long> jobIds);
 

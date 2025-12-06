@@ -22,13 +22,12 @@ public class BlogCreateRequest {
     @Size(max = 2048, message = "URL banner không được vượt quá 2048 ký tự")
     private String banner;
 
-    @NotBlank(message = "Mô tả không được để trống")
     private String description;
 
     @NotBlank(message = "Nội dung không được để trống")
     private String content;
 
-    private List<@NotBlank(message = "Tag không được để trống") String> tags;
+    private List<String> tags;
 
     @NotNull(message = "Trạng thái bản nháp phải được cung cấp")
     private Boolean draft;

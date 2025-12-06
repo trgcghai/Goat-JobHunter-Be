@@ -8,7 +8,6 @@ import iuh.fit.goat.dto.response.auth.LoginResponse;
 import iuh.fit.goat.dto.response.ResultPaginationResponse;
 import iuh.fit.goat.dto.response.user.UserEnabledResponse;
 import iuh.fit.goat.dto.response.user.UserResponse;
-import iuh.fit.goat.entity.Job;
 import iuh.fit.goat.entity.Notification;
 import iuh.fit.goat.entity.Recruiter;
 import iuh.fit.goat.entity.User;
@@ -107,9 +106,9 @@ public class UserController {
     }
 
     @GetMapping("/users/me/saved-jobs")
-    public ResponseEntity<List<Job>> getCurrentUserSavedJobs() {
-        List<Job> savedJobs = this.userService.handleGetCurrentUserSavedJobs();
-        return ResponseEntity.status(HttpStatus.OK).body(savedJobs);
+    public ResponseEntity<ResultPaginationResponse> getCurrentUserSavedJobs(Pageable pageable) {
+        ResultPaginationResponse result = this.userService.handleGetCurrentUserSavedJobs(pageable);
+        return ResponseEntity.status(HttpStatus.OK).body(result);
     }
 
     @GetMapping("/users/me/saved-jobs/contains")

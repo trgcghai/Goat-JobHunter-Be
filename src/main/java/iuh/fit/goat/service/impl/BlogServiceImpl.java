@@ -18,10 +18,7 @@ import iuh.fit.goat.exception.InvalidException;
 import iuh.fit.goat.repository.BlogRepository;
 import iuh.fit.goat.repository.NotificationRepository;
 import iuh.fit.goat.repository.UserRepository;
-import iuh.fit.goat.service.BlogService;
-import iuh.fit.goat.service.EmailNotificationService;
-import iuh.fit.goat.service.NotificationService;
-import iuh.fit.goat.service.UserService;
+import iuh.fit.goat.service.*;
 import iuh.fit.goat.util.SecurityUtil;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -46,6 +43,7 @@ public class BlogServiceImpl implements BlogService {
     private final BlogRepository blogRepository;
     private final UserRepository userRepository;
     private final NotificationRepository notificationRepository;
+    private final AiService aiService;
     private final SimpMessagingTemplate messagingTemplate;
 
     @Override
@@ -53,12 +51,24 @@ public class BlogServiceImpl implements BlogService {
         String email = SecurityUtil.getCurrentUserLogin().isPresent() ? SecurityUtil.getCurrentUserLogin().get() : "";
         User currentUser = this.userRepository.findByContact_Email(email);
 
+        // Generate description if not provided
+        String description = request.getDescription();
+        if (description == null || description.trim().isEmpty()) {
+            description = this.aiService.generateBlogDescription(request.getContent());
+        }
+
+        // Generate tags if not provided or empty
+        List<String> tags = request.getTags();
+        if (tags == null || tags.isEmpty()) {
+            tags = this.aiService.generateBlogTags(request.getContent());
+        }
+
         Blog blog = new Blog();
         blog.setTitle(request.getTitle());
         blog.setBanner(request.getBanner());
-        blog.setDescription(request.getDescription());
+        blog.setDescription(description);
         blog.setContent(request.getContent());
-        blog.setTags(request.getTags());
+        blog.setTags(tags);
         blog.setDraft(request.getDraft());
         blog.setAuthor(currentUser);
         blog.setEnabled(false);
