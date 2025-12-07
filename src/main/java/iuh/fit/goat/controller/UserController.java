@@ -98,7 +98,7 @@ public class UserController {
         try {
             this.userService.handleResetPassword(resetPasswordRequest);
             return ResponseEntity.status(HttpStatus.OK).body(
-                    Map.of("message", "Reset password successful")
+                    Map.of("message", "Password reset successful. Please check your email to verify your account.")
             );
         } catch (Exception e) {
             return ResponseEntity.badRequest().body(e.getMessage());
