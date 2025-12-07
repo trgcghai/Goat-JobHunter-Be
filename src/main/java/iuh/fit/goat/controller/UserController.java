@@ -1,6 +1,7 @@
 package iuh.fit.goat.controller;
 
 import com.turkraft.springfilter.boot.Filter;
+import iuh.fit.goat.dto.request.user.CreateUserRequest;
 import iuh.fit.goat.dto.request.user.ResetPasswordRequest;
 import iuh.fit.goat.dto.request.user.UpdatePasswordRequest;
 import iuh.fit.goat.dto.request.user.UserEnabledRequest;
@@ -47,11 +48,32 @@ public class UserController {
         return ResponseEntity.status(HttpStatus.OK).body(result);
     }
 
-    @PostMapping("/users")
-    public <T extends User> ResponseEntity<T> getUserByEmail() {
+    @GetMapping("/users/{id}")
+    public ResponseEntity<UserResponse> getUserById(@PathVariable("id") long id) {
+        User user = this.userService.handleGetUserById(id);
+        if (user == null) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
+        }
+        UserResponse userResponse = this.userService.convertToUserResponse(user);
+        return ResponseEntity.status(HttpStatus.OK).body(userResponse);
+    }
+
+    @GetMapping("/users/me")
+    public <T extends User> ResponseEntity<T> getCurrentUserByEmail() {
         String email = SecurityUtil.getCurrentUserLogin().isPresent() ? SecurityUtil.getCurrentUserLogin().get() : null;
         User user = this.userService.handleGetUserByEmail(email);
         return ResponseEntity.status(HttpStatus.OK).body((T) user);
+    }
+
+    @PostMapping("/users")
+    public ResponseEntity<UserResponse> createUser(@Valid @RequestBody CreateUserRequest request) {
+        try {
+            User newUser = this.userService.handleCreateUser(request);
+            UserResponse userResponse = this.userService.convertToUserResponse(newUser);
+            return ResponseEntity.status(HttpStatus.CREATED).body(userResponse);
+        } catch (InvalidException e) {
+            throw new RuntimeException(e.getMessage());
+        }
     }
 
     @PutMapping("/users/update-password")

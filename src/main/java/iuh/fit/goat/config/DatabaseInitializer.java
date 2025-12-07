@@ -113,6 +113,8 @@ public class DatabaseInitializer implements CommandLineRunner {
         permissions.add(new Permission("Update password", "/api/v1/users/update-password", "PUT", "USERS"));
         permissions.add(new Permission("Reset password", "/api/v1/users/reset-password", "PUT", "USERS"));
         permissions.add(new Permission("Get all users", "/api/v1/users", "GET", "USERS"));
+        permissions.add(new Permission("Get a user by id", "/api/v1/users/{id}", "GET", "USERS"));
+        permissions.add(new Permission("Create a new user", "/api/v1/users", "POST", "USERS"));
         permissions.add(new Permission("Activate users", "/api/v1/users/activate", "PUT", "USERS"));
         permissions.add(new Permission("Deactivate users", "/api/v1/users/deactivate", "PUT", "USERS"));
 
@@ -155,8 +157,8 @@ public class DatabaseInitializer implements CommandLineRunner {
         permissions.add(new Permission("Get all applicants for job", "/api/v1/jobs/{jobId}/applicants", "GET", "JOBS"));
         permissions.add(new Permission("Count jobs for recruiter", "/api/v1/jobs/recruiters/count", "GET", "JOBS"));
         permissions.add(new Permission("Count applications for job", "/api/v1/jobs/count-applications", "GET", "JOBS"));
-        permissions.add(new Permission("Enable jobs", "/api/v1/jobs/enabled", "PATCH", "JOBS"));
-        permissions.add(new Permission("Disable jobs", "/api/v1/jobs/disabled", "PATCH", "JOBS"));
+        permissions.add(new Permission("Enable jobs", "/api/v1/jobs/enabled", "PUT", "JOBS"));
+        permissions.add(new Permission("Disable jobs", "/api/v1/jobs/disabled", "PUT", "JOBS"));
 
 
         // FILE

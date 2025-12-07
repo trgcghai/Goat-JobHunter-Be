@@ -1,10 +1,10 @@
 package iuh.fit.goat.service;
 
+import iuh.fit.goat.dto.request.user.CreateUserRequest;
 import iuh.fit.goat.dto.request.user.ResetPasswordRequest;
 import iuh.fit.goat.dto.response.ResultPaginationResponse;
 import iuh.fit.goat.dto.response.user.UserEnabledResponse;
 import iuh.fit.goat.dto.response.user.UserResponse;
-import iuh.fit.goat.entity.Job;
 import iuh.fit.goat.entity.Notification;
 import iuh.fit.goat.entity.Recruiter;
 import iuh.fit.goat.entity.User;
@@ -21,6 +21,8 @@ public interface UserService {
     boolean handleExistsByEmail(String email);
 
     User handleGetUserById(long id);
+
+    User handleCreateUser(CreateUserRequest request) throws InvalidException;
 
     ResultPaginationResponse handleGetAllUsers(Specification<User> spec, Pageable pageable);
 
