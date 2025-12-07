@@ -492,20 +492,5 @@ public class JobServiceImpl implements JobService {
 
         return results;
     }
-
-    @Scheduled(cron = "0 0 0 * * *")
-    @Transactional
-    public void handleDeactivateExpiredJobs() {
-        LocalDate today = LocalDate.now();
-        List<Job> jobs = this.jobRepository.findAll();
-
-        jobs.forEach(job -> {
-            if(job.getEndDate() != null && job.getEndDate().isBefore(today)){
-                job.setActive(false);
-            }
-        });
-
-        this.jobRepository.saveAll(jobs);
-    }
 }
 
