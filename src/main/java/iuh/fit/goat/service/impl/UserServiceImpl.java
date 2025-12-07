@@ -51,6 +51,8 @@ public class UserServiceImpl implements UserService {
 
     @Value("${minhdat.jwt.refresh-token-validity-in-seconds}")
     private long jwtRefreshToken;
+    @Value("${minhdat.verify-code-validity-in-seconds}")
+    private long validityInSeconds;
 
     @Override
     public User handleGetUserByEmail(String email) {
@@ -149,7 +151,17 @@ public class UserServiceImpl implements UserService {
         if (user != null) {
             String hashedPassword = this.passwordEncoder.encode(resetPasswordRequest.getNewPassword());
             user.setPassword(hashedPassword);
+            user.setEnabled(false);
             this.userRepository.save(user);
+
+            String verificationCode = SecurityUtil.generateVerificationCode();
+            this.redisService.saveWithTTL(
+                    user.getContact().getEmail(),
+                    verificationCode,
+                    validityInSeconds,
+                    TimeUnit.SECONDS
+            );
+            this.emailNotificationService.handleSendVerificationEmail(user.getContact().getEmail(), verificationCode);
         } else {
             throw new InvalidException("User not found");
         }
