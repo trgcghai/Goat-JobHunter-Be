@@ -1,5 +1,7 @@
 package iuh.fit.goat.service.impl;
 
+import iuh.fit.goat.dto.request.user.CreateUserRequest;
+import iuh.fit.goat.entity.embeddable.Contact;
 import iuh.fit.goat.enumeration.Role;
 import iuh.fit.goat.dto.request.user.ResetPasswordRequest;
 import iuh.fit.goat.dto.response.auth.LoginResponse;
@@ -8,10 +10,7 @@ import iuh.fit.goat.dto.response.user.UserEnabledResponse;
 import iuh.fit.goat.dto.response.user.UserResponse;
 import iuh.fit.goat.entity.*;
 import iuh.fit.goat.exception.InvalidException;
-import iuh.fit.goat.repository.JobRepository;
-import iuh.fit.goat.repository.NotificationRepository;
-import iuh.fit.goat.repository.RecruiterRepository;
-import iuh.fit.goat.repository.UserRepository;
+import iuh.fit.goat.repository.*;
 import iuh.fit.goat.service.EmailNotificationService;
 import iuh.fit.goat.service.NotificationService;
 import iuh.fit.goat.service.RedisService;
@@ -48,6 +47,7 @@ public class UserServiceImpl implements UserService {
 
     private final PasswordEncoder passwordEncoder;
     private final SecurityUtil securityUtil;
+    private final RoleRepository roleRepository;
 
     @Value("${minhdat.jwt.refresh-token-validity-in-seconds}")
     private long jwtRefreshToken;
@@ -67,6 +67,78 @@ public class UserServiceImpl implements UserService {
     @Override
     public User handleGetUserById(long id) {
         return this.userRepository.findById(id).orElse(null);
+    }
+
+    @Override
+    public User handleCreateUser(CreateUserRequest request) throws InvalidException {
+        // Check if email already exists
+        if (this.handleExistsByEmail(request.getEmail())) {
+            throw new InvalidException("Email already exists");
+        }
+
+        // Get role entity
+        iuh.fit.goat.entity.Role roleEntity;
+        User newUser;
+
+        String hashedPassword = this.passwordEncoder.encode("11111111");
+
+        if (Role.APPLICANT.getValue().equalsIgnoreCase(request.getRole())) {
+            Applicant applicant = new Applicant();
+            applicant.setPassword(hashedPassword);
+            applicant.setEnabled(true);
+            applicant.setFullName(request.getFullName());
+            applicant.setUsername(request.getUsername());
+            applicant.setAddress(request.getAddress());
+
+            Contact contact = new Contact();
+            contact.setEmail(request.getEmail());
+            contact.setPhone(request.getPhone());
+            applicant.setContact(contact);
+
+            // Set role - you need to fetch from RoleRepository
+            // Assuming you have a RoleRepository injected
+             roleEntity = roleRepository.findByName(Role.APPLICANT.getValue());
+             applicant.setRole(roleEntity);
+
+            newUser = applicant;
+        } else if (Role.RECRUITER.getValue().equalsIgnoreCase(request.getRole())) {
+            Recruiter recruiter = new Recruiter();
+            recruiter.setPassword(hashedPassword);
+            recruiter.setEnabled(true);
+
+            if (recruiter.getAddress() == null || recruiter.getAddress().isEmpty()) {
+                recruiter.setAddress("Chưa cung cấp");
+            } else {
+                recruiter.setAddress(request.getAddress());
+            }
+
+            if (recruiter.getFullName() == null || recruiter.getFullName().isEmpty()) {
+                recruiter.setFullName("Chưa cung cấp");
+            } else {
+                recruiter.setFullName(request.getFullName());
+            }
+
+            if (recruiter.getUsername() == null || recruiter.getUsername().isEmpty()) {
+                recruiter.setUsername("Chưa cung cấp");
+            } else {
+                recruiter.setUsername(request.getUsername());
+            }
+
+            Contact contact = new Contact();
+            contact.setEmail(request.getEmail());
+            contact.setPhone(request.getPhone());
+            recruiter.setContact(contact);
+
+            // Set role
+             roleEntity = roleRepository.findByName(Role.RECRUITER.getValue());
+             recruiter.setRole(roleEntity);
+
+            newUser = recruiter;
+        } else {
+            throw new InvalidException("Invalid role. Must be APPLICANT or RECRUITER");
+        }
+
+        return this.userRepository.save(newUser);
     }
 
     @Override
