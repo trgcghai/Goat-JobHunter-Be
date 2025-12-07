@@ -73,7 +73,7 @@ public class EmailNotificationServiceImpl implements EmailNotificationService {
         }
 
         String content = this.templateEngine.process("blog", context);
-        this.asyncEmailService.handleSendEmailSync("nguyenthangdat84@gmail.com", subject, content, false, true);
+        this.asyncEmailService.handleSendEmailSync(recipient, subject, content, false, true);
     }
 
     @Override
@@ -99,7 +99,7 @@ public class EmailNotificationServiceImpl implements EmailNotificationService {
         }
 
         String content = this.templateEngine.process("job_status", context);
-        this.asyncEmailService.handleSendEmailSync("nguyenthangdat84@gmail.com", subject, content, false, true);
+        this.asyncEmailService.handleSendEmailSync(recipient, subject, content, false, true);
     }
 
     @Override
