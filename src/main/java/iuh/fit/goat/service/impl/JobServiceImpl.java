@@ -18,6 +18,7 @@ import iuh.fit.goat.service.EmailNotificationService;
 import iuh.fit.goat.service.JobService;
 import iuh.fit.goat.service.UserService;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
@@ -32,6 +33,7 @@ import java.time.LocalDate;
 import java.util.*;
 import java.util.stream.Collectors;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class JobServiceImpl implements JobService {
@@ -400,7 +402,6 @@ public class JobServiceImpl implements JobService {
 
         jobByEmail.forEach((email, js) -> {
             if(js.isEmpty()) return;
-
             this.emailNotificationService.handleSendJobActionNotice(
                     email, js.getFirst().getRecruiter().getUsername(),
                     js, request.getReason(), ActionType.REJECT

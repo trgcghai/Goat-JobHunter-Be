@@ -146,7 +146,7 @@ public class JobController {
         return ResponseEntity.status(HttpStatus.OK).body(result);
     }
 
-    @PatchMapping("/jobs/enabled")
+    @PutMapping("/jobs/enabled")
     public ResponseEntity<List<JobEnabledResponse>> enableJobs(
             @Valid @RequestBody JobIdsActionRequest request
     ) {
@@ -154,7 +154,7 @@ public class JobController {
         return ResponseEntity.status(HttpStatus.OK).body(result);
     }
 
-    @PatchMapping("/jobs/disabled")
+    @PutMapping("/jobs/disabled")
     public ResponseEntity<List<JobEnabledResponse>> disableJobs(
             @Valid @RequestBody JobIdsActionRequest request
     ) {
