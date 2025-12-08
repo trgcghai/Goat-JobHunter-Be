@@ -26,6 +26,8 @@ public interface ConversationService {
 
     Conversation handleGetConversationById(Long id);
 
+    ResultPaginationResponse handleGetMessagesByConversation(Long conversationId, Pageable pageable);
+
     ResultPaginationResponse handleGetAllConversations(Specification<Conversation> spec, Pageable pageable);
 
     ConversationResponse convertConversationResponse (Conversation conversation);

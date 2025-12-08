@@ -4,13 +4,16 @@ import iuh.fit.goat.dto.request.conversation.ConversationUpdateRequest;
 import iuh.fit.goat.dto.response.ResultPaginationResponse;
 import iuh.fit.goat.dto.response.conversation.ConversationPinnedResponse;
 import iuh.fit.goat.dto.response.conversation.ConversationResponse;
+import iuh.fit.goat.dto.response.message.MessageResponse;
 import iuh.fit.goat.entity.Conversation;
+import iuh.fit.goat.entity.Message;
 import iuh.fit.goat.entity.User;
 import iuh.fit.goat.exception.InvalidException;
 import iuh.fit.goat.repository.ConversationRepository;
 import iuh.fit.goat.repository.MessageRepository;
 import iuh.fit.goat.repository.UserRepository;
 import iuh.fit.goat.service.ConversationService;
+import iuh.fit.goat.service.MessageService;
 import iuh.fit.goat.util.SecurityUtil;
 import jakarta.persistence.criteria.Predicate;
 import lombok.RequiredArgsConstructor;
@@ -32,6 +35,8 @@ public class ConversationServiceImpl implements ConversationService {
     private final ConversationRepository conversationRepository;
     private final MessageRepository messageRepository;
 
+    private final MessageService messageService;
+
     @Override
     public ConversationResponse handleCreateConversation() throws InvalidException {
         String currentEmail = SecurityUtil.getCurrentUserLogin().isPresent()
@@ -39,7 +44,7 @@ public class ConversationServiceImpl implements ConversationService {
                 : "";
 
         User currentUser = this.userRepository.findByContact_Email(currentEmail);
-        if(currentUser == null){
+        if (currentUser == null) {
             throw new InvalidException("User doesn't exist");
         }
 
@@ -53,15 +58,15 @@ public class ConversationServiceImpl implements ConversationService {
 
     @Override
     public ConversationResponse handleUpdateConversation(ConversationUpdateRequest request) {
-            Conversation conversation = this.handleGetConversationById(request.getConversationId());
+        Conversation conversation = this.handleGetConversationById(request.getConversationId());
 
-            if(request.getTitle() != null && !request.getTitle().isEmpty()){
-                conversation.setTitle(request.getTitle());
-            }
+        if (request.getTitle() != null && !request.getTitle().isEmpty()) {
+            conversation.setTitle(request.getTitle());
+        }
 
-            Conversation updated = this.conversationRepository.save(conversation);
+        Conversation updated = this.conversationRepository.save(conversation);
 
-            return this.convertConversationResponse(updated);
+        return this.convertConversationResponse(updated);
     }
 
     @Override
@@ -80,7 +85,7 @@ public class ConversationServiceImpl implements ConversationService {
     @Transactional
     public void handleDeleteConversations(List<Long> conversationIds) {
         List<Conversation> conversations = this.conversationRepository.findAllById(conversationIds);
-        if(conversations.isEmpty()) return;
+        if (conversations.isEmpty()) return;
 
         conversations.forEach(conversation -> conversation.setDeleted(true));
         this.conversationRepository.saveAll(conversations);
@@ -106,6 +111,31 @@ public class ConversationServiceImpl implements ConversationService {
     }
 
     @Override
+    public ResultPaginationResponse handleGetMessagesByConversation(Long conversationId, Pageable pageable) {
+        Conversation conversation = this.handleGetConversationById(conversationId);
+        if (conversation == null) {
+            ResultPaginationResponse.Meta emptyMeta = new ResultPaginationResponse.Meta();
+            emptyMeta.setPage(pageable.getPageNumber() + 1);
+            emptyMeta.setPageSize(pageable.getPageSize());
+            emptyMeta.setPages(0);
+            emptyMeta.setTotal(0);
+            return new ResultPaginationResponse(emptyMeta, Collections.emptyList());
+        }
+
+        Page<Message> page = this.messageRepository.findByConversation_ConversationId(conversationId, pageable);
+
+        ResultPaginationResponse.Meta meta = new ResultPaginationResponse.Meta();
+        meta.setPage(pageable.getPageNumber() + 1);
+        meta.setPageSize(pageable.getPageSize());
+        meta.setPages(page.getTotalPages());
+        meta.setTotal(page.getTotalElements());
+
+        List<MessageResponse> messages = page.getContent().stream().map(messageService::convertMessageResponse).toList();
+
+        return new ResultPaginationResponse(meta, messages);
+    }
+
+    @Override
     public ResultPaginationResponse handleGetAllConversations(Specification<Conversation> spec, Pageable pageable) {
         String currentEmail = SecurityUtil.getCurrentUserLogin().isPresent()
                 ? SecurityUtil.getCurrentUserLogin().get()
@@ -121,7 +151,7 @@ public class ConversationServiceImpl implements ConversationService {
             return cb.and(predicates.toArray(new Predicate[0]));
         };
 
-        if(spec != null){
+        if (spec != null) {
             specification = specification.and(spec);
         }
 
@@ -141,7 +171,7 @@ public class ConversationServiceImpl implements ConversationService {
     }
 
     @Override
-    public ConversationResponse convertConversationResponse (Conversation conversation) {
+    public ConversationResponse convertConversationResponse(Conversation conversation) {
         ConversationResponse conversationResponse = new ConversationResponse();
         conversationResponse.setConversationId(conversation.getConversationId());
         conversationResponse.setTitle(conversation.getTitle());
@@ -151,9 +181,8 @@ public class ConversationServiceImpl implements ConversationService {
         return conversationResponse;
     }
 
-    private List<ConversationPinnedResponse> handleSetPinnedForConversations(List<Long> conversationIds, boolean pinned)
-    {
-        if(conversationIds == null || conversationIds.isEmpty()){
+    private List<ConversationPinnedResponse> handleSetPinnedForConversations(List<Long> conversationIds, boolean pinned) {
+        if (conversationIds == null || conversationIds.isEmpty()) {
             return Collections.emptyList();
         }
 

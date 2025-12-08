@@ -11,6 +11,7 @@ import iuh.fit.goat.repository.*;
 import iuh.fit.goat.service.*;
 import iuh.fit.goat.util.SecurityUtil;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -20,6 +21,7 @@ import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class AiServiceImpl implements AiService {
@@ -28,7 +30,7 @@ public class AiServiceImpl implements AiService {
     private final UserService userService;
     private final ConversationService conversationService;
     private final MessageService messageService;
-    private final CacheService cacheService;;
+    private final CacheService cacheService;
 
     private final JobRepository jobRepository;
     private final ApplicantRepository applicantRepository;
@@ -48,7 +50,7 @@ public class AiServiceImpl implements AiService {
     private final Long TTL = 1800L;
 
     @Override
-    @Transactional(readOnly = true)
+    @Transactional
     public String chatWithAi(ChatRequest request) {
         String currentUserEmail = SecurityUtil.getCurrentUserLogin().orElse(null);
         User currentUser = null;
