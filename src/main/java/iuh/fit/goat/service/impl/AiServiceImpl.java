@@ -45,7 +45,7 @@ public class AiServiceImpl implements AiService {
     private String FE;
 
     private final String CACHE_NAME = "aiChat";
-    private final Long TTL = 86400L;
+    private final Long TTL = 1800L;
 
     @Override
     @Transactional(readOnly = true)
@@ -62,8 +62,9 @@ public class AiServiceImpl implements AiService {
         }
 
         String systemPrompt = buildSystemPrompt(currentUser, currentUserRole);
-        String contextData = buildSmartContext(currentUser, currentUserRole);
-        String conversationHistory = getOptimizedConversationHistory(request.getConversationId(), currentUser);
+        String contextData = buildSmartContext(currentUser, currentUserRole, request.getMessage());
+        String conversationHistory = currentUser != null
+                ? getOptimizedConversationHistory(request.getConversationId(), currentUser) : "";
 
         if (request.getConversationId() != null && currentUser != null) {
             this.messageService.handleCreateMessage(new MessageCreateRequest(
@@ -99,103 +100,139 @@ public class AiServiceImpl implements AiService {
     // Build prompt cho user phù hợp với từng vai trò
     private String buildSystemPrompt(User currentUser, Role currentUserRole) {
         String basePrompt = """
-            Bạn là trợ lý AI thông minh của hệ thống "Goat Tìm Kiếm Việc Làm".
-            Current date: %s.
-            
-            Instructions:
-            1. Trả lời bất kỳ câu hỏi nào: về GOAT hoặc kiến thức tổng quát.
-            2. Ưu tiên dữ liệu nội bộ khi câu hỏi liên quan GOAT.
-            3. Trả lời Tiếng Việt, thân thiện, ngắn gọn.
-            4. Chỉ trả lời dữ liệu người dùng có quyền xem.
-            5. Link job và blog dạng: [title](url) - KHÔNG ghi ID.
-            6. Format lương về VNĐ (K = nghìn).
-            7. Sử dụng context và lịch sử hội thoại để trả lời chính xác.
-            8. Khi đề cập blog, luôn gửi link clickable và thông tin tác giả.
-            9. Khi đề cập career/ngành nghề, liệt kê số lượng job liên quan.
+                Bạn là trợ lý AI của "Goat Tìm Việc". Ngày: %s.
+                Nguyên tắc:
+                1. Trả lời ngắn gọn, chính xác bằng Tiếng Việt
+                2. Ưu tiên dữ liệu context được cung cấp
+                3. Link: [title](url), lương: VNĐ (K=nghìn)
+                4. Chỉ hiển thị dữ liệu user có quyền xem
+                5. Sử dụng context và lịch sử để trả lời
+                6. Có thể trả lời những câu hỏi khác
             """.formatted(new Date());
 
         if (currentUserRole == Role.ADMIN) {
-            return basePrompt + "\nBạn đang hỗ trợ ADMIN - có quyền truy cập toàn bộ dữ liệu.";
+            return basePrompt + "\nQuyền: ADMIN - toàn bộ dữ liệu.";
         } else if (currentUserRole == Role.RECRUITER) {
-            return basePrompt + String.format(
-                    "\nBạn đang hỗ trợ Recruiter %s - chỉ xem dữ liệu liên quan họ.",
-                    currentUser.getFullName()
-            );
+            return basePrompt + String.format("\nQuyền: Recruiter %s - chỉ dữ liệu liên quan.",
+                    currentUser.getFullName());
         } else if (currentUserRole == Role.APPLICANT) {
-            return basePrompt + String.format(
-                    "\nBạn đang hỗ trợ Applicant %s - tư vấn job và application.",
-                    currentUser.getFullName()
-            );
+            return basePrompt + String.format("\nQuyền: Applicant %s - tư vấn job và application.",
+                    currentUser.getFullName());
         } else {
-            return basePrompt + "\nBạn đang hỗ trợ GUEST - chỉ xem công việc công khai.";
+            return basePrompt + "\nQuyền: GUEST - chỉ job công khai.";
         }
     }
 
-    private String buildSmartContext(User currentUser, Role currentUserRole) {
+    private String buildSmartContext(User currentUser, Role currentUserRole, String message) {
         StringBuilder context = new StringBuilder("\n--- DỮ LIỆU NGỮ CẢNH ---\n");
 
         if (currentUserRole == Role.ADMIN) {
-            context.append(buildAdminContext());
+            context.append(buildAdminContext(message));
         } else if (currentUserRole == Role.RECRUITER) {
-            context.append(buildRecruiterContext((Recruiter) currentUser));
+            context.append(buildRecruiterContext((Recruiter) currentUser, message));
         } else if (currentUserRole == Role.APPLICANT) {
-            context.append(buildApplicantContext((Applicant) currentUser));
+            context.append(buildApplicantContext((Applicant) currentUser, message));
         } else {
-            context.append(buildGuestContext());
+            context.append(buildGuestContext(message));
         }
 
         return context.toString();
     }
 
-    private String buildAdminContext() {
+    private String buildAdminContext(String message) {
         StringBuilder sb = new StringBuilder();
-
-        sb.append("[JOBS]\n").append(getTopJobsContext()).append("\n\n");
-        sb.append("[APPLICANTS]\n").append(getTopApplicantsContext()).append("\n\n");
-        sb.append("[RECRUITERS]\n").append(getTopRecruitersContext()).append("\n\n");
-        sb.append("[APPLICATIONS]\n").append(getRecentApplicationsContext()).append("\n\n");
-        sb.append("[SKILLS]\n").append(getTopSkillsContext()).append("\n\n");
-        sb.append("[BLOGS]\n").append(getRecentBlogsContext()).append("\n\n");
-        sb.append("[CAREERS]\n").append(getAllCareersContext()).append("\n\n");
         sb.append("[STATISTICS]\n").append(getSystemStatsContext()).append("\n\n");
+
+        if (containsKeywords(message, "job", "việc", "tuyển dụng", "công việc")) {
+            sb.append("[RECRUITERS]\n").append(getTopRecruitersContext()).append("\n\n");
+            sb.append("[TOP JOBS]\n").append(getTopJobsContext()).append("\n\n");
+        }
+        if (containsKeywords(message, "ứng viên", "applicant", "candidate")) {
+            sb.append("[APPLICATIONS]\n").append(getRecentApplicationsContext()).append("\n\n");
+            sb.append("[TOP APPLICANTS]\n").append(getTopApplicantsContext()).append("\n\n");
+        }
+        if (containsKeywords(message, "recruiter", "nhà tuyển dụng", "công ty")) {
+            sb.append("[RECRUITERS]\n").append(getTopRecruitersContext()).append("\n\n");
+            sb.append("[TOP JOBS]\n").append(getTopJobsContext()).append("\n\n");
+        }
+        if (containsKeywords(message, "application", "đơn", "ứng tuyển")) {
+            sb.append("[APPLICATIONS]\n").append(getRecentApplicationsContext()).append("\n\n");
+            sb.append("[TOP APPLICANTS]\n").append(getTopApplicantsContext()).append("\n\n");
+        }
+        if (containsKeywords(message, "skill", "kỹ năng")) {
+            sb.append("[SKILLS]\n").append(getTopSkillsContext()).append("\n\n");
+        }
+        if (containsKeywords(message, "blog", "bài viết")) {
+            sb.append("[BLOGS]\n").append(getRecentBlogsContext()).append("\n\n");
+        }
+        if (containsKeywords(message, "career", "ngành", "lĩnh vực")) {
+            sb.append("[CAREERS]\n").append(getAllCareersContext()).append("\n\n");
+        }
 
         return sb.toString();
     }
 
-    private String buildRecruiterContext(Recruiter recruiter) {
+    private String buildRecruiterContext(Recruiter recruiter, String message) {
         StringBuilder sb = new StringBuilder();
 
         sb.append("[MY JOBS]\n").append(getJobsContextForRecruiter(recruiter)).append("\n\n");
-        sb.append("[APPLICATIONS TO MY JOBS]\n").append(getApplicationsContextForRecruiter(recruiter)).append("\n\n");
-        sb.append("[RELEVANT APPLICANTS]\n").append(getRelevantApplicantsForRecruiter(recruiter)).append("\n\n");
-        sb.append("[SKILL TRENDS]\n").append(getTopSkillsContext()).append("\n\n");
-        sb.append("[RECENT BLOGS]\n").append(getRecentBlogsContext()).append("\n\n");
-        sb.append("[CAREERS]\n").append(getAllCareersContext()).append("\n\n");
+
+        if (containsKeywords(message, "application", "đơn", "ứng tuyển", "ứng viên")) {
+            sb.append("[APPLICATIONS]\n").append(getApplicationsContextForRecruiter(recruiter)).append("\n\n");
+            sb.append("[RELEVANT APPLICANTS]\n").append(getRelevantApplicantsForRecruiter(recruiter)).append("\n\n");
+        }
+        if (containsKeywords(message, "skill", "kỹ năng")) {
+            sb.append("[SKILLS]\n").append(getTopSkillsContext()).append("\n\n");
+        }
+        if (containsKeywords(message, "blog", "bài viết")) {
+            sb.append("[BLOGS]\n").append(getRecentBlogsContext()).append("\n\n");
+        }
+        if (containsKeywords(message, "career", "ngành")) {
+            sb.append("[CAREERS]\n").append(getAllCareersContext()).append("\n\n");
+        }
 
         return sb.toString();
     }
 
-    private String buildApplicantContext(Applicant applicant) {
+    private String buildApplicantContext(Applicant applicant, String message) {
         StringBuilder sb = new StringBuilder();
 
         sb.append("[MY APPLICATIONS]\n").append(getApplicationsContextForApplicant(applicant)).append("\n\n");
-        sb.append("[RECOMMENDED JOBS]\n").append(getRecommendedJobsForApplicant(applicant)).append("\n\n");
-        sb.append("[MY SUBSCRIPTIONS]\n").append(getSubscribersContextByApplicant(applicant)).append("\n\n");
-        sb.append("[SKILL TRENDS]\n").append(getTopSkillsContext()).append("\n\n");
-        sb.append("[RECOMMENDED BLOGS]\n").append(getRecentBlogsContext()).append("\n\n");
-        sb.append("[CAREERS]\n").append(getAllCareersContext()).append("\n\n");
+        sb.append("[SUBSCRIPTIONS]\n").append(getSubscribersContextByApplicant(applicant)).append("\n\n");
+
+        if (containsKeywords(message, "job", "việc", "tuyển dụng", "gợi ý")) {
+            sb.append("[RECOMMENDED JOBS]\n").append(getRecommendedJobsForApplicant(applicant)).append("\n\n");
+        }
+        if (containsKeywords(message, "skill", "kỹ năng")) {
+            sb.append("[SKILLS]\n").append(getTopSkillsContext()).append("\n\n");
+        }
+        if (containsKeywords(message, "blog", "bài viết")) {
+            sb.append("[BLOGS]\n").append(getRecentBlogsContext()).append("\n\n");
+        }
+        if (containsKeywords(message, "career", "ngành")) {
+            sb.append("[CAREERS]\n").append(getAllCareersContext()).append("\n\n");
+        }
 
         return sb.toString();
     }
 
-    private String buildGuestContext() {
+    private String buildGuestContext(String message) {
         StringBuilder sb = new StringBuilder();
 
         sb.append("[AVAILABLE JOBS]\n").append(getTopJobsContext()).append("\n\n");
-        sb.append("[TRENDING SKILLS]\n").append(getTopSkillsContext()).append("\n\n");
-        sb.append("[RECENT BLOGS]\n").append(getRecentBlogsContext()).append("\n\n");
-        sb.append("[CAREERS]\n").append(getAllCareersContext()).append("\n\n");
-        sb.append("[JOB MARKET OVERVIEW]\n").append(getJobMarketOverview()).append("\n\n");
+
+        if (containsKeywords(message, "skill", "kỹ năng")) {
+            sb.append("[TRENDING SKILLS]\n").append(getTopSkillsContext()).append("\n\n");
+        }
+        if (containsKeywords(message, "blog", "bài viết")) {
+            sb.append("[BLOGS]\n").append(getRecentBlogsContext()).append("\n\n");
+        }
+        if (containsKeywords(message, "career", "ngành")) {
+            sb.append("[CAREERS]\n").append(getAllCareersContext()).append("\n\n");
+        }
+        if (containsKeywords(message, "thống kê", "tổng quan", "overview")) {
+            sb.append("[OVERVIEW]\n").append(getJobMarketOverview()).append("\n\n");
+        }
 
         return sb.toString();
     }
@@ -838,5 +875,14 @@ public class AiServiceImpl implements AiService {
                 supplier,
                 TTL
         );
+    }
+
+    private boolean containsKeywords(String text, String... keywords) {
+        for (String keyword : keywords) {
+            if (text.contains(keyword)) {
+                return true;
+            }
+        }
+        return false;
     }
 }
