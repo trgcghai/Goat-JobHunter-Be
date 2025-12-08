@@ -201,7 +201,7 @@ public class BlogServiceImpl implements BlogService {
         if (actor == null) return false;
 
         Optional<Notification> opt = this.notificationRepository
-                .findByTypeAndActorAndBlogAndRecipient(NotificationType.LIKE, actor, blog, blog.getAuthor());
+                .findByTypeAndActorsContainingAndBlogAndRecipient(NotificationType.LIKE, actor, blog, blog.getAuthor());
 
         return opt.isPresent();
     }

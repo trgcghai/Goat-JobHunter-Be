@@ -19,7 +19,8 @@ public class NotificationResponse {
     private NotificationType type;
     private boolean seen;
     private BlogNotification blog;
-    private UserNotification actor;
+    private int actorCount;
+    private UserNotification lastActor;
     private UserNotification recipient;
     private CommentNotification comment;
     private CommentNotification reply;

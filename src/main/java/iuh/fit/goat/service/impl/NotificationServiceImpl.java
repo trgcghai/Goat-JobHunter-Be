@@ -65,7 +65,7 @@ public class NotificationServiceImpl implements NotificationService {
         notification.setType(NotificationType.COMMENT);
         notification.setBlog(blog);
         notification.setComment(comment);
-        notification.setActor(actor);
+        notification.setActors(List.of(actor));
         notification.setRecipient(recipient);
 
         Notification saved = this.notificationRepository.save(notification);
@@ -85,7 +85,7 @@ public class NotificationServiceImpl implements NotificationService {
         notification.setBlog(parent.getBlog());
         notification.setReply(reply);
         notification.setRepliedOnComment(parent);
-        notification.setActor(actor);
+        notification.setActors(List.of(actor));
         notification.setRecipient(recipient);
 
         Notification saved = this.notificationRepository.save(notification);
@@ -104,7 +104,7 @@ public class NotificationServiceImpl implements NotificationService {
         if (actor.getUserId() == recipient.getUserId()) return;
 
         Optional<Notification> optNotification = this.notificationRepository
-                .findByTypeAndActorAndBlogAndRecipient(
+                .findByTypeAndActorsContainingAndBlogAndRecipient(
                         NotificationType.LIKE, actor, blog, recipient
                 );
 
@@ -116,7 +116,7 @@ public class NotificationServiceImpl implements NotificationService {
         Notification notification = new Notification();
         notification.setType(NotificationType.LIKE);
         notification.setBlog(blog);
-        notification.setActor(actor);
+        notification.setActors(List.of(actor));
         notification.setRecipient(recipient);
 
         Notification saved = this.notificationRepository.save(notification);
@@ -131,7 +131,7 @@ public class NotificationServiceImpl implements NotificationService {
         if (actor.getUserId() == recruiter.getUserId()) return;
 
         Optional<Notification> optNotification = this.notificationRepository
-                .findByTypeAndActorAndRecipient(
+                .findByTypeAndActorsContainingAndRecipient(
                         NotificationType.FOLLOW, actor, recruiter
                 );
 
@@ -142,7 +142,7 @@ public class NotificationServiceImpl implements NotificationService {
 
         Notification notification = new Notification();
         notification.setType(NotificationType.FOLLOW);
-        notification.setActor(actor);
+        notification.setActors(List.of(actor));
         notification.setRecipient(recruiter);
 
         Notification saved = this.notificationRepository.save(notification);
@@ -158,7 +158,7 @@ public class NotificationServiceImpl implements NotificationService {
 
         // Find and delete the notification
         Optional<Notification> optNotification = this.notificationRepository
-                .findByTypeAndActorAndRecipient(
+                .findByTypeAndActorsContainingAndRecipient(
                         NotificationType.FOLLOW, actor, recruiter
                 );
 
@@ -194,12 +194,13 @@ public class NotificationServiceImpl implements NotificationService {
         }
 
         NotificationResponse.UserNotification actor = new NotificationResponse.UserNotification(
-                notification.getActor().getUserId(),
-                notification.getActor().getFullName() == null ? "" : notification.getActor().getFullName(),
-                notification.getActor().getUsername(),
-                notification.getActor().getAvatar()
+                notification.getLastActor().getUserId(),
+                notification.getLastActor().getFullName() == null ? "" : notification.getLastActor().getFullName(),
+                notification.getLastActor().getUsername(),
+                notification.getLastActor().getAvatar()
         );
-        response.setActor(actor);
+        response.setLastActor(actor);
+        response.setActorCount(notification.getActorCount());
 
         NotificationResponse.UserNotification recipient = new NotificationResponse.UserNotification(
                 notification.getRecipient().getUserId(),

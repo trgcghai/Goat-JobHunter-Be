@@ -94,7 +94,7 @@ public abstract class User {
     @JsonIgnore
     private List<Comment> comments = new ArrayList<>();
 
-    @OneToMany(mappedBy = "actor", fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
+    @ManyToMany(mappedBy = "actors", fetch = FetchType.LAZY)
     @ToString.Exclude
     @JsonIgnore
     private List<Notification> actorNotifications = new ArrayList<>();

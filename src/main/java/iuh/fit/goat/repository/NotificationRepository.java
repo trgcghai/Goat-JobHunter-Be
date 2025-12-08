@@ -15,7 +15,7 @@ import java.util.Optional;
 
 @Repository
 public interface NotificationRepository extends JpaRepository<Notification, Long>, JpaSpecificationExecutor<Notification> {
-    Optional<Notification> findByTypeAndActorAndBlogAndRecipient(
+    Optional<Notification> findByTypeAndActorsContainingAndBlogAndRecipient(
             NotificationType type,
             User actor,
             Blog blog,
@@ -28,7 +28,7 @@ public interface NotificationRepository extends JpaRepository<Notification, Long
 
     List<Notification> findByRecipient_UserIdOrderByCreatedAtDesc(Long userId);
 
-    Optional<Notification> findByTypeAndActorAndRecipient(
+    Optional<Notification> findByTypeAndActorsContainingAndRecipient(
             NotificationType type,
             User actor,
             User recipient
