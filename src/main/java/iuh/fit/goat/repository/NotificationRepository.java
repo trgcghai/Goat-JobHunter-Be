@@ -22,6 +22,12 @@ public interface NotificationRepository extends JpaRepository<Notification, Long
             User recipient
     );
 
+    Optional<Notification> findByTypeAndBlogAndRecipient(
+            NotificationType type,
+            Blog blog,
+            User recipient
+    );
+
     Page<Notification> findByRecipient_UserId(Long userId, Pageable pageable);
 
     List<Notification> findByNotificationIdInAndRecipient_UserId(List<Long> notificationIds, Long userId);

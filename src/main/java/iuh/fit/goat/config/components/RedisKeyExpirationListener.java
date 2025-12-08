@@ -25,49 +25,37 @@ public class RedisKeyExpirationListener implements MessageListener {
     @Override
     public void onMessage(Message message, byte[] pattern) {
         // Lấy ra expired key từ message và kiểm tra
-        String expiredKey = message.getBody() != null
-                ? new String(message.getBody(), StandardCharsets.UTF_8)
-                : null;
+        message.getBody();
+        String expiredKey = new String(message.getBody(), StandardCharsets.UTF_8);
 
-        if (expiredKey == null || !expiredKey.startsWith("notification:event:")) {
+        if (!expiredKey.startsWith("notification:") || !expiredKey.endsWith(":listener")) {
             return;
         }
+
 
         log.info("Expired notification event key: {}", expiredKey);
 
-        // Extract notification ID from key (format: "notification:event:<id>")
-        // Lấy ra UUID của notification từ key (được gen ra, cái này không phải là Id trong database)
-        String id = expiredKey.replace("notification:event:", "");
-
-        // Lấy ra data từ UUID key đã lưu trong redis để check
-        String dataKey = "notification:data:" + id;
-        String payload = redisService.getValue(dataKey);
-
-        if (payload == null) {
-            log.warn("No data found for notification {}", id);
-            return;
-        }
-
-        // Map ra notification
         try {
-            // Parse payload
+            String dataKey = expiredKey.replace(":listener", "");
+            String payload = redisService.getValue(dataKey);
+
+            if (payload == null) {
+                log.warn("No data found for notification key {}", dataKey);
+                return;
+            }
+
+            @SuppressWarnings("unchecked")
             Map<String, Object> data = objectMapper.readValue(payload, Map.class);
 
-            // Save notification to DB
+            // Build and save notification
             Notification saved = notificationService.createNotification(
                     notificationService.buildNotification(data)
             );
 
-            // Send via WebSocket in NotificationService
+            // Send via WebSocket
             notificationService.sendNotificationToUser(saved.getRecipient(), saved);
-
-            log.info("Notification {} saved and sent to user {}", saved.getNotificationId(), saved.getRecipient().getContact().getEmail());
-
-            // Clean up data key
-            redisService.deleteKey(dataKey);
-
         } catch (Exception e) {
-            log.error("Failed to process expired notification {}: {}", id, e.getMessage(), e);
+            log.error("Failed to process expired notification {}: {}", expiredKey, e.getMessage(), e);
         }
     }
 }

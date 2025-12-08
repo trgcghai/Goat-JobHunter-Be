@@ -117,24 +117,70 @@ public class NotificationServiceImpl implements NotificationService {
         User recipient = blog.getAuthor();
         if (actor.getUserId() == recipient.getUserId()) return;
 
-        Optional<Notification> optNotification = this.notificationRepository
-                .findByTypeAndActorsContainingAndBlogAndRecipient(
-                        NotificationType.LIKE, actor, blog, recipient
-                );
+        String redisKey = String.format("notification:%d:blog:%d:recipient:%d",
+                NotificationType.LIKE.ordinal(), blog.getBlogId(), recipient.getUserId());
 
-        if(optNotification.isPresent()) {
-            this.notificationRepository.delete(optNotification.get());
-            return;
+        try {
+            // Check if notification exists in Redis
+            if (redisService.hasKey(redisKey)) {
+                // Get existing data, add actor to list
+                String existingPayload = redisService.getValue(redisKey);
+                @SuppressWarnings("unchecked")
+                Map<String, Object> existingData = objectMapper.readValue(existingPayload, Map.class);
+
+                @SuppressWarnings("unchecked")
+                List<Number> actorIds = (List<Number>) existingData.get("actorIds");
+                Long actorId = actor.getUserId();
+
+                if (actorIds.contains(actorId)) {
+                    // Unlike: remove actor from list
+                    actorIds.remove(actorId);
+                    if (actorIds.isEmpty()) {
+                        // No more actors, delete notification
+                        redisService.deleteKey(redisKey);
+
+                        // Also delete from DB if exists
+                        Optional<Notification> optNotification = this.notificationRepository
+                                .findByTypeAndBlogAndRecipient(NotificationType.LIKE, blog, recipient);
+                        optNotification.ifPresent(this.notificationRepository::delete);
+                        return;
+                    }
+                    existingData.put("actorIds", actorIds);
+                } else {
+                    // Add new actor
+                    actorIds.add(actorId);
+                    existingData.put("actorIds", actorIds);
+                }
+
+                String updatedPayload = objectMapper.writeValueAsString(existingData);
+                redisService.saveWithTTL(redisKey, updatedPayload, 120, TimeUnit.SECONDS);
+            } else {
+                // Create new notification in Redis
+                Notification notification = new Notification();
+                notification.setType(NotificationType.LIKE);
+                notification.setBlog(blog);
+                notification.setActors(List.of(actor));
+                notification.setRecipient(recipient);
+
+                setNotificationToRedis(notification, redisKey);
+            }
+        } catch (JsonProcessingException e) {
+            log.error("Failed to process like notification for blog {}: {}", blog.getBlogId(), e.getMessage());
         }
 
-        Notification notification = new Notification();
-        notification.setType(NotificationType.LIKE);
-        notification.setBlog(blog);
-        notification.setActors(List.of(actor));
-        notification.setRecipient(recipient);
-
-        Notification saved = this.notificationRepository.save(notification);
-        this.sendNotificationToUser(recipient, saved);
+//        if(optNotification.isPresent()) {
+//            this.notificationRepository.delete(optNotification.get());
+//            return;
+//        }
+//
+//        Notification notification = new Notification();
+//        notification.setType(NotificationType.LIKE);
+//        notification.setBlog(blog);
+//        notification.setActors(List.of(actor));
+//        notification.setRecipient(recipient);
+//
+//        Notification saved = this.notificationRepository.save(notification);
+//        this.sendNotificationToUser(recipient, saved);
     }
 
     @Override
@@ -300,7 +346,7 @@ public class NotificationServiceImpl implements NotificationService {
         return notification;
     }
 
-    private void setNotificationToRedis(Notification notification) throws JsonProcessingException {
+    private void setNotificationToRedis(Notification notification, String redisKey) throws JsonProcessingException {
         Map<String, Object> notificationData = new HashMap<>();
 
         notificationData.put("type", notification.getType().name());
@@ -328,20 +374,12 @@ public class NotificationServiceImpl implements NotificationService {
         }
 
         String payload = objectMapper.writeValueAsString(notificationData);
-        String id = UUID.randomUUID().toString();
-        int throttleNotifcationTime = 120; // 2 Minutes, 120 Seconds
-        int delay = 10;
+        int throttleNotificationTime = 120; // 2 Minutes, 120 Seconds
+        int delay = 10; // 10 Seconds delay to ensure listener processes after throttle period
 
-        // Event key expires first, triggering listener
-        String eventKey = "notification:event:" + id;
+        redisService.saveWithTTL(redisKey + ":listener", "1", throttleNotificationTime, TimeUnit.SECONDS);
 
-        // Data key lives slightly longer to ensure listener can retrieve it
-        String dataKey = "notification:data:" + id;
-
-        // trigger after 2 minutes to save and send notification, value doesn't matter, just need to handle event
-        redisService.saveWithTTL(eventKey, "1", throttleNotifcationTime, TimeUnit.SECONDS);
-
-        // slight delay to ensure it can get data even if there's some lag
-        redisService.saveWithTTL(dataKey, payload, throttleNotifcationTime + delay, TimeUnit.SECONDS);
+        // Save to Redis with TTL, listen event when key expires to create notification in DB
+        redisService.saveWithTTL(redisKey, payload, throttleNotificationTime + delay, TimeUnit.SECONDS);
     }
 }

@@ -2,11 +2,9 @@ package iuh.fit.goat.service;
 
 import iuh.fit.goat.dto.response.notification.NotificationResponse;
 import iuh.fit.goat.entity.*;
-import iuh.fit.goat.enumeration.NotificationType;
 
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 public interface NotificationService {
     List<Notification> handleGetAllNotifications();
