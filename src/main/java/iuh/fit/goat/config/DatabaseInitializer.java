@@ -215,13 +215,13 @@ public class DatabaseInitializer implements CommandLineRunner {
 
         // ADMIN
         permissions.add(new Permission("Backup Database", "/api/v1/admin/backup", "GET", "ADMIN"));
-
         // CONVERSATION
         permissions.add(new Permission("Create a conversation", "/api/v1/conversations", "POST", "CONVERSATIONS"));
         permissions.add(new Permission("Update a conversation", "/api/v1/conversations", "PUT", "CONVERSATIONS"));
         permissions.add(new Permission("Delete a conversation", "/api/v1/conversations", "DELETE", "CONVERSATIONS"));
         permissions.add(new Permission("Get conversations with pagination", "/api/v1/conversations", "GET", "CONVERSATIONS"));
         permissions.add(new Permission("Get a conversation by id", "/api/v1/conversations/{id}", "GET", "CONVERSATIONS"));
+        permissions.add(new Permission("Get messages of a conversation by id", "/api/v1/conversations/{id}/messages", "GET", "CONVERSATIONS"));
         permissions.add(new Permission("Pin conversations", "/api/v1/conversations/pin", "PATCH", "CONVERSATIONS"));
         permissions.add(new Permission("Unpin conversations", "/api/v1/conversations/unpin", "PATCH", "CONVERSATIONS"));
 
@@ -269,6 +269,7 @@ public class DatabaseInitializer implements CommandLineRunner {
         applicantPermissions.add(this.permissionRepository.findByName("Delete a conversation"));
         applicantPermissions.add(this.permissionRepository.findByName("Get conversations with pagination"));
         applicantPermissions.add(this.permissionRepository.findByName("Get a conversation by id"));
+        applicantPermissions.add(this.permissionRepository.findByName("Get messages of a conversation by id"));
         applicantPermissions.add(this.permissionRepository.findByName("Pin conversations"));
         applicantPermissions.add(this.permissionRepository.findByName("Unpin conversations"));
 
@@ -332,6 +333,7 @@ public class DatabaseInitializer implements CommandLineRunner {
         hrPermissions.add(this.permissionRepository.findByName("Delete a conversation"));
         hrPermissions.add(this.permissionRepository.findByName("Get conversations with pagination"));
         hrPermissions.add(this.permissionRepository.findByName("Get a conversation by id"));
+        hrPermissions.add(this.permissionRepository.findByName("Get messages of a conversation by id"));
         hrPermissions.add(this.permissionRepository.findByName("Pin conversations"));
         hrPermissions.add(this.permissionRepository.findByName("Unpin conversations"));
 

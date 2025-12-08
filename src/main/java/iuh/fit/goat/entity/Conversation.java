@@ -20,7 +20,7 @@ public class Conversation {
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
     private long conversationId;
-    private String title = "New chat";
+    private String title = "Trò chuyện mới";
     private boolean pinned = false;
     private boolean deleted = false;
 

@@ -5,6 +5,7 @@ import iuh.fit.goat.dto.response.ResultPaginationResponse;
 import iuh.fit.goat.dto.response.conversation.ConversationPinnedResponse;
 import iuh.fit.goat.dto.response.conversation.ConversationResponse;
 import iuh.fit.goat.entity.Conversation;
+import iuh.fit.goat.entity.Message;
 import iuh.fit.goat.entity.User;
 import iuh.fit.goat.exception.InvalidException;
 import iuh.fit.goat.repository.ConversationRepository;
@@ -103,6 +104,31 @@ public class ConversationServiceImpl implements ConversationService {
     @Override
     public Conversation handleGetConversationById(Long id) {
         return this.conversationRepository.findById(id).orElse(null);
+    }
+
+    @Override
+    public ResultPaginationResponse handleGetMessagesByConversation(Long conversationId, Pageable pageable) {
+        Conversation conversation = this.handleGetConversationById(conversationId);
+        if (conversation == null) {
+            ResultPaginationResponse.Meta emptyMeta = new ResultPaginationResponse.Meta();
+            emptyMeta.setPage(pageable.getPageNumber() + 1);
+            emptyMeta.setPageSize(pageable.getPageSize());
+            emptyMeta.setPages(0);
+            emptyMeta.setTotal(0);
+            return new ResultPaginationResponse(emptyMeta, Collections.emptyList());
+        }
+
+        Page<Message> page = this.messageRepository.findByConversation_ConversationId(conversationId, pageable);
+
+        ResultPaginationResponse.Meta meta = new ResultPaginationResponse.Meta();
+        meta.setPage(pageable.getPageNumber() + 1);
+        meta.setPageSize(pageable.getPageSize());
+        meta.setPages(page.getTotalPages());
+        meta.setTotal(page.getTotalElements());
+
+        List<Message> messages = page.getContent();
+
+        return new ResultPaginationResponse(meta, messages);
     }
 
     @Override

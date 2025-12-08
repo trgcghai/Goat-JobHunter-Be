@@ -74,6 +74,20 @@ public class ConversationController {
         return ResponseEntity.ok(this.conversationService.convertConversationResponse(conversation));
     }
 
+    @GetMapping("/{id}/messages")
+    public ResponseEntity<ResultPaginationResponse> getMessagesByConversation(
+            @PathVariable("id") Long id,
+            Pageable pageable) throws InvalidException
+    {
+        Conversation conversation = this.conversationService.handleGetConversationById(id);
+        if (conversation == null) throw new InvalidException("Conversation does not exist");
+
+        ResultPaginationResponse result =
+                this.conversationService.handleGetMessagesByConversation(id, pageable);
+
+        return ResponseEntity.ok(result);
+    }
+
     @GetMapping
     public ResponseEntity<ResultPaginationResponse> getAllConversations(
             @Filter Specification<Conversation> spec, Pageable pageable
