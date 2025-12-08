@@ -54,6 +54,10 @@ public class RedisKeyExpirationListener implements MessageListener {
 
             // Send via WebSocket
             notificationService.sendNotificationToUser(saved.getRecipient(), saved);
+
+            if(redisService.hasKey(dataKey)) {
+                redisService.deleteKey(dataKey);
+            }
         } catch (Exception e) {
             log.error("Failed to process expired notification {}: {}", expiredKey, e.getMessage(), e);
         }
