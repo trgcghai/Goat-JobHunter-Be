@@ -1033,7 +1033,7 @@ public class DatabaseInitializer implements CommandLineRunner {
                 do {
                     actor = getRandom(allUsers, random);
                 } while (actor.equals(recipient));
-                n.setActor(actor);
+                n.setActors(List.of(actor));
 
                 NotificationType type = NotificationType.values()[random.nextInt(NotificationType.values().length)];
                 n.setType(type);

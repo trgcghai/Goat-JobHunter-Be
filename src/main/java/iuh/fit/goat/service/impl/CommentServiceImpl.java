@@ -16,11 +16,9 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
-import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
-import java.util.Map;
 
 @Service
 @RequiredArgsConstructor
@@ -29,7 +27,6 @@ public class CommentServiceImpl implements CommentService {
     private final NotificationService notificationService;
     private final CommentRepository commentRepository;
     private final UserRepository userRepository;
-    private final SimpMessagingTemplate messagingTemplate;
 
     @Override
     public Comment handleCreateComment(CreateCommentRequest request) {
@@ -65,13 +62,6 @@ public class CommentServiceImpl implements CommentService {
             this.notificationService.handleNotifyCommentBlog(newComment.getBlog(), newComment);
         }
 
-        // Broadcast comment to subscribers of this blog
-        CommentResponse response = convertToCommentResponse(newComment);
-        messagingTemplate.convertAndSend(
-                "/topic/comments/" + blog.getBlogId(),
-                response
-        );
-
         return newComment;
     }
 
@@ -81,16 +71,7 @@ public class CommentServiceImpl implements CommentService {
         if(currentComment == null) return null;
 
         currentComment.setComment(comment.getComment());
-        Comment updated = this.commentRepository.save(currentComment);
-
-        // Broadcast update
-        CommentResponse response = convertToCommentResponse(updated);
-        messagingTemplate.convertAndSend(
-                "/topic/comments/" + updated.getBlog().getBlogId(),
-                response
-        );
-
-        return updated;
+        return this.commentRepository.save(currentComment);
     }
 
     @Override
@@ -106,12 +87,6 @@ public class CommentServiceImpl implements CommentService {
 
         this.commentRepository.delete(comment);
         this.blogService.handleUpdateBlogActivity(blog);
-
-        // Broadcast deletion
-        messagingTemplate.convertAndSend(
-                "/topic/comments/" + blog.getBlogId(),
-                Map.of("action", "delete", "commentId", id)
-        );
     }
 
     @Override

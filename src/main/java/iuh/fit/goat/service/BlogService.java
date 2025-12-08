@@ -41,7 +41,5 @@ public interface BlogService {
 
     ResultPaginationResponse handleGetBlogsByCurrentUser(Specification<Blog> spec, Pageable pageable) throws InvalidException;
 
-    boolean checkUserLikedBlog(Long blogId);
-
     BlogResponse convertToBlogResponse(Blog blog);
 }

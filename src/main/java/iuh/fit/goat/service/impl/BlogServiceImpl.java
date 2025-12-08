@@ -1,7 +1,6 @@
 package iuh.fit.goat.service.impl;
 
 import iuh.fit.goat.common.ActionType;
-import iuh.fit.goat.enumeration.NotificationType;
 import iuh.fit.goat.enumeration.Role;
 import iuh.fit.goat.dto.request.blog.BlogCreateRequest;
 import iuh.fit.goat.dto.request.blog.BlogIdsRequest;
@@ -16,35 +15,43 @@ import iuh.fit.goat.entity.Notification;
 import iuh.fit.goat.entity.User;
 import iuh.fit.goat.exception.InvalidException;
 import iuh.fit.goat.repository.BlogRepository;
-import iuh.fit.goat.repository.NotificationRepository;
 import iuh.fit.goat.repository.UserRepository;
 import iuh.fit.goat.service.*;
 import iuh.fit.goat.util.SecurityUtil;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
-import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.stream.Collectors;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class BlogServiceImpl implements BlogService {
-    private final UserService userService;
+    // avoid circular dependency between user service impl, ai service impl and blog service impl
+    @Lazy
+    @Autowired
+    private UserService userService;
+
+    // avoid circular dependency between user service impl, ai service impl and blog service impl
+    @Lazy
+    @Autowired
+    private AiService aiService;
+
     private final EmailNotificationService emailNotificationService;
     private final NotificationService notificationService;
     private final BlogRepository blogRepository;
     private final UserRepository userRepository;
-    private final NotificationRepository notificationRepository;
-    private final AiService aiService;
-    private final SimpMessagingTemplate messagingTemplate;
+
 
     @Override
     public Blog handleCreateBlog(BlogCreateRequest request) {
@@ -80,7 +87,7 @@ public class BlogServiceImpl implements BlogService {
     public Blog handleUpdateBlog(BlogUpdateRequest request) {
         Blog currentBlog = this.handleGetBlogById(request.getBlogId());
 
-        if(currentBlog != null) {
+        if (currentBlog != null) {
             currentBlog.setTitle(request.getTitle());
             currentBlog.setBanner(request.getBanner());
             currentBlog.setDescription(request.getDescription());
@@ -102,24 +109,24 @@ public class BlogServiceImpl implements BlogService {
     @Override
     public void handleDeleteBlog(BlogIdsRequest request) {
         List<Blog> blogs = this.blogRepository.findAllById(request.getBlogIds());
-        if(blogs.isEmpty()) return;
+        if (blogs.isEmpty()) return;
 
         String currentEmail = SecurityUtil.getCurrentUserLogin().isPresent()
                 ? SecurityUtil.getCurrentUserLogin().get()
                 : "";
         User currentUser = this.userService.handleGetUserByEmail(currentEmail);
-        if(currentUser == null) return;
+        if (currentUser == null) return;
 
-        if(!currentUser.isEnabled() || !currentUser.getRole().isActive()) return;
+        if (!currentUser.isEnabled() || !currentUser.getRole().isActive()) return;
 
         this.blogRepository.deleteAllById(request.getBlogIds());
 
-        if(currentUser.getRole().getName().equalsIgnoreCase(Role.ADMIN.getValue())) {
+        if (currentUser.getRole().getName().equalsIgnoreCase(Role.ADMIN.getValue())) {
             Map<String, List<Blog>> blogByEmail = blogs.stream()
                     .collect(Collectors.groupingBy(blog -> blog.getAuthor().getContact().getEmail()));
 
             blogByEmail.forEach((email, bs) -> {
-                if(bs.isEmpty()) return;
+                if (bs.isEmpty()) return;
 
                 this.emailNotificationService.handleSendBlogActionNotice(
                         email, bs.getFirst().getAuthor().getUsername(),
@@ -145,7 +152,7 @@ public class BlogServiceImpl implements BlogService {
         meta.setTotal(page.getTotalElements());
 
         List<BlogResponse> blogResponses = page.getContent().stream()
-                .map(this :: convertToBlogResponse)
+                .map(this::convertToBlogResponse)
                 .toList();
 
         return new ResultPaginationResponse(meta, blogResponses);
@@ -155,17 +162,10 @@ public class BlogServiceImpl implements BlogService {
     public void handleIncrementTotalValue(Comment comment) {
         Blog blog = comment.getBlog();
         blog.getActivity().setTotalComments(blog.getActivity().getTotalComments() + 1);
-        if(!comment.isReply()) {
+        if (!comment.isReply()) {
             blog.getActivity().setTotalParentComments(blog.getActivity().getTotalParentComments() + 1);
         }
-        Blog updatedBlog = this.blogRepository.save(blog);
-
-        // Broadcast blog update to subscribers
-        BlogResponse response = convertToBlogResponse(updatedBlog);
-        messagingTemplate.convertAndSend(
-                "/topic/blog/" + updatedBlog.getBlogId(),
-                response
-        );
+        this.blogRepository.save(blog);
     }
 
     @Override
@@ -181,29 +181,7 @@ public class BlogServiceImpl implements BlogService {
 
         this.notificationService.handleNotifyLikeBlog(updatedBlog);
 
-        // Broadcast blog update to subscribers
-        BlogResponse response = convertToBlogResponse(updatedBlog);
-        messagingTemplate.convertAndSend(
-                "/topic/blog/" + updatedBlog.getBlogId(),
-                response
-        );
-
         return currentUser.getRecipientNotifications();
-    }
-
-    @Override
-    public boolean checkUserLikedBlog(Long blogId) {
-        Blog blog = this.handleGetBlogById(blogId);
-        if (blog == null || blog.getAuthor() == null) return false;
-
-        String currentEmail = SecurityUtil.getCurrentUserLogin().orElse("");
-        User actor = this.userRepository.findByContact_Email(currentEmail);
-        if (actor == null) return false;
-
-        Optional<Notification> opt = this.notificationRepository
-                .findByTypeAndActorAndBlogAndRecipient(NotificationType.LIKE, actor, blog, blog.getAuthor());
-
-        return opt.isPresent();
     }
 
     @Override
@@ -215,7 +193,7 @@ public class BlogServiceImpl implements BlogService {
     @Transactional
     public List<BlogStatusResponse> handleEnableBlogs(BlogIdsRequest request) {
         List<Blog> blogs = this.blogRepository.findAllById(request.getBlogIds());
-        if(blogs.isEmpty()) return Collections.emptyList();
+        if (blogs.isEmpty()) return Collections.emptyList();
 
         blogs.forEach(blog -> blog.setEnabled(true));
         this.blogRepository.saveAll(blogs);
@@ -224,7 +202,7 @@ public class BlogServiceImpl implements BlogService {
                 blogs.stream().collect(Collectors.groupingBy(blog -> blog.getAuthor().getContact().getEmail()));
 
         blogByEmail.forEach((email, bs) -> {
-            if(bs.isEmpty()) return;
+            if (bs.isEmpty()) return;
 
             this.emailNotificationService.handleSendBlogActionNotice(
                     email, bs.getFirst().getAuthor().getUsername(),
@@ -244,7 +222,7 @@ public class BlogServiceImpl implements BlogService {
     @Transactional
     public List<BlogStatusResponse> handleDisableBlogs(BlogIdsRequest request) {
         List<Blog> blogs = this.blogRepository.findAllById(request.getBlogIds());
-        if(blogs.isEmpty()) return Collections.emptyList();
+        if (blogs.isEmpty()) return Collections.emptyList();
 
         blogs.forEach(blog -> blog.setEnabled(false));
         this.blogRepository.saveAll(blogs);
@@ -253,7 +231,7 @@ public class BlogServiceImpl implements BlogService {
                 blogs.stream().collect(Collectors.groupingBy(blog -> blog.getAuthor().getContact().getEmail()));
 
         blogByEmail.forEach((email, bs) -> {
-            if(bs.isEmpty()) return;
+            if (bs.isEmpty()) return;
 
             this.emailNotificationService.handleSendBlogActionNotice(
                     email, bs.getFirst().getAuthor().getUsername(),

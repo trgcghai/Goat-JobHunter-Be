@@ -2,7 +2,10 @@ package iuh.fit.goat.service.impl;
 
 import iuh.fit.goat.service.RedisService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.redis.connection.RedisStringCommands;
+import org.springframework.data.redis.core.RedisCallback;
 import org.springframework.data.redis.core.StringRedisTemplate;
+import org.springframework.data.redis.core.types.Expiration;
 import org.springframework.stereotype.Service;
 
 import java.util.concurrent.TimeUnit;
@@ -36,5 +39,18 @@ public class RedisServiceImpl implements RedisService {
     public void replaceKey(String oldKey, String newKey, String value, long ttl, TimeUnit timeUnit) {
         this.redisTemplate.delete(oldKey);
         this.redisTemplate.opsForValue().set(newKey, value, ttl, timeUnit);
+    }
+
+    @Override
+    public void updateValue(String key, String value) {
+        this.redisTemplate.execute((RedisCallback<Void>) connection -> {
+            connection.stringCommands().set(
+                    key.getBytes(),
+                    value.getBytes(),
+                    Expiration.keepTtl(),
+                    RedisStringCommands.SetOption.upsert()
+            );
+            return null;
+        });
     }
 }

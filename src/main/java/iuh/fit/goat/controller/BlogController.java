@@ -4,12 +4,10 @@ import com.turkraft.springfilter.boot.Filter;
 import iuh.fit.goat.dto.request.blog.BlogCreateRequest;
 import iuh.fit.goat.dto.request.blog.BlogIdsRequest;
 import iuh.fit.goat.dto.request.blog.BlogUpdateRequest;
-import iuh.fit.goat.dto.request.user.LikeBlogRequest;
 import iuh.fit.goat.dto.response.blog.BlogResponse;
 import iuh.fit.goat.dto.response.blog.BlogStatusResponse;
 import iuh.fit.goat.dto.response.ResultPaginationResponse;
 import iuh.fit.goat.entity.Blog;
-import iuh.fit.goat.entity.Notification;
 import iuh.fit.goat.exception.InvalidException;
 import iuh.fit.goat.service.BlogService;
 import jakarta.validation.Valid;
@@ -82,18 +80,6 @@ public class BlogController {
                 .and((root, query, criteriaBuilder) -> criteriaBuilder.isTrue(root.get("enabled")));
 
         ResultPaginationResponse res = this.blogService.handleGetAllBlogs(finalSpec, pageable);
-        return ResponseEntity.status(HttpStatus.OK).body(res);
-    }
-
-    @PutMapping("/liked-blogs")
-    public ResponseEntity<List<Notification>> likeBlogs(@Valid @RequestBody LikeBlogRequest likeBlogRequest) {
-        List<Notification> res = this.blogService.handleLikeBlog(likeBlogRequest);
-        return ResponseEntity.status(HttpStatus.OK).body(res);
-    }
-
-    @GetMapping("/liked-blogs/{id}")
-    public ResponseEntity<Boolean> likeBlogs(@PathVariable("id") Long id) {
-        Boolean res = this.blogService.checkUserLikedBlog(id);
         return ResponseEntity.status(HttpStatus.OK).body(res);
     }
 

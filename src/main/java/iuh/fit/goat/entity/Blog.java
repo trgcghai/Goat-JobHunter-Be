@@ -44,6 +44,11 @@ public class Blog {
     @JoinColumn(name = "user_id")
     private User author;
 
+    @ManyToMany(mappedBy = "likedBlogs", fetch = FetchType.LAZY)
+    @JsonIgnore
+    @ToString.Exclude
+    private List<User> likedByUsers = new ArrayList<>();
+
     @OneToMany(mappedBy = "blog", fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
     @ToString.Exclude
     @JsonIgnore

@@ -76,6 +76,16 @@ public abstract class User {
 
     @ManyToMany(fetch = FetchType.LAZY)
     @JoinTable(
+            name = "user_liked_blog",
+            joinColumns = @JoinColumn(name = "user_id"),
+            inverseJoinColumns = @JoinColumn(name = "blog_id")
+    )
+    @JsonIgnore
+    @ToString.Exclude
+    private List<Blog> likedBlogs = new ArrayList<>();
+
+    @ManyToMany(fetch = FetchType.LAZY)
+    @JoinTable(
             name = "user_followed_recruiter",
             joinColumns = @JoinColumn(name = "user_id"),
             inverseJoinColumns = @JoinColumn(name = "recruiter_id")
@@ -94,7 +104,7 @@ public abstract class User {
     @JsonIgnore
     private List<Comment> comments = new ArrayList<>();
 
-    @OneToMany(mappedBy = "actor", fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
+    @ManyToMany(mappedBy = "actors", fetch = FetchType.LAZY)
     @ToString.Exclude
     @JsonIgnore
     private List<Notification> actorNotifications = new ArrayList<>();
