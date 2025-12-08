@@ -399,7 +399,7 @@ public class NotificationServiceImpl implements NotificationService {
 
         String payload = objectMapper.writeValueAsString(notificationData);
         int throttleNotificationTime = 120; // 2 Minutes, 120 Seconds
-        int delay = 30; // 10 Seconds delay to ensure listener processes after throttle period
+        int delay = 30; // 30 Seconds delay to ensure listener processes after throttle period
 
         redisService.saveWithTTL(redisKey + ":listener", "1", throttleNotificationTime, TimeUnit.SECONDS);
 
