@@ -26,7 +26,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
-import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -47,7 +46,6 @@ public class BlogServiceImpl implements BlogService {
     private final UserRepository userRepository;
     private final NotificationRepository notificationRepository;
     private final AiService aiService;
-    private final SimpMessagingTemplate messagingTemplate;
     private final RedisService redisService;
     private final ObjectMapper objectMapper;
 
