@@ -1,11 +1,16 @@
 package iuh.fit.goat.service.impl;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import iuh.fit.goat.enumeration.NotificationType;
 import iuh.fit.goat.dto.response.notification.NotificationResponse;
 import iuh.fit.goat.entity.*;
+import iuh.fit.goat.repository.BlogRepository;
+import iuh.fit.goat.repository.CommentRepository;
 import iuh.fit.goat.repository.NotificationRepository;
 import iuh.fit.goat.repository.UserRepository;
 import iuh.fit.goat.service.NotificationService;
+import iuh.fit.goat.service.RedisService;
 import iuh.fit.goat.util.SecurityUtil;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -13,9 +18,9 @@ import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.Collections;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
+import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Service
@@ -23,12 +28,21 @@ import java.util.Optional;
 public class NotificationServiceImpl implements NotificationService {
     private final NotificationRepository notificationRepository;
     private final UserRepository userRepository;
+    private final BlogRepository blogRepository;
+    private final CommentRepository commentRepository;
     private final SimpMessagingTemplate messagingTemplate;
+    private final RedisService redisService;
+    private final ObjectMapper objectMapper;
 
     private User handleGetCurrentUser() {
         String currentEmail = SecurityUtil.getCurrentUserLogin()
                 .orElse("");
         return this.userRepository.findByContact_Email(currentEmail);
+    }
+
+    @Override
+    public Notification createNotification(Notification notification) {
+        return this.notificationRepository.save(notification);
     }
 
     @Override
@@ -165,7 +179,8 @@ public class NotificationServiceImpl implements NotificationService {
         optNotification.ifPresent(this.notificationRepository::delete);
     }
 
-    private void sendNotificationToUser(User user, Notification notification) {
+    @Override
+    public void sendNotificationToUser(User user, Notification notification) {
 
         log.info("Sending notification to user {}: {}", user, notification);
 
@@ -177,7 +192,8 @@ public class NotificationServiceImpl implements NotificationService {
         );
     }
 
-    private NotificationResponse convertToNotificationResponse(Notification notification) {
+    @Override
+    public NotificationResponse convertToNotificationResponse(Notification notification) {
         NotificationResponse response = new NotificationResponse();
 
         response.setNotificationId(notification.getNotificationId());
@@ -235,5 +251,97 @@ public class NotificationServiceImpl implements NotificationService {
         }
 
         return response;
+    }
+
+    @Override
+    public Notification buildNotification(Map<String, Object> data) {
+        Notification notification = new Notification();
+
+        notification.setType(NotificationType.valueOf((String) data.get("type")));
+        notification.setSeen(false);
+
+        Long recipientId = ((Number) data.get("recipientId")).longValue();
+        User recipient = userRepository.findById(recipientId)
+                .orElseThrow(() -> new IllegalArgumentException("Recipient not found"));
+        notification.setRecipient(recipient);
+
+        @SuppressWarnings("unchecked")
+        List<Number> actorIds = (List<Number>) data.get("actorIds");
+        List<User> actors = actorIds.stream()
+                .map(id -> userRepository.findById(id.longValue()).orElse(null))
+                .filter(u -> u != null)
+                .collect(Collectors.toList());
+        notification.setActors(actors);
+
+        if (data.containsKey("blogId")) {
+            Long blogId = ((Number) data.get("blogId")).longValue();
+            Blog blog = blogRepository.findById(blogId).orElse(null);
+            notification.setBlog(blog);
+        }
+
+        if (data.containsKey("commentId")) {
+            Long commentId = ((Number) data.get("commentId")).longValue();
+            Comment comment = commentRepository.findById(commentId).orElse(null);
+            notification.setComment(comment);
+        }
+
+        if (data.containsKey("replyId")) {
+            Long replyId = ((Number) data.get("replyId")).longValue();
+            Comment reply = commentRepository.findById(replyId).orElse(null);
+            notification.setReply(reply);
+        }
+
+        if (data.containsKey("repliedOnCommentId")) {
+            Long repliedOnCommentId = ((Number) data.get("repliedOnCommentId")).longValue();
+            Comment repliedOnComment = commentRepository.findById(repliedOnCommentId).orElse(null);
+            notification.setRepliedOnComment(repliedOnComment);
+        }
+
+        return notification;
+    }
+
+    private void setNotificationToRedis(Notification notification) throws JsonProcessingException {
+        Map<String, Object> notificationData = new HashMap<>();
+
+        notificationData.put("type", notification.getType().name());
+        notificationData.put("recipientId", notification.getRecipient().getUserId());
+
+        List<Long> actorIds = notification.getActors().stream()
+                .map(User::getUserId)
+                .collect(Collectors.toList());
+        notificationData.put("actorIds", actorIds);
+
+        if (notification.getBlog() != null) {
+            notificationData.put("blogId", notification.getBlog().getBlogId());
+        }
+
+        if (notification.getComment() != null) {
+            notificationData.put("commentId", notification.getComment().getCommentId());
+        }
+
+        if (notification.getReply() != null) {
+            notificationData.put("replyId", notification.getReply().getCommentId());
+        }
+
+        if (notification.getRepliedOnComment() != null) {
+            notificationData.put("repliedOnCommentId", notification.getRepliedOnComment().getCommentId());
+        }
+
+        String payload = objectMapper.writeValueAsString(notificationData);
+        String id = UUID.randomUUID().toString();
+        int throttleNotifcationTime = 120; // 2 Minutes, 120 Seconds
+        int delay = 10;
+
+        // Event key expires first, triggering listener
+        String eventKey = "notification:event:" + id;
+
+        // Data key lives slightly longer to ensure listener can retrieve it
+        String dataKey = "notification:data:" + id;
+
+        // trigger after 2 minutes to save and send notification, value doesn't matter, just need to handle event
+        redisService.saveWithTTL(eventKey, "1", throttleNotifcationTime, TimeUnit.SECONDS);
+
+        // slight delay to ensure it can get data even if there's some lag
+        redisService.saveWithTTL(dataKey, payload, throttleNotifcationTime + delay, TimeUnit.SECONDS);
     }
 }

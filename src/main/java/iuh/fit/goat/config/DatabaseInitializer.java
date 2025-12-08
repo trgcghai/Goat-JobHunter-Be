@@ -874,6 +874,7 @@ public class DatabaseInitializer implements CommandLineRunner {
                 job.setEndDate(endDate);
 
                 job.setActive(random.nextBoolean());
+                job.setEnabled(random.nextBoolean());
 
                 Level[] levels = Level.values();
                 job.setLevel(levels[random.nextInt(levels.length)]);

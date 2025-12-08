@@ -1,14 +1,17 @@
 package iuh.fit.goat.service;
 
-import iuh.fit.goat.entity.Blog;
-import iuh.fit.goat.entity.Comment;
-import iuh.fit.goat.entity.Notification;
-import iuh.fit.goat.entity.Recruiter;
+import iuh.fit.goat.dto.response.notification.NotificationResponse;
+import iuh.fit.goat.entity.*;
+import iuh.fit.goat.enumeration.NotificationType;
 
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 public interface NotificationService {
     List<Notification> handleGetAllNotifications();
+
+    Notification createNotification(Notification notification);
 
     void handleMarkNotificationsAsSeen(List<Long> notificationIds);
 
@@ -21,4 +24,10 @@ public interface NotificationService {
     void handleNotifyFollowRecruiter(Recruiter recruiter);
 
     void handleNotifyUnfollowRecruiter(Recruiter recruiter);
+
+    void sendNotificationToUser(User user, Notification notification);
+
+    NotificationResponse convertToNotificationResponse(Notification notification);
+
+    Notification buildNotification(Map<String, Object> data);
 }
