@@ -54,7 +54,7 @@ public class CommentServiceImpl implements CommentService {
 
         Comment newComment = this.commentRepository.save(comment);
 
-        this.blogService.handleIncrementTotalValue(newComment);
+        this.blogService.handleIncrementTotalCommentValue(newComment);
 
         if(request.getReplyTo() != null) {
             this.notificationService.handleNotifyReplyComment(newComment.getParent(), newComment);

@@ -29,9 +29,9 @@ public interface BlogService {
 
     ResultPaginationResponse handleGetAllBlogs(Specification<Blog> spec, Pageable pageable);
 
-    void handleIncrementTotalValue(Comment comment);
+    void handleIncrementTotalCommentValue(Comment comment);
 
-    List<Notification> handleLikeBlog(LikeBlogRequest likeBlogRequest);
+    void handleIncrementTotalLikeValue(LikeBlogRequest likeBlogRequest);
 
     List<Object[]> handleGetAllTags(String keyword);
 

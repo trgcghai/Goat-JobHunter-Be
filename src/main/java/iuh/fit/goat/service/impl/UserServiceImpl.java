@@ -461,7 +461,7 @@ public class UserServiceImpl implements UserService {
                 currentLikedBlogs.add(blog);
 
                 // Forward to blog service to handle like blog activity
-                this.blogService.handleLikeBlog(new LikeBlogRequest(blog.getBlogId(), true));
+                this.blogService.handleIncrementTotalLikeValue(new LikeBlogRequest(blog.getBlogId(), true));
             }
 
             Map<String, Object> result = new HashMap<>();
@@ -495,7 +495,18 @@ public class UserServiceImpl implements UserService {
 
         List<Map<String, Object>> results = new ArrayList<>();
 
-        currentLikedBlogs.removeIf(b -> blogIds.contains(b.getBlogId()));
+        currentLikedBlogs.forEach(blog -> {
+            if(blogIds.contains(blog.getBlogId())) {
+                currentLikedBlogs.remove(blog);
+                this.blogService.handleIncrementTotalLikeValue(new LikeBlogRequest(blog.getBlogId(), false));
+            }
+            results.add(new HashMap<>(
+                    Map.of(
+                            "blogId", blog.getBlogId(),
+                            "result", false
+                    )
+            ));
+        });
 
         currentUser.setLikedBlogs(currentLikedBlogs);
         this.userRepository.save(currentUser);

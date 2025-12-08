@@ -339,7 +339,7 @@ public class NotificationServiceImpl implements NotificationService {
         List<Number> actorIds = (List<Number>) data.get("actorIds");
         List<User> actors = actorIds.stream()
                 .map(id -> userRepository.findById(id.longValue()).orElse(null))
-                .filter(u -> u != null)
+                .filter(Objects::nonNull)
                 .collect(Collectors.toList());
         notification.setActors(actors);
 
