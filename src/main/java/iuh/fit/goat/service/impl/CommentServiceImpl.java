@@ -65,13 +65,6 @@ public class CommentServiceImpl implements CommentService {
             this.notificationService.handleNotifyCommentBlog(newComment.getBlog(), newComment);
         }
 
-        // Broadcast comment to subscribers of this blog
-        CommentResponse response = convertToCommentResponse(newComment);
-        messagingTemplate.convertAndSend(
-                "/topic/comments/" + blog.getBlogId(),
-                response
-        );
-
         return newComment;
     }
 
@@ -81,16 +74,7 @@ public class CommentServiceImpl implements CommentService {
         if(currentComment == null) return null;
 
         currentComment.setComment(comment.getComment());
-        Comment updated = this.commentRepository.save(currentComment);
-
-        // Broadcast update
-        CommentResponse response = convertToCommentResponse(updated);
-        messagingTemplate.convertAndSend(
-                "/topic/comments/" + updated.getBlog().getBlogId(),
-                response
-        );
-
-        return updated;
+        return this.commentRepository.save(currentComment);
     }
 
     @Override
@@ -106,12 +90,6 @@ public class CommentServiceImpl implements CommentService {
 
         this.commentRepository.delete(comment);
         this.blogService.handleUpdateBlogActivity(blog);
-
-        // Broadcast deletion
-        messagingTemplate.convertAndSend(
-                "/topic/comments/" + blog.getBlogId(),
-                Map.of("action", "delete", "commentId", id)
-        );
     }
 
     @Override

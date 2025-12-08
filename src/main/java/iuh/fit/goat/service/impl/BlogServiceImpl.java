@@ -163,14 +163,7 @@ public class BlogServiceImpl implements BlogService {
         if (!comment.isReply()) {
             blog.getActivity().setTotalParentComments(blog.getActivity().getTotalParentComments() + 1);
         }
-        Blog updatedBlog = this.blogRepository.save(blog);
-
-        // Broadcast blog update to subscribers
-        BlogResponse response = convertToBlogResponse(updatedBlog);
-        messagingTemplate.convertAndSend(
-                "/topic/blog/" + updatedBlog.getBlogId(),
-                response
-        );
+        this.blogRepository.save(blog);
     }
 
     @Override
@@ -185,13 +178,6 @@ public class BlogServiceImpl implements BlogService {
         User currentUser = this.userRepository.findByContact_Email(email);
 
         this.notificationService.handleNotifyLikeBlog(updatedBlog);
-
-        // Broadcast blog update to subscribers
-        BlogResponse response = convertToBlogResponse(updatedBlog);
-        messagingTemplate.convertAndSend(
-                "/topic/blog/" + updatedBlog.getBlogId(),
-                response
-        );
 
         return currentUser.getRecipientNotifications();
     }
