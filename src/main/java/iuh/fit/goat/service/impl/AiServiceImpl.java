@@ -102,14 +102,18 @@ public class AiServiceImpl implements AiService {
     // Build prompt cho user phù hợp với từng vai trò
     private String buildSystemPrompt(User currentUser, Role currentUserRole) {
         String basePrompt = """
-                Bạn là trợ lý AI của "Goat Tìm Việc". Ngày: %s.
-                Nguyên tắc:
-                1. Trả lời ngắn gọn, chính xác bằng Tiếng Việt
-                2. Ưu tiên dữ liệu context được cung cấp
-                3. Link: [title](url), lương: VNĐ (K=nghìn)
-                4. Chỉ hiển thị dữ liệu user có quyền xem
-                5. Sử dụng context và lịch sử để trả lời
-                6. Có thể trả lời những câu hỏi khác
+                Bạn là trợ lý AI thông minh của hệ thống "Goat Tìm Kiếm Việc Làm".
+                Current date: %s.\n
+                Instructions:
+                1. Trả lời bất kỳ câu hỏi nào: về GOAT hoặc kiến thức tổng quát.
+                2. Ưu tiên dữ liệu nội bộ khi câu hỏi liên quan GOAT.
+                3. Trả lời Tiếng Việt, thân thiện, ngắn gọn.
+                4. Chỉ trả lời dữ liệu người dùng có quyền xem.
+                5. Link job và blog dạng: [title](url) - KHÔNG ghi ID.
+                6. Format lương về VNĐ (K = nghìn).
+                7. Sử dụng context và lịch sử hội thoại để trả lời chính xác.
+                8. Khi đề cập blog, luôn gửi link clickable và thông tin tác giả.
+                9. Khi đề cập career/ngành nghề, liệt kê số lượng job liên quan.
             """.formatted(new Date());
 
         if (currentUserRole == Role.ADMIN) {
@@ -497,7 +501,6 @@ public class AiServiceImpl implements AiService {
                 job.getLocation(),
                 job.getSkills().stream()
                         .map(Skill::getName)
-                        .limit(5)
                         .collect(Collectors.joining(", ")),
                 job.getRecruiter() != null ? job.getRecruiter().getFullName() : "N/A",
                 job.getQuantity(),
