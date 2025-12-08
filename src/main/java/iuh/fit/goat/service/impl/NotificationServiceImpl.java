@@ -48,7 +48,7 @@ public class NotificationServiceImpl implements NotificationService {
     @Override
     public List<Notification> handleGetAllNotifications() {
         User currentUser = this.handleGetCurrentUser();
-        if(currentUser == null) return Collections.emptyList();
+        if (currentUser == null) return Collections.emptyList();
 
         return this.notificationRepository
                 .findByRecipient_UserIdOrderByCreatedAtDesc(currentUser.getUserId());
@@ -70,7 +70,7 @@ public class NotificationServiceImpl implements NotificationService {
     @Override
     public void handleNotifyCommentBlog(Blog blog, Comment comment) {
         User actor = this.handleGetCurrentUser();
-        if(actor == null) return;
+        if (actor == null) return;
 
         User recipient = blog.getAuthor();
         if (actor.getUserId() == recipient.getUserId()) return;
@@ -86,16 +86,19 @@ public class NotificationServiceImpl implements NotificationService {
 
                 @SuppressWarnings("unchecked")
                 List<Number> actorIds = (List<Number>) existingData.get("actorIds");
-                Long actorId = actor.getUserId();
 
-                if (!actorIds.contains(actorId)) {
-                    actorIds.add(actorId);
-                    existingData.put("actorIds", actorIds);
-                    existingData.put("commentId", comment.getCommentId());
+                // Convert to Set for uniqueness
+                Set<Long> uniqueActorIds = actorIds.stream()
+                        .map(Number::longValue)
+                        .collect(Collectors.toSet());
 
-                    String updatedPayload = objectMapper.writeValueAsString(existingData);
-                    redisService.updateValue(redisKey, updatedPayload);
-                }
+                uniqueActorIds.add(actor.getUserId());
+
+                existingData.put("actorIds", actorIds);
+                existingData.put("commentId", comment.getCommentId());
+
+                String updatedPayload = objectMapper.writeValueAsString(existingData);
+                redisService.updateValue(redisKey, updatedPayload);
             } else {
                 Notification notification = new Notification();
                 notification.setType(NotificationType.COMMENT);
@@ -114,7 +117,7 @@ public class NotificationServiceImpl implements NotificationService {
     @Override
     public void handleNotifyReplyComment(Comment parent, Comment reply) {
         User actor = this.handleGetCurrentUser();
-        if(actor == null) return;
+        if (actor == null) return;
 
         User recipient = parent.getCommentedBy();
         if (actor.getUserId() == recipient.getUserId()) return;
@@ -130,16 +133,19 @@ public class NotificationServiceImpl implements NotificationService {
 
                 @SuppressWarnings("unchecked")
                 List<Number> actorIds = (List<Number>) existingData.get("actorIds");
-                Long actorId = actor.getUserId();
 
-                if (!actorIds.contains(actorId)) {
-                    actorIds.add(actorId);
-                    existingData.put("actorIds", actorIds);
-                    existingData.put("replyId", reply.getCommentId());
+                // Convert to Set for uniqueness
+                Set<Long> uniqueActorIds = actorIds.stream()
+                        .map(Number::longValue)
+                        .collect(Collectors.toSet());
 
-                    String updatedPayload = objectMapper.writeValueAsString(existingData);
-                    redisService.updateValue(redisKey, updatedPayload);
-                }
+                uniqueActorIds.add(actor.getUserId());
+
+                existingData.put("actorIds", new ArrayList<>(uniqueActorIds));
+                existingData.put("replyId", reply.getCommentId());
+
+                String updatedPayload = objectMapper.writeValueAsString(existingData);
+                redisService.updateValue(redisKey, updatedPayload);
             } else {
                 Notification notification = new Notification();
                 notification.setType(NotificationType.REPLY);
@@ -159,7 +165,7 @@ public class NotificationServiceImpl implements NotificationService {
     @Override
     public void handleNotifyLikeBlog(Blog blog) {
         User actor = this.handleGetCurrentUser();
-        if(actor == null || blog == null || blog.getAuthor() == null) return;
+        if (actor == null || blog == null || blog.getAuthor() == null) return;
 
         User recipient = blog.getAuthor();
         if (actor.getUserId() == recipient.getUserId()) return;
@@ -219,7 +225,7 @@ public class NotificationServiceImpl implements NotificationService {
     @Override
     public void handleNotifyFollowRecruiter(Recruiter recruiter) {
         User actor = this.handleGetCurrentUser();
-        if(actor == null || recruiter == null) return;
+        if (actor == null || recruiter == null) return;
 
         if (actor.getUserId() == recruiter.getUserId()) return;
 
@@ -295,7 +301,7 @@ public class NotificationServiceImpl implements NotificationService {
         response.setSeen(notification.isSeen());
         response.setCreatedAt(notification.getCreatedAt());
 
-        if(notification.getBlog() != null) {
+        if (notification.getBlog() != null) {
             NotificationResponse.BlogNotification blog = new NotificationResponse.BlogNotification(
                     notification.getBlog().getBlogId(),
                     notification.getBlog().getTitle()
@@ -320,7 +326,7 @@ public class NotificationServiceImpl implements NotificationService {
         );
         response.setRecipient(recipient);
 
-        if(notification.getComment() != null) {
+        if (notification.getComment() != null) {
             NotificationResponse.CommentNotification comment = new NotificationResponse.CommentNotification(
                     notification.getComment().getCommentId(),
                     notification.getComment().getComment()
@@ -328,7 +334,7 @@ public class NotificationServiceImpl implements NotificationService {
             response.setComment(comment);
         }
 
-        if(notification.getReply() != null) {
+        if (notification.getReply() != null) {
             NotificationResponse.CommentNotification reply = new NotificationResponse.CommentNotification(
                     notification.getReply().getCommentId(),
                     notification.getReply().getComment()
@@ -336,7 +342,7 @@ public class NotificationServiceImpl implements NotificationService {
             response.setReply(reply);
         }
 
-        if(notification.getRepliedOnComment() != null) {
+        if (notification.getRepliedOnComment() != null) {
             NotificationResponse.CommentNotification repliedOnComment = new NotificationResponse.CommentNotification(
                     notification.getRepliedOnComment().getCommentId(),
                     notification.getRepliedOnComment().getComment()
