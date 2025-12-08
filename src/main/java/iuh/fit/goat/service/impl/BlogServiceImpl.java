@@ -159,7 +159,7 @@ public class BlogServiceImpl implements BlogService {
     }
 
     @Override
-    public void handleIncrementTotalValue(Comment comment) {
+    public void handleIncrementTotalCommentValue(Comment comment) {
         Blog blog = comment.getBlog();
         blog.getActivity().setTotalComments(blog.getActivity().getTotalComments() + 1);
         if (!comment.isReply()) {
@@ -169,19 +169,16 @@ public class BlogServiceImpl implements BlogService {
     }
 
     @Override
-    public List<Notification> handleLikeBlog(LikeBlogRequest likeBlogRequest) {
+    public void handleIncrementTotalLikeValue(LikeBlogRequest likeBlogRequest) {
         int incrementVal = likeBlogRequest.isLiked() ? 1 : -1;
         Blog blog = this.handleGetBlogById(likeBlogRequest.getBlogId());
         long newTotalLikes = blog.getActivity().getTotalLikes() + incrementVal;
         blog.getActivity().setTotalLikes(Math.max(newTotalLikes, 0));
         Blog updatedBlog = this.blogRepository.save(blog);
 
-        String email = SecurityUtil.getCurrentUserLogin().isPresent() ? SecurityUtil.getCurrentUserLogin().get() : "";
-        User currentUser = this.userRepository.findByContact_Email(email);
-
-        this.notificationService.handleNotifyLikeBlog(updatedBlog);
-
-        return currentUser.getRecipientNotifications();
+        if(likeBlogRequest.isLiked()) {
+            this.notificationService.handleNotifyLikeBlog(updatedBlog);
+        }
     }
 
     @Override
