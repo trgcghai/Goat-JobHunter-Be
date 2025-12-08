@@ -9,6 +9,7 @@ import iuh.fit.goat.util.FileUploadUtil;
 import lombok.RequiredArgsConstructor;
 import net.datafaker.Faker;
 import org.springframework.boot.CommandLineRunner;
+import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -903,6 +904,48 @@ public class DatabaseInitializer implements CommandLineRunner {
         System.out.println("Initialized jobs.");
     }
 
+    private void initApplications() {
+        List<Job> jobs = this.jobRepository.findAll();
+        for (Applicant a : applicants) {
+            for (int j = 0; j < 5; j++) {
+                Job job = getRandom(jobs, random);
+
+                Application app = new Application();
+                app.setJob(job);
+                app.setApplicant(a);
+                app.setEmail(a.getContact().getEmail());
+                app.setResumeUrl("https://res.cloudinary.com/dfwttyfwk/image/upload/v1754836676/jobhunter/resumes/sample-corporate-resume_10082025213751.pdf");
+
+                Status[] types = Status.values();
+                app.setStatus(types[random.nextInt(types.length)]);
+
+                applications.add(app);
+            }
+        }
+
+        this.applicationRepository.saveAll(applications);
+        System.out.println("Initialized applications.");
+    }
+
+    private void initSubscribers() {
+        List<Skill> allSkills = this.skillRepository.findAll();
+
+        for (Applicant a : applicants) {
+            Subscriber s = new Subscriber();
+            s.setName(a.getFullName());
+            s.setEmail(a.getContact().getEmail());
+
+            Collections.shuffle(allSkills, random);
+            int skillCount = 1 + random.nextInt(5);
+            s.setSkills(new ArrayList<>(allSkills.subList(0, Math.min(skillCount, allSkills.size()))));
+
+            subscribers.add(s);
+        }
+
+        this.subscriberRepository.saveAll(subscribers);
+        System.out.println("Initialized subscribers.");
+    }
+
     private void initBlogsAndComments() {
         for (Recruiter r : recruiters) {
             for (int b = 0; b < 10; b++) {
@@ -923,13 +966,13 @@ public class DatabaseInitializer implements CommandLineRunner {
                 blog.setEnabled(true);
                 blog.setAuthor(r);
                 blog.getActivity().setTotalReads(random.nextInt(1000));
-                blog.getActivity().setTotalParentComments(0);
+                blog.getActivity().setTotalParentComments(random.nextInt(1000));
+                blog.getActivity().setTotalComments(random.nextInt(1000));
                 blogs.add(blog);
             }
         }
 
-        blogRepository.saveAll(blogs);
-        blogRepository.flush();
+        batchSave(blogs, 300, blogRepository);
 
         List<Comment> parentComments = new ArrayList<>();
         List<Comment> childComments = new ArrayList<>();
@@ -968,52 +1011,10 @@ public class DatabaseInitializer implements CommandLineRunner {
             }
         }
 
-        commentRepository.saveAll(parentComments);
-        commentRepository.flush();
-
-        commentRepository.saveAll(childComments);
-        commentRepository.flush();
-
-        for (Comment c : parentComments) {
-            Blog blog = c.getBlog();
-            blog.getComments().add(c);
-        }
-        for (Comment c : childComments) {
-            Blog blog = c.getBlog();
-            blog.getComments().add(c);
-        }
-
-        for (Blog blog : blogs) {
-            long totalComments = blog.getComments().size();
-            blog.getActivity().setTotalComments(totalComments);
-        }
-
-        blogRepository.saveAll(blogs);
+        batchSave(parentComments, 300, commentRepository);
+        batchSave(childComments, 300, commentRepository);
 
         System.out.println("Initialized blogs and comments.");
-    }
-
-    private void initApplications() {
-        List<Job> jobs = this.jobRepository.findAll();
-        for (Applicant a : applicants) {
-            for (int j = 0; j < 5; j++) {
-                Job job = getRandom(jobs, random);
-
-                Application app = new Application();
-                app.setJob(job);
-                app.setApplicant(a);
-                app.setEmail(a.getContact().getEmail());
-                app.setResumeUrl("https://res.cloudinary.com/dfwttyfwk/image/upload/v1754836676/jobhunter/resumes/sample-corporate-resume_10082025213751.pdf");
-
-                Status[] types = Status.values();
-                app.setStatus(types[random.nextInt(types.length)]);
-
-                applications.add(app);
-            }
-        }
-
-        this.applicationRepository.saveAll(applications);
-        System.out.println("Initialized applications.");
     }
 
     private void initNotifications() {
@@ -1061,23 +1062,12 @@ public class DatabaseInitializer implements CommandLineRunner {
         System.out.println("Initialized notifications.");
     }
 
-    private void initSubscribers() {
-        List<Skill> allSkills = this.skillRepository.findAll();
-
-        for (Applicant a : applicants) {
-            Subscriber s = new Subscriber();
-            s.setName(a.getFullName());
-            s.setEmail(a.getContact().getEmail());
-
-            Collections.shuffle(allSkills, random);
-            int skillCount = 1 + random.nextInt(5);
-            s.setSkills(new ArrayList<>(allSkills.subList(0, Math.min(skillCount, allSkills.size()))));
-
-            subscribers.add(s);
+    private <T> void batchSave(List<T> list, int batchSize, JpaRepository<T, Long> repo) {
+        for (int i = 0; i < list.size(); i += batchSize) {
+            int end = Math.min(i + batchSize, list.size());
+            repo.saveAll(list.subList(i, end));
+            repo.flush();
         }
-
-        this.subscriberRepository.saveAll(subscribers);
-        System.out.println("Initialized subscribers.");
     }
 
 }
