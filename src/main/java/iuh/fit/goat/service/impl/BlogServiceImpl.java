@@ -189,8 +189,8 @@ public class BlogServiceImpl implements BlogService {
         User actor = this.userRepository.findByContact_Email(currentEmail);
         if (actor == null) return false;
 
-        String redisKey = String.format("notification:like:blog:%d:recipient:%d",
-                blog.getBlogId(), blog.getAuthor().getUserId());
+        String redisKey = String.format("notification:%d:blog:%d:recipient:%d",
+                NotificationType.LIKE.ordinal(), blog.getBlogId(), blog.getAuthor().getUserId());
 
         // Check Redis first
         if (redisService.hasKey(redisKey)) {

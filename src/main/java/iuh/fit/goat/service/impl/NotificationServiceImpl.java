@@ -75,15 +75,40 @@ public class NotificationServiceImpl implements NotificationService {
         User recipient = blog.getAuthor();
         if (actor.getUserId() == recipient.getUserId()) return;
 
-        Notification notification = new Notification();
-        notification.setType(NotificationType.COMMENT);
-        notification.setBlog(blog);
-        notification.setComment(comment);
-        notification.setActors(List.of(actor));
-        notification.setRecipient(recipient);
+        String redisKey = String.format("notification:%d:blog:%d:recipient:%d",
+                NotificationType.COMMENT.ordinal(), blog.getBlogId(), recipient.getUserId());
 
-        Notification saved = this.notificationRepository.save(notification);
-        this.sendNotificationToUser(recipient, saved);
+        try {
+            if (redisService.hasKey(redisKey)) {
+                String existingPayload = redisService.getValue(redisKey);
+                @SuppressWarnings("unchecked")
+                Map<String, Object> existingData = objectMapper.readValue(existingPayload, Map.class);
+
+                @SuppressWarnings("unchecked")
+                List<Number> actorIds = (List<Number>) existingData.get("actorIds");
+                Long actorId = actor.getUserId();
+
+                if (!actorIds.contains(actorId)) {
+                    actorIds.add(actorId);
+                    existingData.put("actorIds", actorIds);
+                    existingData.put("commentId", comment.getCommentId());
+
+                    String updatedPayload = objectMapper.writeValueAsString(existingData);
+                    redisService.updateValue(redisKey, updatedPayload);
+                }
+            } else {
+                Notification notification = new Notification();
+                notification.setType(NotificationType.COMMENT);
+                notification.setBlog(blog);
+                notification.setComment(comment);
+                notification.setActors(List.of(actor));
+                notification.setRecipient(recipient);
+
+                setNotificationToRedis(notification, redisKey);
+            }
+        } catch (JsonProcessingException e) {
+            log.error("Failed to process comment notification for blog {}: {}", blog.getBlogId(), e.getMessage());
+        }
     }
 
     @Override
@@ -94,19 +119,41 @@ public class NotificationServiceImpl implements NotificationService {
         User recipient = parent.getCommentedBy();
         if (actor.getUserId() == recipient.getUserId()) return;
 
-        Notification notification = new Notification();
-        notification.setType(NotificationType.REPLY);
-        notification.setBlog(parent.getBlog());
-        notification.setReply(reply);
-        notification.setRepliedOnComment(parent);
-        notification.setActors(List.of(actor));
-        notification.setRecipient(recipient);
+        String redisKey = String.format("notification:%d:comment:%d:recipient:%d",
+                NotificationType.REPLY.ordinal(), parent.getCommentId(), recipient.getUserId());
 
-        Notification saved = this.notificationRepository.save(notification);
+        try {
+            if (redisService.hasKey(redisKey)) {
+                String existingPayload = redisService.getValue(redisKey);
+                @SuppressWarnings("unchecked")
+                Map<String, Object> existingData = objectMapper.readValue(existingPayload, Map.class);
 
-        log.info("Reply to comment success. Now sending notification.");
+                @SuppressWarnings("unchecked")
+                List<Number> actorIds = (List<Number>) existingData.get("actorIds");
+                Long actorId = actor.getUserId();
 
-        this.sendNotificationToUser(recipient, saved);
+                if (!actorIds.contains(actorId)) {
+                    actorIds.add(actorId);
+                    existingData.put("actorIds", actorIds);
+                    existingData.put("replyId", reply.getCommentId());
+
+                    String updatedPayload = objectMapper.writeValueAsString(existingData);
+                    redisService.updateValue(redisKey, updatedPayload);
+                }
+            } else {
+                Notification notification = new Notification();
+                notification.setType(NotificationType.REPLY);
+                notification.setBlog(parent.getBlog());
+                notification.setReply(reply);
+                notification.setRepliedOnComment(parent);
+                notification.setActors(List.of(actor));
+                notification.setRecipient(recipient);
+
+                setNotificationToRedis(notification, redisKey);
+            }
+        } catch (JsonProcessingException e) {
+            log.error("Failed to process reply notification for comment {}: {}", parent.getCommentId(), e.getMessage());
+        }
     }
 
     @Override
@@ -153,7 +200,7 @@ public class NotificationServiceImpl implements NotificationService {
                 }
 
                 String updatedPayload = objectMapper.writeValueAsString(existingData);
-                redisService.saveWithTTL(redisKey, updatedPayload, 120, TimeUnit.SECONDS);
+                redisService.updateValue(redisKey, updatedPayload);
             } else {
                 // Create new notification in Redis
                 Notification notification = new Notification();
@@ -167,20 +214,6 @@ public class NotificationServiceImpl implements NotificationService {
         } catch (JsonProcessingException e) {
             log.error("Failed to process like notification for blog {}: {}", blog.getBlogId(), e.getMessage());
         }
-
-//        if(optNotification.isPresent()) {
-//            this.notificationRepository.delete(optNotification.get());
-//            return;
-//        }
-//
-//        Notification notification = new Notification();
-//        notification.setType(NotificationType.LIKE);
-//        notification.setBlog(blog);
-//        notification.setActors(List.of(actor));
-//        notification.setRecipient(recipient);
-//
-//        Notification saved = this.notificationRepository.save(notification);
-//        this.sendNotificationToUser(recipient, saved);
     }
 
     @Override
@@ -190,45 +223,60 @@ public class NotificationServiceImpl implements NotificationService {
 
         if (actor.getUserId() == recruiter.getUserId()) return;
 
-        Optional<Notification> optNotification = this.notificationRepository
-                .findByTypeAndActorsContainingAndRecipient(
-                        NotificationType.FOLLOW, actor, recruiter
-                );
+        String redisKey = String.format("notification:follow:recipient:%d", recruiter.getUserId());
 
-        if(optNotification.isPresent()) {
-            this.notificationRepository.delete(optNotification.get());
-            return;
+        try {
+            if (redisService.hasKey(redisKey)) {
+                String existingPayload = redisService.getValue(redisKey);
+                @SuppressWarnings("unchecked")
+                Map<String, Object> existingData = objectMapper.readValue(existingPayload, Map.class);
+
+                @SuppressWarnings("unchecked")
+                List<Number> actorIds = (List<Number>) existingData.get("actorIds");
+                Long actorId = actor.getUserId();
+
+                if (actorIds.contains(actorId)) {
+                    // Unfollow: remove actor
+                    actorIds.remove(actorId);
+                    if (actorIds.isEmpty()) {
+                        redisService.deleteKey(redisKey);
+
+                        Optional<Notification> optNotification = this.notificationRepository
+                                .findByTypeAndRecipient(NotificationType.FOLLOW, recruiter);
+                        optNotification.ifPresent(this.notificationRepository::delete);
+                        return;
+                    }
+                    existingData.put("actorIds", actorIds);
+                } else {
+                    actorIds.add(actorId);
+                    existingData.put("actorIds", actorIds);
+                }
+
+                String updatedPayload = objectMapper.writeValueAsString(existingData);
+                redisService.updateValue(redisKey, updatedPayload);
+            } else {
+                Notification notification = new Notification();
+                notification.setType(NotificationType.FOLLOW);
+                notification.setActors(List.of(actor));
+                notification.setRecipient(recruiter);
+
+                setNotificationToRedis(notification, redisKey);
+            }
+        } catch (JsonProcessingException e) {
+            log.error("Failed to process follow notification for recruiter {}: {}", recruiter.getUserId(), e.getMessage());
         }
-
-        Notification notification = new Notification();
-        notification.setType(NotificationType.FOLLOW);
-        notification.setActors(List.of(actor));
-        notification.setRecipient(recruiter);
-
-        Notification saved = this.notificationRepository.save(notification);
-        this.sendNotificationToUser(recruiter, saved);
     }
 
     @Override
     public void handleNotifyUnfollowRecruiter(Recruiter recruiter) {
-        User actor = this.handleGetCurrentUser();
-        if(actor == null || recruiter == null) return;
-
-        if (actor.getUserId() == recruiter.getUserId()) return;
-
-        // Find and delete the notification
-        Optional<Notification> optNotification = this.notificationRepository
-                .findByTypeAndActorsContainingAndRecipient(
-                        NotificationType.FOLLOW, actor, recruiter
-                );
-
-        optNotification.ifPresent(this.notificationRepository::delete);
+        // Unfollow is now handled inside handleNotifyFollowRecruiter by removing actor
+        handleNotifyFollowRecruiter(recruiter);
     }
 
     @Override
     public void sendNotificationToUser(User user, Notification notification) {
 
-        log.info("Sending notification to user {}: {}", user, notification);
+        log.info("Sending notification to user {}: {}", user.getUserId(), notification.getNotificationId());
 
         NotificationResponse response = convertToNotificationResponse(notification);
         messagingTemplate.convertAndSendToUser(
@@ -375,7 +423,7 @@ public class NotificationServiceImpl implements NotificationService {
 
         String payload = objectMapper.writeValueAsString(notificationData);
         int throttleNotificationTime = 120; // 2 Minutes, 120 Seconds
-        int delay = 10; // 10 Seconds delay to ensure listener processes after throttle period
+        int delay = 30; // 10 Seconds delay to ensure listener processes after throttle period
 
         redisService.saveWithTTL(redisKey + ":listener", "1", throttleNotificationTime, TimeUnit.SECONDS);
 

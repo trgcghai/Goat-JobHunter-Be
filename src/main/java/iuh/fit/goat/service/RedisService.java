@@ -12,4 +12,6 @@ public interface RedisService {
     void deleteKey(String key);
 
     void replaceKey(String oldKey, String newKey, String value, long ttl, TimeUnit timeUnit);
+
+    void updateValue(String key, String value);
 }
