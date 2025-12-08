@@ -23,11 +23,11 @@ forbes
 stackoverflow
 wsj
 theverge
-youtube
+reddit
 tripadvisor
 instacart
 stripe
-dribble
+meta
 lyft
 figma
 hbomax
