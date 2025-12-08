@@ -5,11 +5,14 @@ import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.CookieValue;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+@Slf4j
 @RestController
 @RequestMapping("/api/v1")
 @RequiredArgsConstructor
@@ -37,5 +40,15 @@ public class PingController {
         }
 
         return ResponseEntity.ok("All cookies cleared");
+    }
+
+    @PermitAll
+    @GetMapping("/uuid")
+    public ResponseEntity<String> createUuid(@CookieValue(value = "guestId", required = false) String guestId) {
+        if (guestId != null) {
+            log.info("✅ Guest id is set to {}", guestId);
+            return ResponseEntity.ok(guestId);
+        }
+        return ResponseEntity.ok().body("UUID cookie not found");
     }
 }
