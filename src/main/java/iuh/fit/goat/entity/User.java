@@ -76,6 +76,16 @@ public abstract class User {
 
     @ManyToMany(fetch = FetchType.LAZY)
     @JoinTable(
+            name = "user_liked_blog",
+            joinColumns = @JoinColumn(name = "user_id"),
+            inverseJoinColumns = @JoinColumn(name = "blog_id")
+    )
+    @JsonIgnore
+    @ToString.Exclude
+    private List<Blog> likedBlogs = new ArrayList<>();
+
+    @ManyToMany(fetch = FetchType.LAZY)
+    @JoinTable(
             name = "user_followed_recruiter",
             joinColumns = @JoinColumn(name = "user_id"),
             inverseJoinColumns = @JoinColumn(name = "recruiter_id")

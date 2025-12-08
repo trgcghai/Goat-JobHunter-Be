@@ -1,8 +1,6 @@
 package iuh.fit.goat.service.impl;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import iuh.fit.goat.common.ActionType;
-import iuh.fit.goat.enumeration.NotificationType;
 import iuh.fit.goat.enumeration.Role;
 import iuh.fit.goat.dto.request.blog.BlogCreateRequest;
 import iuh.fit.goat.dto.request.blog.BlogIdsRequest;
@@ -17,12 +15,13 @@ import iuh.fit.goat.entity.Notification;
 import iuh.fit.goat.entity.User;
 import iuh.fit.goat.exception.InvalidException;
 import iuh.fit.goat.repository.BlogRepository;
-import iuh.fit.goat.repository.NotificationRepository;
 import iuh.fit.goat.repository.UserRepository;
 import iuh.fit.goat.service.*;
 import iuh.fit.goat.util.SecurityUtil;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
@@ -32,22 +31,27 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Slf4j
 @Service
 @RequiredArgsConstructor
 public class BlogServiceImpl implements BlogService {
-    private final UserService userService;
+    // avoid circular dependency between user service impl, ai service impl and blog service impl
+    @Lazy
+    @Autowired
+    private UserService userService;
+
+    // avoid circular dependency between user service impl, ai service impl and blog service impl
+    @Lazy
+    @Autowired
+    private AiService aiService;
+
     private final EmailNotificationService emailNotificationService;
     private final NotificationService notificationService;
     private final BlogRepository blogRepository;
     private final UserRepository userRepository;
-    private final NotificationRepository notificationRepository;
-    private final AiService aiService;
-    private final RedisService redisService;
-    private final ObjectMapper objectMapper;
+
 
     @Override
     public Blog handleCreateBlog(BlogCreateRequest request) {
@@ -178,41 +182,6 @@ public class BlogServiceImpl implements BlogService {
         this.notificationService.handleNotifyLikeBlog(updatedBlog);
 
         return currentUser.getRecipientNotifications();
-    }
-
-    @Override
-    public boolean checkUserLikedBlog(Long blogId) {
-        Blog blog = this.handleGetBlogById(blogId);
-        if (blog == null || blog.getAuthor() == null) return false;
-
-        String currentEmail = SecurityUtil.getCurrentUserLogin().orElse("");
-        User actor = this.userRepository.findByContact_Email(currentEmail);
-        if (actor == null) return false;
-
-        String redisKey = String.format("notification:%d:blog:%d:recipient:%d",
-                NotificationType.LIKE.ordinal(), blog.getBlogId(), blog.getAuthor().getUserId());
-
-        // Check Redis first
-        if (redisService.hasKey(redisKey)) {
-            try {
-                String payload = redisService.getValue(redisKey);
-                @SuppressWarnings("unchecked")
-                Map<String, Object> data = objectMapper.readValue(payload, Map.class);
-
-                @SuppressWarnings("unchecked")
-                List<Number> actorIds = (List<Number>) data.get("actorIds");
-
-                return actorIds.contains(actor.getUserId());
-            } catch (Exception e) {
-                log.error("Failed to parse Redis notification data for blog {}: {}", blogId, e.getMessage());
-            }
-        } else {
-            Optional<Notification> opt = this.notificationRepository
-                    .findByTypeAndActorsContainingAndBlogAndRecipient(NotificationType.LIKE, actor, blog, blog.getAuthor());
-
-            return opt.isPresent();
-        }
-        return false;
     }
 
     @Override

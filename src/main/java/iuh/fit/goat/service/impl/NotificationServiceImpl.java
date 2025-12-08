@@ -88,13 +88,13 @@ public class NotificationServiceImpl implements NotificationService {
                 List<Number> actorIds = (List<Number>) existingData.get("actorIds");
 
                 // Convert to Set for uniqueness
-                Set<Long> uniqueActorIds = actorIds.stream()
+                List<Long> newActorIds = actorIds.stream()
                         .map(Number::longValue)
-                        .collect(Collectors.toSet());
+                        .collect(Collectors.toList());
 
-                uniqueActorIds.add(actor.getUserId());
+                newActorIds.add(actor.getUserId());
 
-                existingData.put("actorIds", actorIds);
+                existingData.put("actorIds", newActorIds);
                 existingData.put("commentId", comment.getCommentId());
 
                 String updatedPayload = objectMapper.writeValueAsString(existingData);
@@ -135,13 +135,13 @@ public class NotificationServiceImpl implements NotificationService {
                 List<Number> actorIds = (List<Number>) existingData.get("actorIds");
 
                 // Convert to Set for uniqueness
-                Set<Long> uniqueActorIds = actorIds.stream()
+                List<Long> newActorIds = actorIds.stream()
                         .map(Number::longValue)
-                        .collect(Collectors.toSet());
+                        .collect(Collectors.toList());
 
-                uniqueActorIds.add(actor.getUserId());
+                newActorIds.add(actor.getUserId());
 
-                existingData.put("actorIds", new ArrayList<>(uniqueActorIds));
+                existingData.put("actorIds", newActorIds);
                 existingData.put("replyId", reply.getCommentId());
 
                 String updatedPayload = objectMapper.writeValueAsString(existingData);
@@ -185,28 +185,13 @@ public class NotificationServiceImpl implements NotificationService {
                 List<Number> actorIds = (List<Number>) existingData.get("actorIds");
                 Long actorId = actor.getUserId();
 
-                if (actorIds.contains(actorId)) {
-                    // Unlike: remove actor from list
-                    actorIds.remove(actorId);
-                    if (actorIds.isEmpty()) {
-                        // No more actors, delete notification
-                        redisService.deleteKey(redisKey);
-
-                        // Also delete from DB if exists
-                        Optional<Notification> optNotification = this.notificationRepository
-                                .findByTypeAndBlogAndRecipient(NotificationType.LIKE, blog, recipient);
-                        optNotification.ifPresent(this.notificationRepository::delete);
-                        return;
-                    }
-                    existingData.put("actorIds", actorIds);
-                } else {
-                    // Add new actor
+                if (!actorIds.contains(actorId)) {
                     actorIds.add(actorId);
                     existingData.put("actorIds", actorIds);
-                }
 
-                String updatedPayload = objectMapper.writeValueAsString(existingData);
-                redisService.updateValue(redisKey, updatedPayload);
+                    String updatedPayload = objectMapper.writeValueAsString(existingData);
+                    redisService.updateValue(redisKey, updatedPayload);
+                }
             } else {
                 // Create new notification in Redis
                 Notification notification = new Notification();
@@ -229,7 +214,7 @@ public class NotificationServiceImpl implements NotificationService {
 
         if (actor.getUserId() == recruiter.getUserId()) return;
 
-        String redisKey = String.format("notification:follow:recipient:%d", recruiter.getUserId());
+        String redisKey = String.format("notification:%d:recipient:%d", NotificationType.FOLLOW.ordinal(), recruiter.getUserId());
 
         try {
             if (redisService.hasKey(redisKey)) {
@@ -241,21 +226,12 @@ public class NotificationServiceImpl implements NotificationService {
                 List<Number> actorIds = (List<Number>) existingData.get("actorIds");
                 Long actorId = actor.getUserId();
 
-                if (actorIds.contains(actorId)) {
-                    // Unfollow: remove actor
-                    actorIds.remove(actorId);
-                    if (actorIds.isEmpty()) {
-                        redisService.deleteKey(redisKey);
-
-                        Optional<Notification> optNotification = this.notificationRepository
-                                .findByTypeAndRecipient(NotificationType.FOLLOW, recruiter);
-                        optNotification.ifPresent(this.notificationRepository::delete);
-                        return;
-                    }
-                    existingData.put("actorIds", actorIds);
-                } else {
+                if (!actorIds.contains(actorId)) {
                     actorIds.add(actorId);
                     existingData.put("actorIds", actorIds);
+
+                    String updatedPayload = objectMapper.writeValueAsString(existingData);
+                    redisService.updateValue(redisKey, updatedPayload);
                 }
 
                 String updatedPayload = objectMapper.writeValueAsString(existingData);
@@ -271,12 +247,6 @@ public class NotificationServiceImpl implements NotificationService {
         } catch (JsonProcessingException e) {
             log.error("Failed to process follow notification for recruiter {}: {}", recruiter.getUserId(), e.getMessage());
         }
-    }
-
-    @Override
-    public void handleNotifyUnfollowRecruiter(Recruiter recruiter) {
-        // Unfollow is now handled inside handleNotifyFollowRecruiter by removing actor
-        handleNotifyFollowRecruiter(recruiter);
     }
 
     @Override

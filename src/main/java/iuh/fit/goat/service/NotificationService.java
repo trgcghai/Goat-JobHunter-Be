@@ -21,8 +21,6 @@ public interface NotificationService {
 
     void handleNotifyFollowRecruiter(Recruiter recruiter);
 
-    void handleNotifyUnfollowRecruiter(Recruiter recruiter);
-
     void sendNotificationToUser(User user, Notification notification);
 
     NotificationResponse convertToNotificationResponse(Notification notification);

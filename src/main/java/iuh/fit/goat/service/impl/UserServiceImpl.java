@@ -1,6 +1,7 @@
 package iuh.fit.goat.service.impl;
 
 import iuh.fit.goat.dto.request.user.CreateUserRequest;
+import iuh.fit.goat.dto.request.user.LikeBlogRequest;
 import iuh.fit.goat.entity.embeddable.Contact;
 import iuh.fit.goat.enumeration.Role;
 import iuh.fit.goat.dto.request.user.ResetPasswordRequest;
@@ -11,13 +12,12 @@ import iuh.fit.goat.dto.response.user.UserResponse;
 import iuh.fit.goat.entity.*;
 import iuh.fit.goat.exception.InvalidException;
 import iuh.fit.goat.repository.*;
-import iuh.fit.goat.service.EmailNotificationService;
-import iuh.fit.goat.service.NotificationService;
-import iuh.fit.goat.service.RedisService;
-import iuh.fit.goat.service.UserService;
+import iuh.fit.goat.service.*;
 import iuh.fit.goat.util.SecurityUtil;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -36,6 +36,12 @@ import java.util.stream.Collectors;
 @Service
 @RequiredArgsConstructor
 public class UserServiceImpl implements UserService {
+
+    // avoid circular dependency between user service impl, ai service impl and blog service impl
+    @Lazy
+    @Autowired
+    private final BlogService blogService;
+
     private final RedisService redisService;
     private final NotificationService notificationService;
     private final EmailNotificationService emailNotificationService;
@@ -44,6 +50,7 @@ public class UserServiceImpl implements UserService {
     private final JobRepository jobRepository;
     private final RecruiterRepository recruiterRepository;
     private final NotificationRepository notificationRepository;
+    private final BlogRepository blogRepository;
 
     private final PasswordEncoder passwordEncoder;
     private final SecurityUtil securityUtil;
@@ -365,6 +372,137 @@ public class UserServiceImpl implements UserService {
         return this.convertToUserResponse(currentUser);
     }
 
+    @Override
+    public ResultPaginationResponse handleGetCurrentUserLikedBlogs(Specification<Blog> spec, Pageable pageable) {
+        String currentEmail = SecurityUtil.getCurrentUserLogin().orElse("");
+
+        if (currentEmail.isEmpty()) {
+            return new ResultPaginationResponse(
+                    new ResultPaginationResponse.Meta(0, 0, 0, 0L),
+                    new ArrayList<>()
+            );
+        }
+
+        User currentUser = this.handleGetUserByEmail(currentEmail);
+        if (currentUser == null) {
+            return new ResultPaginationResponse(
+                    new ResultPaginationResponse.Meta(0, 0, 0, 0L),
+                    new ArrayList<>()
+            );
+        }
+
+        // Create specification để filter blogs mà user đã like
+        Specification<Blog> userLikedSpec = (root, query, cb) ->
+                cb.isMember(currentUser, root.get("likedByUsers"));
+
+        // Combine với spec từ request
+        Specification<Blog> finalSpec = spec == null ? userLikedSpec : spec.and(userLikedSpec);
+
+        Page<Blog> page = this.blogRepository.findAll(finalSpec, pageable);
+
+        ResultPaginationResponse.Meta meta = new ResultPaginationResponse.Meta();
+        meta.setPage(pageable.getPageNumber() + 1);
+        meta.setPageSize(pageable.getPageSize());
+        meta.setPages(page.getTotalPages());
+        meta.setTotal(page.getTotalElements());
+
+        return new ResultPaginationResponse(meta, page.getContent());
+    }
+
+    @Override
+    public List<Map<String, Object>> handleCheckBlogsLiked(List<Long> blogIds) {
+        String currentEmail = SecurityUtil.getCurrentUserLogin().orElse("");
+
+        if (currentEmail.isEmpty()) {
+            return new ArrayList<>();
+        }
+
+        User currentUser = this.handleGetUserByEmail(currentEmail);
+        List<Long> likedBlogIds = currentUser.getLikedBlogs() != null
+                ? currentUser.getLikedBlogs().stream().map(Blog::getBlogId).toList()
+                : new ArrayList<>();
+
+        return blogIds.stream()
+                .map(blogId -> {
+                    Map<String, Object> result = new HashMap<>();
+                    result.put("blogId", blogId);
+                    result.put("result", likedBlogIds.contains(blogId));
+                    return result;
+                })
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    public List<Map<String, Object>> handleLikeBlogs(List<Long> blogIds) {
+        String currentEmail = SecurityUtil.getCurrentUserLogin().orElse("");
+
+        if (currentEmail.isEmpty()) {
+            return new ArrayList<>();
+        }
+
+        User currentUser = this.handleGetUserByEmail(currentEmail);
+        if (currentUser == null) {
+            return new ArrayList<>();
+        }
+
+        List<Blog> currentLikedBlogs = currentUser.getLikedBlogs() != null
+                ? new ArrayList<>(currentUser.getLikedBlogs())
+                : new ArrayList<>();
+
+        List<Blog> blogsToLike = this.blogRepository.findByBlogIdIn(blogIds);
+
+        List<Map<String, Object>> results = new ArrayList<>();
+
+        for (Blog blog : blogsToLike) {
+            boolean alreadyLiked = currentLikedBlogs.stream()
+                    .anyMatch(b -> b.getBlogId() == blog.getBlogId());
+
+            if (!alreadyLiked) {
+                currentLikedBlogs.add(blog);
+
+                // Forward to blog service to handle like blog activity
+                this.blogService.handleLikeBlog(new LikeBlogRequest(blog.getBlogId(), true));
+            }
+
+            Map<String, Object> result = new HashMap<>();
+            result.put("blogId", blog.getBlogId());
+            result.put("result", true);
+            results.add(result);
+        }
+
+        currentUser.setLikedBlogs(currentLikedBlogs);
+        this.userRepository.save(currentUser);
+
+        return results;
+    }
+
+    @Override
+    public List<Map<String, Object>> handleUnlikeBlogs(List<Long> blogIds) {
+        String currentEmail = SecurityUtil.getCurrentUserLogin().orElse("");
+
+        if (currentEmail.isEmpty()) {
+            return new ArrayList<>();
+        }
+
+        User currentUser = this.handleGetUserByEmail(currentEmail);
+        if (currentUser == null) {
+            return new ArrayList<>();
+        }
+
+        List<Blog> currentLikedBlogs = currentUser.getLikedBlogs() != null
+                ? new ArrayList<>(currentUser.getLikedBlogs())
+                : new ArrayList<>();
+
+        List<Map<String, Object>> results = new ArrayList<>();
+
+        currentLikedBlogs.removeIf(b -> blogIds.contains(b.getBlogId()));
+
+        currentUser.setLikedBlogs(currentLikedBlogs);
+        this.userRepository.save(currentUser);
+
+        return results;
+    }
+
     // functions for notifications feature
     @Override
     public ResultPaginationResponse handleGetCurrentUserNotifications(Pageable pageable) {
@@ -537,13 +675,7 @@ public class UserServiceImpl implements UserService {
                 ? new ArrayList<>(currentUser.getFollowedRecruiters())
                 : new ArrayList<>();
 
-        List<Recruiter> recruitersToUnfollow = this.recruiterRepository.findByUserIdIn(recruiterIds);
-
-        for (Recruiter r : recruitersToUnfollow) {
-            if (currentFollowed.removeIf(fr -> fr.getUserId() == r.getUserId())) {
-                this.notificationService.handleNotifyUnfollowRecruiter(r);
-            }
-        }
+        currentFollowed.removeIf(r -> recruiterIds.contains(r.getUserId()));
 
         currentUser.setFollowedRecruiters(currentFollowed);
         this.userRepository.save(currentUser);
