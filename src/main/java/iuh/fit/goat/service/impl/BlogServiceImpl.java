@@ -31,6 +31,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -46,6 +47,8 @@ public class BlogServiceImpl implements BlogService {
     @Lazy
     @Autowired
     private AiService aiService;
+
+    private final RedisService redisService;
 
     private final EmailNotificationService emailNotificationService;
     private final NotificationService notificationService;
@@ -179,6 +182,28 @@ public class BlogServiceImpl implements BlogService {
         if(likeBlogRequest.isLiked()) {
             this.notificationService.handleNotifyLikeBlog(updatedBlog);
         }
+    }
+
+    @Override
+    public void handleIncrementTotalReadValue(Long blogId, String guestId) {
+        String currentEmail = SecurityUtil.getCurrentUserLogin().isPresent()
+                ? SecurityUtil.getCurrentUserLogin().get(): "";
+        User currentUser = this.userService.handleGetUserByEmail(currentEmail);
+
+        String viewer = currentUser != null ? "User" + currentUser.getUserId() : "Guest" + guestId;
+        String key = "view:blog:" + blogId + ":" + viewer;
+
+        if(this.redisService.hasKey(key)) return;
+        this.redisService.saveWithTTL(
+                key,
+                "1",
+                60,
+                TimeUnit.SECONDS
+        );
+
+        Blog blog = this.handleGetBlogById(blogId);
+        blog.getActivity().setTotalReads(blog.getActivity().getTotalReads() + 1);
+        this.blogRepository.save(blog);
     }
 
     @Override

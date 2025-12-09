@@ -33,6 +33,8 @@ public interface BlogService {
 
     void handleIncrementTotalLikeValue(LikeBlogRequest likeBlogRequest);
 
+    void handleIncrementTotalReadValue(Long blogId, String guestId);
+
     List<Object[]> handleGetAllTags(String keyword);
 
     List<BlogStatusResponse> handleEnableBlogs(BlogIdsRequest request);
