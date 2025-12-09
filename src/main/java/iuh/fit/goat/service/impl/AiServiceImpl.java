@@ -821,36 +821,31 @@ public class AiServiceImpl implements AiService {
     }
 
     private String getOptimizedConversationHistory(Long conversationId, User currentUser) {
-        return this.getOrSet(
-                "conversationHistory" + conversationId + currentUser.getUserId(),
-                () -> {
-                    if (conversationId == null || currentUser == null) {
-                        return "";
-                    }
+        if (conversationId == null || currentUser == null) {
+            return "";
+        }
 
-                    Conversation conversation = this.conversationService.handleGetConversationById(conversationId);
-                    List<Message> messages = conversation.getMessages();
+        Conversation conversation = this.conversationService.handleGetConversationById(conversationId);
+        List<Message> messages = conversation.getMessages();
 
-                    if (messages == null || messages.isEmpty()) {
-                        return "";
-                    }
+        if (messages == null || messages.isEmpty()) {
+            return "";
+        }
 
-                    StringBuilder history = new StringBuilder("\n--- LỊCH SỬ HỘI THOẠI (10 tin nhắn gần nhất) ---\n");
-                    int startIndex = Math.max(0, messages.size() - 10);
+        StringBuilder history = new StringBuilder("\n--- LỊCH SỬ HỘI THOẠI (10 tin nhắn gần nhất) ---\n");
+        int startIndex = Math.max(0, messages.size() - 10);
 
-                    for (int i = startIndex; i < messages.size(); i++) {
-                        Message msg = messages.get(i);
-                        String role = msg.getRole() == MessageRole.USER ? "User" : "AI";
-                        history.append(String.format("%s: %s\n", role,
-                                msg.getContent().length() > 200
-                                        ? msg.getContent().substring(0, 200) + "..."
-                                        : msg.getContent()
-                        ));
-                    }
+        for (int i = startIndex; i < messages.size(); i++) {
+            Message msg = messages.get(i);
+            String role = msg.getRole() == MessageRole.USER ? "User" : "AI";
+            history.append(String.format("%s: %s\n", role,
+                    msg.getContent().length() > 200
+                            ? msg.getContent().substring(0, 200) + "..."
+                            : msg.getContent()
+            ));
+        }
 
-                    return history.toString();
-                }
-        );
+        return history.toString();
     }
     // Lấy dữ liệu
 
