@@ -28,7 +28,7 @@ public class AdminServiceImpl implements AdminService {
     @Override
     public ResponseEntity<Resource> handleBackupDatabase() {
         try {
-            File tempFile = File.createTempFile("backup_", ".sql");
+            File tempFile = File.createTempFile("backup_", ".bak");
 
             ProcessBuilder pb = new ProcessBuilder(
                     "mysqldump",
@@ -47,12 +47,12 @@ public class AdminServiceImpl implements AdminService {
 
             return ResponseEntity
                     .ok()
-                    .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=backup.sql")
+                    .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=backup.bak")
                     .contentType(MediaType.APPLICATION_OCTET_STREAM)
                     .body(resource);
 
         } catch (Exception e) {
-            throw new RuntimeException("Backup failed: " + e.getMessage());
+            throw new RuntimeException(e.getMessage());
         }
     }
 }
