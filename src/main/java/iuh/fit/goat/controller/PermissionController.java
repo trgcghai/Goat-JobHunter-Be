@@ -38,9 +38,6 @@ public class PermissionController {
         if(this.permissionService.handleGetPermissionById(permission.getPermissionId()) == null){
             throw new InvalidException("Permission doesn't exist");
         }
-        if(this.permissionService.handleExistPermission(permission)) {
-            throw new InvalidException("Permission exists");
-        }
         Permission res = this.permissionService.handleUpdatePermission(permission);
         return ResponseEntity.status(HttpStatus.OK).body(res);
     }
