@@ -10,6 +10,7 @@ import iuh.fit.goat.dto.response.ResultPaginationResponse;
 import iuh.fit.goat.entity.Blog;
 import iuh.fit.goat.exception.InvalidException;
 import iuh.fit.goat.service.BlogService;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Pageable;
@@ -49,12 +50,20 @@ public class BlogController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<?> getBlogById(@PathVariable("id") String id) throws InvalidException {
+    public ResponseEntity<?> getBlogById(
+            @PathVariable("id") String id,
+            @RequestParam(value = "read", required = false) Boolean read,
+            @CookieValue(value = "guestId", required = false) String guestId
+    ) throws InvalidException {
         Pattern pattern = Pattern.compile("^[0-9]+$");
         if(!pattern.matcher(id).matches()) throw new InvalidException("Id is number");
 
         Blog res = this.blogService.handleGetBlogById(Long.parseLong(id));
         if(res == null) throw new InvalidException("Blog doesn't exist");
+
+        if (Boolean.TRUE.equals(read)) {
+            this.blogService.handleIncrementTotalReadValue(res.getBlogId(), guestId);
+        }
 
         BlogResponse blogResponse = this.blogService.convertToBlogResponse(res);
 
