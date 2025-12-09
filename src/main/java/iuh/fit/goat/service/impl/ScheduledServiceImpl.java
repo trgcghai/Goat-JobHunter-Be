@@ -2,6 +2,7 @@ package iuh.fit.goat.service.impl;
 
 import iuh.fit.goat.entity.Job;
 import iuh.fit.goat.repository.JobRepository;
+import iuh.fit.goat.service.AiService;
 import iuh.fit.goat.service.ScheduledService;
 import iuh.fit.goat.service.SubscriberService;
 import lombok.RequiredArgsConstructor;
@@ -15,6 +16,7 @@ import java.util.List;
 @Service
 @RequiredArgsConstructor
 public class ScheduledServiceImpl implements ScheduledService {
+    private final AiService aiService;
     private final SubscriberService subscriberService;
     private final JobRepository jobRepository;
 
@@ -38,8 +40,25 @@ public class ScheduledServiceImpl implements ScheduledService {
     @Override
     @Scheduled(cron = "0 0 */12 * * *")
     @Transactional
-    public void sendEmail(){
+    public void handleSendSuitableJobs(){
         this.subscriberService.handleSendSubscribersEmailJobs();
         this.subscriberService.handleSendFollowersEmailJobs();
+    }
+
+    @Override
+    @Scheduled(cron = "0 */30 * * * *")
+    @Transactional
+    public void handleRefreshAiCache() {
+        this.aiService.getTopJobsContext();
+        this.aiService.getTopApplicantsContext();
+        this.aiService.getTopRecruitersContext();
+        this.aiService.getRecentApplicationsContext();
+        this.aiService.getTopSkillsContext();
+        this.aiService.getRecentBlogsContext();
+        this.aiService.getAllCareersContext();
+        this.aiService.getSystemStatsContext();
+        this.aiService.getJobMarketOverview();
+
+        System.out.println("AI cache refreshed!");
     }
 }
