@@ -495,17 +495,23 @@ public class UserServiceImpl implements UserService {
 
         List<Map<String, Object>> results = new ArrayList<>();
 
-        currentLikedBlogs.forEach(blog -> {
-            if(blogIds.contains(blog.getBlogId())) {
-                currentLikedBlogs.remove(blog);
-                this.blogService.handleIncrementTotalLikeValue(new LikeBlogRequest(blog.getBlogId(), false));
+        // Remove liked blogs and update like counts
+        currentLikedBlogs.removeIf(blog -> {
+            if (blogIds.contains(blog.getBlogId())) {
+                // Decrement like count
+                this.blogService.handleIncrementTotalLikeValue(
+                        new LikeBlogRequest(blog.getBlogId(), false)
+                );
+
+                // Add result
+                results.add(new HashMap<>(Map.of(
+                        "blogId", blog.getBlogId(),
+                        "result", false
+                )));
+
+                return true; // Remove this blog
             }
-            results.add(new HashMap<>(
-                    Map.of(
-                            "blogId", blog.getBlogId(),
-                            "result", false
-                    )
-            ));
+            return false; // Keep this blog
         });
 
         currentUser.setLikedBlogs(currentLikedBlogs);
