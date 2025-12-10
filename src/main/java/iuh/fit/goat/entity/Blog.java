@@ -49,6 +49,7 @@ public class Blog {
     @ToString.Exclude
     private List<User> likedByUsers = new ArrayList<>();
 
+    // khi chạy lần đầu thì EAGER để nạp data, rồi đổi lại LAZY
     @OneToMany(mappedBy = "blog", fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
     @ToString.Exclude
     @JsonIgnore

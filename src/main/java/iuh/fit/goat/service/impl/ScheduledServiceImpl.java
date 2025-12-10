@@ -46,7 +46,7 @@ public class ScheduledServiceImpl implements ScheduledService {
     }
 
     @Override
-    @Scheduled(cron = "0 */30 * * * *")
+    @Scheduled(cron = "0 */15 * * * *")
     @Transactional
     public void handleRefreshAiCache() {
         this.aiService.getTopJobsContext();

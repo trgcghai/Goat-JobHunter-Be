@@ -12,6 +12,7 @@ import org.springframework.boot.CommandLineRunner;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.io.IOException;
 import java.time.LocalDate;
@@ -43,10 +44,11 @@ public class DatabaseInitializer implements CommandLineRunner {
     private final List<Career> careers = new ArrayList<>();
     private final List<Job> jobs = new ArrayList<>();
     private final List<Blog> blogs = new ArrayList<>();
-    private final List<Comment> comments = new ArrayList<>();
     private final List<Application> applications = new ArrayList<>();
     private final List<Notification> notifications = new ArrayList<>();
     private final List<Subscriber> subscribers = new ArrayList<>();
+    private final List<Comment> parentComments = new ArrayList<>();
+    private final List<Comment> childComments = new ArrayList<>();
 
     @Override
     public void run(String... args) throws Exception {
@@ -78,6 +80,7 @@ public class DatabaseInitializer implements CommandLineRunner {
             initUsers();
             initJobs();
             initBlogsAndComments();
+            updateBlogActivityValue();
             initApplications();
             initNotifications();
             initSubscribers();
@@ -216,6 +219,7 @@ public class DatabaseInitializer implements CommandLineRunner {
 
         // ADMIN
         permissions.add(new Permission("Backup Database", "/api/v1/admin/backup", "GET", "ADMIN"));
+
         // CONVERSATION
         permissions.add(new Permission("Create a conversation", "/api/v1/conversations", "POST", "CONVERSATIONS"));
         permissions.add(new Permission("Update a conversation", "/api/v1/conversations", "PUT", "CONVERSATIONS"));
@@ -950,7 +954,7 @@ public class DatabaseInitializer implements CommandLineRunner {
 
     private void initBlogsAndComments() {
         for (Recruiter r : recruiters) {
-            for (int b = 0; b < 10; b++) {
+            for (int b = 0; b < 5; b++) {
                 Blog blog = new Blog();
                 blog.setTitle(faker.book().title());
                 blog.setBanner("https://boringapi.com/api/v1/static/photos/" + random.nextInt(300) + ".jpeg");
@@ -968,16 +972,11 @@ public class DatabaseInitializer implements CommandLineRunner {
                 blog.setEnabled(true);
                 blog.setAuthor(r);
                 blog.getActivity().setTotalReads(random.nextInt(1000));
-                blog.getActivity().setTotalParentComments(random.nextInt(1000));
-                blog.getActivity().setTotalComments(random.nextInt(1000));
                 blogs.add(blog);
             }
         }
 
-        batchSave(blogs, 300, blogRepository);
-
-        List<Comment> parentComments = new ArrayList<>();
-        List<Comment> childComments = new ArrayList<>();
+        batchSave(blogs, 100, blogRepository);
 
         for (Blog blog : blogs) {
             for (int c = 0; c < 5; c++) {
@@ -1017,6 +1016,23 @@ public class DatabaseInitializer implements CommandLineRunner {
         batchSave(childComments, 300, commentRepository);
 
         System.out.println("Initialized blogs and comments.");
+    }
+
+    @Transactional
+    public void updateBlogActivityValue() {
+        List<Blog> blogsDB = this.blogRepository.findAll();
+        for(Blog blog : blogsDB) {
+            long parentCount = parentComments.stream()
+                    .filter(p -> p.getBlog().getBlogId() == blog.getBlogId())
+                    .count();
+            blog.getActivity().setTotalParentComments(parentCount);
+            blog.getActivity().setTotalComments(blog.getComments().size());
+
+        }
+
+        this.blogRepository.saveAll(blogsDB);
+
+        System.out.println("Initialized activity blogs.");
     }
 
     private void initNotifications() {
