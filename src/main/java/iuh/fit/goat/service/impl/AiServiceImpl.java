@@ -47,7 +47,7 @@ public class AiServiceImpl implements AiService {
     private String FE;
 
     private final String CACHE_NAME = "aiChat";
-    private final Long TTL = 1800L;
+    private final Long TTL = 900L;
 
     @Override
     @Transactional
@@ -119,7 +119,7 @@ public class AiServiceImpl implements AiService {
         if (currentUserRole == Role.ADMIN) {
             return basePrompt + "\nQuyền: ADMIN - toàn bộ dữ liệu.";
         } else if (currentUserRole == Role.RECRUITER) {
-            return basePrompt + String.format("\nQuyền: Recruiter %s - chỉ dữ liệu liên quan.",
+            return basePrompt + String.format("\nQuyền: Recruiter %s - chỉ dữ liệu liên quan đến job (có thể là job của recruiter khác).",
                     currentUser.getFullName());
         } else if (currentUserRole == Role.APPLICANT) {
             return basePrompt + String.format("\nQuyền: Applicant %s - tư vấn job và application.",
@@ -182,6 +182,7 @@ public class AiServiceImpl implements AiService {
         StringBuilder sb = new StringBuilder();
 
         sb.append("[MY JOBS]\n").append(getJobsContextForRecruiter(recruiter)).append("\n\n");
+        sb.append("[TOP JOBS]\n").append(getTopJobsContext()).append("\n\n");
 
         if (containsKeywords(message, "application", "đơn", "ứng tuyển", "ứng viên")) {
             sb.append("[APPLICATIONS]\n").append(getApplicationsContextForRecruiter(recruiter)).append("\n\n");
