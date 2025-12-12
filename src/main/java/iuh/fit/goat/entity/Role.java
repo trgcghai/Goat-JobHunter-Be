@@ -22,7 +22,7 @@ public class Role {
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
     private long roleId;
-    @Column(columnDefinition = "MEDIUMTEXT")
+    @Column(columnDefinition = "TEXT")
     private String description;
     private boolean active;
     @NotBlank(message = "Role name is not empty")

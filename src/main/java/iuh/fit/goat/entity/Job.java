@@ -25,7 +25,7 @@ public class Job {
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
     private long jobId;
-    @Column(columnDefinition = "MEDIUMTEXT")
+    @Column(columnDefinition = "TEXT")
     private String description;
     private LocalDate startDate;
     private LocalDate endDate;

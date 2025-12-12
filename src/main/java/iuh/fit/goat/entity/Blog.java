@@ -25,9 +25,9 @@ public class Blog {
     @NotBlank(message = "Title is not empty")
     private String title;
     private String banner;
-    @Column(columnDefinition = "MEDIUMTEXT")
+    @Column(columnDefinition = "TEXT")
     private String description;
-    @Column(columnDefinition = "MEDIUMTEXT")
+    @Column(columnDefinition = "TEXT")
     private String content;
     @ElementCollection
     private List<String> tags;

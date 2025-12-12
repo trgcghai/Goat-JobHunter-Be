@@ -15,7 +15,7 @@ import java.util.List;
 @AllArgsConstructor
 @ToString
 public class Recruiter extends User{
-    @Column(columnDefinition = "MEDIUMTEXT")
+    @Column(columnDefinition = "TEXT")
     private String description;
     private String website;
 

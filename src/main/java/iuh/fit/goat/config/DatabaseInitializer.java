@@ -54,43 +54,43 @@ public class DatabaseInitializer implements CommandLineRunner {
     public void run(String... args) throws Exception {
         System.out.println("Database initialization is starting...");
 
-        long countPermissions = this.permissionRepository.count();
-        long countRoles = this.roleRepository.count();
-        long countUsers = this.userRepository.count();
-        long countSkills = this.skillRepository.count();
-        long countCareers = this.careerRepository.count();
-
-        if(countPermissions == 0){
-            initPermissions();
-        }
-
-        if(countRoles == 0){
-            initRoles();
-        }
-
-        if(countSkills == 0){
-            initSkills();
-        }
-
-        if(countCareers == 0){
-            initCareers();
-        }
-
-        if(countUsers == 0){
-            initUsers();
-            initJobs();
-            initBlogsAndComments();
-            updateBlogActivityValue();
-            initApplications();
-            initNotifications();
-            initSubscribers();
-        }
-
-        if (countPermissions > 0 && countRoles > 0 && countUsers > 0 && countSkills > 0 && countCareers > 0) {
-            System.out.println("Skip init database ~ Already have data...");
-        } else {
-            System.out.println("Database initialization ended...");
-        }
+//        long countPermissions = this.permissionRepository.count();
+//        long countRoles = this.roleRepository.count();
+//        long countUsers = this.userRepository.count();
+//        long countSkills = this.skillRepository.count();
+//        long countCareers = this.careerRepository.count();
+//
+//        if(countPermissions == 0){
+//            initPermissions();
+//        }
+//
+//        if(countRoles == 0){
+//            initRoles();
+//        }
+//
+//        if(countSkills == 0){
+//            initSkills();
+//        }
+//
+//        if(countCareers == 0){
+//            initCareers();
+//        }
+//
+//        if(countUsers == 0){
+//            initUsers();
+//            initJobs();
+//            initBlogsAndComments();
+//            updateBlogActivityValue();
+//            initApplications();
+//            initNotifications();
+//            initSubscribers();
+//        }
+//
+//        if (countPermissions > 0 && countRoles > 0 && countUsers > 0 && countSkills > 0 && countCareers > 0) {
+//            System.out.println("Skip init database ~ Already have data...");
+//        } else {
+//            System.out.println("Database initialization ended...");
+//        }
     }
 
     private <T> T getRandom(List<T> list, Random random) {
