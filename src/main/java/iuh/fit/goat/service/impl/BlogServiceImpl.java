@@ -1,7 +1,7 @@
 package iuh.fit.goat.service.impl;
 
 import iuh.fit.goat.common.ActionType;
-import iuh.fit.goat.enumeration.Role;
+import iuh.fit.goat.common.Role;
 import iuh.fit.goat.dto.request.blog.BlogCreateRequest;
 import iuh.fit.goat.dto.request.blog.BlogIdsRequest;
 import iuh.fit.goat.dto.request.blog.BlogUpdateRequest;
@@ -11,7 +11,6 @@ import iuh.fit.goat.dto.response.blog.BlogStatusResponse;
 import iuh.fit.goat.dto.response.ResultPaginationResponse;
 import iuh.fit.goat.entity.Blog;
 import iuh.fit.goat.entity.Comment;
-import iuh.fit.goat.entity.Notification;
 import iuh.fit.goat.entity.User;
 import iuh.fit.goat.exception.InvalidException;
 import iuh.fit.goat.repository.BlogRepository;

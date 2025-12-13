@@ -2,7 +2,7 @@ package iuh.fit.goat.service.impl;
 
 import iuh.fit.goat.common.ActionType;
 import iuh.fit.goat.enumeration.Level;
-import iuh.fit.goat.enumeration.Role;
+import iuh.fit.goat.common.Role;
 import iuh.fit.goat.enumeration.WorkingType;
 import iuh.fit.goat.dto.request.job.CreateJobRequest;
 import iuh.fit.goat.dto.request.job.JobIdsActionRequest;
@@ -22,7 +22,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
-import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import iuh.fit.goat.entity.*;
 import iuh.fit.goat.repository.*;

@@ -47,6 +47,7 @@ public class SecurityUtil {
                 .claim("userId", user.getUserId())
                 .claim("email", user.getContact().getEmail())
                 .claim("fullName", user.getFullName())
+                .claim("role", user.getRole().getName())
                 .build();
 
         JwsHeader header = JwsHeader.with(SecurityUtil.JWT_ALGORITHM).build();
@@ -103,6 +104,14 @@ public class SecurityUtil {
     public static Optional<String> getCurrentUserLogin(){
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         return Optional.ofNullable(extractPrincipal(authentication));
+    }
+
+    public static boolean hasRole(String role) {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        if (auth == null) return false;
+
+        return auth.getAuthorities().stream()
+                .anyMatch(a -> a.getAuthority().equals("ROLE_" + role));
     }
 
     private static String extractPrincipal(Authentication authentication){
