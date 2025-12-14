@@ -9,13 +9,15 @@ import org.hibernate.annotations.FilterDef;
 
 import java.time.Instant;
 
+import static jakarta.persistence.FetchType.LAZY;
+
 @Entity
 @Table(name = "interviews")
 @Getter
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-@ToString
+@ToString(exclude = {"applicant", "interviewer", "application"})
 @FilterDef(name = "activeInterviewFilter")
 public class Interview extends BaseEntity{
     @Id
@@ -34,11 +36,11 @@ public class Interview extends BaseEntity{
     private String feedback;
     private Integer rating;
 
-    @ManyToOne
+    @ManyToOne(fetch = LAZY)
     @JoinColumn(name = "applicant_id")
     private Applicant applicant;
 
-    @ManyToOne
+    @ManyToOne(fetch = LAZY)
     @JoinColumn(name = "interviewer_id")
     private Recruiter interviewer;
 

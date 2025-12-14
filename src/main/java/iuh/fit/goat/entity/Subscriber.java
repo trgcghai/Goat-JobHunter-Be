@@ -10,6 +10,8 @@ import org.hibernate.annotations.FilterDef;
 import java.util.ArrayList;
 import java.util.List;
 
+import static jakarta.persistence.FetchType.LAZY;
+
 @Entity
 @Table(
         name = "subscribers",
@@ -32,7 +34,7 @@ public class Subscriber extends BaseEntity {
     @NotBlank(message = "Email is not empty")
     private String email;
 
-    @ManyToMany(fetch = FetchType.LAZY)
+    @ManyToMany(fetch = LAZY)
     @JoinTable(
             name = "subscriber_skill",
             joinColumns = @JoinColumn(name = "subscriber_id"),

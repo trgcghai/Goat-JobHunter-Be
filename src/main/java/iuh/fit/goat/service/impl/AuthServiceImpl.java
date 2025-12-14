@@ -12,7 +12,7 @@ import iuh.fit.goat.entity.Recruiter;
 import iuh.fit.goat.entity.User;
 import iuh.fit.goat.entity.embeddable.Contact;
 import iuh.fit.goat.exception.InvalidException;
-import iuh.fit.goat.repository.RecruiterRepository;
+//import iuh.fit.goat.repository.RecruiterRepository;
 import iuh.fit.goat.repository.UserRepository;
 import iuh.fit.goat.service.*;
 import iuh.fit.goat.util.SecurityUtil;

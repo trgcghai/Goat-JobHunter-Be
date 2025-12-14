@@ -5,13 +5,15 @@ import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.FilterDef;
 
+import static jakarta.persistence.FetchType.LAZY;
+
 @Entity
 @Table(name = "chat_members")
 @Getter
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-@ToString(exclude = {"room"})
+@ToString(exclude = {"room", "user"})
 @FilterDef(name = "activeChatMemberFilter")
 public class ChatMember extends BaseEntity {
     @Id
@@ -20,11 +22,11 @@ public class ChatMember extends BaseEntity {
     @Enumerated(EnumType.STRING)
     private ChatRole role;
 
-    @ManyToOne
+    @ManyToOne(fetch = LAZY)
     @JoinColumn(name = "room_id")
     private ChatRoom room;
 
-    @ManyToOne
+    @ManyToOne(fetch = LAZY)
     @JoinColumn(name = "user_id")
     private User user;
 }

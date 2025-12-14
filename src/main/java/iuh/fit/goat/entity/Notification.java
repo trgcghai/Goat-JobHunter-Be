@@ -10,13 +10,15 @@ import org.hibernate.annotations.FilterDef;
 import java.util.ArrayList;
 import java.util.List;
 
+import static jakarta.persistence.FetchType.*;
+
 @Entity
 @Table(name = "notifications")
 @Getter
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-@ToString(exclude = {"actors", "recipient", "comment"})
+@ToString(exclude = {"actors", "blog", "comment", "recipient"})
 @FilterDef(name = "activeNotificationFilter")
 public class Notification extends BaseEntity {
     @Id
@@ -26,11 +28,11 @@ public class Notification extends BaseEntity {
     private NotificationType type;
     private boolean seen = false;
 
-    @ManyToOne
+    @ManyToOne(fetch = LAZY)
     @JoinColumn(name = "blog_id")
     private Blog blog;
 
-    @ManyToMany(fetch = FetchType.LAZY)
+    @ManyToMany(fetch = LAZY)
     @JoinTable(
             name = "notification_actors",
             joinColumns = @JoinColumn(name = "notification_id"),
@@ -43,11 +45,11 @@ public class Notification extends BaseEntity {
     )
     private List<User> actors = new ArrayList<>();
 
-    @ManyToOne(fetch = FetchType.EAGER)
+    @ManyToOne(fetch = LAZY)
     @JoinColumn(name = "recipient_id")
     private User recipient;
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = LAZY)
     @JoinColumn(name = "comment_id")
     private Comment comment;
 

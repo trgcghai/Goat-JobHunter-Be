@@ -10,6 +10,8 @@ import org.hibernate.annotations.FilterDef;
 import java.util.ArrayList;
 import java.util.List;
 
+import static jakarta.persistence.FetchType.LAZY;
+
 @Entity
 @Table(name = "permissions")
 @Getter
@@ -37,7 +39,7 @@ public class Permission extends BaseEntity {
         this.module = module;
     }
 
-    @ManyToMany(mappedBy = "permissions", fetch = FetchType.LAZY)
+    @ManyToMany(mappedBy = "permissions", fetch = LAZY)
     @JsonIgnore
     @Filter(
             name = "activeRoleFilter",

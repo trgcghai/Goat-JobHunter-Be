@@ -8,6 +8,8 @@ import org.hibernate.annotations.FilterDef;
 
 import java.time.Instant;
 
+import static jakarta.persistence.FetchType.LAZY;
+
 @Entity
 @Table(
         name = "friendships",
@@ -19,7 +21,7 @@ import java.time.Instant;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-@ToString
+@ToString(exclude = {"sender", "receiver"})
 @FilterDef(name = "activeFriendshipFilter")
 public class Friendship extends BaseEntity {
     @Id
@@ -29,11 +31,11 @@ public class Friendship extends BaseEntity {
     private Status status;
     private Instant respondedAt;
 
-    @ManyToOne
+    @ManyToOne(fetch = LAZY)
     @JoinColumn(name = "sender_id")
     private User sender;
 
-    @ManyToOne
+    @ManyToOne(fetch = LAZY)
     @JoinColumn(name = "receiver_id")
     private User receiver;
 }

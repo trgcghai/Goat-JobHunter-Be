@@ -11,13 +11,16 @@ import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 
+import static jakarta.persistence.CascadeType.*;
+import static jakarta.persistence.FetchType.*;
+
 @Entity
 @Table(name = "resumes")
 @Getter
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-@ToString(exclude = {"applications"})
+@ToString(exclude = {"applicant", "applications"})
 @FilterDef(name = "activeResumeFilter")
 public class Resume extends BaseEntity {
     @Id
@@ -40,11 +43,11 @@ public class Resume extends BaseEntity {
     private String aiSuggestions;
     private Instant analyzedAt;
 
-    @ManyToOne
+    @ManyToOne(fetch = LAZY)
     @JoinColumn(name = "applicant_id")
     private Applicant applicant;
 
-    @OneToMany(mappedBy = "resume", fetch = FetchType.LAZY, cascade = {CascadeType.PERSIST, CascadeType.MERGE})
+    @OneToMany(mappedBy = "resume", fetch = LAZY, cascade = {PERSIST, MERGE})
     @JsonIgnore
     @Filter(
             name = "activeApplicationFilter",

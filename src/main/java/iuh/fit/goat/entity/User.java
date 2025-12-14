@@ -13,6 +13,9 @@ import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 
+import static jakarta.persistence.CascadeType.*;
+import static jakarta.persistence.FetchType.LAZY;
+
 @Entity
 @Table(name = "users")
 @Inheritance(strategy = InheritanceType.JOINED)
@@ -59,7 +62,7 @@ public abstract class User extends Account {
     @Column(columnDefinition = "TEXT")
     protected String bio;
 
-    @OneToMany(mappedBy = "sender", fetch = FetchType.LAZY, cascade = {CascadeType.PERSIST, CascadeType.MERGE})
+    @OneToMany(mappedBy = "sender", fetch = LAZY, cascade = {PERSIST, MERGE})
     @JsonIgnore
     @Filter(
             name = "activeFriendshipFilter",
@@ -67,7 +70,7 @@ public abstract class User extends Account {
     )
     private List<Friendship> sentFriendRequests = new ArrayList<>();
 
-    @OneToMany(mappedBy = "receiver", fetch = FetchType.LAZY, cascade = {CascadeType.PERSIST, CascadeType.MERGE})
+    @OneToMany(mappedBy = "receiver", fetch = LAZY, cascade = {PERSIST, MERGE})
     @JsonIgnore
     @Filter(
             name = "activeFriendshipFilter",
@@ -75,7 +78,7 @@ public abstract class User extends Account {
     )
     private List<Friendship> receivedFriendRequests = new ArrayList<>();
 
-    @ManyToMany(fetch = FetchType.LAZY)
+    @ManyToMany(fetch = LAZY)
     @JoinTable(
             name = "user_saved_job",
             joinColumns = @JoinColumn(name = "user_id"),
@@ -88,7 +91,7 @@ public abstract class User extends Account {
     )
     private List<Job> savedJobs = new ArrayList<>();
 
-    @ManyToMany(fetch = FetchType.LAZY)
+    @ManyToMany(fetch = LAZY)
     @JoinTable(
             name = "user_followed_company",
             joinColumns = @JoinColumn(name = "user_id"),
@@ -101,7 +104,7 @@ public abstract class User extends Account {
     )
     private List<Company> followedCompanies = new ArrayList<>();
 
-    @OneToMany(mappedBy = "author", fetch = FetchType.LAZY, cascade = {CascadeType.PERSIST, CascadeType.MERGE})
+    @OneToMany(mappedBy = "author", fetch = LAZY, cascade = {PERSIST, MERGE})
     @JsonIgnore
     @Filter(
             name = "activeBlogFilter",
@@ -109,7 +112,7 @@ public abstract class User extends Account {
     )
     private List<Blog> blogs = new ArrayList<>();
 
-    @OneToMany(mappedBy = "commentedBy", fetch = FetchType.LAZY, cascade = {CascadeType.PERSIST, CascadeType.MERGE})
+    @OneToMany(mappedBy = "commentedBy", fetch = LAZY, cascade = {PERSIST, MERGE})
     @JsonIgnore
     @Filter(
             name = "activeCommentFilter",
@@ -117,7 +120,7 @@ public abstract class User extends Account {
     )
     private List<Comment> comments = new ArrayList<>();
 
-    @ManyToMany(mappedBy = "actors", fetch = FetchType.LAZY)
+    @ManyToMany(mappedBy = "actors", fetch = LAZY)
     @JsonIgnore
     @Filter(
             name = "activeNotificationFilter",
@@ -125,7 +128,7 @@ public abstract class User extends Account {
     )
     private List<Notification> actorNotifications = new ArrayList<>();
 
-    @OneToMany(mappedBy = "recipient", fetch = FetchType.LAZY, cascade = {CascadeType.PERSIST, CascadeType.MERGE})
+    @OneToMany(mappedBy = "recipient", fetch = LAZY, cascade = {PERSIST, MERGE})
     @JsonIgnore
     @Filter(
             name = "activeNotificationFilter",
@@ -133,7 +136,7 @@ public abstract class User extends Account {
     )
     private List<Notification> recipientNotifications = new ArrayList<>();
 
-    @OneToMany(mappedBy = "user", fetch = FetchType.LAZY, cascade = {CascadeType.PERSIST, CascadeType.MERGE})
+    @OneToMany(mappedBy = "user", fetch = LAZY, cascade = {PERSIST, MERGE})
     @JsonIgnore
     @Filter(
             name = "activeChatMemberFilter",
@@ -141,7 +144,7 @@ public abstract class User extends Account {
     )
     private List<ChatMember> memberships = new ArrayList<>();
 
-    @OneToMany(mappedBy = "sender", fetch = FetchType.LAZY, cascade = {CascadeType.PERSIST, CascadeType.MERGE})
+    @OneToMany(mappedBy = "sender", fetch = LAZY, cascade = {PERSIST, MERGE})
     @JsonIgnore
     @Filter(
             name = "activeMessageFilter",
@@ -149,7 +152,7 @@ public abstract class User extends Account {
     )
     private List<Message> sentMessages = new ArrayList<>();
 
-    @ManyToMany(mappedBy = "readBy", fetch = FetchType.LAZY)
+    @ManyToMany(mappedBy = "readBy", fetch = LAZY)
     @JsonIgnore
     @Filter(
             name = "activeMessageFilter",
@@ -157,15 +160,15 @@ public abstract class User extends Account {
     )
     private List<Message> readMessages = new ArrayList<>();
 
-    @OneToMany(mappedBy = "user", fetch = FetchType.LAZY, cascade = {CascadeType.PERSIST, CascadeType.MERGE}, orphanRemoval = true)
+    @OneToMany(mappedBy = "user", fetch = LAZY, cascade = {PERSIST, MERGE}, orphanRemoval = true)
     @JsonIgnore
     private List<BlogReaction> blogReactions = new ArrayList<>();
 
-    @OneToMany(mappedBy = "user", fetch = FetchType.LAZY, cascade = {CascadeType.PERSIST, CascadeType.MERGE}, orphanRemoval = true)
+    @OneToMany(mappedBy = "user", fetch = LAZY, cascade = {PERSIST, MERGE}, orphanRemoval = true)
     @JsonIgnore
     private List<CommentReaction> commentReactions = new ArrayList<>();
 
-    @OneToMany(mappedBy = "reporter", fetch = FetchType.LAZY, cascade = {CascadeType.PERSIST, CascadeType.MERGE})
+    @OneToMany(mappedBy = "reporter", fetch = LAZY, cascade = {PERSIST, MERGE})
     @JsonIgnore
     @Filter(
             name = "activeTicketFilter",
@@ -173,7 +176,7 @@ public abstract class User extends Account {
     )
     private List<Ticket> reportedTickets = new ArrayList<>();
 
-    @OneToMany(mappedBy = "assignee", fetch = FetchType.LAZY, cascade = {CascadeType.PERSIST, CascadeType.MERGE})
+    @OneToMany(mappedBy = "assignee", fetch = LAZY, cascade = {PERSIST, MERGE})
     @JsonIgnore
     @Filter(
             name = "activeTicketFilter",

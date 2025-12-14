@@ -1,17 +1,17 @@
 package iuh.fit.goat.entity;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import iuh.fit.goat.entity.embeddable.Contact;
 import iuh.fit.goat.enumeration.CompanySize;
 import jakarta.persistence.*;
-import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
 import lombok.*;
 import org.hibernate.annotations.Filter;
 
 import java.util.ArrayList;
 import java.util.List;
+
+import static jakarta.persistence.CascadeType.*;
+import static jakarta.persistence.FetchType.LAZY;
 
 @Entity
 @Table(name = "companies")
@@ -33,7 +33,7 @@ public class Company extends Account {
     private CompanySize size;
     private boolean verified = false;
 
-    @OneToMany(mappedBy = "company", fetch = FetchType.LAZY, cascade = {CascadeType.PERSIST, CascadeType.MERGE})
+    @OneToMany(mappedBy = "company", fetch = LAZY, cascade = {PERSIST, MERGE})
     @JsonIgnore
     @Filter(
             name = "activeJobFilter",
@@ -41,7 +41,7 @@ public class Company extends Account {
     )
     private List<Job> jobs = new ArrayList<>();
 
-    @OneToMany(mappedBy = "company", fetch = FetchType.LAZY, cascade = {CascadeType.PERSIST, CascadeType.MERGE})
+    @OneToMany(mappedBy = "company", fetch = LAZY, cascade = {PERSIST, MERGE})
     @JsonIgnore
     @Filter(
             name = "activeAccountFilter",
@@ -49,7 +49,7 @@ public class Company extends Account {
     )
     private List<Recruiter> recruiters = new ArrayList<>();
 
-    @ManyToMany(mappedBy = "followedCompanies", fetch = FetchType.LAZY)
+    @ManyToMany(mappedBy = "followedCompanies", fetch = LAZY)
     @JsonIgnore
     @Filter(
             name = "activeAccountFilter",

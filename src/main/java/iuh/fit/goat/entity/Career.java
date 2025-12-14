@@ -10,6 +10,9 @@ import org.hibernate.annotations.FilterDef;
 import java.util.ArrayList;
 import java.util.List;
 
+import static jakarta.persistence.CascadeType.*;
+import static jakarta.persistence.FetchType.LAZY;
+
 @Entity
 @Table(name = "careers")
 @Getter
@@ -29,7 +32,7 @@ public class Career extends BaseEntity {
         this.name = name;
     }
 
-    @OneToMany(mappedBy = "career", fetch = FetchType.LAZY, cascade = {CascadeType.PERSIST, CascadeType.MERGE})
+    @OneToMany(mappedBy = "career", fetch = LAZY, cascade = {PERSIST, MERGE})
     @JsonIgnore
     @Filter(
             name = "activeJobFilter",

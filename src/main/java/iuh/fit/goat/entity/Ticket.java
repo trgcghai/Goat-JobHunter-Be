@@ -7,6 +7,8 @@ import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.FilterDef;
 
+import static jakarta.persistence.FetchType.LAZY;
+
 @Entity
 @Table(name = "tickets")
 @Getter
@@ -30,19 +32,19 @@ public class Ticket extends BaseEntity{
     @Column(columnDefinition = "TEXT")
     private String adminNotes;
 
-    @ManyToOne
+    @ManyToOne(fetch = LAZY)
     @JoinColumn(name = "reporter_id")
     private User reporter;
 
-    @ManyToOne
+    @ManyToOne(fetch = LAZY)
     @JoinColumn(name = "assignee_id")
     private User assignee;
 
-    @ManyToOne
+    @ManyToOne(fetch = LAZY)
     @JoinColumn(name = "blog_id")
     private Blog blog;
 
-    @ManyToOne
+    @ManyToOne(fetch = LAZY)
     @JoinColumn(name = "comment_id")
     private Comment comment;
 }

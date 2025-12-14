@@ -4,6 +4,8 @@ import iuh.fit.goat.enumeration.ReactionType;
 import jakarta.persistence.*;
 import lombok.*;
 
+import static jakarta.persistence.FetchType.LAZY;
+
 @Entity
 @Table(
         name = "comment_reactions",
@@ -15,7 +17,7 @@ import lombok.*;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-@ToString
+@ToString(exclude = {"user", "comment"})
 public class CommentReaction extends BaseEntity{
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
@@ -23,11 +25,11 @@ public class CommentReaction extends BaseEntity{
     @Enumerated(EnumType.STRING)
     private ReactionType type;
 
-    @ManyToOne
+    @ManyToOne(fetch = LAZY)
     @JoinColumn(name = "user_id")
     private User user;
 
-    @ManyToOne
+    @ManyToOne(fetch = LAZY)
     @JoinColumn(name = "comment_id")
     private Comment comment;
 }

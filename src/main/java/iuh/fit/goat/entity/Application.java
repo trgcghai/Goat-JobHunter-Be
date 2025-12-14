@@ -7,13 +7,16 @@ import lombok.*;
 import org.hibernate.annotations.Filter;
 import org.hibernate.annotations.FilterDef;
 
+import static jakarta.persistence.CascadeType.*;
+import static jakarta.persistence.FetchType.LAZY;
+
 @Entity
 @Table(name = "applications")
 @Getter
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-@ToString
+@ToString(exclude = {"job", "applicant", "resume", "interview"})
 @FilterDef(name = "activeApplicationFilter")
 public class Application extends BaseEntity{
     @Id
@@ -25,19 +28,19 @@ public class Application extends BaseEntity{
     @Enumerated(EnumType.STRING)
     private Status status;
 
-    @ManyToOne
+    @ManyToOne(fetch = LAZY)
     @JoinColumn(name = "job_id")
     private Job job;
 
-    @ManyToOne
+    @ManyToOne(fetch = LAZY)
     @JoinColumn(name = "applicant_id")
     private Applicant applicant;
 
-    @ManyToOne
+    @ManyToOne(fetch = LAZY)
     @JoinColumn(name = "resume_id")
     private Resume resume;
 
-    @OneToOne(mappedBy = "application", cascade = {CascadeType.PERSIST, CascadeType.MERGE})
+    @OneToOne(mappedBy = "application", cascade = {PERSIST, MERGE})
     @JsonIgnore
     @Filter(
             name = "activeInterviewFilter",

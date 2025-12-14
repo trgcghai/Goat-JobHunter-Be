@@ -10,6 +10,9 @@ import org.hibernate.annotations.FilterDef;
 import java.util.ArrayList;
 import java.util.List;
 
+import static jakarta.persistence.CascadeType.*;
+import static jakarta.persistence.FetchType.LAZY;
+
 @Entity
 @Table(name = "chat_rooms")
 @Getter
@@ -28,7 +31,7 @@ public class ChatRoom extends BaseEntity {
     private ChatRoomType type;
     private String aiModel;
 
-    @OneToMany(mappedBy = "room", fetch = FetchType.LAZY, cascade = {CascadeType.PERSIST, CascadeType.MERGE})
+    @OneToMany(mappedBy = "room", fetch = LAZY, cascade = {PERSIST, MERGE})
     @JsonIgnore
     @Filter(
             name = "activeChatMemberFilter",
@@ -36,7 +39,7 @@ public class ChatRoom extends BaseEntity {
     )
     private List<ChatMember> members = new ArrayList<>();
 
-    @OneToMany(mappedBy = "chatRoom", fetch = FetchType.LAZY, cascade = {CascadeType.PERSIST, CascadeType.MERGE})
+    @OneToMany(mappedBy = "chatRoom", fetch = LAZY, cascade = {PERSIST, MERGE})
     @JsonIgnore
     @Filter(
             name = "activeMessageFilter",

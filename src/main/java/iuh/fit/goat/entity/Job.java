@@ -14,13 +14,16 @@ import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 
+import static jakarta.persistence.CascadeType.*;
+import static jakarta.persistence.FetchType.LAZY;
+
 @Entity
 @Table(name = "jobs")
 @Getter
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-@ToString(exclude = {"skills", "applications", "users"})
+@ToString(exclude = {"company", "skills", "applications", "career", "users"})
 @FilterDef(name = "activeJobFilter")
 public class Job extends BaseEntity {
     @Id
@@ -43,11 +46,11 @@ public class Job extends BaseEntity {
     private String location;
     private boolean enabled = false;
 
-    @ManyToOne
+    @ManyToOne(fetch = LAZY)
     @JoinColumn(name = "company_id")
     private Company company;
 
-    @ManyToMany(fetch = FetchType.LAZY)
+    @ManyToMany(fetch = LAZY)
     @JoinTable(
             name = "job_skill",
             joinColumns = @JoinColumn(name = "job_id"),
@@ -60,7 +63,7 @@ public class Job extends BaseEntity {
     )
     private List<Skill> skills = new ArrayList<>();
 
-    @OneToMany(mappedBy = "job", fetch = FetchType.LAZY, cascade = {CascadeType.PERSIST, CascadeType.MERGE})
+    @OneToMany(mappedBy = "job", fetch = LAZY, cascade = {PERSIST, MERGE})
     @JsonIgnore
     @Filter(
             name = "activeApplicationFilter",
@@ -68,11 +71,11 @@ public class Job extends BaseEntity {
     )
     private List<Application> applications = new ArrayList<>();
 
-    @ManyToOne
+    @ManyToOne(fetch = LAZY)
     @JoinColumn(name = "career_id")
     private Career career;
 
-    @ManyToMany(mappedBy = "savedJobs", fetch = FetchType.LAZY)
+    @ManyToMany(mappedBy = "savedJobs", fetch = LAZY)
     @JsonIgnore
     @Filter(
             name = "activeAccountFilter",

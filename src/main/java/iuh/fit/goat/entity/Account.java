@@ -5,6 +5,8 @@ import jakarta.validation.constraints.NotBlank;
 import lombok.*;
 import org.hibernate.annotations.FilterDef;
 
+import static jakarta.persistence.FetchType.LAZY;
+
 @Entity
 @Table(name = "accounts")
 @Inheritance(strategy = InheritanceType.JOINED)
@@ -12,7 +14,7 @@ import org.hibernate.annotations.FilterDef;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-@ToString
+@ToString(exclude = {"role"})
 @FilterDef(name = "activeAccountFilter")
 public abstract class Account extends BaseEntity {
     @Id
@@ -27,7 +29,7 @@ public abstract class Account extends BaseEntity {
     protected String avatar;
     protected boolean enabled = false;
 
-    @ManyToOne
+    @ManyToOne(fetch = LAZY)
     @JoinColumn(name = "role_id")
     private Role role;
 }

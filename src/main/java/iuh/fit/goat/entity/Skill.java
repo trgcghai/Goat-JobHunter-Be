@@ -1,16 +1,16 @@
 package iuh.fit.goat.entity;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import iuh.fit.goat.util.SecurityUtil;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
 import lombok.*;
 import org.hibernate.annotations.Filter;
 import org.hibernate.annotations.FilterDef;
 
-import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
+
+import static jakarta.persistence.FetchType.LAZY;
 
 @Entity
 @Table(name = "skills")
@@ -31,7 +31,7 @@ public class Skill extends BaseEntity {
         this.name = name;
     }
 
-    @ManyToMany(mappedBy = "skills", fetch = FetchType.LAZY)
+    @ManyToMany(mappedBy = "skills", fetch = LAZY)
     @JsonIgnore
     @Filter(
             name = "activeJobFilter",
@@ -39,7 +39,7 @@ public class Skill extends BaseEntity {
     )
     private List<Job> jobs = new ArrayList<>();
 
-    @ManyToMany(mappedBy = "skills", fetch = FetchType.LAZY)
+    @ManyToMany(mappedBy = "skills", fetch = LAZY)
     @JsonIgnore
     @Filter(
             name = "activeSubscriberFilter",

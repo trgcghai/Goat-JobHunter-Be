@@ -10,6 +10,9 @@ import org.hibernate.annotations.Filter;
 import java.util.ArrayList;
 import java.util.List;
 
+import static jakarta.persistence.CascadeType.*;
+import static jakarta.persistence.FetchType.LAZY;
+
 @Entity
 @Table(name = "applicants")
 @Getter
@@ -24,7 +27,7 @@ public class Applicant extends User{
     @Enumerated(EnumType.STRING)
     private Level level;
 
-    @OneToMany(mappedBy = "applicant", fetch = FetchType.LAZY, cascade = {CascadeType.PERSIST, CascadeType.MERGE})
+    @OneToMany(mappedBy = "applicant", fetch = LAZY, cascade = {PERSIST, MERGE})
     @JsonIgnore
     @Filter(
             name = "activeApplicationFilter",
@@ -32,7 +35,7 @@ public class Applicant extends User{
     )
     private List<Application> applications = new ArrayList<>();
 
-    @OneToMany(mappedBy = "applicant", fetch = FetchType.LAZY, cascade = {CascadeType.PERSIST, CascadeType.MERGE})
+    @OneToMany(mappedBy = "applicant", fetch = LAZY, cascade = {PERSIST, MERGE})
     @JsonIgnore
     @Filter(
             name = "activeResumeFilter",
@@ -40,7 +43,7 @@ public class Applicant extends User{
     )
     private List<Resume> resumes = new ArrayList<>();
 
-    @OneToMany(mappedBy = "applicant", fetch = FetchType.LAZY)
+    @OneToMany(mappedBy = "applicant", fetch = LAZY)
     @JsonIgnore
     @Filter(
             name = "activeInterviewFilter",

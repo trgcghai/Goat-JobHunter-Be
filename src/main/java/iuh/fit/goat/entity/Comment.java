@@ -10,13 +10,16 @@ import org.hibernate.annotations.FilterDef;
 import java.util.ArrayList;
 import java.util.List;
 
+import static jakarta.persistence.CascadeType.*;
+import static jakarta.persistence.FetchType.LAZY;
+
 @Entity
 @Table(name = "comments")
 @Getter
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-@ToString(exclude = {"children", "reactions", "tickets", "notifications"})
+@ToString(exclude = {"blog", "commentedBy", "parent", "children", "reactions", "tickets", "notifications"})
 @FilterDef(name = "activeCommentFilter")
 public class Comment extends BaseEntity {
     @Id
@@ -28,19 +31,19 @@ public class Comment extends BaseEntity {
     private boolean reply;
     private boolean pinned = false;
 
-    @ManyToOne
+    @ManyToOne(fetch = LAZY)
     @JoinColumn(name = "blog_id")
     private Blog blog;
 
-    @ManyToOne
+    @ManyToOne(fetch = LAZY)
     @JoinColumn(name = "commented_by_id")
     private User commentedBy;
 
-    @ManyToOne
+    @ManyToOne(fetch = LAZY)
     @JoinColumn(name = "parent_id")
     private Comment parent;
 
-    @OneToMany(mappedBy = "parent", fetch = FetchType.LAZY, cascade = {CascadeType.PERSIST, CascadeType.MERGE})
+    @OneToMany(mappedBy = "parent", fetch = LAZY, cascade = {PERSIST, MERGE})
     @JsonIgnore
     @Filter(
             name = "activeCommentFilter",
@@ -48,11 +51,11 @@ public class Comment extends BaseEntity {
     )
     private List<Comment> children = new ArrayList<>();
 
-    @OneToMany(mappedBy = "comment", fetch = FetchType.LAZY, cascade = {CascadeType.PERSIST, CascadeType.MERGE}, orphanRemoval = true)
+    @OneToMany(mappedBy = "comment", fetch = LAZY, cascade = {PERSIST, MERGE}, orphanRemoval = true)
     @JsonIgnore
     private List<CommentReaction> reactions = new ArrayList<>();
 
-    @OneToMany(mappedBy = "comment", fetch = FetchType.LAZY, cascade = {CascadeType.PERSIST, CascadeType.MERGE})
+    @OneToMany(mappedBy = "comment", fetch = LAZY, cascade = {PERSIST, MERGE})
     @JsonIgnore
     @Filter(
             name = "activeTicketFilter",
@@ -60,7 +63,7 @@ public class Comment extends BaseEntity {
     )
     private List<Ticket> tickets = new ArrayList<>();
 
-    @OneToMany(mappedBy = "comment", fetch = FetchType.LAZY, cascade = {CascadeType.PERSIST, CascadeType.MERGE})
+    @OneToMany(mappedBy = "comment", fetch = LAZY, cascade = {PERSIST, MERGE})
     @JsonIgnore
     @Filter(
             name = "activeNotificationFilter",

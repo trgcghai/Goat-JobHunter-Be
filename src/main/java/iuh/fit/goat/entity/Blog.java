@@ -11,6 +11,9 @@ import org.hibernate.annotations.FilterDef;
 import java.util.ArrayList;
 import java.util.List;
 
+import static jakarta.persistence.CascadeType.*;
+import static jakarta.persistence.FetchType.LAZY;
+
 @Entity
 @Table(name = "blogs")
 @Getter
@@ -25,7 +28,8 @@ public class Blog extends BaseEntity {
     private long blogId;
     @NotBlank(message = "Title is not empty")
     private String title;
-    private String banner;
+    @ElementCollection
+    private List<String> images;
     @Column(columnDefinition = "TEXT")
     private String description;
     @Column(columnDefinition = "TEXT")
@@ -41,7 +45,7 @@ public class Blog extends BaseEntity {
     @JoinColumn(name = "user_id")
     private User author;
 
-    @OneToMany(mappedBy = "blog", fetch = FetchType.LAZY, cascade = {CascadeType.PERSIST, CascadeType.MERGE})
+    @OneToMany(mappedBy = "blog", fetch = LAZY, cascade = {PERSIST, MERGE})
     @JsonIgnore
     @Filter(
             name = "activeCommentFilter",
@@ -49,11 +53,11 @@ public class Blog extends BaseEntity {
     )
     private List<Comment> comments = new ArrayList<>();
 
-    @OneToMany(mappedBy = "blog", fetch = FetchType.LAZY, cascade = {CascadeType.PERSIST, CascadeType.MERGE}, orphanRemoval = true)
+    @OneToMany(mappedBy = "blog", fetch = LAZY, cascade = {PERSIST, MERGE}, orphanRemoval = true)
     @JsonIgnore
     private List<BlogReaction> reactions = new ArrayList<>();
 
-    @OneToMany(mappedBy = "blog", fetch = FetchType.LAZY, cascade = {CascadeType.PERSIST, CascadeType.MERGE})
+    @OneToMany(mappedBy = "blog", fetch = LAZY, cascade = {PERSIST, MERGE})
     @JsonIgnore
     @Filter(
             name = "activeTicketFilter",
@@ -61,7 +65,7 @@ public class Blog extends BaseEntity {
     )
     private List<Ticket> tickets = new ArrayList<>();
 
-    @OneToMany(mappedBy = "blog", fetch = FetchType.LAZY,  cascade = {CascadeType.PERSIST, CascadeType.MERGE})
+    @OneToMany(mappedBy = "blog", fetch = LAZY,  cascade = {PERSIST, MERGE})
     @JsonIgnore
     @Filter(
             name = "activeNotificationFilter",

@@ -11,13 +11,15 @@ import org.hibernate.annotations.FilterDef;
 import java.util.ArrayList;
 import java.util.List;
 
+import static jakarta.persistence.FetchType.LAZY;
+
 @Entity
 @Table(name = "chat_messages")
 @Getter
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-@ToString(exclude = {"readBy"})
+@ToString(exclude = {"chatRoom", "sender", "readBy"})
 @FilterDef(name = "activeMessageFilter")
 public class Message extends BaseEntity {
     @Id
@@ -31,15 +33,15 @@ public class Message extends BaseEntity {
     private String fileUrl;
     private String fileName;
 
-    @ManyToOne
+    @ManyToOne(fetch = LAZY)
     @JoinColumn(name = "room_id")
     private ChatRoom chatRoom;
 
-    @ManyToOne
+    @ManyToOne(fetch = LAZY)
     @JoinColumn(name = "sender_id")
     private User sender;
 
-    @ManyToMany(fetch = FetchType.LAZY)
+    @ManyToMany(fetch = LAZY)
     @JoinTable(
             name = "message_read_by",
             joinColumns = @JoinColumn(name = "message_id"),
