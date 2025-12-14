@@ -9,7 +9,7 @@ import org.springframework.stereotype.Repository;
 
 @Repository
 public interface MessageRepository extends JpaRepository<Message, Long>, JpaSpecificationExecutor<Message> {
-    Long countByConversation_ConversationId(Long conversationId);
-
-    Page<Message> findByConversation_ConversationId(Long conversationId, Pageable pageable);
+//    Long countByConversation_ConversationId(Long conversationId);
+//
+//    Page<Messages> findByConversation_ConversationId(Long conversationId, Pageable pageable);
 }

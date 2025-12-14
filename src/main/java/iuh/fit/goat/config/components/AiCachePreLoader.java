@@ -15,15 +15,15 @@ public class AiCachePreLoader implements ApplicationRunner {
     @Override
     @Transactional(readOnly = true)
     public void run(ApplicationArguments args) throws Exception {
-        this.aiService.getTopJobsContext();
-        this.aiService.getTopApplicantsContext();
-        this.aiService.getTopRecruitersContext();
-        this.aiService.getRecentApplicationsContext();
-        this.aiService.getTopSkillsContext();
-        this.aiService.getRecentBlogsContext();
-        this.aiService.getAllCareersContext();
-        this.aiService.getSystemStatsContext();
-        this.aiService.getJobMarketOverview();
+//        this.aiService.getTopJobsContext();
+//        this.aiService.getTopApplicantsContext();
+//        this.aiService.getTopRecruitersContext();
+//        this.aiService.getRecentApplicationsContext();
+//        this.aiService.getTopSkillsContext();
+//        this.aiService.getRecentBlogsContext();
+//        this.aiService.getAllCareersContext();
+//        this.aiService.getSystemStatsContext();
+//        this.aiService.getJobMarketOverview();
 
         System.out.println("AI cache preloaded!");
     }

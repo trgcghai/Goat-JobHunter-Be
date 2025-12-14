@@ -11,7 +11,7 @@ import java.util.Optional;
 @Repository
 public interface RecruiterRepository extends JpaRepository<Recruiter, Long>,
         JpaSpecificationExecutor<Recruiter> {
-    List<Recruiter> findByUserIdIn(List<Long> userIds);
-
-    Optional<Recruiter> findByContactEmail(String email);
+//    List<Recruiter> findByUserIdIn(List<Long> userIds);
+//
+//    Optional<Recruiter> findByContactEmail(String email);
 }

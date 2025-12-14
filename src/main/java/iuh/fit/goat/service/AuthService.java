@@ -11,21 +11,21 @@ import iuh.fit.goat.exception.InvalidException;
 import jakarta.servlet.http.HttpServletResponse;
 
 public interface AuthService {
-    Object handleLogin(LoginRequest loginRequest, HttpServletResponse response) throws InvalidException;
-
-    Object handleRefreshToken(String refreshToken, HttpServletResponse response) throws InvalidException;
-
-    void handleLogout(String accessToken, String refreshToken, HttpServletResponse response);
-
-    LoginResponse.UserGetAccount handleGetCurrentAccount();
-
-    ApplicantResponse handleRegisterApplicant(Applicant applicant) throws InvalidException;
-
-    RecruiterResponse handleRegisterRecruiter(Recruiter recruiter) throws InvalidException;
-
-    void handleVerifyUser(VerifyUserRequest verifyUser) throws InvalidException;
-
-    void handleVerifyRecruiter(long id) throws InvalidException;
-
-    void handleResendCode(String email) throws InvalidException;
+//    Object handleLogin(LoginRequest loginRequest, HttpServletResponse response) throws InvalidException;
+//
+//    Object handleRefreshToken(String refreshToken, HttpServletResponse response) throws InvalidException;
+//
+//    void handleLogout(String accessToken, String refreshToken, HttpServletResponse response);
+//
+//    LoginResponse.UserGetAccount handleGetCurrentAccount();
+//
+//    ApplicantResponse handleRegisterApplicant(Applicant applicant) throws InvalidException;
+//
+//    RecruiterResponse handleRegisterRecruiter(Recruiter recruiter) throws InvalidException;
+//
+//    void handleVerifyUser(VerifyUserRequest verifyUser) throws InvalidException;
+//
+//    void handleVerifyRecruiter(long id) throws InvalidException;
+//
+//    void handleResendCode(String email) throws InvalidException;
 }

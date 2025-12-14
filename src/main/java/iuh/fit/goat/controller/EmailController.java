@@ -10,10 +10,10 @@ import org.springframework.web.bind.annotation.*;
 @RequestMapping("/api/v1")
 @RequiredArgsConstructor
 public class EmailController {
-    private final EmailNotificationService emailNotificationService;
-
-    @PostMapping("email/jobs")
-    public void sendJobInvitation(@Valid @RequestBody JobInvitationRequest request) {
-        this.emailNotificationService.handleSendJobInvitationEmail(request.getApplicantIds(), request.getJobId());
-    }
+//    private final EmailNotificationService emailNotificationService;
+//
+//    @PostMapping("email/jobs")
+//    public void sendJobInvitation(@Valid @RequestBody JobInvitationRequest request) {
+//        this.emailNotificationService.handleSendJobInvitationEmail(request.getApplicantIds(), request.getJobId());
+//    }
 }

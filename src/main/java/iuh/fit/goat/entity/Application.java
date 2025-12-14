@@ -1,12 +1,14 @@
 package iuh.fit.goat.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import iuh.fit.goat.enumeration.Status;
-import iuh.fit.goat.util.SecurityUtil;
 import jakarta.persistence.*;
-import jakarta.validation.constraints.NotBlank;
 import lombok.*;
+import org.hibernate.annotations.Filter;
+import org.hibernate.annotations.FilterDef;
 
-import java.time.Instant;
+import static jakarta.persistence.CascadeType.*;
+import static jakarta.persistence.FetchType.LAZY;
 
 @Entity
 @Table(name = "applications")
@@ -14,42 +16,35 @@ import java.time.Instant;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-@ToString
-public class Application {
+@ToString(exclude = {"job", "applicant", "resume", "interview"})
+@FilterDef(name = "activeApplicationFilter")
+public class Application extends BaseEntity{
     @Id
-    @GeneratedValue(strategy = GenerationType.AUTO)
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private long applicationId;
     private String email;
-    @NotBlank(message = "Resume is required")
-    private String resumeUrl;
+    @Column(columnDefinition = "TEXT")
+    private String coverLetter;
     @Enumerated(EnumType.STRING)
     private Status status;
 
-    private Instant createdAt;
-    private String createdBy;
-    private Instant updatedAt;
-    private String updatedBy;
-
-    @ManyToOne
+    @ManyToOne(fetch = LAZY)
     @JoinColumn(name = "job_id")
     private Job job;
 
-    @ManyToOne
+    @ManyToOne(fetch = LAZY)
     @JoinColumn(name = "applicant_id")
     private Applicant applicant;
 
-    @PrePersist
-    public void handleBeforeCreate(){
-        this.createdAt = Instant.now();
-        this.createdBy = SecurityUtil.getCurrentUserLogin().isPresent()
-                ? SecurityUtil.getCurrentUserLogin().get()
-                : "";
-    }
-    @PreUpdate
-    public void handleBeforeUpdate(){
-        this.updatedAt = Instant.now();
-        this.updatedBy = SecurityUtil.getCurrentUserLogin().isPresent()
-                ? SecurityUtil.getCurrentUserLogin().get()
-                : "";
-    }
+    @ManyToOne(fetch = LAZY)
+    @JoinColumn(name = "resume_id")
+    private Resume resume;
+
+    @OneToOne(mappedBy = "application", cascade = {PERSIST, MERGE})
+    @JsonIgnore
+    @Filter(
+            name = "activeInterviewFilter",
+            condition = "deleted_at IS NULL"
+    )
+    private Interview interview;
 }

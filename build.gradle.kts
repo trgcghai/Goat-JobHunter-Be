@@ -34,34 +34,21 @@ dependencies {
 	implementation("com.turkraft.springfilter:jpa:3.2.1")
 	implementation("org.springframework.boot:spring-boot-starter-mail")
 	implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:2.8.8")
-	runtimeOnly ("com.h2database:h2")
 	implementation("org.springframework.boot:spring-boot-starter-data-redis:3.5.7")
-
-	developmentOnly("org.springframework.boot:spring-boot-devtools")
-	runtimeOnly("com.mysql:mysql-connector-j")
-	implementation("mysql:mysql-connector-java:8.0.33")
-
-	// https://mvnrepository.com/artifact/com.cloudinary/cloudinary-http44
 	implementation ("com.cloudinary:cloudinary-http44:1.39.0")
-	// https://mvnrepository.com/artifact/commons-io/commons-io
-	implementation("commons-io:commons-io:2.19.0")
+	implementation("com.google.genai:google-genai:1.28.0")
+	implementation("net.datafaker:datafaker:2.5.3")
+	implementation("org.springframework.boot:spring-boot-starter-websocket")
+	implementation("org.postgresql:postgresql:42.7.8")
 
-	// https://mvnrepository.com/artifact/commons-net/commons-net
+
+	implementation("commons-io:commons-io:2.19.0")
 	implementation("commons-net:commons-net:3.12.0")
-	// https://mvnrepository.com/artifact/dnsjava/dnsjava
 	implementation("dnsjava:dnsjava:3.6.3")
 
-	implementation("net.datafaker:datafaker:2.5.3")
 
-	// https://mvnrepository.com/artifact/org.springframework/spring-webflux
-	implementation("org.springframework:spring-webflux:7.0.1")
+	developmentOnly("org.springframework.boot:spring-boot-devtools")
 
-	// https://mvnrepository.com/artifact/com.google.genai/google-genai
-	implementation("com.google.genai:google-genai:1.28.0")
-
-    implementation("org.springframework.boot:spring-boot-starter-websocket")
-
-    implementation("org.springframework.boot:spring-boot-starter-security")
 
 	testImplementation("org.springframework.boot:spring-boot-starter-test")
 	testImplementation("org.springframework.security:spring-security-test")

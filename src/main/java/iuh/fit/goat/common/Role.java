@@ -1,4 +1,4 @@
-package iuh.fit.goat.enumeration;
+package iuh.fit.goat.common;
 
 import lombok.Getter;
 

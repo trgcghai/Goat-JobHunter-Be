@@ -3,9 +3,12 @@ package iuh.fit.goat.entity;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.*;
+import org.hibernate.annotations.Filter;
 
 import java.util.ArrayList;
 import java.util.List;
+
+import static jakarta.persistence.FetchType.LAZY;
 
 @Entity
 @Table(name = "recruiters")
@@ -13,19 +16,19 @@ import java.util.List;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-@ToString
+@ToString(callSuper = true, exclude = {"conductedInterviews"})
 public class Recruiter extends User{
-    @Column(columnDefinition = "MEDIUMTEXT")
-    private String description;
-    private String website;
+    private String position;
 
-    @OneToMany(mappedBy = "recruiter", fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
-    @JsonIgnore
-    @ToString.Exclude
-    private List<Job> jobs = new ArrayList<>();
+    @ManyToOne
+    @JoinColumn(name = "company_id")
+    private Company company;
 
-    @ManyToMany(mappedBy = "followedRecruiters", fetch = FetchType.LAZY)
+    @OneToMany(mappedBy = "interviewer", fetch = LAZY)
     @JsonIgnore
-    @ToString.Exclude
-    private List<User> users = new ArrayList<>();
+    @Filter(
+            name = "activeInterviewFilter",
+            condition = "deleted_at IS NULL"
+    )
+    private List<Interview> conductedInterviews = new ArrayList<>();
 }

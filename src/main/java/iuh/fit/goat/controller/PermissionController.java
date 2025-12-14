@@ -20,56 +20,56 @@ import java.util.regex.Pattern;
 @RequestMapping("/api/v1")
 @RequiredArgsConstructor
 public class PermissionController {
-    private final PermissionService permissionService;
-
-    @PostMapping("/permissions")
-    public ResponseEntity<Permission> createPermission(@Valid @RequestBody Permission permission)
-            throws InvalidException {
-        if(this.permissionService.handleExistPermission(permission)) {
-            throw new InvalidException("Permission exists");
-        }
-        Permission res = this.permissionService.handleCreatePermission(permission);
-        return ResponseEntity.status(HttpStatus.CREATED).body(res);
-    }
-
-    @PutMapping("/permissions")
-    public ResponseEntity<Permission> updatePermission(@Valid @RequestBody Permission permission)
-            throws InvalidException {
-        if(this.permissionService.handleGetPermissionById(permission.getPermissionId()) == null){
-            throw new InvalidException("Permission doesn't exist");
-        }
-        Permission res = this.permissionService.handleUpdatePermission(permission);
-        return ResponseEntity.status(HttpStatus.OK).body(res);
-    }
-
-    @DeleteMapping("/permissions/{id}")
-    @ApiMessage("Delete a permission")
-    public ResponseEntity<Void> deletePermission(@PathVariable("id") String id) throws InvalidException {
-        Pattern pattern = Pattern.compile("^[0-9]+$");
-        if(!pattern.matcher(id).matches()){
-            throw new InvalidException("Id is number");
-        }
-        if(this.permissionService.handleGetPermissionById(Long.parseLong(id)) == null){
-            throw new InvalidException("Permission doesn't exist");
-        }
-        this.permissionService.handleDeletePermission(Long.parseLong(id));
-        return ResponseEntity.status(HttpStatus.OK).body(null);
-    }
-
-    @GetMapping("/permissions/{id}")
-    public ResponseEntity<Permission> getPermissionById(@PathVariable("id") long id) throws InvalidException {
-        Permission permission = this.permissionService.handleGetPermissionById(id);
-        if(permission == null){
-            throw new InvalidException("Permission doesn't exist");
-        }
-        return ResponseEntity.status(HttpStatus.OK).body(permission);
-    }
-
-    @GetMapping("/permissions")
-    public ResponseEntity<ResultPaginationResponse> getAllPermissions(
-            @Filter Specification<Permission> spec, Pageable pageable
-    ) {
-        ResultPaginationResponse result = this.permissionService.handleGetAllPermissions(spec, pageable);
-        return ResponseEntity.status(HttpStatus.OK).body(result);
-    }
+//    private final PermissionService permissionService;
+//
+//    @PostMapping("/permissions")
+//    public ResponseEntity<Permission> createPermission(@Valid @RequestBody Permission permission)
+//            throws InvalidException {
+//        if(this.permissionService.handleExistPermission(permission)) {
+//            throw new InvalidException("Permission exists");
+//        }
+//        Permission res = this.permissionService.handleCreatePermission(permission);
+//        return ResponseEntity.status(HttpStatus.CREATED).body(res);
+//    }
+//
+//    @PutMapping("/permissions")
+//    public ResponseEntity<Permission> updatePermission(@Valid @RequestBody Permission permission)
+//            throws InvalidException {
+//        if(this.permissionService.handleGetPermissionById(permission.getPermissionId()) == null){
+//            throw new InvalidException("Permission doesn't exist");
+//        }
+//        Permission res = this.permissionService.handleUpdatePermission(permission);
+//        return ResponseEntity.status(HttpStatus.OK).body(res);
+//    }
+//
+//    @DeleteMapping("/permissions/{id}")
+//    @ApiMessage("Delete a permission")
+//    public ResponseEntity<Void> deletePermission(@PathVariable("id") String id) throws InvalidException {
+//        Pattern pattern = Pattern.compile("^[0-9]+$");
+//        if(!pattern.matcher(id).matches()){
+//            throw new InvalidException("Id is number");
+//        }
+//        if(this.permissionService.handleGetPermissionById(Long.parseLong(id)) == null){
+//            throw new InvalidException("Permission doesn't exist");
+//        }
+//        this.permissionService.handleDeletePermission(Long.parseLong(id));
+//        return ResponseEntity.status(HttpStatus.OK).body(null);
+//    }
+//
+//    @GetMapping("/permissions/{id}")
+//    public ResponseEntity<Permission> getPermissionById(@PathVariable("id") long id) throws InvalidException {
+//        Permission permission = this.permissionService.handleGetPermissionById(id);
+//        if(permission == null){
+//            throw new InvalidException("Permission doesn't exist");
+//        }
+//        return ResponseEntity.status(HttpStatus.OK).body(permission);
+//    }
+//
+//    @GetMapping("/permissions")
+//    public ResponseEntity<ResultPaginationResponse> getAllPermissions(
+//            @Filter Specification<Permission> spec, Pageable pageable
+//    ) {
+//        ResultPaginationResponse result = this.permissionService.handleGetAllPermissions(spec, pageable);
+//        return ResponseEntity.status(HttpStatus.OK).body(result);
+//    }
 }

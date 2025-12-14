@@ -1,22 +1,25 @@
 package iuh.fit.goat.entity;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import iuh.fit.goat.util.SecurityUtil;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
 import lombok.*;
+import org.hibernate.annotations.Filter;
+import org.hibernate.annotations.FilterDef;
 
-import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
+
+import static jakarta.persistence.FetchType.LAZY;
 
 @Entity
 @Table(name = "permissions")
 @Getter
 @Setter
 @NoArgsConstructor
-@ToString
-public class Permission {
+@ToString(exclude = {"roles"})
+@FilterDef(name = "activePermissionFilter")
+public class Permission extends BaseEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
     private long permissionId;
@@ -29,11 +32,6 @@ public class Permission {
     @NotBlank(message = "Permission name is not empty")
     private String name;
 
-    private Instant createdAt;
-    private String createdBy;
-    private Instant updatedAt;
-    private String updatedBy;
-
     public Permission (String name, String apiPath, String method, String module) {
         this.name = name;
         this.apiPath = apiPath;
@@ -41,23 +39,11 @@ public class Permission {
         this.module = module;
     }
 
-    @ManyToMany(mappedBy = "permissions", fetch = FetchType.LAZY)
+    @ManyToMany(mappedBy = "permissions", fetch = LAZY)
     @JsonIgnore
-    @ToString.Exclude
+    @Filter(
+            name = "activeRoleFilter",
+            condition = "deleted_at IS NULL"
+    )
     private List<Role> roles = new ArrayList<>();
-
-    @PrePersist
-    public void handleBeforeCreate(){
-        this.createdAt = Instant.now();
-        this.createdBy = SecurityUtil.getCurrentUserLogin().isPresent()
-                ? SecurityUtil.getCurrentUserLogin().get()
-                : "";
-    }
-    @PreUpdate
-    public void handleBeforeUpdate(){
-        this.updatedAt = Instant.now();
-        this.updatedBy = SecurityUtil.getCurrentUserLogin().isPresent()
-                ? SecurityUtil.getCurrentUserLogin().get()
-                : "";
-    }
 }

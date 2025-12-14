@@ -1,14 +1,17 @@
 package iuh.fit.goat.entity;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import iuh.fit.goat.util.SecurityUtil;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
 import lombok.*;
+import org.hibernate.annotations.Filter;
+import org.hibernate.annotations.FilterDef;
 
-import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
+
+import static jakarta.persistence.CascadeType.*;
+import static jakarta.persistence.FetchType.LAZY;
 
 @Entity
 @Table(name = "comments")
@@ -16,8 +19,9 @@ import java.util.List;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-@ToString
-public class Comment {
+@ToString(exclude = {"blog", "commentedBy", "parent", "children", "reactions", "tickets", "notifications"})
+@FilterDef(name = "activeCommentFilter")
+public class Comment extends BaseEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
     private long commentId;
@@ -25,55 +29,45 @@ public class Comment {
     @Column(columnDefinition = "TEXT")
     private String comment;
     private boolean reply;
-    private Instant createdAt;
-    private String createdBy;
-    private Instant updatedAt;
-    private String updatedBy;
+    private boolean pinned = false;
 
-    @ManyToOne
+    @ManyToOne(fetch = LAZY)
     @JoinColumn(name = "blog_id")
     private Blog blog;
 
-    @ManyToOne
+    @ManyToOne(fetch = LAZY)
     @JoinColumn(name = "commented_by_id")
     private User commentedBy;
 
-    @ManyToOne
+    @ManyToOne(fetch = LAZY)
     @JoinColumn(name = "parent_id")
     private Comment parent;
 
-    @OneToMany(mappedBy = "parent", fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
-    @ToString.Exclude
+    @OneToMany(mappedBy = "parent", fetch = LAZY, cascade = {PERSIST, MERGE})
     @JsonIgnore
+    @Filter(
+            name = "activeCommentFilter",
+            condition = "deleted_at IS NULL"
+    )
     private List<Comment> children = new ArrayList<>();
 
-    @OneToMany(mappedBy = "comment", fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
-    @ToString.Exclude
+    @OneToMany(mappedBy = "comment", fetch = LAZY, cascade = {PERSIST, MERGE}, orphanRemoval = true)
     @JsonIgnore
-    private List<Notification> commentNotifications = new ArrayList<>();
+    private List<CommentReaction> reactions = new ArrayList<>();
 
-    @OneToMany(mappedBy = "reply", fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
-    @ToString.Exclude
+    @OneToMany(mappedBy = "comment", fetch = LAZY, cascade = {PERSIST, MERGE})
     @JsonIgnore
-    private List<Notification> replyNotifications = new ArrayList<>();
+    @Filter(
+            name = "activeTicketFilter",
+            condition = "deleted_at IS NULL"
+    )
+    private List<Ticket> tickets = new ArrayList<>();
 
-    @OneToMany(mappedBy = "repliedOnComment", fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
-    @ToString.Exclude
+    @OneToMany(mappedBy = "comment", fetch = LAZY, cascade = {PERSIST, MERGE})
     @JsonIgnore
-    private List<Notification> repliedOnCommentNotifications = new ArrayList<>();
-
-    @PrePersist
-    public void handleBeforeCreate(){
-        this.createdAt = Instant.now();
-        this.createdBy = SecurityUtil.getCurrentUserLogin().isPresent()
-                ? SecurityUtil.getCurrentUserLogin().get()
-                : "";
-    }
-    @PreUpdate
-    public void handleBeforeUpdate(){
-        this.updatedAt = Instant.now();
-        this.updatedBy = SecurityUtil.getCurrentUserLogin().isPresent()
-                ? SecurityUtil.getCurrentUserLogin().get()
-                : "";
-    }
+    @Filter(
+            name = "activeNotificationFilter",
+            condition = "deleted_at IS NULL"
+    )
+    private List<Notification> notifications = new ArrayList<>();
 }

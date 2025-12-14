@@ -1,14 +1,17 @@
 package iuh.fit.goat.entity;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import iuh.fit.goat.util.SecurityUtil;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
 import lombok.*;
+import org.hibernate.annotations.Filter;
+import org.hibernate.annotations.FilterDef;
 
-import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
+
+import static jakarta.persistence.CascadeType.*;
+import static jakarta.persistence.FetchType.LAZY;
 
 @Entity
 @Table(name = "careers")
@@ -16,40 +19,24 @@ import java.util.List;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-@ToString
-public class Career {
+@ToString(exclude = {"jobs"})
+@FilterDef(name = "activeCareerFilter")
+public class Career extends BaseEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
     private long careerId;
     @NotBlank(message = "Career name is not empty")
     private String name;
 
-    private Instant createdAt;
-    private String createdBy;
-    private Instant updatedAt;
-    private String updatedBy;
-
-    @OneToMany(mappedBy = "career", fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
-    @JsonIgnore
-    @ToString.Exclude
-    private List<Job> jobs = new ArrayList<>();
-
     public Career(String name) {
         this.name = name;
     }
 
-    @PrePersist
-    public void handleBeforeCreate(){
-        this.createdAt = Instant.now();
-        this.createdBy = SecurityUtil.getCurrentUserLogin().isPresent()
-                ? SecurityUtil.getCurrentUserLogin().get()
-                : "";
-    }
-    @PreUpdate
-    public void handleBeforeUpdate(){
-        this.updatedAt = Instant.now();
-        this.updatedBy = SecurityUtil.getCurrentUserLogin().isPresent()
-                ? SecurityUtil.getCurrentUserLogin().get()
-                : "";
-    }
+    @OneToMany(mappedBy = "career", fetch = LAZY, cascade = {PERSIST, MERGE})
+    @JsonIgnore
+    @Filter(
+            name = "activeJobFilter",
+            condition = "deleted_at IS NULL"
+    )
+    private List<Job> jobs = new ArrayList<>();
 }

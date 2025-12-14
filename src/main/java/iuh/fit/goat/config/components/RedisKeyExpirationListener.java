@@ -25,41 +25,41 @@ public class RedisKeyExpirationListener implements MessageListener {
     @Override
     public void onMessage(Message message, byte[] pattern) {
         // Lấy ra expired key từ message và kiểm tra
-        message.getBody();
-        String expiredKey = new String(message.getBody(), StandardCharsets.UTF_8);
-
-        if (!expiredKey.startsWith("notification:") || !expiredKey.endsWith(":listener")) {
-            return;
-        }
-
-
-        log.info("Expired notification event key: {}", expiredKey);
-
-        try {
-            String dataKey = expiredKey.replace(":listener", "");
-            String payload = redisService.getValue(dataKey);
-
-            if (payload == null) {
-                log.warn("No data found for notification key {}", dataKey);
-                return;
-            }
-
-            @SuppressWarnings("unchecked")
-            Map<String, Object> data = objectMapper.readValue(payload, Map.class);
-
-            // Build and save notification
-            Notification saved = notificationService.createNotification(
-                    notificationService.buildNotification(data)
-            );
-
-            // Send via WebSocket
-            notificationService.sendNotificationToUser(saved.getRecipient(), saved);
-
-            if(redisService.hasKey(dataKey)) {
-                redisService.deleteKey(dataKey);
-            }
-        } catch (Exception e) {
-            log.error("Failed to process expired notification {}: {}", expiredKey, e.getMessage(), e);
-        }
+//        message.getBody();
+//        String expiredKey = new String(message.getBody(), StandardCharsets.UTF_8);
+//
+//        if (!expiredKey.startsWith("notification:") || !expiredKey.endsWith(":listener")) {
+//            return;
+//        }
+//
+//
+//        log.info("Expired notification event key: {}", expiredKey);
+//
+//        try {
+//            String dataKey = expiredKey.replace(":listener", "");
+//            String payload = redisService.getValue(dataKey);
+//
+//            if (payload == null) {
+//                log.warn("No data found for notification key {}", dataKey);
+//                return;
+//            }
+//
+//            @SuppressWarnings("unchecked")
+//            Map<String, Object> data = objectMapper.readValue(payload, Map.class);
+//
+//            // Build and save notification
+//            Notification saved = notificationService.createNotification(
+//                    notificationService.buildNotification(data)
+//            );
+//
+//            // Send via WebSocket
+//            notificationService.sendNotificationToUser(saved.getRecipient(), saved);
+//
+//            if(redisService.hasKey(dataKey)) {
+//                redisService.deleteKey(dataKey);
+//            }
+//        } catch (Exception e) {
+//            log.error("Failed to process expired notification {}: {}", expiredKey, e.getMessage(), e);
+//        }
     }
 }

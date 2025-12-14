@@ -7,23 +7,23 @@ import java.util.List;
 import java.util.Map;
 
 public interface NotificationService {
-    List<Notification> handleGetAllNotifications();
-
-    Notification createNotification(Notification notification);
-
-    void handleMarkNotificationsAsSeen(List<Long> notificationIds);
-
-    void handleNotifyCommentBlog(Blog blog, Comment comment);
-
-    void handleNotifyReplyComment(Comment parent, Comment reply);
-
-    void handleNotifyLikeBlog(Blog blog);
-
-    void handleNotifyFollowRecruiter(Recruiter recruiter);
-
-    void sendNotificationToUser(User user, Notification notification);
-
-    NotificationResponse convertToNotificationResponse(Notification notification);
-
-    Notification buildNotification(Map<String, Object> data);
+//    List<Notification> handleGetAllNotifications();
+//
+//    Notification createNotification(Notification notification);
+//
+//    void handleMarkNotificationsAsSeen(List<Long> notificationIds);
+//
+//    void handleNotifyCommentBlog(Blog blog, Comment comment);
+//
+//    void handleNotifyReplyComment(Comment parent, Comment reply);
+//
+//    void handleNotifyLikeBlog(Blog blog);
+//
+//    void handleNotifyFollowRecruiter(Recruiter recruiter);
+//
+//    void sendNotificationToUser(User user, Notification notification);
+//
+//    NotificationResponse convertToNotificationResponse(Notification notification);
+//
+//    Notification buildNotification(Map<String, Object> data);
 }

@@ -6,7 +6,7 @@ import iuh.fit.goat.entity.Message;
 
 public interface MessageService {
 
-    void handleCreateMessage(MessageCreateRequest request);
-
-    MessageResponse convertMessageResponse(Message message);
+//    void handleCreateMessage(MessageCreateRequest request);
+//
+//    MessageResponse convertMessageResponse(Message messages);
 }

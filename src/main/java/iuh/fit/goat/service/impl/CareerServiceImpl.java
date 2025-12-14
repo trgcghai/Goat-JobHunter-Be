@@ -18,60 +18,60 @@ import java.util.Optional;
 @Service
 @RequiredArgsConstructor
 public class CareerServiceImpl implements CareerService {
-    private final CareerRepository careerRepository;
-    private final JobRepository jobRepository;
-
-    @Override
-    public Career handleCreateCareer(Career career) {
-        return this.careerRepository.save(career);
-    }
-
-    @Override
-    public Career handleUpdateCareer(Career career) {
-        Career currentCareer = this.handleGetCareerById(career.getCareerId());
-
-        if(currentCareer != null){
-            currentCareer.setName(career.getName());
-            return this.careerRepository.save(currentCareer);
-        }
-        return null;
-    }
-
-    @Override
-    public void handleDeleteCareer(long id) {
-        Career currentCareer = this.handleGetCareerById(id);
-
-        if(currentCareer.getJobs() != null){
-            List<Job> jobs = this.jobRepository.findByCareer(currentCareer);
-            this.jobRepository.deleteAll(jobs);
-        }
-
-        this.careerRepository.deleteById(currentCareer.getCareerId());
-    }
-
-    @Override
-    public Career handleGetCareerById(long id) {
-        Optional<Career> career = this.careerRepository.findById(id);
-
-        return career.orElse(null);
-    }
-
-    @Override
-    public ResultPaginationResponse handleGetAllCareers(Specification<Career> spec, Pageable pageable) {
-        Page<Career> page = this.careerRepository.findAll(spec, pageable);
-
-        ResultPaginationResponse.Meta meta = new ResultPaginationResponse.Meta();
-        meta.setPage(pageable.getPageNumber() + 1);
-        meta.setPageSize(pageable.getPageSize());
-        meta.setPages(page.getTotalPages());
-        meta.setTotal(page.getTotalElements());
-
-        return new ResultPaginationResponse(meta, page.getContent());
-    }
-
-    @Override
-    public boolean handleExistCareer(String name) {
-        return this.careerRepository.existsByName(name);
-    }
+//    private final CareerRepository careerRepository;
+//    private final JobRepository jobRepository;
+//
+//    @Override
+//    public Career handleCreateCareer(Career career) {
+//        return this.careerRepository.save(career);
+//    }
+//
+//    @Override
+//    public Career handleUpdateCareer(Career career) {
+//        Career currentCareer = this.handleGetCareerById(career.getCareerId());
+//
+//        if(currentCareer != null){
+//            currentCareer.setName(career.getName());
+//            return this.careerRepository.save(currentCareer);
+//        }
+//        return null;
+//    }
+//
+//    @Override
+//    public void handleDeleteCareer(long id) {
+//        Career currentCareer = this.handleGetCareerById(id);
+//
+//        if(currentCareer.getJobs() != null){
+//            List<Job> jobs = this.jobRepository.findByCareer(currentCareer);
+//            this.jobRepository.deleteAll(jobs);
+//        }
+//
+//        this.careerRepository.deleteById(currentCareer.getCareerId());
+//    }
+//
+//    @Override
+//    public Career handleGetCareerById(long id) {
+//        Optional<Career> career = this.careerRepository.findById(id);
+//
+//        return career.orElse(null);
+//    }
+//
+//    @Override
+//    public ResultPaginationResponse handleGetAllCareers(Specification<Career> spec, Pageable pageable) {
+//        Page<Career> page = this.careerRepository.findAll(spec, pageable);
+//
+//        ResultPaginationResponse.Meta meta = new ResultPaginationResponse.Meta();
+//        meta.setPage(pageable.getPageNumber() + 1);
+//        meta.setPageSize(pageable.getPageSize());
+//        meta.setPages(page.getTotalPages());
+//        meta.setTotal(page.getTotalElements());
+//
+//        return new ResultPaginationResponse(meta, page.getContent());
+//    }
+//
+//    @Override
+//    public boolean handleExistCareer(String name) {
+//        return this.careerRepository.existsByName(name);
+//    }
 
 }

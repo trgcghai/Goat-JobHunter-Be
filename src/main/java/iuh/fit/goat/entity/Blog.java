@@ -2,14 +2,17 @@ package iuh.fit.goat.entity;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import iuh.fit.goat.entity.embeddable.BlogActivity;
-import iuh.fit.goat.util.SecurityUtil;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
 import lombok.*;
+import org.hibernate.annotations.Filter;
+import org.hibernate.annotations.FilterDef;
 
-import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
+
+import static jakarta.persistence.CascadeType.*;
+import static jakarta.persistence.FetchType.LAZY;
 
 @Entity
 @Table(name = "blogs")
@@ -17,17 +20,19 @@ import java.util.List;
 @Setter
 @AllArgsConstructor
 @NoArgsConstructor
-@ToString
-public class Blog {
+@ToString(exclude = {"comments", "reactions", "tickets", "notifications"})
+@FilterDef(name = "activeBlogFilter")
+public class Blog extends BaseEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
     private long blogId;
     @NotBlank(message = "Title is not empty")
     private String title;
-    private String banner;
-    @Column(columnDefinition = "MEDIUMTEXT")
+    @ElementCollection
+    private List<String> images;
+    @Column(columnDefinition = "TEXT")
     private String description;
-    @Column(columnDefinition = "MEDIUMTEXT")
+    @Column(columnDefinition = "TEXT")
     private String content;
     @ElementCollection
     private List<String> tags;
@@ -35,43 +40,36 @@ public class Blog {
     private boolean enabled = false;
     @Embedded
     private BlogActivity activity = new BlogActivity();
-    private Instant createdAt;
-    private String createdBy;
-    private Instant updatedAt;
-    private String updatedBy;
 
     @ManyToOne
     @JoinColumn(name = "user_id")
     private User author;
 
-    @ManyToMany(mappedBy = "likedBlogs", fetch = FetchType.LAZY)
+    @OneToMany(mappedBy = "blog", fetch = LAZY, cascade = {PERSIST, MERGE})
     @JsonIgnore
-    @ToString.Exclude
-    private List<User> likedByUsers = new ArrayList<>();
-
-    // khi chạy lần đầu thì EAGER để nạp data, rồi đổi lại LAZY
-    @OneToMany(mappedBy = "blog", fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
-    @ToString.Exclude
-    @JsonIgnore
+    @Filter(
+            name = "activeCommentFilter",
+            condition = "deleted_at IS NULL"
+    )
     private List<Comment> comments = new ArrayList<>();
 
-    @OneToMany(mappedBy = "blog", fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
-    @ToString.Exclude
+    @OneToMany(mappedBy = "blog", fetch = LAZY, cascade = {PERSIST, MERGE}, orphanRemoval = true)
     @JsonIgnore
-    private List<Notification> notifications = new ArrayList<>();
+    private List<BlogReaction> reactions = new ArrayList<>();
 
-    @PrePersist
-    public void handleBeforeCreate(){
-        this.createdAt = Instant.now();
-        this.createdBy = SecurityUtil.getCurrentUserLogin().isPresent()
-                ? SecurityUtil.getCurrentUserLogin().get()
-                : "";
-    }
-    @PreUpdate
-    public void handleBeforeUpdate(){
-        this.updatedAt = Instant.now();
-        this.updatedBy = SecurityUtil.getCurrentUserLogin().isPresent()
-                ? SecurityUtil.getCurrentUserLogin().get()
-                : "";
-    }
+    @OneToMany(mappedBy = "blog", fetch = LAZY, cascade = {PERSIST, MERGE})
+    @JsonIgnore
+    @Filter(
+            name = "activeTicketFilter",
+            condition = "deleted_at IS NULL"
+    )
+    private List<Ticket> tickets = new ArrayList<>();
+
+    @OneToMany(mappedBy = "blog", fetch = LAZY,  cascade = {PERSIST, MERGE})
+    @JsonIgnore
+    @Filter(
+            name = "activeNotificationFilter",
+            condition = "deleted_at IS NULL"
+    )
+    private List<Notification> notifications = new ArrayList<>();
 }

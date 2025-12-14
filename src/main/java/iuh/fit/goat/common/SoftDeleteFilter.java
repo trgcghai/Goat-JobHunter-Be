@@ -1,0 +1,32 @@
+package iuh.fit.goat.common;
+
+import lombok.Getter;
+
+@Getter
+public enum SoftDeleteFilter {
+    ACCOUNT("activeAccountFilter"),
+    ROLE("activeRoleFilter"),
+    PERMISSION("activePermissionFilter"),
+    APPLICATION("activeApplicationFilter"),
+    RESUME("activeResumeFilter"),
+    SKILL("activeSkillFilter"),
+    CAREER("activeCareerFilter"),
+    SUBSCRIBER("activeSubscriberFilter"),
+    INTERVIEW("activeInterviewFilter"),
+    FRIENDSHIP("activeFriendshipFilter"),
+    COMPANY("activeCompanyFilter"),
+    JOB("activeJobFilter"),
+    BLOG("activeBlogFilter"),
+    COMMENT("activeCommentFilter"),
+    NOTIFICATION("activeNotificationFilter"),
+    CHATROOM("activeChatRoomFilter"),
+    CHATMEMBER("activeChatMemberFilter"),
+    MESSAGE("activeMessageFilter"),
+    TICKET("activeTicketFilter"),;
+
+    private final String value;
+
+    SoftDeleteFilter(String value) {
+        this.value = value;
+    }
+}

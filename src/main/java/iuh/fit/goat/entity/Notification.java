@@ -4,10 +4,13 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import iuh.fit.goat.enumeration.NotificationType;
 import jakarta.persistence.*;
 import lombok.*;
+import org.hibernate.annotations.Filter;
+import org.hibernate.annotations.FilterDef;
 
-import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
+
+import static jakarta.persistence.FetchType.*;
 
 @Entity
 @Table(name = "notifications")
@@ -15,57 +18,44 @@ import java.util.List;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-@ToString
-public class Notification {
+@ToString(exclude = {"actors", "blog", "comment", "recipient"})
+@FilterDef(name = "activeNotificationFilter")
+public class Notification extends BaseEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
     private long notificationId;
-
     @Enumerated(EnumType.STRING)
     private NotificationType type;
-
     private boolean seen = false;
 
-    private Instant createdAt;
-
-    @ManyToOne
+    @ManyToOne(fetch = LAZY)
     @JoinColumn(name = "blog_id")
     private Blog blog;
 
-    @ManyToMany(fetch = FetchType.LAZY)
+    @ManyToMany(fetch = LAZY)
     @JoinTable(
             name = "notification_actors",
             joinColumns = @JoinColumn(name = "notification_id"),
             inverseJoinColumns = @JoinColumn(name = "actor_id")
     )
     @JsonIgnore
-    @ToString.Exclude
+    @Filter(
+            name = "activeAccountFilter",
+            condition = "deleted_at IS NULL"
+    )
     private List<User> actors = new ArrayList<>();
 
-    @ManyToOne(fetch = FetchType.EAGER)
+    @ManyToOne(fetch = LAZY)
     @JoinColumn(name = "recipient_id")
     private User recipient;
 
-    @ManyToOne
+    @ManyToOne(fetch = LAZY)
     @JoinColumn(name = "comment_id")
     private Comment comment;
 
-    @ManyToOne
-    @JoinColumn(name = "reply_id")
-    private Comment reply;
-
-    @ManyToOne
-    @JoinColumn(name = "replied_on_comment_id")
-    private Comment repliedOnComment;
-
-    @PrePersist
-    public void handleBeforeCreate(){
-        this.createdAt = Instant.now();
-    }
-
     public User getLastActor() {
         if (actors != null && !actors.isEmpty()) {
-            return actors.get(actors.size() - 1);
+            return actors.getLast();
         }
         return null;
     }
