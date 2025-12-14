@@ -5,6 +5,8 @@ import iuh.fit.goat.util.SecurityUtil;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
 import lombok.*;
+import org.hibernate.annotations.Filter;
+import org.hibernate.annotations.FilterDef;
 
 import java.time.Instant;
 import java.util.ArrayList;
@@ -16,45 +18,32 @@ import java.util.List;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-@ToString(callSuper = true)
-public class Skill {
+@ToString(exclude = {"jobs", "subscribers"})
+@FilterDef(name = "activeSkillFilter")
+public class Skill extends BaseEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
     private long skillId;
     @NotBlank(message = "Skill name is not empty")
     private String name;
 
-    private Instant createdAt;
-    private String createdBy;
-    private Instant updatedAt;
-    private String updatedBy;
-
-    @ManyToMany(mappedBy = "skills", fetch = FetchType.LAZY)
-    @JsonIgnore
-    @ToString.Exclude
-    private List<Job> jobs = new ArrayList<>();
-
-    @ManyToMany(mappedBy = "skills", fetch = FetchType.LAZY)
-    @JsonIgnore
-    @ToString.Exclude
-    private List<Subscriber> subscribers = new ArrayList<>();
-
     public Skill(String name) {
         this.name = name;
     }
 
-    @PrePersist
-    public void handleBeforeCreate(){
-        this.createdAt = Instant.now();
-        this.createdBy = SecurityUtil.getCurrentUserLogin().isPresent()
-                ? SecurityUtil.getCurrentUserLogin().get()
-                : "";
-    }
-    @PreUpdate
-    public void handleBeforeUpdate(){
-        this.updatedAt = Instant.now();
-        this.updatedBy = SecurityUtil.getCurrentUserLogin().isPresent()
-                ? SecurityUtil.getCurrentUserLogin().get()
-                : "";
-    }
+    @ManyToMany(mappedBy = "skills", fetch = FetchType.LAZY)
+    @JsonIgnore
+    @Filter(
+            name = "activeJobFilter",
+            condition = "deleted_at IS NULL"
+    )
+    private List<Job> jobs = new ArrayList<>();
+
+    @ManyToMany(mappedBy = "skills", fetch = FetchType.LAZY)
+    @JsonIgnore
+    @Filter(
+            name = "activeSubscriberFilter",
+            condition = "deleted_at IS NULL"
+    )
+    private List<Subscriber> subscribers = new ArrayList<>();
 }

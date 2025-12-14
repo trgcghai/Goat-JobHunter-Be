@@ -2,12 +2,12 @@ package iuh.fit.goat.entity;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import iuh.fit.goat.util.SecurityUtil;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
 import lombok.*;
+import org.hibernate.annotations.Filter;
+import org.hibernate.annotations.FilterDef;
 
-import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -17,8 +17,9 @@ import java.util.List;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-@ToString
-public class Role {
+@ToString(exclude = {"permissions", "accounts"})
+@FilterDef(name = "activeRoleFilter")
+public class Role extends BaseEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
     private long roleId;
@@ -28,11 +29,6 @@ public class Role {
     @NotBlank(message = "Role name is not empty")
     private String name;
 
-    private Instant createdAt;
-    private String createdBy;
-    private Instant updatedAt;
-    private String updatedBy;
-
     @ManyToMany(fetch = FetchType.LAZY)
     @JoinTable(
             name = "role_permission",
@@ -40,26 +36,17 @@ public class Role {
             inverseJoinColumns = @JoinColumn(name = "permission_id")
     )
     @JsonIgnoreProperties(value = {"roles"})
-    @ToString.Exclude
+    @Filter(
+            name = "activePermissionFilter",
+            condition = "deleted_at IS NULL"
+    )
     private List<Permission> permissions = new ArrayList<>();
 
-    @OneToMany(mappedBy = "role", fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
+    @OneToMany(mappedBy = "role", fetch = FetchType.LAZY, cascade = {CascadeType.PERSIST, CascadeType.MERGE})
     @JsonIgnore
-    @ToString.Exclude
-    private List<User> users = new ArrayList<>();
-
-    @PrePersist
-    public void handleBeforeCreate(){
-        this.createdAt = Instant.now();
-        this.createdBy = SecurityUtil.getCurrentUserLogin().isPresent()
-                ? SecurityUtil.getCurrentUserLogin().get()
-                : "";
-    }
-    @PreUpdate
-    public void handleBeforeUpdate(){
-        this.updatedAt = Instant.now();
-        this.updatedBy = SecurityUtil.getCurrentUserLogin().isPresent()
-                ? SecurityUtil.getCurrentUserLogin().get()
-                : "";
-    }
+    @Filter(
+            name = "activeAccountFilter",
+            condition = "deleted_at IS NULL"
+    )
+    private List<Account> accounts = new ArrayList<>();
 }

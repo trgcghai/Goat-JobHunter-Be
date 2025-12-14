@@ -13,30 +13,30 @@ import org.springframework.data.jpa.domain.Specification;
 import java.util.List;
 
 public interface ApplicationService {
-    ApplicationResponse handleCreateApplication(Application application);
-
-    List<ApplicationStatusResponse> handleAcceptApplications(ApplicationIdsRequest request);
-
-    List<ApplicationStatusResponse> handleRejectApplications(ApplicationIdsRequest request);
-
-    void handleDeleteApplication(long id);
-
-    Application handleGetApplicationById(long id);
-
-    ResultPaginationResponse handleGetAllApplications(
-            Specification<Application> spec, Pageable pageable
-    );
-
-    boolean checkApplicantAndJobExist(Application application);
-
-    boolean handleCanApplyToJob(Long applicantId, Long jobId);
-
-    Long handleCountApplicationsByApplicantForJob(Long applicantId, Long jobId);
-
-    Applicant handleGetApplicant(Application application);
-
-    Job handleGetJob(Application application);
-
-
-    ApplicationResponse convertToApplicationResponse(Application application);
+//    ApplicationResponse handleCreateApplication(Application application);
+//
+//    List<ApplicationStatusResponse> handleAcceptApplications(ApplicationIdsRequest request);
+//
+//    List<ApplicationStatusResponse> handleRejectApplications(ApplicationIdsRequest request);
+//
+//    void handleDeleteApplication(long id);
+//
+//    Application handleGetApplicationById(long id);
+//
+//    ResultPaginationResponse handleGetAllApplications(
+//            Specification<Application> spec, Pageable pageable
+//    );
+//
+//    boolean checkApplicantAndJobExist(Application application);
+//
+//    boolean handleCanApplyToJob(Long applicantId, Long jobId);
+//
+//    Long handleCountApplicationsByApplicantForJob(Long applicantId, Long jobId);
+//
+//    Applicant handleGetApplicant(Application application);
+//
+//    Job handleGetJob(Application application);
+//
+//
+//    ApplicationResponse convertToApplicationResponse(Application application);
 }

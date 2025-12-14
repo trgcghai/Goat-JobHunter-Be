@@ -1,6 +1,5 @@
 package iuh.fit.goat.dto.request.message;
 
-import iuh.fit.goat.enumeration.MessageRole;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
@@ -14,7 +13,7 @@ public class MessageCreateRequest {
     @NotNull(message = "conversation ID is required")
     private Long conversationId;
     @NotNull(message = "Role is required")
-    private MessageRole role;
+//    private MessageRole role;
     @NotBlank(message = "message is not empty")
     private String content;
 }

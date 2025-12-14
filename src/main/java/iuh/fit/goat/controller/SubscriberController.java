@@ -23,75 +23,75 @@ import java.util.regex.Pattern;
 @RequestMapping("/api/v1")
 @RequiredArgsConstructor
 public class SubscriberController {
-    private final SubscriberService subscriberService;
-
-    @PostMapping("/subscribers")
-    public ResponseEntity<Subscriber> createSubscriber(@Valid @RequestBody SubscriberCreateDto dto)
-            throws InvalidException {
-        if (this.subscriberService.handleGetSubscriberByEmail(dto.getEmail()) == null) {
-            return ResponseEntity.status(HttpStatus.CREATED)
-                    .body(this.subscriberService.handleCreateSubscriber(dto));
-        } else {
-            throw new InvalidException("Email exists");
-        }
-    }
-
-    @PutMapping("/subscribers")
-    public ResponseEntity<Subscriber> updateSubscriber(@Valid @RequestBody SubscriberUpdateDto dto)
-            throws InvalidException {
-        if (this.subscriberService.handleGetSubscriberById(dto.getSubscriberId()) != null) {
-            return ResponseEntity.ok()
-                    .body(this.subscriberService.handleUpdateSubscriber(dto));
-        } else {
-            throw new InvalidException("Subscriber doesn't exist");
-        }
-    }
-
-    @DeleteMapping("/subscribers/{id}")
-    public ResponseEntity<Void> deleteSubscriber(@PathVariable("id") String id)
-            throws InvalidException {
-        Pattern pattern = Pattern.compile("^[0-9]+$");
-
-        if(pattern.matcher(id).matches()) {
-            Subscriber subscriber = this.subscriberService.handleGetSubscriberById(Long.parseLong(id));
-            if(subscriber != null) {
-                this.subscriberService.handleDeleteSubscriber(Long.parseLong(id));
-                return ResponseEntity.status(HttpStatus.OK).body(null);
-            } else {
-                throw new InvalidException("Subscriber doesn't exist");
-            }
-        } else {
-            throw new InvalidException("Id is number");
-        }
-    }
-
-    @GetMapping("/subscribers/{id}")
-    public ResponseEntity<Subscriber> getSubscriberById(@PathVariable("id") String id) throws InvalidException {
-        Pattern pattern = Pattern.compile("^[0-9]+$");
-
-        if(pattern.matcher(id).matches()) {
-            Subscriber subscriber = this.subscriberService.handleGetSubscriberById(Long.parseLong(id));
-            if(subscriber != null) {
-                return ResponseEntity.status(HttpStatus.OK).body(subscriber);
-            } else {
-                throw new InvalidException("Subscriber doesn't exist");
-            }
-        } else {
-            throw new InvalidException("Id is number");
-        }
-    }
-
-    @GetMapping("/subscribers")
-    public ResponseEntity<ResultPaginationResponse> getAllSubscribers(
-            @Filter Specification<Subscriber> spec, Pageable pageable
-    ) {
-        ResultPaginationResponse result = this.subscriberService.handleGetAllSubscribers(spec, pageable);
-        return ResponseEntity.status(HttpStatus.OK).body(result);
-    }
-
-    @GetMapping("/subscribers/skills")
-    public ResponseEntity<Subscriber> getCurrentUserSubscribersSkill() {
-        String email = SecurityUtil.getCurrentUserLogin().isPresent() ? SecurityUtil.getCurrentUserLogin().get() : "";
-        return ResponseEntity.ok().body(this.subscriberService.handleGetSubscribersSkill(email));
-    }
+//    private final SubscriberService subscriberService;
+//
+//    @PostMapping("/subscribers")
+//    public ResponseEntity<Subscriber> createSubscriber(@Valid @RequestBody SubscriberCreateDto dto)
+//            throws InvalidException {
+//        if (this.subscriberService.handleGetSubscriberByEmail(dto.getEmail()) == null) {
+//            return ResponseEntity.status(HttpStatus.CREATED)
+//                    .body(this.subscriberService.handleCreateSubscriber(dto));
+//        } else {
+//            throw new InvalidException("Email exists");
+//        }
+//    }
+//
+//    @PutMapping("/subscribers")
+//    public ResponseEntity<Subscriber> updateSubscriber(@Valid @RequestBody SubscriberUpdateDto dto)
+//            throws InvalidException {
+//        if (this.subscriberService.handleGetSubscriberById(dto.getSubscriberId()) != null) {
+//            return ResponseEntity.ok()
+//                    .body(this.subscriberService.handleUpdateSubscriber(dto));
+//        } else {
+//            throw new InvalidException("Subscriber doesn't exist");
+//        }
+//    }
+//
+//    @DeleteMapping("/subscribers/{id}")
+//    public ResponseEntity<Void> deleteSubscriber(@PathVariable("id") String id)
+//            throws InvalidException {
+//        Pattern pattern = Pattern.compile("^[0-9]+$");
+//
+//        if(pattern.matcher(id).matches()) {
+//            Subscriber subscriber = this.subscriberService.handleGetSubscriberById(Long.parseLong(id));
+//            if(subscriber != null) {
+//                this.subscriberService.handleDeleteSubscriber(Long.parseLong(id));
+//                return ResponseEntity.status(HttpStatus.OK).body(null);
+//            } else {
+//                throw new InvalidException("Subscriber doesn't exist");
+//            }
+//        } else {
+//            throw new InvalidException("Id is number");
+//        }
+//    }
+//
+//    @GetMapping("/subscribers/{id}")
+//    public ResponseEntity<Subscriber> getSubscriberById(@PathVariable("id") String id) throws InvalidException {
+//        Pattern pattern = Pattern.compile("^[0-9]+$");
+//
+//        if(pattern.matcher(id).matches()) {
+//            Subscriber subscriber = this.subscriberService.handleGetSubscriberById(Long.parseLong(id));
+//            if(subscriber != null) {
+//                return ResponseEntity.status(HttpStatus.OK).body(subscriber);
+//            } else {
+//                throw new InvalidException("Subscriber doesn't exist");
+//            }
+//        } else {
+//            throw new InvalidException("Id is number");
+//        }
+//    }
+//
+//    @GetMapping("/subscribers")
+//    public ResponseEntity<ResultPaginationResponse> getAllSubscribers(
+//            @Filter Specification<Subscriber> spec, Pageable pageable
+//    ) {
+//        ResultPaginationResponse result = this.subscriberService.handleGetAllSubscribers(spec, pageable);
+//        return ResponseEntity.status(HttpStatus.OK).body(result);
+//    }
+//
+//    @GetMapping("/subscribers/skills")
+//    public ResponseEntity<Subscriber> getCurrentUserSubscribersSkill() {
+//        String email = SecurityUtil.getCurrentUserLogin().isPresent() ? SecurityUtil.getCurrentUserLogin().get() : "";
+//        return ResponseEntity.ok().body(this.subscriberService.handleGetSubscribersSkill(email));
+//    }
 }

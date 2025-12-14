@@ -34,280 +34,280 @@ import java.util.Map;
 @RequestMapping("/api/v1")
 @RequiredArgsConstructor
 public class UserController {
-    private final UserService userService;
-
-    @Value("${minhdat.jwt.access-token-validity-in-seconds}")
-    private long jwtAccessToken;
-    @Value("${minhdat.jwt.refresh-token-validity-in-seconds}")
-    private long jwtRefreshToken;
-
-    @GetMapping("/users")
-    public ResponseEntity<ResultPaginationResponse> getAllUsers(
-            @Filter Specification<User> spec, Pageable pageable
-    ) {
-        ResultPaginationResponse result = this.userService.handleGetAllUsers(spec, pageable);
-        return ResponseEntity.status(HttpStatus.OK).body(result);
-    }
-
-    @GetMapping("/users/{id}")
-    public ResponseEntity<UserResponse> getUserById(@PathVariable("id") long id) {
-        User user = this.userService.handleGetUserById(id);
-        if (user == null) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
-        }
-        UserResponse userResponse = this.userService.convertToUserResponse(user);
-        return ResponseEntity.status(HttpStatus.OK).body(userResponse);
-    }
-
-    @GetMapping("/users/me")
-    public <T extends User> ResponseEntity<T> getCurrentUserByEmail() {
-        String email = SecurityUtil.getCurrentUserLogin().isPresent() ? SecurityUtil.getCurrentUserLogin().get() : null;
-        User user = this.userService.handleGetUserByEmail(email);
-        return ResponseEntity.status(HttpStatus.OK).body((T) user);
-    }
-
-    @PostMapping("/users")
-    public ResponseEntity<UserResponse> createUser(@Valid @RequestBody CreateUserRequest request) {
-        try {
-            User newUser = this.userService.handleCreateUser(request);
-            UserResponse userResponse = this.userService.convertToUserResponse(newUser);
-            return ResponseEntity.status(HttpStatus.CREATED).body(userResponse);
-        } catch (InvalidException e) {
-            throw new RuntimeException(e.getMessage());
-        }
-    }
-
-    @PutMapping("/users/update-password")
-    public ResponseEntity<LoginResponse> updatePassword(
-            @CookieValue(name = "refreshToken", defaultValue = "missingValue") String refreshToken,
-            @Valid @RequestBody UpdatePasswordRequest updatePasswordRequest
-    ) throws InvalidException {
-        boolean checked = this.userService.handleCheckCurrentPassword(updatePasswordRequest.getCurrentPassword());
-        if (!checked) {
-            throw new InvalidException("Current password is error");
-        }
-
-        Map<String, Object> result = this.userService
-                .handleUpdatePassword(updatePasswordRequest.getNewPassword(), refreshToken);
-        if (result == null) {
-            throw new InvalidException("Updated password is failed");
-        }
-
-        ResponseCookie accessTokenCookie = ResponseCookie
-                .from("accessToken", result.get("accessToken").toString())
-                .httpOnly(true)
-                .secure(false) // for dev
-                .sameSite("Lax") // for dev
-                .path("/")
-                .maxAge(jwtAccessToken)
-                .build();
-        ResponseCookie refreshTokenCookie = ResponseCookie
-                .from("refreshToken", result.get("refreshToken").toString())
-                .httpOnly(true)
-                .secure(false) // for dev
-                .sameSite("Lax") // for dev
-                .path("/")
-                .maxAge(jwtRefreshToken)
-                .build();
-
-        return ResponseEntity.ok()
-                .header(HttpHeaders.SET_COOKIE, accessTokenCookie.toString())
-                .header(HttpHeaders.SET_COOKIE, refreshTokenCookie.toString())
-                .body((LoginResponse) result.get("loginResponse"));
-    }
-
-    @PutMapping("/users/reset-password")
-    public ResponseEntity<?> resetPassword(@Valid @RequestBody ResetPasswordRequest resetPasswordRequest) {
-        try {
-            this.userService.handleResetPassword(resetPasswordRequest);
-            return ResponseEntity.status(HttpStatus.OK).body(
-                    Map.of("message", "Password reset successful. Please check your email to verify your account.")
-            );
-        } catch (Exception e) {
-            return ResponseEntity.badRequest().body(e.getMessage());
-        }
-    }
-
-    @GetMapping("/users/me/saved-jobs")
-    public ResponseEntity<ResultPaginationResponse> getCurrentUserSavedJobs(Pageable pageable) {
-        ResultPaginationResponse result = this.userService.handleGetCurrentUserSavedJobs(pageable);
-        return ResponseEntity.status(HttpStatus.OK).body(result);
-    }
-
-    @GetMapping("/users/me/saved-jobs/contains")
-    public ResponseEntity<List<Map<String, Object>>> checkJobsSaved(@RequestParam List<Long> jobIds) {
-        List<Map<String, Object>> result = this.userService.handleCheckJobsSaved(jobIds);
-        return ResponseEntity.status(HttpStatus.OK).body(result);
-    }
-
-    @PutMapping("/users/me/saved-jobs")
-    public ResponseEntity<UserResponse> saveJobsForCurrentUser(@RequestBody Map<String, List<Long>> request)
-            throws InvalidException {
-        List<Long> jobIds = request.get("jobIds");
-        if (jobIds == null || jobIds.isEmpty()) {
-            throw new InvalidException("Job IDs list cannot be empty");
-        }
-
-        UserResponse userResponse = this.userService.handleSaveJobsForCurrentUser(jobIds);
-        if (userResponse == null) {
-            throw new InvalidException("Failed to save jobs");
-        }
-
-        return ResponseEntity.status(HttpStatus.OK).body(userResponse);
-    }
-
-    @DeleteMapping("/users/me/saved-jobs")
-    public ResponseEntity<UserResponse> unsaveJobsForCurrentUser(@RequestBody Map<String, List<Long>> request)
-            throws InvalidException {
-        List<Long> jobIds = request.get("jobIds");
-        if (jobIds == null || jobIds.isEmpty()) {
-            throw new InvalidException("Job IDs list cannot be empty");
-        }
-
-        UserResponse userResponse = this.userService.handleUnsaveJobsForCurrentUser(jobIds);
-        if (userResponse == null) {
-            throw new InvalidException("Failed to unsave jobs");
-        }
-
-        return ResponseEntity.status(HttpStatus.OK).body(userResponse);
-    }
-
-    @GetMapping("/users/me/liked-blogs")
-    public ResponseEntity<ResultPaginationResponse> getCurrentUserLikedBlogs(
-            @Filter Specification<Blog> spec,
-            Pageable pageable
-    ) {
-        ResultPaginationResponse result = this.userService.handleGetCurrentUserLikedBlogs(spec, pageable);
-        return ResponseEntity.status(HttpStatus.OK).body(result);
-    }
-
-    @GetMapping("/users/me/liked-blogs/contains")
-    public ResponseEntity<List<Map<String, Object>>> checkBlogsLiked(@RequestParam List<Long> blogIds) {
-        List<Map<String, Object>> result = this.userService.handleCheckBlogsLiked(blogIds);
-        return ResponseEntity.status(HttpStatus.OK).body(result);
-    }
-
-    @PutMapping("/users/me/liked-blogs")
-    public ResponseEntity<List<Map<String, Object>>> likeBlogs(@RequestBody Map<String, List<Long>> request)
-            throws InvalidException {
-        List<Long> blogIds = request.get("blogIds");
-        if (blogIds == null || blogIds.isEmpty()) {
-            throw new InvalidException("Blog IDs list cannot be empty");
-        }
-
-        List<Map<String, Object>> results = this.userService.handleLikeBlogs(blogIds);
-        return ResponseEntity.status(HttpStatus.OK).body(results);
-    }
-
-    @DeleteMapping("/users/me/liked-blogs")
-    public ResponseEntity<List<Map<String, Object>>> unlikeBlogs(@RequestBody Map<String, List<Long>> request)
-            throws InvalidException {
-        List<Long> blogIds = request.get("blogIds");
-        if (blogIds == null || blogIds.isEmpty()) {
-            throw new InvalidException("Blog IDs list cannot be empty");
-        }
-
-        List<Map<String, Object>> results = this.userService.handleUnlikeBlogs(blogIds);
-        return ResponseEntity.status(HttpStatus.OK).body(results);
-    }
-
-    @GetMapping("/users/me/notifications")
-    public ResponseEntity<ResultPaginationResponse> getCurrentUserNotifications(Pageable pageable) {
-        ResultPaginationResponse result = this.userService.handleGetCurrentUserNotifications(pageable);
-        return ResponseEntity.status(HttpStatus.OK).body(result);
-    }
-
-    @GetMapping("/users/me/notifications/latest")
-    public ResponseEntity<List<Notification>> getLatestNotifications() {
-        List<Notification> notifications = this.userService.handleGetLatestNotifications();
-        return ResponseEntity.status(HttpStatus.OK).body(notifications);
-    }
-
-    @PutMapping("/users/me/notifications")
-    public ResponseEntity<Map<String, String>> markNotificationsAsSeen(
-            @RequestBody List<Long> notificationIds
-    ) throws InvalidException {
-        if (notificationIds == null) {
-            throw new InvalidException("Notification IDs list cannot be null");
-        }
-
-        if (notificationIds.isEmpty()) {
-            return ResponseEntity.status(HttpStatus.OK).body(
-                    Map.of("message", "No notifications to mark as seen")
-            );
-        }
-
-        this.userService.handleMarkNotificationsAsSeen(notificationIds);
-
-        return ResponseEntity.status(HttpStatus.OK).body(
-                Map.of("message", "Notifications marked as seen successfully")
-        );
-    }
-
-    // endpoints for follow recruiters feature
-    @GetMapping("/users/me/followed-recruiters")
-    public ResponseEntity<List<Recruiter>> getCurrentUserFollowedRecruiters() {
-        List<Recruiter> followed = this.userService.handleGetCurrentUserFollowedRecruiters();
-        return ResponseEntity.status(HttpStatus.OK).body(followed);
-    }
-
-    @GetMapping("/users/me/followed-recruiters/contains")
-    public ResponseEntity<List<Map<String, Object>>> checkRecruitersFollowed(@RequestParam List<Long> recruiterIds) {
-        List<Map<String, Object>> result = this.userService.handleCheckRecruitersFollowed(recruiterIds);
-        return ResponseEntity.status(HttpStatus.OK).body(result);
-    }
-
-    @PutMapping("/users/me/followed-recruiters")
-    public ResponseEntity<UserResponse> followRecruiters(@RequestBody Map<String, List<Long>> request)
-            throws InvalidException {
-        List<Long> recruiterIds = request.get("recruiterIds");
-        if (recruiterIds == null || recruiterIds.isEmpty()) {
-            throw new InvalidException("Recruiter IDs list cannot be empty");
-        }
-
-        UserResponse userResponse = this.userService.handleFollowRecruiters(recruiterIds);
-        if (userResponse == null) {
-            throw new InvalidException("Failed to follow recruiters");
-        }
-
-        return ResponseEntity.status(HttpStatus.OK).body(userResponse);
-    }
-
-    @DeleteMapping("/users/me/followed-recruiters")
-    public ResponseEntity<UserResponse> unfollowRecruiters(@RequestBody Map<String, List<Long>> request)
-            throws InvalidException {
-        List<Long> recruiterIds = request.get("recruiterIds");
-        if (recruiterIds == null || recruiterIds.isEmpty()) {
-            throw new InvalidException("Recruiter IDs list cannot be empty");
-        }
-
-        UserResponse userResponse = this.userService.handleUnfollowRecruiters(recruiterIds);
-        if (userResponse == null) {
-            throw new InvalidException("Failed to unfollow recruiters");
-        }
-
-        return ResponseEntity.status(HttpStatus.OK).body(userResponse);
-    }
-
-    @PutMapping("/users/activate")
-    public ResponseEntity<List<UserEnabledResponse>> activateUsers(@RequestBody UserEnabledRequest request)
-            throws InvalidException {
-        List<Long> userIds = request.getUserIds();
-        if (userIds == null || userIds.isEmpty()) {
-            throw new InvalidException("User IDs list cannot be empty");
-        }
-        List<UserEnabledResponse> res = this.userService.handleActivateUsers(userIds);
-        return ResponseEntity.status(HttpStatus.OK).body(res);
-    }
-
-    @PutMapping("/users/deactivate")
-    public ResponseEntity<List<UserEnabledResponse>> deactivateUsers(@RequestBody UserEnabledRequest request)
-            throws InvalidException {
-        List<Long> userIds = request.getUserIds();
-        if (userIds == null || userIds.isEmpty()) {
-            throw new InvalidException("User IDs list cannot be empty");
-        }
-        List<UserEnabledResponse> res = this.userService.handleDeactivateUsers(userIds);
-        return ResponseEntity.status(HttpStatus.OK).body(res);
-    }
+//    private final UserService userService;
+//
+//    @Value("${minhdat.jwt.access-token-validity-in-seconds}")
+//    private long jwtAccessToken;
+//    @Value("${minhdat.jwt.refresh-token-validity-in-seconds}")
+//    private long jwtRefreshToken;
+//
+//    @GetMapping("/users")
+//    public ResponseEntity<ResultPaginationResponse> getAllUsers(
+//            @Filter Specification<User> spec, Pageable pageable
+//    ) {
+//        ResultPaginationResponse result = this.userService.handleGetAllUsers(spec, pageable);
+//        return ResponseEntity.status(HttpStatus.OK).body(result);
+//    }
+//
+//    @GetMapping("/users/{id}")
+//    public ResponseEntity<UserResponse> getUserById(@PathVariable("id") long id) {
+//        User user = this.userService.handleGetUserById(id);
+//        if (user == null) {
+//            return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
+//        }
+//        UserResponse userResponse = this.userService.convertToUserResponse(user);
+//        return ResponseEntity.status(HttpStatus.OK).body(userResponse);
+//    }
+//
+//    @GetMapping("/users/me")
+//    public <T extends User> ResponseEntity<T> getCurrentUserByEmail() {
+//        String email = SecurityUtil.getCurrentUserLogin().isPresent() ? SecurityUtil.getCurrentUserLogin().get() : null;
+//        User user = this.userService.handleGetUserByEmail(email);
+//        return ResponseEntity.status(HttpStatus.OK).body((T) user);
+//    }
+//
+//    @PostMapping("/users")
+//    public ResponseEntity<UserResponse> createUser(@Valid @RequestBody CreateUserRequest request) {
+//        try {
+//            User newUser = this.userService.handleCreateUser(request);
+//            UserResponse userResponse = this.userService.convertToUserResponse(newUser);
+//            return ResponseEntity.status(HttpStatus.CREATED).body(userResponse);
+//        } catch (InvalidException e) {
+//            throw new RuntimeException(e.getMessage());
+//        }
+//    }
+//
+//    @PutMapping("/users/update-password")
+//    public ResponseEntity<LoginResponse> updatePassword(
+//            @CookieValue(name = "refreshToken", defaultValue = "missingValue") String refreshToken,
+//            @Valid @RequestBody UpdatePasswordRequest updatePasswordRequest
+//    ) throws InvalidException {
+//        boolean checked = this.userService.handleCheckCurrentPassword(updatePasswordRequest.getCurrentPassword());
+//        if (!checked) {
+//            throw new InvalidException("Current password is error");
+//        }
+//
+//        Map<String, Object> result = this.userService
+//                .handleUpdatePassword(updatePasswordRequest.getNewPassword(), refreshToken);
+//        if (result == null) {
+//            throw new InvalidException("Updated password is failed");
+//        }
+//
+//        ResponseCookie accessTokenCookie = ResponseCookie
+//                .from("accessToken", result.get("accessToken").toString())
+//                .httpOnly(true)
+//                .secure(false) // for dev
+//                .sameSite("Lax") // for dev
+//                .path("/")
+//                .maxAge(jwtAccessToken)
+//                .build();
+//        ResponseCookie refreshTokenCookie = ResponseCookie
+//                .from("refreshToken", result.get("refreshToken").toString())
+//                .httpOnly(true)
+//                .secure(false) // for dev
+//                .sameSite("Lax") // for dev
+//                .path("/")
+//                .maxAge(jwtRefreshToken)
+//                .build();
+//
+//        return ResponseEntity.ok()
+//                .header(HttpHeaders.SET_COOKIE, accessTokenCookie.toString())
+//                .header(HttpHeaders.SET_COOKIE, refreshTokenCookie.toString())
+//                .body((LoginResponse) result.get("loginResponse"));
+//    }
+//
+//    @PutMapping("/users/reset-password")
+//    public ResponseEntity<?> resetPassword(@Valid @RequestBody ResetPasswordRequest resetPasswordRequest) {
+//        try {
+//            this.userService.handleResetPassword(resetPasswordRequest);
+//            return ResponseEntity.status(HttpStatus.OK).body(
+//                    Map.of("message", "Password reset successful. Please check your email to verify your account.")
+//            );
+//        } catch (Exception e) {
+//            return ResponseEntity.badRequest().body(e.getMessage());
+//        }
+//    }
+//
+//    @GetMapping("/users/me/saved-jobs")
+//    public ResponseEntity<ResultPaginationResponse> getCurrentUserSavedJobs(Pageable pageable) {
+//        ResultPaginationResponse result = this.userService.handleGetCurrentUserSavedJobs(pageable);
+//        return ResponseEntity.status(HttpStatus.OK).body(result);
+//    }
+//
+//    @GetMapping("/users/me/saved-jobs/contains")
+//    public ResponseEntity<List<Map<String, Object>>> checkJobsSaved(@RequestParam List<Long> jobIds) {
+//        List<Map<String, Object>> result = this.userService.handleCheckJobsSaved(jobIds);
+//        return ResponseEntity.status(HttpStatus.OK).body(result);
+//    }
+//
+//    @PutMapping("/users/me/saved-jobs")
+//    public ResponseEntity<UserResponse> saveJobsForCurrentUser(@RequestBody Map<String, List<Long>> request)
+//            throws InvalidException {
+//        List<Long> jobIds = request.get("jobIds");
+//        if (jobIds == null || jobIds.isEmpty()) {
+//            throw new InvalidException("Job IDs list cannot be empty");
+//        }
+//
+//        UserResponse userResponse = this.userService.handleSaveJobsForCurrentUser(jobIds);
+//        if (userResponse == null) {
+//            throw new InvalidException("Failed to save jobs");
+//        }
+//
+//        return ResponseEntity.status(HttpStatus.OK).body(userResponse);
+//    }
+//
+//    @DeleteMapping("/users/me/saved-jobs")
+//    public ResponseEntity<UserResponse> unsaveJobsForCurrentUser(@RequestBody Map<String, List<Long>> request)
+//            throws InvalidException {
+//        List<Long> jobIds = request.get("jobIds");
+//        if (jobIds == null || jobIds.isEmpty()) {
+//            throw new InvalidException("Job IDs list cannot be empty");
+//        }
+//
+//        UserResponse userResponse = this.userService.handleUnsaveJobsForCurrentUser(jobIds);
+//        if (userResponse == null) {
+//            throw new InvalidException("Failed to unsave jobs");
+//        }
+//
+//        return ResponseEntity.status(HttpStatus.OK).body(userResponse);
+//    }
+//
+//    @GetMapping("/users/me/liked-blogs")
+//    public ResponseEntity<ResultPaginationResponse> getCurrentUserLikedBlogs(
+//            @Filter Specification<Blog> spec,
+//            Pageable pageable
+//    ) {
+//        ResultPaginationResponse result = this.userService.handleGetCurrentUserLikedBlogs(spec, pageable);
+//        return ResponseEntity.status(HttpStatus.OK).body(result);
+//    }
+//
+//    @GetMapping("/users/me/liked-blogs/contains")
+//    public ResponseEntity<List<Map<String, Object>>> checkBlogsLiked(@RequestParam List<Long> blogIds) {
+//        List<Map<String, Object>> result = this.userService.handleCheckBlogsLiked(blogIds);
+//        return ResponseEntity.status(HttpStatus.OK).body(result);
+//    }
+//
+//    @PutMapping("/users/me/liked-blogs")
+//    public ResponseEntity<List<Map<String, Object>>> likeBlogs(@RequestBody Map<String, List<Long>> request)
+//            throws InvalidException {
+//        List<Long> blogIds = request.get("blogIds");
+//        if (blogIds == null || blogIds.isEmpty()) {
+//            throw new InvalidException("Blog IDs list cannot be empty");
+//        }
+//
+//        List<Map<String, Object>> results = this.userService.handleLikeBlogs(blogIds);
+//        return ResponseEntity.status(HttpStatus.OK).body(results);
+//    }
+//
+//    @DeleteMapping("/users/me/liked-blogs")
+//    public ResponseEntity<List<Map<String, Object>>> unlikeBlogs(@RequestBody Map<String, List<Long>> request)
+//            throws InvalidException {
+//        List<Long> blogIds = request.get("blogIds");
+//        if (blogIds == null || blogIds.isEmpty()) {
+//            throw new InvalidException("Blog IDs list cannot be empty");
+//        }
+//
+//        List<Map<String, Object>> results = this.userService.handleUnlikeBlogs(blogIds);
+//        return ResponseEntity.status(HttpStatus.OK).body(results);
+//    }
+//
+//    @GetMapping("/users/me/notifications")
+//    public ResponseEntity<ResultPaginationResponse> getCurrentUserNotifications(Pageable pageable) {
+//        ResultPaginationResponse result = this.userService.handleGetCurrentUserNotifications(pageable);
+//        return ResponseEntity.status(HttpStatus.OK).body(result);
+//    }
+//
+//    @GetMapping("/users/me/notifications/latest")
+//    public ResponseEntity<List<Notification>> getLatestNotifications() {
+//        List<Notification> notifications = this.userService.handleGetLatestNotifications();
+//        return ResponseEntity.status(HttpStatus.OK).body(notifications);
+//    }
+//
+//    @PutMapping("/users/me/notifications")
+//    public ResponseEntity<Map<String, String>> markNotificationsAsSeen(
+//            @RequestBody List<Long> notificationIds
+//    ) throws InvalidException {
+//        if (notificationIds == null) {
+//            throw new InvalidException("Notification IDs list cannot be null");
+//        }
+//
+//        if (notificationIds.isEmpty()) {
+//            return ResponseEntity.status(HttpStatus.OK).body(
+//                    Map.of("message", "No notifications to mark as seen")
+//            );
+//        }
+//
+//        this.userService.handleMarkNotificationsAsSeen(notificationIds);
+//
+//        return ResponseEntity.status(HttpStatus.OK).body(
+//                Map.of("message", "Notifications marked as seen successfully")
+//        );
+//    }
+//
+//    // endpoints for follow recruiters feature
+//    @GetMapping("/users/me/followed-recruiters")
+//    public ResponseEntity<List<Recruiter>> getCurrentUserFollowedRecruiters() {
+//        List<Recruiter> followed = this.userService.handleGetCurrentUserFollowedRecruiters();
+//        return ResponseEntity.status(HttpStatus.OK).body(followed);
+//    }
+//
+//    @GetMapping("/users/me/followed-recruiters/contains")
+//    public ResponseEntity<List<Map<String, Object>>> checkRecruitersFollowed(@RequestParam List<Long> recruiterIds) {
+//        List<Map<String, Object>> result = this.userService.handleCheckRecruitersFollowed(recruiterIds);
+//        return ResponseEntity.status(HttpStatus.OK).body(result);
+//    }
+//
+//    @PutMapping("/users/me/followed-recruiters")
+//    public ResponseEntity<UserResponse> followRecruiters(@RequestBody Map<String, List<Long>> request)
+//            throws InvalidException {
+//        List<Long> recruiterIds = request.get("recruiterIds");
+//        if (recruiterIds == null || recruiterIds.isEmpty()) {
+//            throw new InvalidException("Recruiter IDs list cannot be empty");
+//        }
+//
+//        UserResponse userResponse = this.userService.handleFollowRecruiters(recruiterIds);
+//        if (userResponse == null) {
+//            throw new InvalidException("Failed to follow recruiters");
+//        }
+//
+//        return ResponseEntity.status(HttpStatus.OK).body(userResponse);
+//    }
+//
+//    @DeleteMapping("/users/me/followed-recruiters")
+//    public ResponseEntity<UserResponse> unfollowRecruiters(@RequestBody Map<String, List<Long>> request)
+//            throws InvalidException {
+//        List<Long> recruiterIds = request.get("recruiterIds");
+//        if (recruiterIds == null || recruiterIds.isEmpty()) {
+//            throw new InvalidException("Recruiter IDs list cannot be empty");
+//        }
+//
+//        UserResponse userResponse = this.userService.handleUnfollowRecruiters(recruiterIds);
+//        if (userResponse == null) {
+//            throw new InvalidException("Failed to unfollow recruiters");
+//        }
+//
+//        return ResponseEntity.status(HttpStatus.OK).body(userResponse);
+//    }
+//
+//    @PutMapping("/users/activate")
+//    public ResponseEntity<List<UserEnabledResponse>> activateUsers(@RequestBody UserEnabledRequest request)
+//            throws InvalidException {
+//        List<Long> userIds = request.getUserIds();
+//        if (userIds == null || userIds.isEmpty()) {
+//            throw new InvalidException("User IDs list cannot be empty");
+//        }
+//        List<UserEnabledResponse> res = this.userService.handleActivateUsers(userIds);
+//        return ResponseEntity.status(HttpStatus.OK).body(res);
+//    }
+//
+//    @PutMapping("/users/deactivate")
+//    public ResponseEntity<List<UserEnabledResponse>> deactivateUsers(@RequestBody UserEnabledRequest request)
+//            throws InvalidException {
+//        List<Long> userIds = request.getUserIds();
+//        if (userIds == null || userIds.isEmpty()) {
+//            throw new InvalidException("User IDs list cannot be empty");
+//        }
+//        List<UserEnabledResponse> res = this.userService.handleDeactivateUsers(userIds);
+//        return ResponseEntity.status(HttpStatus.OK).body(res);
+//    }
 }

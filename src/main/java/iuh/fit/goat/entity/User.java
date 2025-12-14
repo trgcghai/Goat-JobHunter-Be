@@ -4,16 +4,11 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import iuh.fit.goat.enumeration.Gender;
-import iuh.fit.goat.entity.embeddable.Contact;
-import iuh.fit.goat.util.SecurityUtil;
 import jakarta.persistence.*;
-import jakarta.validation.Valid;
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
 import lombok.*;
 import iuh.fit.goat.util.annotation.RequireAddressIfRecruiter;
+import org.hibernate.annotations.Filter;
 
-import java.time.Instant;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
@@ -25,7 +20,23 @@ import java.util.List;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-@ToString
+@ToString(callSuper = true, exclude = {
+        "sentFriendRequests",
+        "receivedFriendRequests",
+        "savedJobs",
+        "followedCompanies",
+        "blogs",
+        "comments",
+        "actorNotifications",
+        "recipientNotifications",
+        "memberships",
+        "sentMessages",
+        "readMessages",
+        "blogReactions",
+        "commentReactions",
+        "reportedTickets",
+        "assignedTickets"}
+)
 @RequireAddressIfRecruiter
 @JsonTypeInfo(
         use = JsonTypeInfo.Id.NAME,
@@ -34,35 +45,35 @@ import java.util.List;
 )
 @JsonSubTypes({
         @JsonSubTypes.Type(value = Recruiter.class, name = "recruiter"),
-        @JsonSubTypes.Type(value = Applicant.class, name = "applicant")
+        @JsonSubTypes.Type(value = Applicant.class, name = "applicant"),
 })
-public abstract class User {
-    @Id
-    @GeneratedValue(strategy = GenerationType.AUTO)
-    protected long userId;
+public abstract class User extends Account {
     protected String address;
-    @Embedded
-    @Valid
-    @NotNull(message = "Contact is not empty")
-    protected Contact contact;
+    protected String phone;
     protected LocalDate dob;
     protected String fullName;
     @Enumerated(EnumType.STRING)
     protected Gender gender;
-    @NotBlank(message = "Password is not empty")
-    protected String password;
-    protected String username;
-    protected String avatar;
-    protected boolean enabled;
+    protected String coverPhoto;
+    protected String headline;
+    @Column(columnDefinition = "TEXT")
+    protected String bio;
 
-    protected Instant createdAt;
-    protected String createdBy;
-    protected Instant updatedAt;
-    protected String updatedBy;
+    @OneToMany(mappedBy = "sender", fetch = FetchType.LAZY, cascade = {CascadeType.PERSIST, CascadeType.MERGE})
+    @JsonIgnore
+    @Filter(
+            name = "activeFriendshipFilter",
+            condition = "deleted_at IS NULL"
+    )
+    private List<Friendship> sentFriendRequests = new ArrayList<>();
 
-    @ManyToOne
-    @JoinColumn(name = "role_id")
-    private Role role;
+    @OneToMany(mappedBy = "receiver", fetch = FetchType.LAZY, cascade = {CascadeType.PERSIST, CascadeType.MERGE})
+    @JsonIgnore
+    @Filter(
+            name = "activeFriendshipFilter",
+            condition = "deleted_at IS NULL"
+    )
+    private List<Friendship> receivedFriendRequests = new ArrayList<>();
 
     @ManyToMany(fetch = FetchType.LAZY)
     @JoinTable(
@@ -71,66 +82,102 @@ public abstract class User {
             inverseJoinColumns = @JoinColumn(name = "job_id")
     )
     @JsonIgnore
-    @ToString.Exclude
+    @Filter(
+            name = "activeJobFilter",
+            condition = "deleted_at IS NULL"
+    )
     private List<Job> savedJobs = new ArrayList<>();
 
     @ManyToMany(fetch = FetchType.LAZY)
     @JoinTable(
-            name = "user_liked_blog",
+            name = "user_followed_company",
             joinColumns = @JoinColumn(name = "user_id"),
-            inverseJoinColumns = @JoinColumn(name = "blog_id")
+            inverseJoinColumns = @JoinColumn(name = "company_id")
     )
     @JsonIgnore
-    @ToString.Exclude
-    private List<Blog> likedBlogs = new ArrayList<>();
-
-    @ManyToMany(fetch = FetchType.LAZY)
-    @JoinTable(
-            name = "user_followed_recruiter",
-            joinColumns = @JoinColumn(name = "user_id"),
-            inverseJoinColumns = @JoinColumn(name = "recruiter_id")
+    @Filter(
+            name = "activeAccountFilter",
+            condition = "deleted_at IS NULL"
     )
-    @JsonIgnore
-    @ToString.Exclude
-    private List<Recruiter> followedRecruiters = new ArrayList<>();
+    private List<Company> followedCompanies = new ArrayList<>();
 
-    @OneToMany(mappedBy = "author", fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
-    @ToString.Exclude
+    @OneToMany(mappedBy = "author", fetch = FetchType.LAZY, cascade = {CascadeType.PERSIST, CascadeType.MERGE})
     @JsonIgnore
+    @Filter(
+            name = "activeBlogFilter",
+            condition = "deleted_at IS NULL"
+    )
     private List<Blog> blogs = new ArrayList<>();
 
-    @OneToMany(mappedBy = "commentedBy", fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
-    @ToString.Exclude
+    @OneToMany(mappedBy = "commentedBy", fetch = FetchType.LAZY, cascade = {CascadeType.PERSIST, CascadeType.MERGE})
     @JsonIgnore
+    @Filter(
+            name = "activeCommentFilter",
+            condition = "deleted_at IS NULL"
+    )
     private List<Comment> comments = new ArrayList<>();
 
     @ManyToMany(mappedBy = "actors", fetch = FetchType.LAZY)
-    @ToString.Exclude
     @JsonIgnore
+    @Filter(
+            name = "activeNotificationFilter",
+            condition = "deleted_at IS NULL"
+    )
     private List<Notification> actorNotifications = new ArrayList<>();
 
-    @OneToMany(mappedBy = "recipient", fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
-    @ToString.Exclude
+    @OneToMany(mappedBy = "recipient", fetch = FetchType.LAZY, cascade = {CascadeType.PERSIST, CascadeType.MERGE})
     @JsonIgnore
+    @Filter(
+            name = "activeNotificationFilter",
+            condition = "deleted_at IS NULL"
+    )
     private List<Notification> recipientNotifications = new ArrayList<>();
 
-    @OneToMany(mappedBy = "user", fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
-    @ToString.Exclude
+    @OneToMany(mappedBy = "user", fetch = FetchType.LAZY, cascade = {CascadeType.PERSIST, CascadeType.MERGE})
     @JsonIgnore
-    private List<Conversation> conversations = new ArrayList<>();
+    @Filter(
+            name = "activeChatMemberFilter",
+            condition = "deleted_at IS NULL"
+    )
+    private List<ChatMember> memberships = new ArrayList<>();
 
-    @PrePersist
-    public void handleBeforeCreate(){
-        this.createdAt = Instant.now();
-        this.createdBy = SecurityUtil.getCurrentUserLogin().isPresent()
-                ? SecurityUtil.getCurrentUserLogin().get()
-                : "";
-    }
-    @PreUpdate
-    public void handleBeforeUpdate(){
-        this.updatedAt = Instant.now();
-        this.updatedBy = SecurityUtil.getCurrentUserLogin().isPresent()
-                ? SecurityUtil.getCurrentUserLogin().get()
-                : "";
-    }
+    @OneToMany(mappedBy = "sender", fetch = FetchType.LAZY, cascade = {CascadeType.PERSIST, CascadeType.MERGE})
+    @JsonIgnore
+    @Filter(
+            name = "activeMessageFilter",
+            condition = "deleted_at IS NULL"
+    )
+    private List<Message> sentMessages = new ArrayList<>();
+
+    @ManyToMany(mappedBy = "readBy", fetch = FetchType.LAZY)
+    @JsonIgnore
+    @Filter(
+            name = "activeMessageFilter",
+            condition = "deleted_at IS NULL"
+    )
+    private List<Message> readMessages = new ArrayList<>();
+
+    @OneToMany(mappedBy = "user", fetch = FetchType.LAZY, cascade = {CascadeType.PERSIST, CascadeType.MERGE}, orphanRemoval = true)
+    @JsonIgnore
+    private List<BlogReaction> blogReactions = new ArrayList<>();
+
+    @OneToMany(mappedBy = "user", fetch = FetchType.LAZY, cascade = {CascadeType.PERSIST, CascadeType.MERGE}, orphanRemoval = true)
+    @JsonIgnore
+    private List<CommentReaction> commentReactions = new ArrayList<>();
+
+    @OneToMany(mappedBy = "reporter", fetch = FetchType.LAZY, cascade = {CascadeType.PERSIST, CascadeType.MERGE})
+    @JsonIgnore
+    @Filter(
+            name = "activeTicketFilter",
+            condition = "deleted_at IS NULL"
+    )
+    private List<Ticket> reportedTickets = new ArrayList<>();
+
+    @OneToMany(mappedBy = "assignee", fetch = FetchType.LAZY, cascade = {CascadeType.PERSIST, CascadeType.MERGE})
+    @JsonIgnore
+    @Filter(
+            name = "activeTicketFilter",
+            condition = "deleted_at IS NULL"
+    )
+    private List<Ticket> assignedTickets = new ArrayList<>();
 }

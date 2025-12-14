@@ -4,12 +4,12 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import iuh.fit.goat.enumeration.Level;
 import iuh.fit.goat.enumeration.WorkingType;
-import iuh.fit.goat.util.SecurityUtil;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
 import lombok.*;
+import org.hibernate.annotations.Filter;
+import org.hibernate.annotations.FilterDef;
 
-import java.time.Instant;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
@@ -20,8 +20,9 @@ import java.util.List;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-@ToString
-public class Job {
+@ToString(exclude = {"skills", "applications", "users"})
+@FilterDef(name = "activeJobFilter")
+public class Job extends BaseEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
     private long jobId;
@@ -42,14 +43,9 @@ public class Job {
     private String location;
     private boolean enabled = false;
 
-    private Instant createdAt;
-    private String createdBy;
-    private Instant updatedAt;
-    private String updatedBy;
-
     @ManyToOne
-    @JoinColumn(name = "recruiter_id")
-    private Recruiter recruiter;
+    @JoinColumn(name = "company_id")
+    private Company company;
 
     @ManyToMany(fetch = FetchType.LAZY)
     @JoinTable(
@@ -58,12 +54,18 @@ public class Job {
             inverseJoinColumns = @JoinColumn(name = "skill_id")
     )
     @JsonIgnoreProperties(value = {"jobs"})
-    @ToString.Exclude
+    @Filter(
+            name = "activeSkillFilter",
+            condition = "deleted_at IS NULL"
+    )
     private List<Skill> skills = new ArrayList<>();
 
-    @OneToMany(mappedBy = "job", fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
+    @OneToMany(mappedBy = "job", fetch = FetchType.LAZY, cascade = {CascadeType.PERSIST, CascadeType.MERGE})
     @JsonIgnore
-    @ToString.Exclude
+    @Filter(
+            name = "activeApplicationFilter",
+            condition = "deleted_at IS NULL"
+    )
     private List<Application> applications = new ArrayList<>();
 
     @ManyToOne
@@ -72,29 +74,9 @@ public class Job {
 
     @ManyToMany(mappedBy = "savedJobs", fetch = FetchType.LAZY)
     @JsonIgnore
-    @ToString.Exclude
+    @Filter(
+            name = "activeAccountFilter",
+            condition = "deleted_at IS NULL"
+    )
     private List<User> users = new ArrayList<>();
-
-    @PrePersist
-    public void handleBeforeCreate(){
-        this.createdAt = Instant.now();
-        this.createdBy = SecurityUtil.getCurrentUserLogin().isPresent()
-                ? SecurityUtil.getCurrentUserLogin().get()
-                : "";
-
-        if(this.endDate != null && this.endDate.isBefore(LocalDate.now())){
-            this.active = false;
-        }
-    }
-    @PreUpdate
-    public void handleBeforeUpdate(){
-        this.updatedAt = Instant.now();
-        this.updatedBy = SecurityUtil.getCurrentUserLogin().isPresent()
-                ? SecurityUtil.getCurrentUserLogin().get()
-                : "";
-
-        if(this.endDate != null && this.endDate.isBefore(LocalDate.now())){
-            this.active = false;
-        }
-    }
 }

@@ -23,47 +23,47 @@ import java.util.Map;
 @RequestMapping("/api/v1")
 @RequiredArgsConstructor
 public class DashboardController {
-    private final DashboardService dashboardService;
-
-    @GetMapping("/dashboard/users")
-    public ResponseEntity<?> statisticsUser() {
-        Map<String, Long> result = this.dashboardService.handleStatisticsUser();
-        return ResponseEntity.status(HttpStatus.OK).body(result);
-    }
-
-    @GetMapping("/dashboard/jobs")
-    public ResponseEntity<?> statisticsJob(@Filter Specification<Job> spec) {
-        Map<String, Long> result = this.dashboardService.handleStatisticsJob(spec);
-        return ResponseEntity.status(HttpStatus.OK).body(result);
-    }
-
-    @GetMapping("/dashboard/applications")
-    public ResponseEntity<?> statisticsApplication(@Filter Specification<Application> spec) {
-        Map<Status, Long> result = this.dashboardService.handleStatisticsApplication(spec);
-        return ResponseEntity.status(HttpStatus.OK).body(result);
-    }
-
-    @GetMapping("/dashboard/applications-year")
-    public ResponseEntity<?> statisticsApplicationByYear(int year, @Filter Specification<Application> spec) {
-        Map<Integer, Long> result = this.dashboardService.handleStatisticsApplicationByYear(year, spec);
-        return ResponseEntity.status(HttpStatus.OK).body(result);
-    }
-
-    @GetMapping("/dashboard/total")
-    public ResponseEntity<TotalStatisticsResponse> getTotalStatistics() {
-        TotalStatisticsResponse result = this.dashboardService.handleTotalStatistics();
-        return ResponseEntity.status(HttpStatus.OK).body(result);
-    }
-
-    @GetMapping("/dashboard/applications/year")
-    public ResponseEntity<Map<Status, Map<Integer, Long>>> getApplicationsByYear(@RequestParam int year) {
-        Map<Status, Map<Integer, Long>> result = this.dashboardService.handleApplicationsByStatusAndMonth(year);
-        return ResponseEntity.status(HttpStatus.OK).body(result);
-    }
-
-    @GetMapping("/dashboard/blogs/top10")
-    public ResponseEntity<List<TopBlogResponse>> getTop10Blogs(@RequestParam int year, @RequestParam int month) {
-        List<TopBlogResponse> result = this.dashboardService.handleTop10BlogsByMonth(year, month);
-        return ResponseEntity.status(HttpStatus.OK).body(result);
-    }
+//    private final DashboardService dashboardService;
+//
+//    @GetMapping("/dashboard/users")
+//    public ResponseEntity<?> statisticsUser() {
+//        Map<String, Long> result = this.dashboardService.handleStatisticsUser();
+//        return ResponseEntity.status(HttpStatus.OK).body(result);
+//    }
+//
+//    @GetMapping("/dashboard/jobs")
+//    public ResponseEntity<?> statisticsJob(@Filter Specification<Job> spec) {
+//        Map<String, Long> result = this.dashboardService.handleStatisticsJob(spec);
+//        return ResponseEntity.status(HttpStatus.OK).body(result);
+//    }
+//
+//    @GetMapping("/dashboard/applications")
+//    public ResponseEntity<?> statisticsApplication(@Filter Specification<Application> spec) {
+//        Map<Status, Long> result = this.dashboardService.handleStatisticsApplication(spec);
+//        return ResponseEntity.status(HttpStatus.OK).body(result);
+//    }
+//
+//    @GetMapping("/dashboard/applications-year")
+//    public ResponseEntity<?> statisticsApplicationByYear(int year, @Filter Specification<Application> spec) {
+//        Map<Integer, Long> result = this.dashboardService.handleStatisticsApplicationByYear(year, spec);
+//        return ResponseEntity.status(HttpStatus.OK).body(result);
+//    }
+//
+//    @GetMapping("/dashboard/total")
+//    public ResponseEntity<TotalStatisticsResponse> getTotalStatistics() {
+//        TotalStatisticsResponse result = this.dashboardService.handleTotalStatistics();
+//        return ResponseEntity.status(HttpStatus.OK).body(result);
+//    }
+//
+//    @GetMapping("/dashboard/applications/year")
+//    public ResponseEntity<Map<Status, Map<Integer, Long>>> getApplicationsByYear(@RequestParam int year) {
+//        Map<Status, Map<Integer, Long>> result = this.dashboardService.handleApplicationsByStatusAndMonth(year);
+//        return ResponseEntity.status(HttpStatus.OK).body(result);
+//    }
+//
+//    @GetMapping("/dashboard/blogs/top10")
+//    public ResponseEntity<List<TopBlogResponse>> getTop10Blogs(@RequestParam int year, @RequestParam int month) {
+//        List<TopBlogResponse> result = this.dashboardService.handleTop10BlogsByMonth(year, month);
+//        return ResponseEntity.status(HttpStatus.OK).body(result);
+//    }
 }

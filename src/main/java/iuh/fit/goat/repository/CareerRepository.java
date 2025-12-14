@@ -7,5 +7,5 @@ import org.springframework.stereotype.Repository;
 
 @Repository
 public interface CareerRepository extends JpaRepository<Career, Long>, JpaSpecificationExecutor<Career> {
-    boolean existsByName(String name);
+//    boolean existsByName(String name);
 }

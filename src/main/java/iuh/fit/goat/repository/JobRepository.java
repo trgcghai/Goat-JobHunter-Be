@@ -13,12 +13,12 @@ import java.util.List;
 
 @Repository
 public interface JobRepository extends JpaRepository<Job, Long>, JpaSpecificationExecutor<Job> {
-    List<Job> findByRecruiter(Recruiter recruiter);
-    List<Job> findByCareer(Career career);
-    List<Job> findBySkillsIn(List<Skill> skills);
-    List<Job> findByJobIdIn(List<Long> jobIds);
-    Long countByActive(boolean active);
-
-    @Query("SELECT j.recruiter.userId, COUNT(j) FROM Job j GROUP BY j.recruiter.userId")
-    List<Object[]> countJobs();
+//    List<Job> findByRecruiter(Recruiter recruiter);
+//    List<Job> findByCareer(Career career);
+//    List<Job> findBySkillsIn(List<Skill> skills);
+//    List<Job> findByJobIdIn(List<Long> jobIds);
+//    Long countByActive(boolean active);
+//
+//    @Query("SELECT j.recruiter.userId, COUNT(j) FROM Job j GROUP BY j.recruiter.userId")
+//    List<Object[]> countJobs();
 }

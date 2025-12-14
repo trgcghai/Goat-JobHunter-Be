@@ -12,6 +12,6 @@ import java.util.List;
 @Repository
 public interface ApplicationRepository extends JpaRepository<Application, Long>
         , JpaSpecificationExecutor<Application> {
-    List<Application> findByApplicant(Applicant applicant);
-    List<Application> findByJob(Job job);
+//    List<Application> findByApplicant(Applicant applicant);
+//    List<Application> findByJob(Job job);
 }

@@ -4,8 +4,9 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import iuh.fit.goat.enumeration.NotificationType;
 import jakarta.persistence.*;
 import lombok.*;
+import org.hibernate.annotations.Filter;
+import org.hibernate.annotations.FilterDef;
 
-import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -15,18 +16,15 @@ import java.util.List;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-@ToString
-public class Notification {
+@ToString(exclude = {"actors", "recipient", "comment"})
+@FilterDef(name = "activeNotificationFilter")
+public class Notification extends BaseEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
     private long notificationId;
-
     @Enumerated(EnumType.STRING)
     private NotificationType type;
-
     private boolean seen = false;
-
-    private Instant createdAt;
 
     @ManyToOne
     @JoinColumn(name = "blog_id")
@@ -39,33 +37,23 @@ public class Notification {
             inverseJoinColumns = @JoinColumn(name = "actor_id")
     )
     @JsonIgnore
-    @ToString.Exclude
+    @Filter(
+            name = "activeAccountFilter",
+            condition = "deleted_at IS NULL"
+    )
     private List<User> actors = new ArrayList<>();
 
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "recipient_id")
     private User recipient;
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "comment_id")
     private Comment comment;
 
-    @ManyToOne
-    @JoinColumn(name = "reply_id")
-    private Comment reply;
-
-    @ManyToOne
-    @JoinColumn(name = "replied_on_comment_id")
-    private Comment repliedOnComment;
-
-    @PrePersist
-    public void handleBeforeCreate(){
-        this.createdAt = Instant.now();
-    }
-
     public User getLastActor() {
         if (actors != null && !actors.isEmpty()) {
-            return actors.get(actors.size() - 1);
+            return actors.getLast();
         }
         return null;
     }

@@ -1,45 +1,54 @@
 package iuh.fit.goat.entity;
 
-import iuh.fit.goat.enumeration.MessageRole;
-import iuh.fit.goat.util.SecurityUtil;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import iuh.fit.goat.enumeration.MessageType;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
 import lombok.*;
+import org.hibernate.annotations.Filter;
+import org.hibernate.annotations.FilterDef;
 
-import java.time.Instant;
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
-@Table(name = "messages")
+@Table(name = "chat_messages")
 @Getter
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-@ToString
-public class Message {
+@ToString(exclude = {"readBy"})
+@FilterDef(name = "activeMessageFilter")
+public class Message extends BaseEntity {
     @Id
-    @GeneratedValue(strategy = GenerationType.AUTO)
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private long messageId;
-    @Enumerated(EnumType.STRING)
-    private MessageRole role;
-    @NotBlank(message = "Content is not empty")
     @Column(columnDefinition = "TEXT")
+    @NotBlank(message = "Content is required")
     private String content;
-
-    protected Instant createdAt;
-    protected String createdBy;
+    @Enumerated(EnumType.STRING)
+    private MessageType type;
+    private String fileUrl;
+    private String fileName;
 
     @ManyToOne
-    @JoinColumn(name = "conversation_id")
-    private Conversation conversation;
+    @JoinColumn(name = "room_id")
+    private ChatRoom chatRoom;
 
-    @PrePersist
-    public void handleBeforeCreate(){
-        this.createdAt = Instant.now();
-        this.createdBy = SecurityUtil.getCurrentUserLogin().isPresent()
-                ? SecurityUtil.getCurrentUserLogin().get()
-                : "";
+    @ManyToOne
+    @JoinColumn(name = "sender_id")
+    private User sender;
 
-        this.conversation.setUpdatedAt(Instant.now());
-        this.conversation.setUpdatedBy(this.createdBy);
-    }
+    @ManyToMany(fetch = FetchType.LAZY)
+    @JoinTable(
+            name = "message_read_by",
+            joinColumns = @JoinColumn(name = "message_id"),
+            inverseJoinColumns = @JoinColumn(name = "user_id")
+    )
+    @JsonIgnore
+    @Filter(
+            name = "activeAccountFilter",
+            condition = "deleted_at IS NULL"
+    )
+    private List<User> readBy = new ArrayList<>();
 }

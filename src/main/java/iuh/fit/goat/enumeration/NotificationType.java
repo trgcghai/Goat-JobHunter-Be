@@ -5,7 +5,7 @@ import lombok.Getter;
 @Getter
 public enum NotificationType {
     LIKE("Thích"), FOLLOW("Theo dõi"),
-    COMMENT("Bình luận"), REPLY("Trả lời");
+    COMMENT("Bình luận"), REPLY("Trả lời"), MENTION("Đề cập");
 
     private final String value;
 
