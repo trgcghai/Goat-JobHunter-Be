@@ -40,6 +40,7 @@ dependencies {
 	implementation("net.datafaker:datafaker:2.5.3")
 	implementation("org.springframework.boot:spring-boot-starter-websocket")
 	implementation("org.postgresql:postgresql:42.7.8")
+	implementation("org.liquibase:liquibase-core:5.0.1")
 
 
 	implementation("commons-io:commons-io:2.19.0")
