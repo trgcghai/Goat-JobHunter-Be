@@ -5,6 +5,5 @@
         xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
                       http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-5.0.xsd"
 >
-    <include file="db.changelog/15-12-initial-database-changelog.xml"/>
-    <include file="db.changelog/15-12-drop-column-age-changelog.xml"/>
+    <include file="/db.changelog/2025-12-15-init-database.xml"/>
 </databaseChangeLog>
