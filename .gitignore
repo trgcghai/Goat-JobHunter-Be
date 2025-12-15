@@ -4,6 +4,7 @@ build/
 !gradle/wrapper/gradle-wrapper.jar
 !**/src/main/**/build/
 *.env
+src/main/resources/application-dev.properties
 !**/src/test/**/build/
 
 ### STS ###
