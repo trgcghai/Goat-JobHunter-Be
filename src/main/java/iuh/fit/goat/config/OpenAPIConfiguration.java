@@ -50,7 +50,7 @@ public class OpenAPIConfiguration {
 
     private Server createServer() {
         return new Server()
-                .url("http://localhost:8080")
+                .url("http://localhost:5000")
                 .description("Server URL in Development environment");
     }
 
