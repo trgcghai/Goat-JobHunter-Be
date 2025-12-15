@@ -19,6 +19,10 @@ repositories {
 	mavenCentral()
 }
 
+tasks.bootJar {
+	archiveFileName.set("goat.jar")
+}
+
 dependencies {
 	implementation("org.springframework.boot:spring-boot-starter")
 	implementation("org.springframework.boot:spring-boot-starter-oauth2-resource-server") {
