@@ -5,5 +5,14 @@
         xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
                       http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-5.0.xsd"
 >
-    <include file="/db.changelog/2025-12-15-init-database.xml"/>
+
+    <include file="/db.changelog/schema/2025-12-16/2025-12-16-create-sequences.xml"/>
+    <include file="/db.changelog/schema/2025-12-16/2025-12-16-create-tables.xml"/>
+    <include file="/db.changelog/schema/2025-12-16/2025-12-16-create-constraints.xml"/>
+    <include file="/db.changelog/schema/2025-12-16/2025-12-16-create-foreign-keys.xml"/>
+
+    <include file="/db.changelog/data/2025-12-16/2025-12-16-init-permissions.xml"/>
+    <include file="/db.changelog/data/2025-12-16/2025-12-16-init-roles.xml"/>
+    <include file="/db.changelog/data/2025-12-16/2025-12-16-init-accounts.xml"/>
+
 </databaseChangeLog>

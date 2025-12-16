@@ -27,6 +27,7 @@ import static jakarta.persistence.FetchType.LAZY;
         "sentFriendRequests",
         "receivedFriendRequests",
         "savedJobs",
+        "savedBlogs",
         "followedCompanies",
         "blogs",
         "comments",
@@ -90,6 +91,19 @@ public abstract class User extends Account {
             condition = "deleted_at IS NULL"
     )
     private List<Job> savedJobs = new ArrayList<>();
+
+    @ManyToMany(fetch = LAZY)
+    @JoinTable(
+            name = "user_saved_blog",
+            joinColumns = @JoinColumn(name = "user_id"),
+            inverseJoinColumns = @JoinColumn(name = "blog_id")
+    )
+    @JsonIgnore
+    @Filter(
+            name = "activeBlogFilter",
+            condition = "deleted_at IS NULL"
+    )
+    private List<Blog> savedBlogs = new ArrayList<>();
 
     @ManyToMany(fetch = LAZY)
     @JoinTable(

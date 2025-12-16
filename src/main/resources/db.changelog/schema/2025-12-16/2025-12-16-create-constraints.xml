@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+                      http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-5.0.xsd"
+        objectQuotingStrategy="QUOTE_ONLY_RESERVED_WORDS">
+
+    <changeSet id="1765900330783-49" author="HP">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <uniqueConstraintExists
+                        tableName="friendships"
+                        constraintName="uc_53693805900ebd6aff9bef543"/>
+            </not>
+        </preConditions>
+        <addUniqueConstraint columnNames="sender_id, receiver_id" constraintName="uc_53693805900ebd6aff9bef543"
+                             tableName="friendships"/>
+    </changeSet>
+
+    <changeSet id="1765900330783-50" author="HP">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <uniqueConstraintExists
+                        tableName="subscribers"
+                        constraintName="uc_b058cb21366b3eace6546643e"/>
+            </not>
+        </preConditions>
+        <addUniqueConstraint columnNames="email" constraintName="uc_b058cb21366b3eace6546643e" tableName="subscribers"/>
+    </changeSet>
+
+    <changeSet id="1765900330783-51" author="HP">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <uniqueConstraintExists
+                        tableName="comment_reactions"
+                        constraintName="uc_c190b95092acc64167a1e2ae0"/>
+            </not>
+        </preConditions>
+        <addUniqueConstraint columnNames="comment_id, user_id" constraintName="uc_c190b95092acc64167a1e2ae0"
+                             tableName="comment_reactions"/>
+    </changeSet>
+
+    <changeSet id="1765900330783-52" author="HP">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <uniqueConstraintExists
+                        tableName="blog_reactions"
+                        constraintName="uc_ce10431fbd36dfb69da3f23c2"/>
+            </not>
+        </preConditions>
+        <addUniqueConstraint columnNames="blog_id, user_id" constraintName="uc_ce10431fbd36dfb69da3f23c2"
+                             tableName="blog_reactions"/>
+    </changeSet>
+
+    <changeSet id="1765900330783-53" author="HP">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <uniqueConstraintExists
+                        tableName="interviews"
+                        constraintName="uc_interviews_application"/>
+            </not>
+        </preConditions>
+        <addUniqueConstraint columnNames="application_id" constraintName="uc_interviews_application"
+                             tableName="interviews"/>
+    </changeSet>
+
+</databaseChangeLog>

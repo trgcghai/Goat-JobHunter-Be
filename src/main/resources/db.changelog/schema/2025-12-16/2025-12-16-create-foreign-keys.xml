@@ -1,0 +1,544 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+                      http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-5.0.xsd"
+        objectQuotingStrategy="QUOTE_ONLY_RESERVED_WORDS">
+
+    <changeSet id="1765900330783-54" author="HP">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <foreignKeyConstraintExists foreignKeyName="FK_ACCOUNTS_ON_ROLE"/>
+            </not>
+        </preConditions>
+        <addForeignKeyConstraint baseColumnNames="role_id" baseTableName="accounts" constraintName="FK_ACCOUNTS_ON_ROLE"
+                                 referencedColumnNames="role_id" referencedTableName="roles"/>
+    </changeSet>
+    <changeSet id="1765900330783-55" author="HP">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <foreignKeyConstraintExists foreignKeyName="FK_APPLICANTS_ON_ACCOUNTID"/>
+            </not>
+        </preConditions>
+        <addForeignKeyConstraint baseColumnNames="account_id" baseTableName="applicants"
+                                 constraintName="FK_APPLICANTS_ON_ACCOUNTID" referencedColumnNames="account_id"
+                                 referencedTableName="users"/>
+    </changeSet>
+    <changeSet id="1765900330783-56" author="HP">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <foreignKeyConstraintExists foreignKeyName="FK_APPLICATIONS_ON_APPLICANT"/>
+            </not>
+        </preConditions>
+        <addForeignKeyConstraint baseColumnNames="applicant_id" baseTableName="applications"
+                                 constraintName="FK_APPLICATIONS_ON_APPLICANT" referencedColumnNames="account_id"
+                                 referencedTableName="applicants"/>
+    </changeSet>
+    <changeSet id="1765900330783-57" author="HP">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <foreignKeyConstraintExists foreignKeyName="FK_APPLICATIONS_ON_JOB"/>
+            </not>
+        </preConditions>
+        <addForeignKeyConstraint baseColumnNames="job_id" baseTableName="applications"
+                                 constraintName="FK_APPLICATIONS_ON_JOB" referencedColumnNames="job_id"
+                                 referencedTableName="jobs"/>
+    </changeSet>
+    <changeSet id="1765900330783-58" author="HP">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <foreignKeyConstraintExists foreignKeyName="FK_APPLICATIONS_ON_RESUME"/>
+            </not>
+        </preConditions>
+        <addForeignKeyConstraint baseColumnNames="resume_id" baseTableName="applications"
+                                 constraintName="FK_APPLICATIONS_ON_RESUME" referencedColumnNames="resume_id"
+                                 referencedTableName="resumes"/>
+    </changeSet>
+    <changeSet id="1765900330783-59" author="HP">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <foreignKeyConstraintExists foreignKeyName="FK_BLOGS_ON_USER"/>
+            </not>
+        </preConditions>
+        <addForeignKeyConstraint baseColumnNames="user_id" baseTableName="blogs" constraintName="FK_BLOGS_ON_USER"
+                                 referencedColumnNames="account_id" referencedTableName="users"/>
+    </changeSet>
+    <changeSet id="1765900330783-60" author="HP">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <foreignKeyConstraintExists foreignKeyName="FK_BLOG_REACTIONS_ON_BLOG"/>
+            </not>
+        </preConditions>
+        <addForeignKeyConstraint baseColumnNames="blog_id" baseTableName="blog_reactions"
+                                 constraintName="FK_BLOG_REACTIONS_ON_BLOG" referencedColumnNames="blog_id"
+                                 referencedTableName="blogs"/>
+    </changeSet>
+    <changeSet id="1765900330783-61" author="HP">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <foreignKeyConstraintExists foreignKeyName="FK_BLOG_REACTIONS_ON_USER"/>
+            </not>
+        </preConditions>
+        <addForeignKeyConstraint baseColumnNames="user_id" baseTableName="blog_reactions"
+                                 constraintName="FK_BLOG_REACTIONS_ON_USER" referencedColumnNames="account_id"
+                                 referencedTableName="users"/>
+    </changeSet>
+    <changeSet id="1765900330783-62" author="HP">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <foreignKeyConstraintExists foreignKeyName="FK_CHAT_MEMBERS_ON_ROOM"/>
+            </not>
+        </preConditions>
+        <addForeignKeyConstraint baseColumnNames="room_id" baseTableName="chat_members"
+                                 constraintName="FK_CHAT_MEMBERS_ON_ROOM" referencedColumnNames="room_id"
+                                 referencedTableName="chat_rooms"/>
+    </changeSet>
+    <changeSet id="1765900330783-63" author="HP">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <foreignKeyConstraintExists foreignKeyName="FK_CHAT_MEMBERS_ON_USER"/>
+            </not>
+        </preConditions>
+        <addForeignKeyConstraint baseColumnNames="user_id" baseTableName="chat_members"
+                                 constraintName="FK_CHAT_MEMBERS_ON_USER" referencedColumnNames="account_id"
+                                 referencedTableName="users"/>
+    </changeSet>
+    <changeSet id="1765900330783-64" author="HP">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <foreignKeyConstraintExists foreignKeyName="FK_CHAT_MESSAGES_ON_ROOM"/>
+            </not>
+        </preConditions>
+        <addForeignKeyConstraint baseColumnNames="room_id" baseTableName="chat_messages"
+                                 constraintName="FK_CHAT_MESSAGES_ON_ROOM" referencedColumnNames="room_id"
+                                 referencedTableName="chat_rooms"/>
+    </changeSet>
+    <changeSet id="1765900330783-65" author="HP">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <foreignKeyConstraintExists foreignKeyName="FK_CHAT_MESSAGES_ON_SENDER"/>
+            </not>
+        </preConditions>
+        <addForeignKeyConstraint baseColumnNames="sender_id" baseTableName="chat_messages"
+                                 constraintName="FK_CHAT_MESSAGES_ON_SENDER" referencedColumnNames="account_id"
+                                 referencedTableName="users"/>
+    </changeSet>
+    <changeSet id="1765900330783-66" author="HP">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <foreignKeyConstraintExists foreignKeyName="FK_COMMENTS_ON_BLOG"/>
+            </not>
+        </preConditions>
+        <addForeignKeyConstraint baseColumnNames="blog_id" baseTableName="comments" constraintName="FK_COMMENTS_ON_BLOG"
+                                 referencedColumnNames="blog_id" referencedTableName="blogs"/>
+    </changeSet>
+    <changeSet id="1765900330783-67" author="HP">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <foreignKeyConstraintExists foreignKeyName="FK_COMMENTS_ON_COMMENTED_BY"/>
+            </not>
+        </preConditions>
+        <addForeignKeyConstraint baseColumnNames="commented_by_id" baseTableName="comments"
+                                 constraintName="FK_COMMENTS_ON_COMMENTED_BY" referencedColumnNames="account_id"
+                                 referencedTableName="users"/>
+    </changeSet>
+    <changeSet id="1765900330783-68" author="HP">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <foreignKeyConstraintExists foreignKeyName="FK_COMMENTS_ON_PARENT"/>
+            </not>
+        </preConditions>
+        <addForeignKeyConstraint baseColumnNames="parent_id" baseTableName="comments"
+                                 constraintName="FK_COMMENTS_ON_PARENT" referencedColumnNames="comment_id"
+                                 referencedTableName="comments"/>
+    </changeSet>
+    <changeSet id="1765900330783-69" author="HP">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <foreignKeyConstraintExists foreignKeyName="FK_COMMENT_REACTIONS_ON_COMMENT"/>
+            </not>
+        </preConditions>
+        <addForeignKeyConstraint baseColumnNames="comment_id" baseTableName="comment_reactions"
+                                 constraintName="FK_COMMENT_REACTIONS_ON_COMMENT" referencedColumnNames="comment_id"
+                                 referencedTableName="comments"/>
+    </changeSet>
+    <changeSet id="1765900330783-70" author="HP">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <foreignKeyConstraintExists foreignKeyName="FK_COMMENT_REACTIONS_ON_USER"/>
+            </not>
+        </preConditions>
+        <addForeignKeyConstraint baseColumnNames="user_id" baseTableName="comment_reactions"
+                                 constraintName="FK_COMMENT_REACTIONS_ON_USER" referencedColumnNames="account_id"
+                                 referencedTableName="users"/>
+    </changeSet>
+    <changeSet id="1765900330783-71" author="HP">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <foreignKeyConstraintExists foreignKeyName="FK_COMPANIES_ON_ACCOUNTID"/>
+            </not>
+        </preConditions>
+        <addForeignKeyConstraint baseColumnNames="account_id" baseTableName="companies"
+                                 constraintName="FK_COMPANIES_ON_ACCOUNTID" referencedColumnNames="account_id"
+                                 referencedTableName="accounts"/>
+    </changeSet>
+    <changeSet id="1765900330783-72" author="HP">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <foreignKeyConstraintExists foreignKeyName="FK_FRIENDSHIPS_ON_RECEIVER"/>
+            </not>
+        </preConditions>
+        <addForeignKeyConstraint baseColumnNames="receiver_id" baseTableName="friendships"
+                                 constraintName="FK_FRIENDSHIPS_ON_RECEIVER" referencedColumnNames="account_id"
+                                 referencedTableName="users"/>
+    </changeSet>
+    <changeSet id="1765900330783-73" author="HP">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <foreignKeyConstraintExists foreignKeyName="FK_FRIENDSHIPS_ON_SENDER"/>
+            </not>
+        </preConditions>
+        <addForeignKeyConstraint baseColumnNames="sender_id" baseTableName="friendships"
+                                 constraintName="FK_FRIENDSHIPS_ON_SENDER" referencedColumnNames="account_id"
+                                 referencedTableName="users"/>
+    </changeSet>
+    <changeSet id="1765900330783-74" author="HP">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <foreignKeyConstraintExists foreignKeyName="FK_INTERVIEWS_ON_APPLICANT"/>
+            </not>
+        </preConditions>
+        <addForeignKeyConstraint baseColumnNames="applicant_id" baseTableName="interviews"
+                                 constraintName="FK_INTERVIEWS_ON_APPLICANT" referencedColumnNames="account_id"
+                                 referencedTableName="applicants"/>
+    </changeSet>
+    <changeSet id="1765900330783-75" author="HP">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <foreignKeyConstraintExists foreignKeyName="FK_INTERVIEWS_ON_APPLICATION"/>
+            </not>
+        </preConditions>
+        <addForeignKeyConstraint baseColumnNames="application_id" baseTableName="interviews"
+                                 constraintName="FK_INTERVIEWS_ON_APPLICATION" referencedColumnNames="application_id"
+                                 referencedTableName="applications"/>
+    </changeSet>
+    <changeSet id="1765900330783-76" author="HP">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <foreignKeyConstraintExists foreignKeyName="FK_INTERVIEWS_ON_INTERVIEWER"/>
+            </not>
+        </preConditions>
+        <addForeignKeyConstraint baseColumnNames="interviewer_id" baseTableName="interviews"
+                                 constraintName="FK_INTERVIEWS_ON_INTERVIEWER" referencedColumnNames="account_id"
+                                 referencedTableName="recruiters"/>
+    </changeSet>
+    <changeSet id="1765900330783-77" author="HP">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <foreignKeyConstraintExists foreignKeyName="FK_JOBS_ON_CAREER"/>
+            </not>
+        </preConditions>
+        <addForeignKeyConstraint baseColumnNames="career_id" baseTableName="jobs" constraintName="FK_JOBS_ON_CAREER"
+                                 referencedColumnNames="career_id" referencedTableName="careers"/>
+    </changeSet>
+    <changeSet id="1765900330783-78" author="HP">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <foreignKeyConstraintExists foreignKeyName="FK_JOBS_ON_COMPANY"/>
+            </not>
+        </preConditions>
+        <addForeignKeyConstraint baseColumnNames="company_id" baseTableName="jobs" constraintName="FK_JOBS_ON_COMPANY"
+                                 referencedColumnNames="account_id" referencedTableName="companies"/>
+    </changeSet>
+    <changeSet id="1765900330783-79" author="HP">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <foreignKeyConstraintExists foreignKeyName="FK_NOTIFICATIONS_ON_BLOG"/>
+            </not>
+        </preConditions>
+        <addForeignKeyConstraint baseColumnNames="blog_id" baseTableName="notifications"
+                                 constraintName="FK_NOTIFICATIONS_ON_BLOG" referencedColumnNames="blog_id"
+                                 referencedTableName="blogs"/>
+    </changeSet>
+    <changeSet id="1765900330783-80" author="HP">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <foreignKeyConstraintExists foreignKeyName="FK_NOTIFICATIONS_ON_COMMENT"/>
+            </not>
+        </preConditions>
+        <addForeignKeyConstraint baseColumnNames="comment_id" baseTableName="notifications"
+                                 constraintName="FK_NOTIFICATIONS_ON_COMMENT" referencedColumnNames="comment_id"
+                                 referencedTableName="comments"/>
+    </changeSet>
+    <changeSet id="1765900330783-81" author="HP">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <foreignKeyConstraintExists foreignKeyName="FK_NOTIFICATIONS_ON_RECIPIENT"/>
+            </not>
+        </preConditions>
+        <addForeignKeyConstraint baseColumnNames="recipient_id" baseTableName="notifications"
+                                 constraintName="FK_NOTIFICATIONS_ON_RECIPIENT" referencedColumnNames="account_id"
+                                 referencedTableName="users"/>
+    </changeSet>
+    <changeSet id="1765900330783-82" author="HP">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <foreignKeyConstraintExists foreignKeyName="FK_RECRUITERS_ON_ACCOUNTID"/>
+            </not>
+        </preConditions>
+        <addForeignKeyConstraint baseColumnNames="account_id" baseTableName="recruiters"
+                                 constraintName="FK_RECRUITERS_ON_ACCOUNTID" referencedColumnNames="account_id"
+                                 referencedTableName="users"/>
+    </changeSet>
+    <changeSet id="1765900330783-83" author="HP">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <foreignKeyConstraintExists foreignKeyName="FK_RECRUITERS_ON_COMPANY"/>
+            </not>
+        </preConditions>
+        <addForeignKeyConstraint baseColumnNames="company_id" baseTableName="recruiters"
+                                 constraintName="FK_RECRUITERS_ON_COMPANY" referencedColumnNames="account_id"
+                                 referencedTableName="companies"/>
+    </changeSet>
+    <changeSet id="1765900330783-84" author="HP">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <foreignKeyConstraintExists foreignKeyName="FK_RESUMES_ON_APPLICANT"/>
+            </not>
+        </preConditions>
+        <addForeignKeyConstraint baseColumnNames="applicant_id" baseTableName="resumes"
+                                 constraintName="FK_RESUMES_ON_APPLICANT" referencedColumnNames="account_id"
+                                 referencedTableName="applicants"/>
+    </changeSet>
+    <changeSet id="1765900330783-85" author="HP">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <foreignKeyConstraintExists foreignKeyName="FK_TICKETS_ON_ASSIGNEE"/>
+            </not>
+        </preConditions>
+        <addForeignKeyConstraint baseColumnNames="assignee_id" baseTableName="tickets"
+                                 constraintName="FK_TICKETS_ON_ASSIGNEE" referencedColumnNames="account_id"
+                                 referencedTableName="users"/>
+    </changeSet>
+    <changeSet id="1765900330783-86" author="HP">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <foreignKeyConstraintExists foreignKeyName="FK_TICKETS_ON_BLOG"/>
+            </not>
+        </preConditions>
+        <addForeignKeyConstraint baseColumnNames="blog_id" baseTableName="tickets" constraintName="FK_TICKETS_ON_BLOG"
+                                 referencedColumnNames="blog_id" referencedTableName="blogs"/>
+    </changeSet>
+    <changeSet id="1765900330783-87" author="HP">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <foreignKeyConstraintExists foreignKeyName="FK_TICKETS_ON_COMMENT"/>
+            </not>
+        </preConditions>
+        <addForeignKeyConstraint baseColumnNames="comment_id" baseTableName="tickets"
+                                 constraintName="FK_TICKETS_ON_COMMENT" referencedColumnNames="comment_id"
+                                 referencedTableName="comments"/>
+    </changeSet>
+    <changeSet id="1765900330783-88" author="HP">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <foreignKeyConstraintExists foreignKeyName="FK_TICKETS_ON_REPORTER"/>
+            </not>
+        </preConditions>
+        <addForeignKeyConstraint baseColumnNames="reporter_id" baseTableName="tickets"
+                                 constraintName="FK_TICKETS_ON_REPORTER" referencedColumnNames="account_id"
+                                 referencedTableName="users"/>
+    </changeSet>
+    <changeSet id="1765900330783-89" author="HP">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <foreignKeyConstraintExists foreignKeyName="FK_USERS_ON_ACCOUNTID"/>
+            </not>
+        </preConditions>
+        <addForeignKeyConstraint baseColumnNames="account_id" baseTableName="users"
+                                 constraintName="FK_USERS_ON_ACCOUNTID" referencedColumnNames="account_id"
+                                 referencedTableName="accounts"/>
+    </changeSet>
+
+    <changeSet id="1765900330783-90" author="HP">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <foreignKeyConstraintExists foreignKeyName="fk_blog_images_on_blog"/>
+            </not>
+        </preConditions>
+        <addForeignKeyConstraint baseColumnNames="blog_blog_id" baseTableName="blog_images"
+                                 constraintName="fk_blog_images_on_blog" referencedColumnNames="blog_id"
+                                 referencedTableName="blogs"/>
+    </changeSet>
+    <changeSet id="1765900330783-91" author="HP">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <foreignKeyConstraintExists foreignKeyName="fk_blog_tags_on_blog"/>
+            </not>
+        </preConditions>
+        <addForeignKeyConstraint baseColumnNames="blog_blog_id" baseTableName="blog_tags"
+                                 constraintName="fk_blog_tags_on_blog" referencedColumnNames="blog_id"
+                                 referencedTableName="blogs"/>
+    </changeSet>
+    <changeSet id="1765900330783-92" author="HP">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <foreignKeyConstraintExists foreignKeyName="fk_job_skill_on_job"/>
+            </not>
+        </preConditions>
+        <addForeignKeyConstraint baseColumnNames="job_id" baseTableName="job_skill" constraintName="fk_job_skill_on_job"
+                                 referencedColumnNames="job_id" referencedTableName="jobs"/>
+    </changeSet>
+    <changeSet id="1765900330783-93" author="HP">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <foreignKeyConstraintExists foreignKeyName="fk_job_skill_on_skill"/>
+            </not>
+        </preConditions>
+        <addForeignKeyConstraint baseColumnNames="skill_id" baseTableName="job_skill"
+                                 constraintName="fk_job_skill_on_skill" referencedColumnNames="skill_id"
+                                 referencedTableName="skills"/>
+    </changeSet>
+    <changeSet id="1765900330783-94" author="HP">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <foreignKeyConstraintExists foreignKeyName="fk_mesreaby_on_message"/>
+            </not>
+        </preConditions>
+        <addForeignKeyConstraint baseColumnNames="message_id" baseTableName="message_read_by"
+                                 constraintName="fk_mesreaby_on_message" referencedColumnNames="message_id"
+                                 referencedTableName="chat_messages"/>
+    </changeSet>
+    <changeSet id="1765900330783-95" author="HP">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <foreignKeyConstraintExists foreignKeyName="fk_mesreaby_on_user"/>
+            </not>
+        </preConditions>
+        <addForeignKeyConstraint baseColumnNames="user_id" baseTableName="message_read_by"
+                                 constraintName="fk_mesreaby_on_user" referencedColumnNames="account_id"
+                                 referencedTableName="users"/>
+    </changeSet>
+    <changeSet id="1765900330783-96" author="HP">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <foreignKeyConstraintExists foreignKeyName="fk_notact_on_notification"/>
+            </not>
+        </preConditions>
+        <addForeignKeyConstraint baseColumnNames="notification_id" baseTableName="notification_actors"
+                                 constraintName="fk_notact_on_notification" referencedColumnNames="notification_id"
+                                 referencedTableName="notifications"/>
+    </changeSet>
+    <changeSet id="1765900330783-97" author="HP">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <foreignKeyConstraintExists foreignKeyName="fk_notact_on_user"/>
+            </not>
+        </preConditions>
+        <addForeignKeyConstraint baseColumnNames="actor_id" baseTableName="notification_actors"
+                                 constraintName="fk_notact_on_user" referencedColumnNames="account_id"
+                                 referencedTableName="users"/>
+    </changeSet>
+    <changeSet id="1765900330783-98" author="HP">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <foreignKeyConstraintExists foreignKeyName="fk_rolper_on_permission"/>
+            </not>
+        </preConditions>
+        <addForeignKeyConstraint baseColumnNames="permission_id" baseTableName="role_permission"
+                                 constraintName="fk_rolper_on_permission" referencedColumnNames="permission_id"
+                                 referencedTableName="permissions"/>
+    </changeSet>
+    <changeSet id="1765900330783-99" author="HP">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <foreignKeyConstraintExists foreignKeyName="fk_rolper_on_role"/>
+            </not>
+        </preConditions>
+        <addForeignKeyConstraint baseColumnNames="role_id" baseTableName="role_permission"
+                                 constraintName="fk_rolper_on_role" referencedColumnNames="role_id"
+                                 referencedTableName="roles"/>
+    </changeSet>
+    <changeSet id="1765900330783-100" author="HP">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <foreignKeyConstraintExists foreignKeyName="fk_subski_on_skill"/>
+            </not>
+        </preConditions>
+        <addForeignKeyConstraint baseColumnNames="skill_id" baseTableName="subscriber_skill"
+                                 constraintName="fk_subski_on_skill" referencedColumnNames="skill_id"
+                                 referencedTableName="skills"/>
+    </changeSet>
+    <changeSet id="1765900330783-101" author="HP">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <foreignKeyConstraintExists foreignKeyName="fk_subski_on_subscriber"/>
+            </not>
+        </preConditions>
+        <addForeignKeyConstraint baseColumnNames="subscriber_id" baseTableName="subscriber_skill"
+                                 constraintName="fk_subski_on_subscriber" referencedColumnNames="subscriber_id"
+                                 referencedTableName="subscribers"/>
+    </changeSet>
+    <changeSet id="1765900330783-102" author="HP">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <foreignKeyConstraintExists foreignKeyName="fk_usefolcom_on_company"/>
+            </not>
+        </preConditions>
+        <addForeignKeyConstraint baseColumnNames="company_id" baseTableName="user_followed_company"
+                                 constraintName="fk_usefolcom_on_company" referencedColumnNames="account_id"
+                                 referencedTableName="companies"/>
+    </changeSet>
+    <changeSet id="1765900330783-103" author="HP">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <foreignKeyConstraintExists foreignKeyName="fk_usefolcom_on_user"/>
+            </not>
+        </preConditions>
+        <addForeignKeyConstraint baseColumnNames="user_id" baseTableName="user_followed_company"
+                                 constraintName="fk_usefolcom_on_user" referencedColumnNames="account_id"
+                                 referencedTableName="users"/>
+    </changeSet>
+    <changeSet id="1765900330783-104" author="HP">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <foreignKeyConstraintExists foreignKeyName="fk_usesavblo_on_blog"/>
+            </not>
+        </preConditions>
+        <addForeignKeyConstraint baseColumnNames="blog_id" baseTableName="user_saved_blog"
+                                 constraintName="fk_usesavblo_on_blog" referencedColumnNames="blog_id"
+                                 referencedTableName="blogs"/>
+    </changeSet>
+    <changeSet id="1765900330783-105" author="HP">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <foreignKeyConstraintExists foreignKeyName="fk_usesavblo_on_user"/>
+            </not>
+        </preConditions>
+        <addForeignKeyConstraint baseColumnNames="user_id" baseTableName="user_saved_blog"
+                                 constraintName="fk_usesavblo_on_user" referencedColumnNames="account_id"
+                                 referencedTableName="users"/>
+    </changeSet>
+    <changeSet id="1765900330783-106" author="HP">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <foreignKeyConstraintExists foreignKeyName="fk_usesavjob_on_job"/>
+            </not>
+        </preConditions>
+        <addForeignKeyConstraint baseColumnNames="job_id" baseTableName="user_saved_job"
+                                 constraintName="fk_usesavjob_on_job" referencedColumnNames="job_id"
+                                 referencedTableName="jobs"/>
+    </changeSet>
+    <changeSet id="1765900330783-107" author="HP">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <foreignKeyConstraintExists foreignKeyName="fk_usesavjob_on_user"/>
+            </not>
+        </preConditions>
+        <addForeignKeyConstraint baseColumnNames="user_id" baseTableName="user_saved_job"
+                                 constraintName="fk_usesavjob_on_user" referencedColumnNames="account_id"
+                                 referencedTableName="users"/>
+    </changeSet>
+
+</databaseChangeLog>
