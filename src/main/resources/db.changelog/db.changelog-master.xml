@@ -21,6 +21,7 @@
 
     <!--      History      -->
     <include file="db.changelog/schema/2025-12-16/2025-12-16-update-users-blogs.xml"/>
+    <include file="/db.changelog/schema/2025-12-16/2025-12-16-update-foreign-key-blogs-users.xml"/>
     <!--      History      -->
 
 </databaseChangeLog>
