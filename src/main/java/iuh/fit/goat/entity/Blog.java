@@ -20,7 +20,7 @@ import static jakarta.persistence.FetchType.LAZY;
 @Setter
 @AllArgsConstructor
 @NoArgsConstructor
-@ToString(exclude = {"comments", "reactions", "tickets", "notifications"})
+@ToString(exclude = {"comments", "reactions", "tickets", "notifications", "users"})
 @FilterDef(name = "activeBlogFilter")
 public class Blog extends BaseEntity {
     @Id
@@ -72,4 +72,12 @@ public class Blog extends BaseEntity {
             condition = "deleted_at IS NULL"
     )
     private List<Notification> notifications = new ArrayList<>();
+
+    @ManyToMany(mappedBy = "savedBlogs", fetch = LAZY)
+    @JsonIgnore
+    @Filter(
+            name = "activeAccountFilter",
+            condition = "deleted_at IS NULL"
+    )
+    private List<User> users = new ArrayList<>();
 }
