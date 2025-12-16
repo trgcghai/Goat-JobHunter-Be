@@ -6,13 +6,21 @@
                       http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-5.0.xsd"
 >
 
+    <!--      Initial database setup      -->
     <include file="/db.changelog/schema/2025-12-16/2025-12-16-create-sequences.xml"/>
     <include file="/db.changelog/schema/2025-12-16/2025-12-16-create-tables.xml"/>
     <include file="/db.changelog/schema/2025-12-16/2025-12-16-create-constraints.xml"/>
     <include file="/db.changelog/schema/2025-12-16/2025-12-16-create-foreign-keys.xml"/>
+    <!--      Initial database setup      -->
 
+    <!--      Seed data      -->
     <include file="/db.changelog/data/2025-12-16/2025-12-16-init-permissions.xml"/>
     <include file="/db.changelog/data/2025-12-16/2025-12-16-init-roles.xml"/>
     <include file="/db.changelog/data/2025-12-16/2025-12-16-init-accounts.xml"/>
+    <!--      Seed data      -->
+
+    <!--      History      -->
+    <include file="db.changelog/schema/2025-12-16/2025-12-16-update-users-blogs.xml"/>
+    <!--      History      -->
 
 </databaseChangeLog>
