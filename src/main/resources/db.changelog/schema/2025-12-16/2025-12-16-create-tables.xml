@@ -5,49 +5,11 @@
         xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
                       http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-5.0.xsd"
         objectQuotingStrategy="QUOTE_ONLY_RESERVED_WORDS">
-    <changeSet id="1765785519870-1" author="HP">
-        <createSequence incrementBy="50" sequenceName="accounts_seq" startValue="1"/>
-    </changeSet>
-    <changeSet id="1765785519870-2" author="HP">
-        <createSequence incrementBy="50" sequenceName="applicants_seq" startValue="1"/>
-    </changeSet>
-    <changeSet id="1765785519870-3" author="HP">
-        <createSequence incrementBy="50" sequenceName="blogs_seq" startValue="1"/>
-    </changeSet>
-    <changeSet id="1765785519870-4" author="HP">
-        <createSequence incrementBy="50" sequenceName="careers_seq" startValue="1"/>
-    </changeSet>
-    <changeSet id="1765785519870-5" author="HP">
-        <createSequence incrementBy="50" sequenceName="comment_reactions_seq" startValue="1"/>
-    </changeSet>
-    <changeSet id="1765785519870-6" author="HP">
-        <createSequence incrementBy="50" sequenceName="comments_seq" startValue="1"/>
-    </changeSet>
-    <changeSet id="1765785519870-7" author="HP">
-        <createSequence incrementBy="50" sequenceName="companies_seq" startValue="1"/>
-    </changeSet>
-    <changeSet id="1765785519870-8" author="HP">
-        <createSequence incrementBy="50" sequenceName="jobs_seq" startValue="1"/>
-    </changeSet>
-    <changeSet id="1765785519870-9" author="HP">
-        <createSequence incrementBy="50" sequenceName="notifications_seq" startValue="1"/>
-    </changeSet>
-    <changeSet id="1765785519870-10" author="HP">
-        <createSequence incrementBy="50" sequenceName="permissions_seq" startValue="1"/>
-    </changeSet>
-    <changeSet id="1765785519870-11" author="HP">
-        <createSequence incrementBy="50" sequenceName="recruiters_seq" startValue="1"/>
-    </changeSet>
-    <changeSet id="1765785519870-12" author="HP">
-        <createSequence incrementBy="50" sequenceName="roles_seq" startValue="1"/>
-    </changeSet>
-    <changeSet id="1765785519870-13" author="HP">
-        <createSequence incrementBy="50" sequenceName="skills_seq" startValue="1"/>
-    </changeSet>
-    <changeSet id="1765785519870-14" author="HP">
-        <createSequence incrementBy="50" sequenceName="users_seq" startValue="1"/>
-    </changeSet>
-    <changeSet id="1765785519870-15" author="HP">
+
+    <changeSet id="1765900330783-15" author="HP">
+        <preConditions onFail="MARK_RAN">
+            <not><tableExists tableName="accounts"/></not>
+        </preConditions>
         <createTable tableName="accounts">
             <column name="account_id" type="BIGINT">
                 <constraints nullable="false" primaryKey="true" primaryKeyName="pk_accounts"/>
@@ -68,7 +30,11 @@
             <column name="role_id" type="BIGINT"/>
         </createTable>
     </changeSet>
-    <changeSet id="1765785519870-16" author="HP">
+
+    <changeSet id="1765900330783-16" author="HP">
+        <preConditions onFail="MARK_RAN">
+            <not><tableExists tableName="applicants"/></not>
+        </preConditions>
         <createTable tableName="applicants">
             <column name="account_id" type="BIGINT">
                 <constraints nullable="false" primaryKey="true" primaryKeyName="pk_applicants"/>
@@ -80,7 +46,11 @@
             <column name="level" type="VARCHAR(255)"/>
         </createTable>
     </changeSet>
-    <changeSet id="1765785519870-17" author="HP">
+
+    <changeSet id="1765900330783-17" author="HP">
+        <preConditions onFail="MARK_RAN">
+            <not><tableExists tableName="applications"/></not>
+        </preConditions>
         <createTable tableName="applications">
             <column name="application_id" type="BIGINT">
                 <constraints nullable="false" primaryKey="true" primaryKeyName="pk_applications"/>
@@ -99,7 +69,11 @@
             <column name="resume_id" type="BIGINT"/>
         </createTable>
     </changeSet>
-    <changeSet id="1765785519870-18" author="HP">
+
+    <changeSet id="1765900330783-18" author="HP">
+        <preConditions onFail="MARK_RAN">
+            <not><tableExists tableName="blog_images"/></not>
+        </preConditions>
         <createTable tableName="blog_images">
             <column name="blog_blog_id" type="BIGINT">
                 <constraints nullable="false"/>
@@ -107,7 +81,11 @@
             <column name="images" type="VARCHAR(255)"/>
         </createTable>
     </changeSet>
-    <changeSet id="1765785519870-19" author="HP">
+
+    <changeSet id="1765900330783-19" author="HP">
+        <preConditions onFail="MARK_RAN">
+            <not><tableExists tableName="blog_reactions"/></not>
+        </preConditions>
         <createTable tableName="blog_reactions">
             <column name="reaction_id" type="BIGINT">
                 <constraints nullable="false" primaryKey="true" primaryKeyName="pk_blog_reactions"/>
@@ -123,7 +101,11 @@
             <column name="blog_id" type="BIGINT"/>
         </createTable>
     </changeSet>
-    <changeSet id="1765785519870-20" author="HP">
+
+    <changeSet id="1765900330783-20" author="HP">
+        <preConditions onFail="MARK_RAN">
+            <not><tableExists tableName="blog_tags"/></not>
+        </preConditions>
         <createTable tableName="blog_tags">
             <column name="blog_blog_id" type="BIGINT">
                 <constraints nullable="false"/>
@@ -131,7 +113,11 @@
             <column name="tags" type="VARCHAR(255)"/>
         </createTable>
     </changeSet>
-    <changeSet id="1765785519870-21" author="HP">
+
+    <changeSet id="1765900330783-21" author="HP">
+        <preConditions onFail="MARK_RAN">
+            <not><tableExists tableName="blogs"/></not>
+        </preConditions>
         <createTable tableName="blogs">
             <column name="blog_id" type="BIGINT">
                 <constraints nullable="false" primaryKey="true" primaryKeyName="pk_blogs"/>
@@ -166,7 +152,11 @@
             </column>
         </createTable>
     </changeSet>
-    <changeSet id="1765785519870-22" author="HP">
+
+    <changeSet id="1765900330783-22" author="HP">
+        <preConditions onFail="MARK_RAN">
+            <not><tableExists tableName="careers"/></not>
+        </preConditions>
         <createTable tableName="careers">
             <column name="career_id" type="BIGINT">
                 <constraints nullable="false" primaryKey="true" primaryKeyName="pk_careers"/>
@@ -180,7 +170,11 @@
             <column name="name" type="VARCHAR(255)"/>
         </createTable>
     </changeSet>
-    <changeSet id="1765785519870-23" author="HP">
+
+    <changeSet id="1765900330783-23" author="HP">
+        <preConditions onFail="MARK_RAN">
+            <not><tableExists tableName="chat_members"/></not>
+        </preConditions>
         <createTable tableName="chat_members">
             <column name="member_id" type="BIGINT">
                 <constraints nullable="false" primaryKey="true" primaryKeyName="pk_chat_members"/>
@@ -196,7 +190,11 @@
             <column name="user_id" type="BIGINT"/>
         </createTable>
     </changeSet>
-    <changeSet id="1765785519870-24" author="HP">
+
+    <changeSet id="1765900330783-24" author="HP">
+        <preConditions onFail="MARK_RAN">
+            <not><tableExists tableName="chat_messages"/></not>
+        </preConditions>
         <createTable tableName="chat_messages">
             <column name="message_id" type="BIGINT">
                 <constraints nullable="false" primaryKey="true" primaryKeyName="pk_chat_messages"/>
@@ -215,7 +213,11 @@
             <column name="sender_id" type="BIGINT"/>
         </createTable>
     </changeSet>
-    <changeSet id="1765785519870-25" author="HP">
+
+    <changeSet id="1765900330783-25" author="HP">
+        <preConditions onFail="MARK_RAN">
+            <not><tableExists tableName="chat_rooms"/></not>
+        </preConditions>
         <createTable tableName="chat_rooms">
             <column name="room_id" type="BIGINT">
                 <constraints nullable="false" primaryKey="true" primaryKeyName="pk_chat_rooms"/>
@@ -232,7 +234,11 @@
             <column name="ai_model" type="VARCHAR(255)"/>
         </createTable>
     </changeSet>
-    <changeSet id="1765785519870-26" author="HP">
+
+    <changeSet id="1765900330783-26" author="HP">
+        <preConditions onFail="MARK_RAN">
+            <not><tableExists tableName="comment_reactions"/></not>
+        </preConditions>
         <createTable tableName="comment_reactions">
             <column name="reaction_id" type="BIGINT">
                 <constraints nullable="false" primaryKey="true" primaryKeyName="pk_comment_reactions"/>
@@ -248,7 +254,11 @@
             <column name="comment_id" type="BIGINT"/>
         </createTable>
     </changeSet>
-    <changeSet id="1765785519870-27" author="HP">
+
+    <changeSet id="1765900330783-27" author="HP">
+        <preConditions onFail="MARK_RAN">
+            <not><tableExists tableName="comments"/></not>
+        </preConditions>
         <createTable tableName="comments">
             <column name="comment_id" type="BIGINT">
                 <constraints nullable="false" primaryKey="true" primaryKeyName="pk_comments"/>
@@ -271,7 +281,11 @@
             <column name="parent_id" type="BIGINT"/>
         </createTable>
     </changeSet>
-    <changeSet id="1765785519870-28" author="HP">
+
+    <changeSet id="1765900330783-28" author="HP">
+        <preConditions onFail="MARK_RAN">
+            <not><tableExists tableName="companies"/></not>
+        </preConditions>
         <createTable tableName="companies">
             <column name="account_id" type="BIGINT">
                 <constraints nullable="false" primaryKey="true" primaryKeyName="pk_companies"/>
@@ -288,7 +302,11 @@
             </column>
         </createTable>
     </changeSet>
-    <changeSet id="1765785519870-29" author="HP">
+
+    <changeSet id="1765900330783-29" author="HP">
+        <preConditions onFail="MARK_RAN">
+            <not><tableExists tableName="friendships"/></not>
+        </preConditions>
         <createTable tableName="friendships">
             <column name="request_id" type="BIGINT">
                 <constraints nullable="false" primaryKey="true" primaryKeyName="pk_friendships"/>
@@ -305,7 +323,11 @@
             <column name="receiver_id" type="BIGINT"/>
         </createTable>
     </changeSet>
-    <changeSet id="1765785519870-30" author="HP">
+
+    <changeSet id="1765900330783-30" author="HP">
+        <preConditions onFail="MARK_RAN">
+            <not><tableExists tableName="interviews"/></not>
+        </preConditions>
         <createTable tableName="interviews">
             <column name="interview_id" type="BIGINT">
                 <constraints nullable="false" primaryKey="true" primaryKeyName="pk_interviews"/>
@@ -334,7 +356,11 @@
             </column>
         </createTable>
     </changeSet>
-    <changeSet id="1765785519870-31" author="HP">
+
+    <changeSet id="1765900330783-31" author="HP">
+        <preConditions onFail="MARK_RAN">
+            <not><tableExists tableName="job_skill"/></not>
+        </preConditions>
         <createTable tableName="job_skill">
             <column name="job_id" type="BIGINT">
                 <constraints nullable="false"/>
@@ -344,7 +370,11 @@
             </column>
         </createTable>
     </changeSet>
-    <changeSet id="1765785519870-32" author="HP">
+
+    <changeSet id="1765900330783-32" author="HP">
+        <preConditions onFail="MARK_RAN">
+            <not><tableExists tableName="jobs"/></not>
+        </preConditions>
         <createTable tableName="jobs">
             <column name="job_id" type="BIGINT">
                 <constraints nullable="false" primaryKey="true" primaryKeyName="pk_jobs"/>
@@ -378,7 +408,11 @@
             <column name="career_id" type="BIGINT"/>
         </createTable>
     </changeSet>
-    <changeSet id="1765785519870-33" author="HP">
+
+    <changeSet id="1765900330783-33" author="HP">
+        <preConditions onFail="MARK_RAN">
+            <not><tableExists tableName="message_read_by"/></not>
+        </preConditions>
         <createTable tableName="message_read_by">
             <column name="message_id" type="BIGINT">
                 <constraints nullable="false"/>
@@ -388,7 +422,11 @@
             </column>
         </createTable>
     </changeSet>
-    <changeSet id="1765785519870-34" author="HP">
+
+    <changeSet id="1765900330783-34" author="HP">
+        <preConditions onFail="MARK_RAN">
+            <not><tableExists tableName="notification_actors"/></not>
+        </preConditions>
         <createTable tableName="notification_actors">
             <column name="actor_id" type="BIGINT">
                 <constraints nullable="false"/>
@@ -398,7 +436,11 @@
             </column>
         </createTable>
     </changeSet>
-    <changeSet id="1765785519870-35" author="HP">
+
+    <changeSet id="1765900330783-35" author="HP">
+        <preConditions onFail="MARK_RAN">
+            <not><tableExists tableName="notifications"/></not>
+        </preConditions>
         <createTable tableName="notifications">
             <column name="notification_id" type="BIGINT">
                 <constraints nullable="false" primaryKey="true" primaryKeyName="pk_notifications"/>
@@ -418,7 +460,11 @@
             <column name="comment_id" type="BIGINT"/>
         </createTable>
     </changeSet>
-    <changeSet id="1765785519870-36" author="HP">
+
+    <changeSet id="1765900330783-36" author="HP">
+        <preConditions onFail="MARK_RAN">
+            <not><tableExists tableName="permissions"/></not>
+        </preConditions>
         <createTable tableName="permissions">
             <column name="permission_id" type="BIGINT">
                 <constraints nullable="false" primaryKey="true" primaryKeyName="pk_permissions"/>
@@ -435,7 +481,11 @@
             <column name="name" type="VARCHAR(255)"/>
         </createTable>
     </changeSet>
-    <changeSet id="1765785519870-37" author="HP">
+
+    <changeSet id="1765900330783-37" author="HP">
+        <preConditions onFail="MARK_RAN">
+            <not><tableExists tableName="recruiters"/></not>
+        </preConditions>
         <createTable tableName="recruiters">
             <column name="account_id" type="BIGINT">
                 <constraints nullable="false" primaryKey="true" primaryKeyName="pk_recruiters"/>
@@ -444,7 +494,11 @@
             <column name="company_id" type="BIGINT"/>
         </createTable>
     </changeSet>
-    <changeSet id="1765785519870-38" author="HP">
+
+    <changeSet id="1765900330783-38" author="HP">
+        <preConditions onFail="MARK_RAN">
+            <not><tableExists tableName="resumes"/></not>
+        </preConditions>
         <createTable tableName="resumes">
             <column name="resume_id" type="BIGINT">
                 <constraints nullable="false" primaryKey="true" primaryKeyName="pk_resumes"/>
@@ -475,7 +529,11 @@
             <column name="applicant_id" type="BIGINT"/>
         </createTable>
     </changeSet>
-    <changeSet id="1765785519870-39" author="HP">
+
+    <changeSet id="1765900330783-39" author="HP">
+        <preConditions onFail="MARK_RAN">
+            <not><tableExists tableName="role_permission"/></not>
+        </preConditions>
         <createTable tableName="role_permission">
             <column name="permission_id" type="BIGINT">
                 <constraints nullable="false"/>
@@ -485,7 +543,11 @@
             </column>
         </createTable>
     </changeSet>
-    <changeSet id="1765785519870-40" author="HP">
+
+    <changeSet id="1765900330783-40" author="HP">
+        <preConditions onFail="MARK_RAN">
+            <not><tableExists tableName="roles"/></not>
+        </preConditions>
         <createTable tableName="roles">
             <column name="role_id" type="BIGINT">
                 <constraints nullable="false" primaryKey="true" primaryKeyName="pk_roles"/>
@@ -503,7 +565,11 @@
             <column name="name" type="VARCHAR(255)"/>
         </createTable>
     </changeSet>
-    <changeSet id="1765785519870-41" author="HP">
+
+    <changeSet id="1765900330783-41" author="HP">
+        <preConditions onFail="MARK_RAN">
+            <not><tableExists tableName="skills"/></not>
+        </preConditions>
         <createTable tableName="skills">
             <column name="skill_id" type="BIGINT">
                 <constraints nullable="false" primaryKey="true" primaryKeyName="pk_skills"/>
@@ -517,7 +583,11 @@
             <column name="name" type="VARCHAR(255)"/>
         </createTable>
     </changeSet>
-    <changeSet id="1765785519870-42" author="HP">
+
+    <changeSet id="1765900330783-42" author="HP">
+        <preConditions onFail="MARK_RAN">
+            <not><tableExists tableName="subscriber_skill"/></not>
+        </preConditions>
         <createTable tableName="subscriber_skill">
             <column name="skill_id" type="BIGINT">
                 <constraints nullable="false"/>
@@ -527,7 +597,11 @@
             </column>
         </createTable>
     </changeSet>
-    <changeSet id="1765785519870-43" author="HP">
+
+    <changeSet id="1765900330783-43" author="HP">
+        <preConditions onFail="MARK_RAN">
+            <not><tableExists tableName="subscribers"/></not>
+        </preConditions>
         <createTable tableName="subscribers">
             <column name="subscriber_id" type="BIGINT">
                 <constraints nullable="false" primaryKey="true" primaryKeyName="pk_subscribers"/>
@@ -542,7 +616,11 @@
             <column name="email" type="VARCHAR(255)"/>
         </createTable>
     </changeSet>
-    <changeSet id="1765785519870-44" author="HP">
+
+    <changeSet id="1765900330783-44" author="HP">
+        <preConditions onFail="MARK_RAN">
+            <not><tableExists tableName="tickets"/></not>
+        </preConditions>
         <createTable tableName="tickets">
             <column name="ticket_id" type="BIGINT">
                 <constraints nullable="false" primaryKey="true" primaryKeyName="pk_tickets"/>
@@ -564,7 +642,11 @@
             <column name="comment_id" type="BIGINT"/>
         </createTable>
     </changeSet>
-    <changeSet id="1765785519870-45" author="HP">
+
+    <changeSet id="1765900330783-45" author="HP">
+        <preConditions onFail="MARK_RAN">
+            <not><tableExists tableName="user_followed_company"/></not>
+        </preConditions>
         <createTable tableName="user_followed_company">
             <column name="company_id" type="BIGINT">
                 <constraints nullable="false"/>
@@ -574,7 +656,25 @@
             </column>
         </createTable>
     </changeSet>
-    <changeSet id="1765785519870-46" author="HP">
+
+    <changeSet id="1765900330783-46" author="HP">
+        <preConditions onFail="MARK_RAN">
+            <not><tableExists tableName="user_saved_blog"/></not>
+        </preConditions>
+        <createTable tableName="user_saved_blog">
+            <column name="blog_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="user_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+    </changeSet>
+
+    <changeSet id="1765900330783-47" author="HP">
+        <preConditions onFail="MARK_RAN">
+            <not><tableExists tableName="user_saved_job"/></not>
+        </preConditions>
         <createTable tableName="user_saved_job">
             <column name="job_id" type="BIGINT">
                 <constraints nullable="false"/>
@@ -584,7 +684,11 @@
             </column>
         </createTable>
     </changeSet>
-    <changeSet id="1765785519870-47" author="HP">
+
+    <changeSet id="1765900330783-48" author="HP">
+        <preConditions onFail="MARK_RAN">
+            <not><tableExists tableName="users"/></not>
+        </preConditions>
         <createTable tableName="users">
             <column name="account_id" type="BIGINT">
                 <constraints nullable="false" primaryKey="true" primaryKeyName="pk_users"/>
@@ -598,278 +702,6 @@
             <column name="headline" type="VARCHAR(255)"/>
             <column name="bio" type="TEXT"/>
         </createTable>
-    </changeSet>
-    <changeSet id="1765785519870-48" author="HP">
-        <addUniqueConstraint columnNames="sender_id, receiver_id" constraintName="uc_53693805900ebd6aff9bef543"
-                             tableName="friendships"/>
-    </changeSet>
-    <changeSet id="1765785519870-49" author="HP">
-        <addUniqueConstraint columnNames="email" constraintName="uc_b058cb21366b3eace6546643e" tableName="subscribers"/>
-    </changeSet>
-    <changeSet id="1765785519870-50" author="HP">
-        <addUniqueConstraint columnNames="comment_id, user_id" constraintName="uc_c190b95092acc64167a1e2ae0"
-                             tableName="comment_reactions"/>
-    </changeSet>
-    <changeSet id="1765785519870-51" author="HP">
-        <addUniqueConstraint columnNames="blog_id, user_id" constraintName="uc_ce10431fbd36dfb69da3f23c2"
-                             tableName="blog_reactions"/>
-    </changeSet>
-    <changeSet id="1765785519870-52" author="HP">
-        <addUniqueConstraint columnNames="application_id" constraintName="uc_interviews_application"
-                             tableName="interviews"/>
-    </changeSet>
-    <changeSet id="1765785519870-53" author="HP">
-        <addForeignKeyConstraint baseColumnNames="role_id" baseTableName="accounts" constraintName="FK_ACCOUNTS_ON_ROLE"
-                                 referencedColumnNames="role_id" referencedTableName="roles"/>
-    </changeSet>
-    <changeSet id="1765785519870-54" author="HP">
-        <addForeignKeyConstraint baseColumnNames="account_id" baseTableName="applicants"
-                                 constraintName="FK_APPLICANTS_ON_ACCOUNTID" referencedColumnNames="account_id"
-                                 referencedTableName="users"/>
-    </changeSet>
-    <changeSet id="1765785519870-55" author="HP">
-        <addForeignKeyConstraint baseColumnNames="applicant_id" baseTableName="applications"
-                                 constraintName="FK_APPLICATIONS_ON_APPLICANT" referencedColumnNames="account_id"
-                                 referencedTableName="applicants"/>
-    </changeSet>
-    <changeSet id="1765785519870-56" author="HP">
-        <addForeignKeyConstraint baseColumnNames="job_id" baseTableName="applications"
-                                 constraintName="FK_APPLICATIONS_ON_JOB" referencedColumnNames="job_id"
-                                 referencedTableName="jobs"/>
-    </changeSet>
-    <changeSet id="1765785519870-57" author="HP">
-        <addForeignKeyConstraint baseColumnNames="resume_id" baseTableName="applications"
-                                 constraintName="FK_APPLICATIONS_ON_RESUME" referencedColumnNames="resume_id"
-                                 referencedTableName="resumes"/>
-    </changeSet>
-    <changeSet id="1765785519870-58" author="HP">
-        <addForeignKeyConstraint baseColumnNames="user_id" baseTableName="blogs" constraintName="FK_BLOGS_ON_USER"
-                                 referencedColumnNames="account_id" referencedTableName="users"/>
-    </changeSet>
-    <changeSet id="1765785519870-59" author="HP">
-        <addForeignKeyConstraint baseColumnNames="blog_id" baseTableName="blog_reactions"
-                                 constraintName="FK_BLOG_REACTIONS_ON_BLOG" referencedColumnNames="blog_id"
-                                 referencedTableName="blogs"/>
-    </changeSet>
-    <changeSet id="1765785519870-60" author="HP">
-        <addForeignKeyConstraint baseColumnNames="user_id" baseTableName="blog_reactions"
-                                 constraintName="FK_BLOG_REACTIONS_ON_USER" referencedColumnNames="account_id"
-                                 referencedTableName="users"/>
-    </changeSet>
-    <changeSet id="1765785519870-61" author="HP">
-        <addForeignKeyConstraint baseColumnNames="room_id" baseTableName="chat_members"
-                                 constraintName="FK_CHAT_MEMBERS_ON_ROOM" referencedColumnNames="room_id"
-                                 referencedTableName="chat_rooms"/>
-    </changeSet>
-    <changeSet id="1765785519870-62" author="HP">
-        <addForeignKeyConstraint baseColumnNames="user_id" baseTableName="chat_members"
-                                 constraintName="FK_CHAT_MEMBERS_ON_USER" referencedColumnNames="account_id"
-                                 referencedTableName="users"/>
-    </changeSet>
-    <changeSet id="1765785519870-63" author="HP">
-        <addForeignKeyConstraint baseColumnNames="room_id" baseTableName="chat_messages"
-                                 constraintName="FK_CHAT_MESSAGES_ON_ROOM" referencedColumnNames="room_id"
-                                 referencedTableName="chat_rooms"/>
-    </changeSet>
-    <changeSet id="1765785519870-64" author="HP">
-        <addForeignKeyConstraint baseColumnNames="sender_id" baseTableName="chat_messages"
-                                 constraintName="FK_CHAT_MESSAGES_ON_SENDER" referencedColumnNames="account_id"
-                                 referencedTableName="users"/>
-    </changeSet>
-    <changeSet id="1765785519870-65" author="HP">
-        <addForeignKeyConstraint baseColumnNames="blog_id" baseTableName="comments" constraintName="FK_COMMENTS_ON_BLOG"
-                                 referencedColumnNames="blog_id" referencedTableName="blogs"/>
-    </changeSet>
-    <changeSet id="1765785519870-66" author="HP">
-        <addForeignKeyConstraint baseColumnNames="commented_by_id" baseTableName="comments"
-                                 constraintName="FK_COMMENTS_ON_COMMENTED_BY" referencedColumnNames="account_id"
-                                 referencedTableName="users"/>
-    </changeSet>
-    <changeSet id="1765785519870-67" author="HP">
-        <addForeignKeyConstraint baseColumnNames="parent_id" baseTableName="comments"
-                                 constraintName="FK_COMMENTS_ON_PARENT" referencedColumnNames="comment_id"
-                                 referencedTableName="comments"/>
-    </changeSet>
-    <changeSet id="1765785519870-68" author="HP">
-        <addForeignKeyConstraint baseColumnNames="comment_id" baseTableName="comment_reactions"
-                                 constraintName="FK_COMMENT_REACTIONS_ON_COMMENT" referencedColumnNames="comment_id"
-                                 referencedTableName="comments"/>
-    </changeSet>
-    <changeSet id="1765785519870-69" author="HP">
-        <addForeignKeyConstraint baseColumnNames="user_id" baseTableName="comment_reactions"
-                                 constraintName="FK_COMMENT_REACTIONS_ON_USER" referencedColumnNames="account_id"
-                                 referencedTableName="users"/>
-    </changeSet>
-    <changeSet id="1765785519870-70" author="HP">
-        <addForeignKeyConstraint baseColumnNames="account_id" baseTableName="companies"
-                                 constraintName="FK_COMPANIES_ON_ACCOUNTID" referencedColumnNames="account_id"
-                                 referencedTableName="accounts"/>
-    </changeSet>
-    <changeSet id="1765785519870-71" author="HP">
-        <addForeignKeyConstraint baseColumnNames="receiver_id" baseTableName="friendships"
-                                 constraintName="FK_FRIENDSHIPS_ON_RECEIVER" referencedColumnNames="account_id"
-                                 referencedTableName="users"/>
-    </changeSet>
-    <changeSet id="1765785519870-72" author="HP">
-        <addForeignKeyConstraint baseColumnNames="sender_id" baseTableName="friendships"
-                                 constraintName="FK_FRIENDSHIPS_ON_SENDER" referencedColumnNames="account_id"
-                                 referencedTableName="users"/>
-    </changeSet>
-    <changeSet id="1765785519870-73" author="HP">
-        <addForeignKeyConstraint baseColumnNames="applicant_id" baseTableName="interviews"
-                                 constraintName="FK_INTERVIEWS_ON_APPLICANT" referencedColumnNames="account_id"
-                                 referencedTableName="applicants"/>
-    </changeSet>
-    <changeSet id="1765785519870-74" author="HP">
-        <addForeignKeyConstraint baseColumnNames="application_id" baseTableName="interviews"
-                                 constraintName="FK_INTERVIEWS_ON_APPLICATION" referencedColumnNames="application_id"
-                                 referencedTableName="applications"/>
-    </changeSet>
-    <changeSet id="1765785519870-75" author="HP">
-        <addForeignKeyConstraint baseColumnNames="interviewer_id" baseTableName="interviews"
-                                 constraintName="FK_INTERVIEWS_ON_INTERVIEWER" referencedColumnNames="account_id"
-                                 referencedTableName="recruiters"/>
-    </changeSet>
-    <changeSet id="1765785519870-76" author="HP">
-        <addForeignKeyConstraint baseColumnNames="career_id" baseTableName="jobs" constraintName="FK_JOBS_ON_CAREER"
-                                 referencedColumnNames="career_id" referencedTableName="careers"/>
-    </changeSet>
-    <changeSet id="1765785519870-77" author="HP">
-        <addForeignKeyConstraint baseColumnNames="company_id" baseTableName="jobs" constraintName="FK_JOBS_ON_COMPANY"
-                                 referencedColumnNames="account_id" referencedTableName="companies"/>
-    </changeSet>
-    <changeSet id="1765785519870-78" author="HP">
-        <addForeignKeyConstraint baseColumnNames="blog_id" baseTableName="notifications"
-                                 constraintName="FK_NOTIFICATIONS_ON_BLOG" referencedColumnNames="blog_id"
-                                 referencedTableName="blogs"/>
-    </changeSet>
-    <changeSet id="1765785519870-79" author="HP">
-        <addForeignKeyConstraint baseColumnNames="comment_id" baseTableName="notifications"
-                                 constraintName="FK_NOTIFICATIONS_ON_COMMENT" referencedColumnNames="comment_id"
-                                 referencedTableName="comments"/>
-    </changeSet>
-    <changeSet id="1765785519870-80" author="HP">
-        <addForeignKeyConstraint baseColumnNames="recipient_id" baseTableName="notifications"
-                                 constraintName="FK_NOTIFICATIONS_ON_RECIPIENT" referencedColumnNames="account_id"
-                                 referencedTableName="users"/>
-    </changeSet>
-    <changeSet id="1765785519870-81" author="HP">
-        <addForeignKeyConstraint baseColumnNames="account_id" baseTableName="recruiters"
-                                 constraintName="FK_RECRUITERS_ON_ACCOUNTID" referencedColumnNames="account_id"
-                                 referencedTableName="users"/>
-    </changeSet>
-    <changeSet id="1765785519870-82" author="HP">
-        <addForeignKeyConstraint baseColumnNames="company_id" baseTableName="recruiters"
-                                 constraintName="FK_RECRUITERS_ON_COMPANY" referencedColumnNames="account_id"
-                                 referencedTableName="companies"/>
-    </changeSet>
-    <changeSet id="1765785519870-83" author="HP">
-        <addForeignKeyConstraint baseColumnNames="applicant_id" baseTableName="resumes"
-                                 constraintName="FK_RESUMES_ON_APPLICANT" referencedColumnNames="account_id"
-                                 referencedTableName="applicants"/>
-    </changeSet>
-    <changeSet id="1765785519870-84" author="HP">
-        <addForeignKeyConstraint baseColumnNames="assignee_id" baseTableName="tickets"
-                                 constraintName="FK_TICKETS_ON_ASSIGNEE" referencedColumnNames="account_id"
-                                 referencedTableName="users"/>
-    </changeSet>
-    <changeSet id="1765785519870-85" author="HP">
-        <addForeignKeyConstraint baseColumnNames="blog_id" baseTableName="tickets" constraintName="FK_TICKETS_ON_BLOG"
-                                 referencedColumnNames="blog_id" referencedTableName="blogs"/>
-    </changeSet>
-    <changeSet id="1765785519870-86" author="HP">
-        <addForeignKeyConstraint baseColumnNames="comment_id" baseTableName="tickets"
-                                 constraintName="FK_TICKETS_ON_COMMENT" referencedColumnNames="comment_id"
-                                 referencedTableName="comments"/>
-    </changeSet>
-    <changeSet id="1765785519870-87" author="HP">
-        <addForeignKeyConstraint baseColumnNames="reporter_id" baseTableName="tickets"
-                                 constraintName="FK_TICKETS_ON_REPORTER" referencedColumnNames="account_id"
-                                 referencedTableName="users"/>
-    </changeSet>
-    <changeSet id="1765785519870-88" author="HP">
-        <addForeignKeyConstraint baseColumnNames="account_id" baseTableName="users"
-                                 constraintName="FK_USERS_ON_ACCOUNTID" referencedColumnNames="account_id"
-                                 referencedTableName="accounts"/>
-    </changeSet>
-    <changeSet id="1765785519870-89" author="HP">
-        <addForeignKeyConstraint baseColumnNames="blog_blog_id" baseTableName="blog_images"
-                                 constraintName="fk_blog_images_on_blog" referencedColumnNames="blog_id"
-                                 referencedTableName="blogs"/>
-    </changeSet>
-    <changeSet id="1765785519870-90" author="HP">
-        <addForeignKeyConstraint baseColumnNames="blog_blog_id" baseTableName="blog_tags"
-                                 constraintName="fk_blog_tags_on_blog" referencedColumnNames="blog_id"
-                                 referencedTableName="blogs"/>
-    </changeSet>
-    <changeSet id="1765785519870-91" author="HP">
-        <addForeignKeyConstraint baseColumnNames="job_id" baseTableName="job_skill" constraintName="fk_job_skill_on_job"
-                                 referencedColumnNames="job_id" referencedTableName="jobs"/>
-    </changeSet>
-    <changeSet id="1765785519870-92" author="HP">
-        <addForeignKeyConstraint baseColumnNames="skill_id" baseTableName="job_skill"
-                                 constraintName="fk_job_skill_on_skill" referencedColumnNames="skill_id"
-                                 referencedTableName="skills"/>
-    </changeSet>
-    <changeSet id="1765785519870-93" author="HP">
-        <addForeignKeyConstraint baseColumnNames="message_id" baseTableName="message_read_by"
-                                 constraintName="fk_mesreaby_on_message" referencedColumnNames="message_id"
-                                 referencedTableName="chat_messages"/>
-    </changeSet>
-    <changeSet id="1765785519870-94" author="HP">
-        <addForeignKeyConstraint baseColumnNames="user_id" baseTableName="message_read_by"
-                                 constraintName="fk_mesreaby_on_user" referencedColumnNames="account_id"
-                                 referencedTableName="users"/>
-    </changeSet>
-    <changeSet id="1765785519870-95" author="HP">
-        <addForeignKeyConstraint baseColumnNames="notification_id" baseTableName="notification_actors"
-                                 constraintName="fk_notact_on_notification" referencedColumnNames="notification_id"
-                                 referencedTableName="notifications"/>
-    </changeSet>
-    <changeSet id="1765785519870-96" author="HP">
-        <addForeignKeyConstraint baseColumnNames="actor_id" baseTableName="notification_actors"
-                                 constraintName="fk_notact_on_user" referencedColumnNames="account_id"
-                                 referencedTableName="users"/>
-    </changeSet>
-    <changeSet id="1765785519870-97" author="HP">
-        <addForeignKeyConstraint baseColumnNames="permission_id" baseTableName="role_permission"
-                                 constraintName="fk_rolper_on_permission" referencedColumnNames="permission_id"
-                                 referencedTableName="permissions"/>
-    </changeSet>
-    <changeSet id="1765785519870-98" author="HP">
-        <addForeignKeyConstraint baseColumnNames="role_id" baseTableName="role_permission"
-                                 constraintName="fk_rolper_on_role" referencedColumnNames="role_id"
-                                 referencedTableName="roles"/>
-    </changeSet>
-    <changeSet id="1765785519870-99" author="HP">
-        <addForeignKeyConstraint baseColumnNames="skill_id" baseTableName="subscriber_skill"
-                                 constraintName="fk_subski_on_skill" referencedColumnNames="skill_id"
-                                 referencedTableName="skills"/>
-    </changeSet>
-    <changeSet id="1765785519870-100" author="HP">
-        <addForeignKeyConstraint baseColumnNames="subscriber_id" baseTableName="subscriber_skill"
-                                 constraintName="fk_subski_on_subscriber" referencedColumnNames="subscriber_id"
-                                 referencedTableName="subscribers"/>
-    </changeSet>
-    <changeSet id="1765785519870-101" author="HP">
-        <addForeignKeyConstraint baseColumnNames="company_id" baseTableName="user_followed_company"
-                                 constraintName="fk_usefolcom_on_company" referencedColumnNames="account_id"
-                                 referencedTableName="companies"/>
-    </changeSet>
-    <changeSet id="1765785519870-102" author="HP">
-        <addForeignKeyConstraint baseColumnNames="user_id" baseTableName="user_followed_company"
-                                 constraintName="fk_usefolcom_on_user" referencedColumnNames="account_id"
-                                 referencedTableName="users"/>
-    </changeSet>
-    <changeSet id="1765785519870-103" author="HP">
-        <addForeignKeyConstraint baseColumnNames="job_id" baseTableName="user_saved_job"
-                                 constraintName="fk_usesavjob_on_job" referencedColumnNames="job_id"
-                                 referencedTableName="jobs"/>
-    </changeSet>
-    <changeSet id="1765785519870-104" author="HP">
-        <addForeignKeyConstraint baseColumnNames="user_id" baseTableName="user_saved_job"
-                                 constraintName="fk_usesavjob_on_user" referencedColumnNames="account_id"
-                                 referencedTableName="users"/>
     </changeSet>
 
 </databaseChangeLog>
