@@ -1,5 +1,4 @@
-FROM openjdk:21
-WORKDIR /app
-COPY build/libs/*.jar goat.jar
-EXPOSE 5000
-CMD ["java","-jar","goat.jar"]
+FROM eclipse-temurin:21-jre
+ARG JAR_FILE=build/libs/*.jar
+COPY ${JAR_FILE} goat.jar
+ENTRYPOINT ["java","-jar","/goat.jar"]
