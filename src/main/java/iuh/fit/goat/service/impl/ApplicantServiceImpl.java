@@ -21,30 +21,30 @@ import java.util.Optional;
 @Service
 @RequiredArgsConstructor
 public class ApplicantServiceImpl implements ApplicantService {
-//    private final ApplicantRepository applicantRepository;
+    private final ApplicantRepository applicantRepository;
 //    private final ApplicationRepository applicationRepository;
 //    private final CommentRepository commentRepository;
 //    private final NotificationRepository notificationRepository;
-//    private final RoleService roleService;
-//    private final String APPLICANT = "APPLICANT";
+    private final RoleService roleService;
+    private final String APPLICANT = "APPLICANT";
 //
-//    @Override
-//    public Applicant handleCreateApplicant(Applicant applicant) {
-//        Role role;
-//        if(applicant.getRole() != null){
-//            role = this.roleService.handleGetRoleById(applicant.getRole().getRoleId());
-//        } else {
-//            role = this.roleService.handleGetRoleByName(APPLICANT);
-//        }
-//        applicant.setRole(role);
-//        applicant.setEnabled(false);
-//
-//        if(applicant.getAvatar() == null) {
-//            applicant.setAvatar(FileUploadUtil.AVATAR + applicant.getUsername());
-//        }
-//
-//        return this.applicantRepository.save(applicant);
-//    }
+    @Override
+    public Applicant handleCreateApplicant(Applicant applicant) {
+        Role role;
+        if(applicant.getRole() != null){
+            role = this.roleService.handleGetRoleById(applicant.getRole().getRoleId());
+        } else {
+            role = this.roleService.handleGetRoleByName(APPLICANT);
+        }
+        applicant.setRole(role);
+        applicant.setEnabled(false);
+
+        if(applicant.getAvatar() == null) {
+            applicant.setAvatar(FileUploadUtil.AVATAR + applicant.getUsername());
+        }
+
+        return this.applicantRepository.save(applicant);
+    }
 //
 //    @Override
 //    public void handleDeleteApplicant(long id) {
@@ -145,33 +145,36 @@ public class ApplicantServiceImpl implements ApplicantService {
 //        return new ResultPaginationResponse(meta, applicantResponses);
 //    }
 //
-//    @Override
-//    public ApplicantResponse convertToApplicantResponse(Applicant applicant) {
-//        ApplicantResponse applicantResponse = new ApplicantResponse();
-//
-//        applicantResponse.setUserId(applicant.getUserId());
-//        applicantResponse.setContact(applicant.getContact());
-//        applicantResponse.setAddress(applicant.getAddress());
-//        applicantResponse.setUsername(applicant.getUsername());
-//        applicantResponse.setFullName(applicant.getFullName());
-//        applicantResponse.setCreatedAt(applicant.getCreatedAt());
-//        applicantResponse.setUpdatedAt(applicant.getUpdatedAt());
-//        applicantResponse.setEducation(applicant.getEducation());
-//        applicantResponse.setLevel(applicant.getLevel());
-//        applicantResponse.setGender(applicant.getGender());
-//        applicantResponse.setDob(applicant.getDob());
-//        applicantResponse.setAvailableStatus(applicant.isAvailableStatus());
-//        applicantResponse.setAvatar(applicant.getAvatar());
-//        applicantResponse.setEnabled(applicant.isEnabled());
-//
-//        if(applicant.getRole() != null) {
-//            UserResponse.RoleUser roleUser = new UserResponse.RoleUser();
-//            roleUser.setRoleId(applicant.getRole().getRoleId());
-//            roleUser.setName(applicant.getRole().getName());
-//
-//            applicantResponse.setRole(roleUser);
-//        }
-//
-//        return applicantResponse;
-//    }
+    @Override
+    public ApplicantResponse convertToApplicantResponse(Applicant applicant) {
+        ApplicantResponse applicantResponse = new ApplicantResponse();
+
+        applicantResponse.setAccountId(applicant.getAccountId());
+        applicantResponse.setUsername(applicant.getUsername());
+        applicantResponse.setEmail(applicant.getEmail());
+        applicantResponse.setPhone(applicant.getPhone());
+        applicantResponse.setAddress(applicant.getAddress());
+        applicantResponse.setFullName(applicant.getFullName());
+        applicantResponse.setAvatar(applicant.getAvatar());
+        applicantResponse.setGender(applicant.getGender());
+        applicantResponse.setDob(applicant.getDob());
+        applicantResponse.setEnabled(applicant.isEnabled());
+        applicantResponse.setCoverPhoto(applicant.getCoverPhoto());
+        applicantResponse.setHeadline(applicant.getHeadline());
+        applicantResponse.setBio(applicant.getBio());
+        applicantResponse.setCreatedAt(applicant.getCreatedAt());
+        applicantResponse.setUpdatedAt(applicant.getUpdatedAt());
+        applicantResponse.setEducation(applicant.getEducation());
+        applicantResponse.setLevel(applicant.getLevel());
+        applicantResponse.setAvailableStatus(applicant.isAvailableStatus());
+
+        if(applicant.getRole() != null) {
+            UserResponse.RoleUser roleUser = new UserResponse.RoleUser();
+            roleUser.setRoleId(applicant.getRole().getRoleId());
+            roleUser.setName(applicant.getRole().getName());
+            applicantResponse.setRole(roleUser);
+        }
+
+        return applicantResponse;
+    }
 }

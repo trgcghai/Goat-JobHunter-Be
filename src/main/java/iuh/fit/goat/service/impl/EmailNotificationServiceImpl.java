@@ -18,8 +18,8 @@ import java.util.List;
 @Service
 @RequiredArgsConstructor
 public class EmailNotificationServiceImpl implements EmailNotificationService {
-//    private final SpringTemplateEngine templateEngine;
-//    private final AsyncEmailService asyncEmailService;
+    private final SpringTemplateEngine templateEngine;
+    private final AsyncEmailService asyncEmailService;
 //    private final ApplicantRepository applicantRepository;
 //    private final JobRepository jobRepository;
 //
@@ -38,15 +38,15 @@ public class EmailNotificationServiceImpl implements EmailNotificationService {
 //        this.asyncEmailService.handleSendEmailSync(recipient, subject, content, false, true);
 //    }
 //
-//    @Override
-//    public void handleSendVerificationEmail(String email, String verificationCode) {
-//        String subject = "Account Verification";
-//        Context context = new Context();
-//        context.setVariable("verificationCode", verificationCode);
-//        String content = this.templateEngine.process("verification", context);
-//
-//        this.asyncEmailService.handleSendEmailSync(email, subject, content, false, true);
-//    }
+    @Override
+    public void handleSendVerificationEmail(String email, String verificationCode) {
+        String subject = "Account Verification";
+        Context context = new Context();
+        context.setVariable("verificationCode", verificationCode);
+        String content = this.templateEngine.process("verification", context);
+
+        this.asyncEmailService.handleSendEmailSync(email, subject, content, false, true);
+    }
 //
 //    @Override
 //    public void handleSendBlogActionNotice(

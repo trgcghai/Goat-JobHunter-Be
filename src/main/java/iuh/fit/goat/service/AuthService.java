@@ -1,6 +1,7 @@
 package iuh.fit.goat.service;
 
 import iuh.fit.goat.dto.request.auth.LoginRequest;
+import iuh.fit.goat.dto.request.auth.RegisterUserRequest;
 import iuh.fit.goat.dto.request.auth.VerifyUserRequest;
 import iuh.fit.goat.dto.response.applicant.ApplicantResponse;
 import iuh.fit.goat.dto.response.auth.LoginResponse;
@@ -18,12 +19,10 @@ public interface AuthService {
     void handleLogout(String accessToken, String refreshToken, HttpServletResponse response);
 
     LoginResponse handleGetCurrentAccount();
-//
-//    ApplicantResponse handleRegisterApplicant(Applicant applicant) throws InvalidException;
-//
-//    RecruiterResponse handleRegisterRecruiter(Recruiter recruiter) throws InvalidException;
-//
-//    void handleVerifyUser(VerifyUserRequest verifyUser) throws InvalidException;
+
+    Object handleRegisterUser(RegisterUserRequest request) throws InvalidException;
+
+    void handleVerifyUser(VerifyUserRequest verifyUser) throws InvalidException;
 //
 //    void handleVerifyRecruiter(long id) throws InvalidException;
 //

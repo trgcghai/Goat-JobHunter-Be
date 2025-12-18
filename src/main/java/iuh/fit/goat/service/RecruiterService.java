@@ -8,7 +8,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 
 public interface RecruiterService {
-//    Recruiter handleCreateRecruiter(Recruiter recruiter);
+    Recruiter handleCreateRecruiter(Recruiter recruiter);
 //
 //    void handleDeleteRecruiter(long id);
 //
@@ -20,5 +20,5 @@ public interface RecruiterService {
 //
 //    ResultPaginationResponse handleGetAllRecruiters(Specification<Recruiter> spec, Pageable pageable);
 //
-//    RecruiterResponse convertToRecruiterResponse(Recruiter recruiter);
+    RecruiterResponse convertToRecruiterResponse(Recruiter recruiter);
 }

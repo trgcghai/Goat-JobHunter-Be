@@ -8,7 +8,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 
 public interface ApplicantService {
-//    Applicant handleCreateApplicant(Applicant applicant);
+    Applicant handleCreateApplicant(Applicant applicant);
 //
 //    void handleDeleteApplicant(long id);
 //
@@ -20,5 +20,5 @@ public interface ApplicantService {
 //
 //    ResultPaginationResponse handleGetAllApplicants(Specification<Applicant> spec, Pageable pageable);
 //
-//    ApplicantResponse convertToApplicantResponse(Applicant applicant);
+    ApplicantResponse convertToApplicantResponse(Applicant applicant);
 }

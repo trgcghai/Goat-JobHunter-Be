@@ -65,11 +65,11 @@ public class UserServiceImpl implements UserService {
     public User handleGetUserByEmail(String email) {
         return this.userRepository.findByEmailWithRole(email).orElse(null);
     }
-//
-//    @Override
-//    public boolean handleExistsByEmail(String email) {
-//        return this.userRepository.existsByContact_Email(email);
-//    }
+
+    @Override
+    public boolean handleExistsByEmail(String email) {
+        return this.userRepository.existsByEmail(email);
+    }
 //
 //    @Override
 //    public User handleGetUserById(long id) {

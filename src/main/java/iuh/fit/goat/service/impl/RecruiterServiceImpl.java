@@ -24,31 +24,31 @@ import java.util.Optional;
 @Service
 @RequiredArgsConstructor
 public class RecruiterServiceImpl implements RecruiterService {
-//    private final RecruiterRepository recruiterRepository;
+    private final RecruiterRepository recruiterRepository;
 //    private final JobRepository jobRepository;
 //    private final CommentRepository commentRepository;
 //    private final BlogRepository blogRepository;
 //    private final NotificationRepository notificationRepository;
-//    private final RoleService roleService;
-//    private final String HR = "HR";
+    private final RoleService roleService;
+    private final String HR = "HR";
 //
-//    @Override
-//    public Recruiter handleCreateRecruiter(Recruiter recruiter) {
-//        Role role;
-//        if(recruiter.getRole() != null) {
-//            role = this.roleService.handleGetRoleById(recruiter.getRole().getRoleId());
-//        } else {
-//            role = this.roleService.handleGetRoleByName(HR);
-//        }
-//        recruiter.setRole(role);
-//        recruiter.setEnabled(false);
-//
-//        if(recruiter.getAvatar() == null) {
-//            recruiter.setAvatar(FileUploadUtil.AVATAR + recruiter.getUsername());
-//        }
-//
-//        return this.recruiterRepository.save(recruiter);
-//    }
+    @Override
+    public Recruiter handleCreateRecruiter(Recruiter recruiter) {
+        Role role;
+        if(recruiter.getRole() != null) {
+            role = this.roleService.handleGetRoleById(recruiter.getRole().getRoleId());
+        } else {
+            role = this.roleService.handleGetRoleByName(HR);
+        }
+        recruiter.setRole(role);
+        recruiter.setEnabled(false);
+
+        if(recruiter.getAvatar() == null) {
+            recruiter.setAvatar(FileUploadUtil.AVATAR + recruiter.getUsername());
+        }
+
+        return this.recruiterRepository.save(recruiter);
+    }
 //
 //    @Override
 //    public void handleDeleteRecruiter(long id) {
@@ -156,30 +156,41 @@ public class RecruiterServiceImpl implements RecruiterService {
 //        return new ResultPaginationResponse(meta, recruiterResponses);
 //    }
 //
-//    @Override
-//    public RecruiterResponse convertToRecruiterResponse(Recruiter recruiter) {
-//        RecruiterResponse recruiterResponse = new RecruiterResponse();
-//
-//        recruiterResponse.setUserId(recruiter.getUserId());
-//        recruiterResponse.setContact(recruiter.getContact());
-//        recruiterResponse.setAddress(recruiter.getAddress());
-//        recruiterResponse.setUsername(recruiter.getUsername());
-//        recruiterResponse.setFullName(recruiter.getFullName());
-//        recruiterResponse.setCreatedAt(recruiter.getCreatedAt());
-//        recruiterResponse.setUpdatedAt(recruiter.getUpdatedAt());
-//        recruiterResponse.setDescription(recruiter.getDescription());
-//        recruiterResponse.setWebsite(recruiter.getWebsite());
-//        recruiterResponse.setAvatar(recruiter.getAvatar());
-//        recruiterResponse.setEnabled(recruiter.isEnabled());
-//
-//        if(recruiter.getRole() != null) {
-//            UserResponse.RoleUser roleUser = new UserResponse.RoleUser();
-//            roleUser.setRoleId(recruiter.getRole().getRoleId());
-//            roleUser.setName(recruiter.getRole().getName());
-//
-//            recruiterResponse.setRole(roleUser);
-//        }
-//
-//        return recruiterResponse;
-//    }
+    @Override
+    public RecruiterResponse convertToRecruiterResponse(Recruiter recruiter) {
+        RecruiterResponse recruiterResponse = new RecruiterResponse();
+
+        recruiterResponse.setAccountId(recruiter.getAccountId());
+        recruiterResponse.setUsername(recruiter.getUsername());
+        recruiterResponse.setEmail(recruiter.getEmail());
+        recruiterResponse.setPhone(recruiter.getPhone());
+        recruiterResponse.setAddress(recruiter.getAddress());
+        recruiterResponse.setFullName(recruiter.getFullName());
+        recruiterResponse.setAvatar(recruiter.getAvatar());
+        recruiterResponse.setGender(recruiter.getGender());
+        recruiterResponse.setDob(recruiter.getDob());
+        recruiterResponse.setEnabled(recruiter.isEnabled());
+        recruiterResponse.setCoverPhoto(recruiter.getCoverPhoto());
+        recruiterResponse.setHeadline(recruiter.getHeadline());
+        recruiterResponse.setBio(recruiter.getBio());
+        recruiterResponse.setCreatedAt(recruiter.getCreatedAt());
+        recruiterResponse.setUpdatedAt(recruiter.getUpdatedAt());
+        recruiterResponse.setPosition(recruiter.getPosition());
+
+        if(recruiter.getCompany() != null) {
+            RecruiterResponse.CompanySummary companySummary = new RecruiterResponse.CompanySummary();
+            companySummary.setCompanyId(recruiter.getCompany().getAccountId());
+            companySummary.setName(recruiter.getCompany().getName());
+            recruiterResponse.setCompany(companySummary);
+        }
+
+        if(recruiter.getRole() != null) {
+            UserResponse.RoleUser roleUser = new UserResponse.RoleUser();
+            roleUser.setRoleId(recruiter.getRole().getRoleId());
+            roleUser.setName(recruiter.getRole().getName());
+            recruiterResponse.setRole(roleUser);
+        }
+
+        return recruiterResponse;
+    }
 }

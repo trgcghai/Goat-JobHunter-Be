@@ -18,8 +18,8 @@ import java.util.Map;
 
 public interface UserService {
     User handleGetUserByEmail(String email);
-//
-//    boolean handleExistsByEmail(String email);
+
+    boolean handleExistsByEmail(String email);
 //
 //    User handleGetUserById(long id);
 //

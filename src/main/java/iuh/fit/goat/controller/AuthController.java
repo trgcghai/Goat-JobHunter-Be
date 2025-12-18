@@ -1,6 +1,7 @@
 package iuh.fit.goat.controller;
 
 import iuh.fit.goat.dto.request.auth.LoginRequest;
+import iuh.fit.goat.dto.request.auth.RegisterUserRequest;
 import iuh.fit.goat.dto.request.auth.VerifyUserRequest;
 import iuh.fit.goat.dto.response.applicant.ApplicantResponse;
 import iuh.fit.goat.dto.response.auth.LoginResponse;
@@ -57,33 +58,23 @@ public class AuthController {
         LoginResponse userGetAccount = this.authService.handleGetCurrentAccount();
         return ResponseEntity.status(HttpStatus.OK).body(userGetAccount);
     }
-//
-//    @PostMapping("/auth/register/applicant")
-//    public ResponseEntity<ApplicantResponse> registerApplicant(
-//            @Valid @RequestBody Applicant applicant
-//    ) throws InvalidException {
-//        ApplicantResponse applicantResponse = this.authService.handleRegisterApplicant(applicant);
-//        return ResponseEntity.status(HttpStatus.CREATED).body(applicantResponse);
-//    }
-//
-//    @PostMapping("/auth/register/recruiter")
-//    public ResponseEntity<RecruiterResponse> registerRecruiter(
-//            @Valid @RequestBody Recruiter recruiter
-//    ) throws InvalidException {
-//        RecruiterResponse recruiterResponse = this.authService.handleRegisterRecruiter(recruiter);
-//        return ResponseEntity.status(HttpStatus.CREATED).body(recruiterResponse);
-//    }
-//
-//    @PostMapping("/auth/verify")
-//    public ResponseEntity<?> verifyUser(@RequestBody VerifyUserRequest verifyUser) {
-//        try {
-//            this.authService.handleVerifyUser(verifyUser);
-//            return ResponseEntity.ok(Map.of("message", "Account verified successfully"));
-//        } catch (Exception e) {
-//            return ResponseEntity.badRequest().body(e.getMessage());
-//        }
-//    }
-//
+
+    @PostMapping("/auth/register/users")
+    public ResponseEntity<?> registerUsers(@Valid @RequestBody RegisterUserRequest request) throws InvalidException {
+        Object result = this.authService.handleRegisterUser(request);
+        return ResponseEntity.status(HttpStatus.CREATED).body(result);
+    }
+
+    @PostMapping("/auth/verify")
+    public ResponseEntity<?> verifyUser(@RequestBody VerifyUserRequest verifyUser) {
+        try {
+            this.authService.handleVerifyUser(verifyUser);
+            return ResponseEntity.ok(Map.of("message", "Account verified successfully"));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
+    }
+
 //    @PatchMapping("/auth/verify/recruiter/{id}")
 //    public ResponseEntity<?> verifyRecruiter(@PathVariable("id") long id) {
 //        try {

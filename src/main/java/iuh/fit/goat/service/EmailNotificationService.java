@@ -9,7 +9,7 @@ public interface EmailNotificationService {
 //            String recipient, String subject, String templateName, String username, Object object
 //    );
 //
-//    void handleSendVerificationEmail(String email, String verificationCode);
+    void handleSendVerificationEmail(String email, String verificationCode);
 //
 //    void handleSendBlogActionNotice(
 //            String recipient, String username, Object object, String reason, ActionType mode
