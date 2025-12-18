@@ -201,50 +201,53 @@ public class AuthServiceImpl implements AuthService {
 //        return loginResponse;
 //    }
 //
-//    @Override
-//    public void handleLogout(String accessToken, String refreshToken, HttpServletResponse response) {
-//        this.redisService.deleteKey("refresh:" + refreshToken);
-//        this.redisService.saveWithTTL(
-//                "blacklist:" + accessToken,
-//                "revoked",
-//                this.securityUtil.getRemainingTime(accessToken),
-//                TimeUnit.SECONDS
-//
-//        );
-//
-//        ResponseCookie deleteAccessCookie = ResponseCookie.from("accessToken", "")
-//                .httpOnly(true)
-//                .secure(false) // for dev
-//                .sameSite("Lax") // for dev
-//                .path("/")
-//                .maxAge(0)
-//                .build();
-//
-//        ResponseCookie deleteRefreshCookie = ResponseCookie.from("refreshToken", "")
-//                .httpOnly(true)
-//                .secure(false) // for dev
-//                .sameSite("Lax") // for dev
-//                .path("/")
-//                .maxAge(0)
-//                .build();
-//
-//        response.addHeader(HttpHeaders.SET_COOKIE, deleteAccessCookie.toString());
-//        response.addHeader(HttpHeaders.SET_COOKIE, deleteRefreshCookie.toString());
-//    }
-//
-//    @Override
-//    public LoginResponse.UserGetAccount handleGetCurrentAccount() {
-//        String currentEmail = SecurityUtil.getCurrentUserLogin().isPresent()
-//                ? SecurityUtil.getCurrentUserLogin().get()
-//                : "";
-//
-//        User currentUser = this.userService.handleGetUserByEmail(currentEmail);
-//        LoginResponse.UserGetAccount userGetAccount = new LoginResponse.UserGetAccount();
-//        if(currentUser != null) {
-//            userGetAccount.setUser(createLoginResponse(currentUser));
-//        }
-//        return userGetAccount;
-//    }
+    @Override
+    public void handleLogout(String accessToken, String refreshToken, HttpServletResponse response) {
+        this.redisService.deleteKey("refresh:" + refreshToken);
+        this.redisService.saveWithTTL(
+                "blacklist:" + accessToken,
+                "revoked",
+                this.securityUtil.getRemainingTime(accessToken),
+                TimeUnit.SECONDS
+
+        );
+
+        ResponseCookie deleteAccessCookie = ResponseCookie.from("accessToken", "")
+                .httpOnly(true)
+                .secure(false) // for dev
+                .sameSite("Lax") // for dev
+                .path("/")
+                .maxAge(0)
+                .build();
+
+        ResponseCookie deleteRefreshCookie = ResponseCookie.from("refreshToken", "")
+                .httpOnly(true)
+                .secure(false) // for dev
+                .sameSite("Lax") // for dev
+                .path("/")
+                .maxAge(0)
+                .build();
+
+        response.addHeader(HttpHeaders.SET_COOKIE, deleteAccessCookie.toString());
+        response.addHeader(HttpHeaders.SET_COOKIE, deleteRefreshCookie.toString());
+    }
+
+    @Override
+    public LoginResponse handleGetCurrentAccount() {
+        String currentEmail = SecurityUtil.getCurrentUserLogin().isPresent()
+                ? SecurityUtil.getCurrentUserLogin().get()
+                : "";
+
+        User currentUser = this.userService.handleGetUserByEmail(currentEmail);
+
+        LoginResponse response = new LoginResponse();
+
+        if(currentUser != null) {
+            response = createLoginResponse(currentUser);
+        }
+
+        return response;
+    }
 //
 //    @Override
 //    public ApplicantResponse handleRegisterApplicant(Applicant applicant) throws InvalidException {
