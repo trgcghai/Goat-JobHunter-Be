@@ -15,40 +15,16 @@ import java.time.LocalDate;
 @NoArgsConstructor
 @AllArgsConstructor
 public class LoginResponse {
-    private UserLogin user;
-
-    @Getter
-    @Setter
-    @NoArgsConstructor
-    @AllArgsConstructor
-    public static class UserLogin {
-        private long userId;
-        private Contact contact;
-        private LocalDate dob;
-        private Gender gender;
-        private String fullName;
-        private String username;
-        private String avatar;
-        private String type;
-        private boolean enabled;
-        private Role role;
-    }
-
-    @Getter
-    @Setter
-    @NoArgsConstructor
-    @AllArgsConstructor
-    public static class UserGetAccount {
-        private UserLogin user;
-    }
-
-    @Getter
-    @Setter
-    @NoArgsConstructor
-    @AllArgsConstructor
-    public static class UserInsideToken {
-        private long userId;
-        private String email;
-        private String fullName;
-    }
+    private long accountId;
+    private String email;
+    private String phone;
+    private String address;
+    private LocalDate dob;
+    private Gender gender;
+    private String fullName;
+    private String username;
+    private String avatar;
+    private String type;
+    private boolean enabled;
+    private Role role;
 }

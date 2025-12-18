@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+                      http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-5.0.xsd"
+>
+    <changeSet id="seed-user-for-admin" author="goat">
+        <preConditions onFail="MARK_RAN">
+            <sqlCheck expectedResult="0">
+                SELECT COUNT(*) FROM users WHERE account_id = 1;
+            </sqlCheck>
+        </preConditions>
+
+        <insert tableName="users">
+            <column name="account_id" valueNumeric="1"/>
+            <column name="full_name" value="Admin User"/>
+            <column name="phone" value="0123456789"/>
+            <column name="address" value="Ho Chi Minh City"/>
+            <column name="dob" valueDate="1990-01-01"/>
+            <column name="gender" value="MALE"/>
+            <column name="headline" value="System Administrator"/>
+            <column name="bio" value="System administrator account"/>
+        </insert>
+    </changeSet>
+
+</databaseChangeLog>

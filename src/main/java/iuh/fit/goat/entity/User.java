@@ -51,7 +51,7 @@ import static jakarta.persistence.FetchType.LAZY;
         @JsonSubTypes.Type(value = Recruiter.class, name = "recruiter"),
         @JsonSubTypes.Type(value = Applicant.class, name = "applicant"),
 })
-public abstract class User extends Account {
+public class User extends Account {
     protected String address;
     protected String phone;
     protected LocalDate dob;

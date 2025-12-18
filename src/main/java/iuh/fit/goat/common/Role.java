@@ -5,7 +5,7 @@ import lombok.Getter;
 @Getter
 public enum Role {
 
-    ADMIN("SUPER_ADMIN"), RECRUITER("HR"), APPLICANT("APPLICANT");
+    ADMIN("SUPER_ADMIN"), RECRUITER("HR"), APPLICANT("APPLICANT"), COMPANY("COMPANY");
 
     private final String value;
 
