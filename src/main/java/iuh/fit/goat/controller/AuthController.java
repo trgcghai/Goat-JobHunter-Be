@@ -23,13 +23,13 @@ import java.util.Map;
 @RequestMapping("/api/v1")
 @RequiredArgsConstructor
 public class AuthController {
-//    private final AuthService authService;
-//
-//    @PostMapping("/auth/login")
-//    public ResponseEntity<?> login(@Valid @RequestBody LoginRequest loginRequest, HttpServletResponse response
-//    ) throws InvalidException {
-//        return ResponseEntity.ok(this.authService.handleLogin(loginRequest, response));
-//    }
+    private final AuthService authService;
+
+    @PostMapping("/auth/login")
+    public ResponseEntity<?> login(@Valid @RequestBody LoginRequest loginRequest, HttpServletResponse response
+    ) throws InvalidException {
+        return ResponseEntity.ok(this.authService.handleLogin(loginRequest, response));
+    }
 //
 //    @GetMapping("/auth/refresh")
 //    @ApiMessage("Refresh account")

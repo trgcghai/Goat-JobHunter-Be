@@ -38,17 +38,17 @@ public class SecurityUtil {
         Instant now = Instant.now();
         Instant validity = now.plus(this.jwtAccessToken, ChronoUnit.SECONDS);
 
-        var user = loginResponse.getUser();
-
         JwtClaimsSet claims = JwtClaimsSet.builder()
                 .issuedAt(now)
                 .expiresAt(validity)
                 .subject(email)
-                .claim("userId", user.getUserId())
-                .claim("email", user.getContact().getEmail())
-                .claim("fullName", user.getFullName())
-                .claim("role", user.getRole().getName())
+                .claim("accountId", loginResponse.getAccountId())
+                .claim("email", loginResponse.getEmail())
+                .claim("fullName", loginResponse.getFullName())
+                .claim("type", loginResponse.getType())
+                .claim("role", loginResponse.getRole().getName())
                 .build();
+
 
         JwsHeader header = JwsHeader.with(SecurityUtil.JWT_ALGORITHM).build();
         return this.jwtEncoder.encode(JwtEncoderParameters.from(header, claims)).getTokenValue();
@@ -58,13 +58,11 @@ public class SecurityUtil {
         Instant now = Instant.now();
         Instant validity = now.plus(this.jwtRefreshToken, ChronoUnit.SECONDS);
 
-        var user = loginResponse.getUser();
-
         JwtClaimsSet claims = JwtClaimsSet.builder()
                 .issuedAt(now)
                 .expiresAt(validity)
                 .subject(email)
-                .claim("userId", user.getUserId())
+                .claim("accountId", loginResponse.getAccountId())
                 .build();
 
         JwsHeader header = JwsHeader.with(SecurityUtil.JWT_ALGORITHM).build();

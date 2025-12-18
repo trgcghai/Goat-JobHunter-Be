@@ -11,7 +11,7 @@ import iuh.fit.goat.exception.InvalidException;
 import jakarta.servlet.http.HttpServletResponse;
 
 public interface AuthService {
-//    Object handleLogin(LoginRequest loginRequest, HttpServletResponse response) throws InvalidException;
+    Object handleLogin(LoginRequest loginRequest, HttpServletResponse response) throws InvalidException;
 //
 //    Object handleRefreshToken(String refreshToken, HttpServletResponse response) throws InvalidException;
 //
