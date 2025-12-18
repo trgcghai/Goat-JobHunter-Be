@@ -8,19 +8,15 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 
 public interface RoleService {
-//    Role handleCreateRole(RoleCreateRequest role);
-//
-//    Role handleUpdateRole(Role role);
-//
-//    Role handleActivateRole(long id) throws InvalidException;
-//
-//    Role handleDeactivateRole(long id) throws InvalidException;
-//
-//    void handleDeleteRole(long id);
-//
-//    Role handleGetRoleById(long id);
-//
-//    Role handleGetRoleByName(String name);
-//
-//    ResultPaginationResponse handleGetAllRoles(Specification<Role> spec, Pageable pageable);
+    Role handleCreateRole(RoleCreateRequest role);
+
+    Role handleUpdateRole(Role role);
+
+    Role handleActivateRole(long id) throws InvalidException;
+
+    Role handleDeactivateRole(long id) throws InvalidException;
+
+    Role handleGetRoleById(long id);
+
+    ResultPaginationResponse handleGetAllRoles(Specification<Role> spec, Pageable pageable);
 }
