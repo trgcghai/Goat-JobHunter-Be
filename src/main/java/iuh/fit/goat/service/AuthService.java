@@ -13,7 +13,7 @@ import jakarta.servlet.http.HttpServletResponse;
 public interface AuthService {
     Object handleLogin(LoginRequest loginRequest, HttpServletResponse response) throws InvalidException;
 
-//    Object handleRefreshToken(String refreshToken, HttpServletResponse response) throws InvalidException;
+    Object handleRefreshToken(String refreshToken, HttpServletResponse response) throws InvalidException;
 
     void handleLogout(String accessToken, String refreshToken, HttpServletResponse response);
 

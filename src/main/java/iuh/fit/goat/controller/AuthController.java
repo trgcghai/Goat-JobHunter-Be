@@ -31,15 +31,15 @@ public class AuthController {
         return ResponseEntity.ok(this.authService.handleLogin(loginRequest, response));
     }
 
-//    @GetMapping("/auth/refresh")
-//    @ApiMessage("Refresh account")
-//    public ResponseEntity<?> refresh(
-//            @CookieValue(name = "refreshToken", defaultValue = "missingValue") String refreshToken,
-//            HttpServletResponse response
-//    ) throws InvalidException {
-//        return ResponseEntity.ok(this.authService.handleRefreshToken(refreshToken, response));
-//    }
-//
+    @GetMapping("/auth/refresh")
+    @ApiMessage("Refresh account")
+    public ResponseEntity<?> refresh(
+            @CookieValue(name = "refreshToken", defaultValue = "missingValue") String refreshToken,
+            HttpServletResponse response
+    ) throws InvalidException {
+        return ResponseEntity.ok(this.authService.handleRefreshToken(refreshToken, response));
+    }
+
     @PostMapping("/auth/logout")
     @ApiMessage("Logout account")
     public ResponseEntity<Void> logout(

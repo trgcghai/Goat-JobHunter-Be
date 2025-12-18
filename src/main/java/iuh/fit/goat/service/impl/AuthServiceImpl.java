@@ -131,76 +131,75 @@ public class AuthServiceImpl implements AuthService {
 
         return loginResponse;
     }
-//
-//    @Override
-//    public Object handleRefreshToken(String refreshToken, HttpServletResponse response) throws InvalidException {
-//        if(refreshToken.equalsIgnoreCase("missingValue")) {
-//            throw new InvalidException("You don't have a refresh token at cookie");
-//        }
-//        System.out.println("Refresh Token in Redis: " + refreshToken);
-//        if (!this.redisService.hasKey("refresh:" + refreshToken)) {
-//            throw new InvalidException("Invalid or expired refresh token");
-//        }
-//
-//        Jwt jwt = this.securityUtil.checkValidToken(refreshToken);
-//        String email = jwt.getSubject();
-//
-//        User currentUser = this.userService.handleGetUserByEmail(email);
-//        if(currentUser == null){
-//            throw new InvalidException("User not found");
-//        }
-//        if(!currentUser.isEnabled()) {
-//            throw new InvalidException("Account is locked");
-//        }
-//
-//        UserDetails userDetails = new org.springframework.security.core.userdetails.User(
-//                currentUser.getContact().getEmail(),
-//                currentUser.getPassword(),
-//                Collections.singletonList(new SimpleGrantedAuthority("ROLE_USER"))
-//        );
-//        Authentication authentication = new UsernamePasswordAuthenticationToken(
-//                userDetails, null, userDetails.getAuthorities()
-//        );
-//        SecurityContextHolder.getContext().setAuthentication(authentication);
-//
-//        LoginResponse loginResponse = new LoginResponse();
-//        loginResponse.setUser(createLoginResponse(currentUser));
-//
-//        String newAccessToken = this.securityUtil.createAccessToken(email, loginResponse);
-//        String newRefreshToken = this.securityUtil.createRefreshToken(email, loginResponse);
-//
-//        this.redisService.replaceKey(
-//                "refresh:" + refreshToken,
-//                "refresh:" + newRefreshToken,
-//                currentUser.getContact().getEmail(),
-//                jwtRefreshToken,
-//                TimeUnit.SECONDS
-//        );
-//
-//        ResponseCookie newAccessCookie = ResponseCookie
-//                .from("accessToken", newAccessToken)
-//                .httpOnly(true)
-//                .secure(false) // for dev
-//                .sameSite("Lax") // for dev
-//                .path("/")
-//                .maxAge(jwtAccessToken)
-//                .build();
-//
-//        ResponseCookie newRefreshCookie = ResponseCookie
-//                .from("refreshToken", newRefreshToken)
-//                .httpOnly(true)
-//                .secure(false) // for dev
-//                .sameSite("Lax") // for dev
-//                .path("/")
-//                .maxAge(jwtRefreshToken)
-//                .build();
-//
-//        response.addHeader(HttpHeaders.SET_COOKIE, newAccessCookie.toString());
-//        response.addHeader(HttpHeaders.SET_COOKIE, newRefreshCookie.toString());
-//
-//        return loginResponse;
-//    }
-//
+
+    @Override
+    public Object handleRefreshToken(String refreshToken, HttpServletResponse response) throws InvalidException {
+        if(refreshToken.equalsIgnoreCase("missingValue")) {
+            throw new InvalidException("You don't have a refresh token at cookie");
+        }
+        System.out.println("Refresh Token in Redis: " + refreshToken);
+        if (!this.redisService.hasKey("refresh:" + refreshToken)) {
+            throw new InvalidException("Invalid or expired refresh token");
+        }
+
+        Jwt jwt = this.securityUtil.checkValidToken(refreshToken);
+        String email = jwt.getSubject();
+
+        User currentUser = this.userService.handleGetUserByEmail(email);
+        if(currentUser == null){
+            throw new InvalidException("User not found");
+        }
+        if(!currentUser.isEnabled()) {
+            throw new InvalidException("Account is locked");
+        }
+
+        UserDetails userDetails = new org.springframework.security.core.userdetails.User(
+                currentUser.getEmail(),
+                currentUser.getPassword(),
+                Collections.singletonList(new SimpleGrantedAuthority("ROLE_USER"))
+        );
+        Authentication authentication = new UsernamePasswordAuthenticationToken(
+                userDetails, null, userDetails.getAuthorities()
+        );
+        SecurityContextHolder.getContext().setAuthentication(authentication);
+
+        LoginResponse loginResponse = createLoginResponse(currentUser);
+
+        String newAccessToken = this.securityUtil.createAccessToken(email, loginResponse);
+        String newRefreshToken = this.securityUtil.createRefreshToken(email, loginResponse);
+
+        this.redisService.replaceKey(
+                "refresh:" + refreshToken,
+                "refresh:" + newRefreshToken,
+                currentUser.getEmail(),
+                jwtRefreshToken,
+                TimeUnit.SECONDS
+        );
+
+        ResponseCookie newAccessCookie = ResponseCookie
+                .from("accessToken", newAccessToken)
+                .httpOnly(true)
+                .secure(false) // for dev
+                .sameSite("Lax") // for dev
+                .path("/")
+                .maxAge(jwtAccessToken)
+                .build();
+
+        ResponseCookie newRefreshCookie = ResponseCookie
+                .from("refreshToken", newRefreshToken)
+                .httpOnly(true)
+                .secure(false) // for dev
+                .sameSite("Lax") // for dev
+                .path("/")
+                .maxAge(jwtRefreshToken)
+                .build();
+
+        response.addHeader(HttpHeaders.SET_COOKIE, newAccessCookie.toString());
+        response.addHeader(HttpHeaders.SET_COOKIE, newRefreshCookie.toString());
+
+        return loginResponse;
+    }
+
     @Override
     public void handleLogout(String accessToken, String refreshToken, HttpServletResponse response) {
         this.redisService.deleteKey("refresh:" + refreshToken);
