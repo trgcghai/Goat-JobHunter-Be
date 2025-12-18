@@ -5,11 +5,6 @@
         xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
                       http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-5.0.xsd"
 >
-    <!--  Update admin password  -->
-    <include file="/db.changelog/data.2025-12-17/2025-12-17-update-admin-password.xml"/>
-
-    <!--  Seed user for admin  -->
-    <include file="db.changelog/data.2025-12-18/2025-12-18-seed-user-for-admin.xml" />
 
     <!--      Initial database setup      -->
     <include file="/db.changelog/schema/2025-12-16/2025-12-16-create-sequences.xml"/>
@@ -27,5 +22,9 @@
     <!--      History      -->
     <include file="db.changelog/schema/2025-12-16/2025-12-16-update-users-blogs.xml"/>
     <include file="/db.changelog/schema/2025-12-16/2025-12-16-update-foreign-key-blogs-users.xml"/>
+    <include file="/db.changelog/data/2025-12-17/2025-12-17-update-admin-password.xml"/>
+    <include file="/db.changelog/data/2025-12-18/2025-12-18-seed-user-for-admin.xml" />
+    <include file="db.changelog/schema/2025-12-18/2025-12-18-create-users-companies-reviews-relation.xml"/>
     <!--      History      -->
+
 </databaseChangeLog>
