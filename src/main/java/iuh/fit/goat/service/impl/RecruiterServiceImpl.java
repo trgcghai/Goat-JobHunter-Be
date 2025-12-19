@@ -31,7 +31,7 @@ public class RecruiterServiceImpl implements RecruiterService {
 //    private final NotificationRepository notificationRepository;
     private final RoleService roleService;
     private final String HR = "HR";
-//
+
     @Override
     public Recruiter handleCreateRecruiter(Recruiter recruiter) {
         Role role;
@@ -49,7 +49,7 @@ public class RecruiterServiceImpl implements RecruiterService {
 
         return this.recruiterRepository.save(recruiter);
     }
-//
+
 //    @Override
 //    public void handleDeleteRecruiter(long id) {
 //        Recruiter recruiter = this.handleGetRecruiterById(id);
@@ -80,55 +80,54 @@ public class RecruiterServiceImpl implements RecruiterService {
 //            this.recruiterRepository.deleteById(id);
 //        }
 //    }
-//
-//    @Override
-//    public Recruiter handleUpdateRecruiter(RecruiterUpdateRequest updateRequest) {
-//        Recruiter currentRecruiter = this.handleGetRecruiterById(updateRequest.getUserId());
-//
-//        if (currentRecruiter == null) {
-//            return null;
-//        }
-//
-//        if (updateRequest.getUsername() != null) {
-//            currentRecruiter.setUsername(updateRequest.getUsername());
-//        }
-//        if (updateRequest.getFullName() != null) {
-//            currentRecruiter.setFullName(updateRequest.getFullName());
-//        }
-//        if (updateRequest.getContact() != null) {
-//            currentRecruiter.setContact(updateRequest.getContact());
-//        }
-//        if (updateRequest.getAddress() != null) {
-//            currentRecruiter.setAddress(updateRequest.getAddress());
-//        }
-//        if (updateRequest.getDob() != null) {
-//            currentRecruiter.setDob(updateRequest.getDob());
-//        }
-//        if (updateRequest.getGender() != null) {
-//            currentRecruiter.setGender(updateRequest.getGender());
-//        }
-//        if (updateRequest.getDescription() != null) {
-//            currentRecruiter.setDescription(updateRequest.getDescription());
-//        }
-//        if (updateRequest.getWebsite() != null) {
-//            currentRecruiter.setWebsite(updateRequest.getWebsite());
-//        }
-//        if (updateRequest.getAvatar() != null) {
-//            currentRecruiter.setAvatar(updateRequest.getAvatar());
-//        }
-//
-//        return this.recruiterRepository.save(currentRecruiter);
-//    }
-//
-//
-//    @Override
-//    public Recruiter handleGetRecruiterById(long id) {
-//        Optional<Recruiter> recruiter = this.recruiterRepository.findById(id);
-//
-//        return recruiter.orElse(null);
-//
-//    }
-//
+
+    @Override
+    public Recruiter handleUpdateRecruiter(RecruiterUpdateRequest updateRequest) {
+        Recruiter currentRecruiter = this.handleGetRecruiterById(updateRequest.getAccountId());
+
+        if (currentRecruiter == null) {
+            return null;
+        }
+
+        if (updateRequest.getUsername() != null) {
+            currentRecruiter.setUsername(updateRequest.getUsername());
+        }
+        if (updateRequest.getFullName() != null) {
+            currentRecruiter.setFullName(updateRequest.getFullName());
+        }
+        if (updateRequest.getEmail() != null) {
+            currentRecruiter.setEmail(updateRequest.getEmail());
+        }
+        if (updateRequest.getPhone() != null) {
+            currentRecruiter.setPhone(updateRequest.getPhone());
+        }
+        if (updateRequest.getAddress() != null) {
+            currentRecruiter.setAddress(updateRequest.getAddress());
+        }
+        if (updateRequest.getDob() != null) {
+            currentRecruiter.setDob(updateRequest.getDob());
+        }
+        if (updateRequest.getGender() != null) {
+            currentRecruiter.setGender(updateRequest.getGender());
+        }
+        if (updateRequest.getPosition() != null) {
+            currentRecruiter.setPosition(updateRequest.getPosition());
+        }
+        if (updateRequest.getAvatar() != null) {
+            currentRecruiter.setAvatar(updateRequest.getAvatar());
+        }
+
+        return this.recruiterRepository.save(currentRecruiter);
+    }
+
+
+    @Override
+    public Recruiter handleGetRecruiterById(long id) {
+        Optional<Recruiter> recruiter = this.recruiterRepository.findById(id);
+
+        return recruiter.orElse(null);
+    }
+
 //    @Override
 //    public Recruiter handleGetCurrentRecruiter() {
 //        String email = SecurityUtil.getCurrentUserLogin().orElse(null);

@@ -18,7 +18,7 @@ public interface AuthService {
 
     void handleLogout(String accessToken, String refreshToken, HttpServletResponse response);
 
-    LoginResponse handleGetCurrentAccount();
+    Object handleGetCurrentAccount() throws InvalidException;
 
     Object handleRegisterUser(RegisterUserRequest request) throws InvalidException;
 

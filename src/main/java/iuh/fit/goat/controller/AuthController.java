@@ -52,11 +52,15 @@ public class AuthController {
         return ResponseEntity.status(HttpStatus.OK).body(null);
     }
 
-    @GetMapping("/auth/account")
+    @GetMapping("/auth/account/users")
     @ApiMessage("Get information account")
-    public ResponseEntity<LoginResponse> getCurrentAccount(){
-        LoginResponse userGetAccount = this.authService.handleGetCurrentAccount();
-        return ResponseEntity.status(HttpStatus.OK).body(userGetAccount);
+    public ResponseEntity<?> getCurrentAccount() {
+        try {
+            Object result = this.authService.handleGetCurrentAccount();
+            return ResponseEntity.status(HttpStatus.OK).body(result);
+        } catch (InvalidException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
     }
 
     @PostMapping("/auth/register/users")

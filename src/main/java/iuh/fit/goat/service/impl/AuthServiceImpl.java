@@ -233,20 +233,27 @@ public class AuthServiceImpl implements AuthService {
     }
 
     @Override
-    public LoginResponse handleGetCurrentAccount() {
-        String currentEmail = SecurityUtil.getCurrentUserLogin().isPresent()
-                ? SecurityUtil.getCurrentUserLogin().get()
-                : "";
+    public Object handleGetCurrentAccount() throws InvalidException {
+        String email = SecurityUtil.getCurrentUserLogin()
+                .orElseThrow(() -> new InvalidException("User not logged in"));
 
-        User currentUser = this.userService.handleGetUserByEmail(currentEmail);
+        User user = this.userService.handleGetUserByEmail(email);
 
-        LoginResponse response = new LoginResponse();
-
-        if(currentUser != null) {
-            response = createLoginResponse(currentUser);
+        if (user == null) {
+            throw new InvalidException("User not found");
         }
 
-        return response;
+        // Kiểm tra loại user và trả về response tương ứng
+        if (user instanceof Applicant) {
+            Applicant applicant = (Applicant) user;
+            return this.applicantService.convertToApplicantResponse(applicant);
+        } else if (user instanceof Recruiter) {
+            Recruiter recruiter = (Recruiter) user;
+            return this.recruiterService.convertToRecruiterResponse(recruiter);
+        }
+
+        // Trường hợp là User thông thường
+        return this.userService.convertToUserResponse(user);
     }
 
     @Override

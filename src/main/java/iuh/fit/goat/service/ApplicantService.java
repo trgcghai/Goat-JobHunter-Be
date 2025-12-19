@@ -11,11 +11,11 @@ public interface ApplicantService {
     Applicant handleCreateApplicant(Applicant applicant);
 //
 //    void handleDeleteApplicant(long id);
-//
-//    Applicant handleUpdateApplicant(ApplicantUpdateRequest updateRequest);
-//
-//    Applicant handleGetApplicantById(long id);
-//
+
+    Applicant handleUpdateApplicant(ApplicantUpdateRequest updateRequest);
+
+    Applicant handleGetApplicantById(long id);
+
 //    Applicant handleGetCurrentApplicant();
 //
 //    ResultPaginationResponse handleGetAllApplicants(Specification<Applicant> spec, Pageable pageable);

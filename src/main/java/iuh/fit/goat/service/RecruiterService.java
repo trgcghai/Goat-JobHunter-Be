@@ -11,11 +11,11 @@ public interface RecruiterService {
     Recruiter handleCreateRecruiter(Recruiter recruiter);
 //
 //    void handleDeleteRecruiter(long id);
-//
-//    Recruiter handleUpdateRecruiter(RecruiterUpdateRequest updateRequest);
-//
-//    Recruiter handleGetRecruiterById(long id);
-//
+
+    Recruiter handleUpdateRecruiter(RecruiterUpdateRequest updateRequest);
+
+    Recruiter handleGetRecruiterById(long id);
+
 //    Recruiter handleGetCurrentRecruiter();
 //
 //    ResultPaginationResponse handleGetAllRecruiters(Specification<Recruiter> spec, Pageable pageable);

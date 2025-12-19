@@ -27,7 +27,7 @@ public class ApplicantServiceImpl implements ApplicantService {
 //    private final NotificationRepository notificationRepository;
     private final RoleService roleService;
     private final String APPLICANT = "APPLICANT";
-//
+
     @Override
     public Applicant handleCreateApplicant(Applicant applicant) {
         Role role;
@@ -45,7 +45,7 @@ public class ApplicantServiceImpl implements ApplicantService {
 
         return this.applicantRepository.save(applicant);
     }
-//
+
 //    @Override
 //    public void handleDeleteApplicant(long id) {
 //        Applicant applicant = this.handleGetApplicantById(id);
@@ -67,57 +67,59 @@ public class ApplicantServiceImpl implements ApplicantService {
 //
 //        this.applicantRepository.deleteById(id);
 //    }
-//
-//    @Override
-//    public Applicant handleUpdateApplicant(ApplicantUpdateRequest updateRequest) {
-//        Applicant currentApplicant = this.handleGetApplicantById(updateRequest.getUserId());
-//
-//        if (currentApplicant == null) {
-//            return null;
-//        }
-//
-//        if (updateRequest.getUsername() != null) {
-//            currentApplicant.setUsername(updateRequest.getUsername());
-//        }
-//        if (updateRequest.getFullName() != null) {
-//            currentApplicant.setFullName(updateRequest.getFullName());
-//        }
-//        if (updateRequest.getContact() != null) {
-//            currentApplicant.setContact(updateRequest.getContact());
-//        }
-//        if (updateRequest.getAddress() != null) {
-//            currentApplicant.setAddress(updateRequest.getAddress());
-//        }
-//        if (updateRequest.getDob() != null) {
-//            currentApplicant.setDob(updateRequest.getDob());
-//        }
-//        if (updateRequest.getGender() != null) {
-//            currentApplicant.setGender(updateRequest.getGender());
-//        }
-//        if (updateRequest.getEducation() != null) {
-//            currentApplicant.setEducation(updateRequest.getEducation());
-//        }
-//        if (updateRequest.getLevel() != null) {
-//            currentApplicant.setLevel(updateRequest.getLevel());
-//        }
-//        if (updateRequest.getAvatar() != null) {
-//            currentApplicant.setAvatar(updateRequest.getAvatar());
-//        }
-//        if (updateRequest.isAvailableStatus() != currentApplicant.isAvailableStatus()) {
-//            currentApplicant.setAvailableStatus(updateRequest.isAvailableStatus());
-//        }
-//
-//        return this.applicantRepository.save(currentApplicant);
-//    }
-//
-//
-//    @Override
-//    public Applicant handleGetApplicantById(long id) {
-//        Optional<Applicant> result = this.applicantRepository.findById(id);
-//
-//        return result.orElse(null);
-//    }
-//
+
+    @Override
+    public Applicant handleUpdateApplicant(ApplicantUpdateRequest updateRequest) {
+        Applicant currentApplicant = this.handleGetApplicantById(updateRequest.getAccountId());
+
+        if (currentApplicant == null) {
+            return null;
+        }
+
+        if (updateRequest.getUsername() != null) {
+            currentApplicant.setUsername(updateRequest.getUsername());
+        }
+        if (updateRequest.getFullName() != null) {
+            currentApplicant.setFullName(updateRequest.getFullName());
+        }
+        if (updateRequest.getEmail() != null) {
+            currentApplicant.setEmail(updateRequest.getEmail());
+        }
+        if (updateRequest.getPhone() != null) {
+            currentApplicant.setPhone(updateRequest.getPhone());
+        }
+        if (updateRequest.getAddress() != null) {
+            currentApplicant.setAddress(updateRequest.getAddress());
+        }
+        if (updateRequest.getDob() != null) {
+            currentApplicant.setDob(updateRequest.getDob());
+        }
+        if (updateRequest.getGender() != null) {
+            currentApplicant.setGender(updateRequest.getGender());
+        }
+        if (updateRequest.getEducation() != null) {
+            currentApplicant.setEducation(updateRequest.getEducation());
+        }
+        if (updateRequest.getLevel() != null) {
+            currentApplicant.setLevel(updateRequest.getLevel());
+        }
+        if (updateRequest.getAvatar() != null) {
+            currentApplicant.setAvatar(updateRequest.getAvatar());
+        }
+        if (updateRequest.isAvailableStatus() != currentApplicant.isAvailableStatus()) {
+            currentApplicant.setAvailableStatus(updateRequest.isAvailableStatus());
+        }
+
+        return this.applicantRepository.save(currentApplicant);
+    }
+
+    @Override
+    public Applicant handleGetApplicantById(long id) {
+        Optional<Applicant> result = this.applicantRepository.findById(id);
+
+        return result.orElse(null);
+    }
+
 //    @Override
 //    public Applicant handleGetCurrentApplicant() {
 //        String email = SecurityUtil.getCurrentUserLogin().orElse(null);
