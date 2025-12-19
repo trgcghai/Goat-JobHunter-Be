@@ -84,6 +84,11 @@ public class RoleServiceImpl implements RoleService {
     }
 
     @Override
+    public Role handleGetRoleByName(String name) {
+        return this.roleRepository.findByName(name);
+    }
+
+    @Override
     public ResultPaginationResponse handleGetAllRoles(Specification<Role> spec, Pageable pageable) {
         Page<Role> page = this.roleRepository.findAll(spec, pageable);
 

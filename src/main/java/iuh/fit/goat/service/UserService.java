@@ -18,9 +18,9 @@ import java.util.Map;
 
 public interface UserService {
     User handleGetUserByEmail(String email);
-//
-//    boolean handleExistsByEmail(String email);
-//
+
+    boolean handleExistsByEmail(String email);
+
 //    User handleGetUserById(long id);
 //
 //    User handleCreateUser(CreateUserRequest request) throws InvalidException;
@@ -32,9 +32,9 @@ public interface UserService {
 //    Map<String, Object> handleUpdatePassword(String newPassword, String refreshToken);
 //
 //    void handleResetPassword(ResetPasswordRequest resetPasswordRequest) throws InvalidException;
-//
-//    UserResponse convertToUserResponse(User user);
-//
+
+    UserResponse convertToUserResponse(User user);
+
 //    // Job related methods
 //    ResultPaginationResponse handleGetCurrentUserSavedJobs(Pageable pageable);
 //

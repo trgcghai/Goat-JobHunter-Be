@@ -26,7 +26,7 @@ import java.util.regex.Pattern;
 @RequestMapping("/api/v1")
 @RequiredArgsConstructor
 public class RecruiterController {
-//    private final RecruiterService recruiterService;
+    private final RecruiterService recruiterService;
 //    private final UserService userService;
 //    private final PasswordEncoder passwordEncoder;
 //    private final JobService jobService;
@@ -53,23 +53,22 @@ public class RecruiterController {
 //        this.recruiterService.handleDeleteRecruiter(id);
 //        return ResponseEntity.status(HttpStatus.OK).body(null);
 //    }
-//
-//    @PutMapping("/recruiters")
-//    public ResponseEntity<RecruiterResponse> updateRecruiter(
-//            @Valid @RequestBody RecruiterUpdateRequest updateRequest
-//    ) throws InvalidException {
-//
-//        Recruiter updatedRecruiter = this.recruiterService.handleUpdateRecruiter(updateRequest);
-//
-//        if (updatedRecruiter != null) {
-//            RecruiterResponse recruiterResponse = this.recruiterService.convertToRecruiterResponse(updatedRecruiter);
-//            return ResponseEntity.status(HttpStatus.OK).body(recruiterResponse);
-//        } else {
-//            throw new InvalidException("Recruiter not found");
-//        }
-//    }
-//
-//
+
+    @PutMapping("/recruiters")
+    public ResponseEntity<RecruiterResponse> updateRecruiter(
+            @Valid @RequestBody RecruiterUpdateRequest updateRequest
+    ) throws InvalidException {
+
+        Recruiter updatedRecruiter = this.recruiterService.handleUpdateRecruiter(updateRequest);
+
+        if (updatedRecruiter != null) {
+            RecruiterResponse recruiterResponse = this.recruiterService.convertToRecruiterResponse(updatedRecruiter);
+            return ResponseEntity.status(HttpStatus.OK).body(recruiterResponse);
+        } else {
+            throw new InvalidException("Recruiter not found");
+        }
+    }
+
 //    @GetMapping("/recruiters/{id}")
 //    public ResponseEntity<RecruiterResponse> getRecruiterById(@PathVariable("id") String id) throws InvalidException {
 //        Pattern pattern = Pattern.compile("^[0-9]+$");

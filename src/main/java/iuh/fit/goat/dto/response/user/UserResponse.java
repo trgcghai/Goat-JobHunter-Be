@@ -17,15 +17,19 @@ import java.time.LocalDate;
 @AllArgsConstructor
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class UserResponse {
-    private long userId;
-    private String address;
-    private Contact contact;
+    private long accountId;
     private String username;
+    private String email;
+    private String phone;
+    private String address;
     private String fullName;
     private String avatar;
     private Gender gender;
     private LocalDate dob;
     private boolean enabled;
+    private String coverPhoto;
+    private String headline;
+    private String bio;
     private RoleUser role;
     private Instant createdAt;
     private Instant updatedAt;

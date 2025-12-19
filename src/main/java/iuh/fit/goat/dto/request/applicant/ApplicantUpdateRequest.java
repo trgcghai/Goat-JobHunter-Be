@@ -13,12 +13,13 @@ import java.time.LocalDate;
 @Data
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class ApplicantUpdateRequest {
-    @NotNull(message = "User ID is required")
-    private Long userId;
+    @NotNull(message = "Account ID is required")
+    private Long accountId;
 
     private String username;
     private String fullName;
-    private Contact contact;
+    private String email;
+    private String phone;
     private String address;
     private LocalDate dob;
     private Gender gender;

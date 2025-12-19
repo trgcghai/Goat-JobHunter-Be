@@ -11,6 +11,15 @@ import lombok.Setter;
 @NoArgsConstructor
 @AllArgsConstructor
 public class RecruiterResponse extends UserResponse {
-    private String description;
-    private String website;
+    private String position;
+    private CompanySummary company;
+
+    @Getter
+    @Setter
+    @NoArgsConstructor
+    @AllArgsConstructor
+    public static class CompanySummary {
+        private long companyId;
+        private String name;
+    }
 }

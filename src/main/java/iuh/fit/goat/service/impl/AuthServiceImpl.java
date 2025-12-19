@@ -3,6 +3,7 @@ package iuh.fit.goat.service.impl;
 
 import iuh.fit.goat.common.Role;
 import iuh.fit.goat.dto.request.auth.LoginRequest;
+import iuh.fit.goat.dto.request.auth.RegisterUserRequest;
 import iuh.fit.goat.dto.request.auth.VerifyUserRequest;
 import iuh.fit.goat.dto.response.applicant.ApplicantResponse;
 import iuh.fit.goat.dto.response.auth.LoginResponse;
@@ -41,14 +42,14 @@ public class AuthServiceImpl implements AuthService {
     private final AuthenticationManagerBuilder authenticationManagerBuilder;
     private final UserService userService;
     private final RedisService redisService;
-    //    private final EmailNotificationService emailNotificationService;
-//    private final ApplicantService applicantService;
-//    private final RecruiterService recruiterService;
+    private final EmailNotificationService emailNotificationService;
+    private final ApplicantService applicantService;
+    private final RecruiterService recruiterService;
     private final CompanyService companyService;
     private final SecurityUtil securityUtil;
-//    private final UserRepository userRepository;
+    private final UserRepository userRepository;
 //    private final RecruiterRepository recruiterRepository;
-//    private final PasswordEncoder passwordEncoder;
+    private final PasswordEncoder passwordEncoder;
 
     @Value("${minhdat.jwt.access-token-validity-in-seconds}")
     private long jwtAccessToken;
@@ -232,80 +233,125 @@ public class AuthServiceImpl implements AuthService {
     }
 
     @Override
-    public LoginResponse handleGetCurrentAccount() {
-        String currentEmail = SecurityUtil.getCurrentUserLogin().isPresent()
-                ? SecurityUtil.getCurrentUserLogin().get()
-                : "";
+    public Object handleGetCurrentAccount() throws InvalidException {
+        String email = SecurityUtil.getCurrentUserLogin()
+                .orElseThrow(() -> new InvalidException("User not logged in"));
 
-        User currentUser = this.userService.handleGetUserByEmail(currentEmail);
+        User user = this.userService.handleGetUserByEmail(email);
 
-        LoginResponse response = new LoginResponse();
-
-        if(currentUser != null) {
-            response = createLoginResponse(currentUser);
+        if (user == null) {
+            throw new InvalidException("User not found");
         }
 
-        return response;
+        // Kiểm tra loại user và trả về response tương ứng
+        if (user instanceof Applicant) {
+            Applicant applicant = (Applicant) user;
+            return this.applicantService.convertToApplicantResponse(applicant);
+        } else if (user instanceof Recruiter) {
+            Recruiter recruiter = (Recruiter) user;
+            return this.recruiterService.convertToRecruiterResponse(recruiter);
+        }
+
+        // Trường hợp là User thông thường
+        return this.userService.convertToUserResponse(user);
     }
-//
-//    @Override
-//    public ApplicantResponse handleRegisterApplicant(Applicant applicant) throws InvalidException {
-//        if(this.userService.handleExistsByEmail(applicant.getContact().getEmail())) {
-//            throw new InvalidException("Email exists: " + applicant.getContact().getEmail());
-//        }
-//
-//        String hashPassword = this.passwordEncoder.encode(applicant.getPassword());
-//        applicant.setPassword(hashPassword);
-//
-//        Applicant newApplicant = this.applicantService.handleCreateApplicant(applicant);
-//        ApplicantResponse applicantResponse = this.applicantService.convertToApplicantResponse(newApplicant);
-//
-//        String verificationCode = SecurityUtil.generateVerificationCode();
-//        this.redisService.saveWithTTL(
-//                newApplicant.getContact().getEmail(),
-//                verificationCode,
-//                validityInSeconds,
-//                TimeUnit.SECONDS
-//        );
-//        this.emailNotificationService.handleSendVerificationEmail(newApplicant.getContact().getEmail(), verificationCode);
-//
-//        return applicantResponse;
-//    }
-//
-//    @Override
-//    public RecruiterResponse handleRegisterRecruiter(Recruiter recruiter) throws InvalidException {
-//        if(this.userService.handleExistsByEmail(recruiter.getContact().getEmail())) {
-//            throw new InvalidException("Email exists: " + recruiter.getContact().getEmail());
-//        }
-//
-//        String hashPassword = this.passwordEncoder.encode(recruiter.getPassword());
-//        recruiter.setPassword(hashPassword);
-//
-//        Recruiter newRecruiter = this.recruiterService.handleCreateRecruiter(recruiter);
-//
-//        return this.recruiterService.convertToRecruiterResponse(newRecruiter);
-//    }
-//
-//    @Override
-//    public void handleVerifyUser(VerifyUserRequest verifyUser) throws InvalidException {
-//        User user = this.userService.handleGetUserByEmail(verifyUser.getEmail());
-//        if(user == null) {
-//            throw new InvalidException("User not found");
-//        }
-//
-//        String key = user.getContact().getEmail();
-//        if(!this.redisService.hasKey(key)) {
-//            throw new InvalidException("Verification code has expired");
-//        }
-//        if(!this.redisService.getValue(key).equalsIgnoreCase(verifyUser.getVerificationCode())) {
-//            throw new InvalidException("Invalid verification code");
-//        }
-//
-//        user.setEnabled(true);
-//        this.userRepository.save(user);
-//
-//        this.redisService.deleteKey(key);
-//    }
+
+    @Override
+    public Object handleRegisterUser(RegisterUserRequest request) throws InvalidException {
+
+        // validate email existence
+        if (this.userService.handleExistsByEmail(request.getEmail())) {
+            throw new InvalidException("Email exists: " + request.getEmail());
+        }
+
+        // hash password
+        String hashPassword = this.passwordEncoder.encode(request.getPassword());
+
+        String type = request.getType().trim().toLowerCase();
+
+        if ("applicant".equals(type)) {
+            Applicant applicant = new Applicant();
+            applicant.setUsername(request.getUsername());
+            applicant.setFullName(request.getFullName());
+            applicant.setEmail(request.getEmail());
+            applicant.setPassword(hashPassword);
+            applicant.setAddress(request.getAddress());
+            applicant.setPhone(request.getPhone());
+
+            // create applicant to save to database
+            Applicant newApplicant = this.applicantService.handleCreateApplicant(applicant);
+
+            // create verification code
+            String verificationCode = SecurityUtil.generateVerificationCode();
+
+            // save verification code to redis
+            this.redisService.saveWithTTL(
+                    newApplicant.getEmail(),
+                    verificationCode,
+                    validityInSeconds,
+                    TimeUnit.SECONDS
+            );
+
+            // send email
+            this.emailNotificationService.handleSendVerificationEmail(newApplicant.getEmail(), verificationCode);
+
+            // return response
+            return this.applicantService.convertToApplicantResponse(newApplicant);
+
+        } else if ("recruiter".equals(type)) {
+            Recruiter recruiter = new Recruiter();
+            recruiter.setUsername(request.getUsername());
+            recruiter.setFullName(request.getFullName());
+            recruiter.setEmail(request.getEmail());
+            recruiter.setPassword(hashPassword);
+            recruiter.setAddress(request.getAddress());
+            recruiter.setPhone(request.getPhone());
+
+            // create recruiter to save to database
+            Recruiter newRecruiter = this.recruiterService.handleCreateRecruiter(recruiter);
+
+            // create verification code
+            String verificationCode = SecurityUtil.generateVerificationCode();
+
+            // save verification code to redis
+            this.redisService.saveWithTTL(
+                    newRecruiter.getEmail(),
+                    verificationCode,
+                    validityInSeconds,
+                    TimeUnit.SECONDS
+            );
+
+            // send email
+            this.emailNotificationService.handleSendVerificationEmail(newRecruiter.getEmail(), verificationCode);
+
+            // return response
+            return this.recruiterService.convertToRecruiterResponse(newRecruiter);
+
+        } else {
+            throw new InvalidException("Unsupported type: " + request.getType());
+        }
+    }
+
+    @Override
+    public void handleVerifyUser(VerifyUserRequest verifyUser) throws InvalidException {
+        User user = this.userService.handleGetUserByEmail(verifyUser.getEmail());
+        if(user == null) {
+            throw new InvalidException("User not found");
+        }
+
+        String key = user.getEmail();
+        if(!this.redisService.hasKey(key)) {
+            throw new InvalidException("Verification code has expired");
+        }
+        if(!this.redisService.getValue(key).equalsIgnoreCase(verifyUser.getVerificationCode())) {
+            throw new InvalidException("Invalid verification code");
+        }
+
+        user.setEnabled(true);
+        this.userRepository.save(user);
+
+        this.redisService.deleteKey(key);
+    }
 //
 //    @Override
 //    public void handleVerifyRecruiter(long id) throws InvalidException {

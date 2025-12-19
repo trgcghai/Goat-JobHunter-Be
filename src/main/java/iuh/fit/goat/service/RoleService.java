@@ -18,5 +18,7 @@ public interface RoleService {
 
     Role handleGetRoleById(long id);
 
+    Role handleGetRoleByName(String name);
+
     ResultPaginationResponse handleGetAllRoles(Specification<Role> spec, Pageable pageable);
 }

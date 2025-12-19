@@ -34,7 +34,7 @@ import java.util.Map;
 @RequestMapping("/api/v1")
 @RequiredArgsConstructor
 public class UserController {
-//    private final UserService userService;
+    private final UserService userService;
 //
 //    @Value("${minhdat.jwt.access-token-validity-in-seconds}")
 //    private long jwtAccessToken;
@@ -59,12 +59,12 @@ public class UserController {
 //        return ResponseEntity.status(HttpStatus.OK).body(userResponse);
 //    }
 //
-//    @GetMapping("/users/me")
-//    public <T extends User> ResponseEntity<T> getCurrentUserByEmail() {
-//        String email = SecurityUtil.getCurrentUserLogin().isPresent() ? SecurityUtil.getCurrentUserLogin().get() : null;
-//        User user = this.userService.handleGetUserByEmail(email);
-//        return ResponseEntity.status(HttpStatus.OK).body((T) user);
-//    }
+    @GetMapping("/users/me")
+    public <T extends User> ResponseEntity<T> getCurrentUserByEmail() {
+        String email = SecurityUtil.getCurrentUserLogin().isPresent() ? SecurityUtil.getCurrentUserLogin().get() : null;
+        User user = this.userService.handleGetUserByEmail(email);
+        return ResponseEntity.status(HttpStatus.OK).body((T) user);
+    }
 //
 //    @PostMapping("/users")
 //    public ResponseEntity<UserResponse> createUser(@Valid @RequestBody CreateUserRequest request) {
