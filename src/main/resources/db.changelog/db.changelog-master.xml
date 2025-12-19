@@ -25,6 +25,8 @@
     <include file="/db.changelog/data/2025-12-17/2025-12-17-update-admin-password.xml"/>
     <include file="/db.changelog/data/2025-12-18/2025-12-18-seed-user-for-admin.xml" />
     <include file="db.changelog/schema/2025-12-18/2025-12-18-create-users-companies-reviews-relation.xml"/>
+    <include file="db.changelog/data/2025-12-18/2025-12-18-seed-mbbank.xml"/>
+    <include file="db.changelog/schema/2025-12-19/2025-12-19-add-coverPhoto-company.xml"/>
     <!--      History      -->
 
 </databaseChangeLog>

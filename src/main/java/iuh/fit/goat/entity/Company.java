@@ -26,6 +26,7 @@ public class Company extends Account {
     @Column(columnDefinition = "TEXT")
     private String description;
     private String logo;
+    private String coverPhoto;
     private String website;
     private String address;
     private String phone;
