@@ -25,7 +25,7 @@ public class BlogUpdateRequest {
     private String title;
 
     @Size(max = 2048, message = "URL banner không được vượt quá 2048 ký tự")
-    private String banner;
+    private List<String> images;
 
     @NotBlank(message = "Mô tả không được để trống")
     private String description;

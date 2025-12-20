@@ -35,6 +35,7 @@ public class Blog extends BaseEntity {
     @Column(columnDefinition = "TEXT")
     private String content;
     @ElementCollection
+    @Column(columnDefinition = "TEXT")
     private List<String> tags;
     private boolean draft;
     private boolean enabled = false;

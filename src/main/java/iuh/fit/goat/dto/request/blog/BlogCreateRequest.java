@@ -19,8 +19,7 @@ public class BlogCreateRequest {
     @Size(max = 255, message = "Tiêu đề không được vượt quá 255 ký tự")
     private String title;
 
-    @Size(max = 2048, message = "URL banner không được vượt quá 2048 ký tự")
-    private String banner;
+    private List<String> images;
 
     private String description;
 

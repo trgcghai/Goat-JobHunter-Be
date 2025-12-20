@@ -24,8 +24,8 @@ public interface AiService {
 //    String getSystemStatsContext();
 //
 //    String getJobMarketOverview();
-//
-//    String generateBlogDescription(String content);
-//
-//    List<String> generateBlogTags(String content);
+
+    String generateBlogDescription(String content);
+
+    List<String> generateBlogTags(String content);
 }
