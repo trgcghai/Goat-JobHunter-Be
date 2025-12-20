@@ -3,6 +3,7 @@ package iuh.fit.goat.service;
 import iuh.fit.goat.dto.request.ai.ChatRequest;
 
 import java.util.List;
+import java.util.Map;
 
 public interface AiService {
 //    String chatWithAi(ChatRequest request);
@@ -28,4 +29,6 @@ public interface AiService {
 //    String generateBlogDescription(String content);
 //
 //    List<String> generateBlogTags(String content);
+
+    Map<String, List<String>> groupAddressesByCityWithAi(List<String> addresses);
 }

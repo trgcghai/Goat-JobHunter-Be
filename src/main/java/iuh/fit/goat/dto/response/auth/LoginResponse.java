@@ -9,6 +9,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import java.time.LocalDate;
+import java.util.List;
 
 @Getter
 @Setter
@@ -18,7 +19,7 @@ public class LoginResponse {
     private long accountId;
     private String email;
     private String phone;
-    private String address;
+    private List<String> addresses;
     private LocalDate dob;
     private Gender gender;
     private String fullName;

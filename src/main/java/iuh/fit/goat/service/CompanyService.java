@@ -6,6 +6,9 @@ import iuh.fit.goat.entity.Company;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 
+import java.util.List;
+import java.util.Map;
+
 public interface CompanyService {
     Company handleGetCompanyById(long id);
 
@@ -14,4 +17,6 @@ public interface CompanyService {
     Company handleGetCompanyByEmail(String email);
 
     CompanyResponse convertToCompanyResponse(Company company);
+
+    Map<String, List<String>> handleGroupAddressesCityByCompany(long id);
 }

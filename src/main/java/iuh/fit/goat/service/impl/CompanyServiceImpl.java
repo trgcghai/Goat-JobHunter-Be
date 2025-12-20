@@ -4,6 +4,7 @@ import iuh.fit.goat.dto.response.ResultPaginationResponse;
 import iuh.fit.goat.dto.response.company.CompanyResponse;
 import iuh.fit.goat.entity.Company;
 import iuh.fit.goat.repository.CompanyRepository;
+import iuh.fit.goat.service.AiService;
 import iuh.fit.goat.service.CompanyService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -12,10 +13,12 @@ import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Map;
 
 @Service
 @RequiredArgsConstructor
 public class CompanyServiceImpl implements CompanyService {
+    private final AiService aiService;
     private final CompanyRepository companyRepository;
 
     @Override
@@ -53,7 +56,7 @@ public class CompanyServiceImpl implements CompanyService {
         companyResponse.setLogo(company.getLogo());
         companyResponse.setCoverPhoto(company.getCoverPhoto());
         companyResponse.setWebsite(company.getWebsite());
-        companyResponse.setAddress(company.getAddress());
+        companyResponse.setAddresses(company.getAddresses());
         companyResponse.setPhone(company.getPhone());
         companyResponse.setSize(company.getSize());
         companyResponse.setVerified(company.isVerified());
@@ -61,5 +64,13 @@ public class CompanyServiceImpl implements CompanyService {
         companyResponse.setUpdatedAt(company.getUpdatedAt());
 
         return companyResponse;
+    }
+
+    @Override
+    public Map<String, List<String>> handleGroupAddressesCityByCompany(long id) {
+        Company company = this.handleGetCompanyById(id);
+        if(company == null) return Map.of();
+
+        return this.aiService.groupAddressesByCityWithAi(company.getAddresses());
     }
 }

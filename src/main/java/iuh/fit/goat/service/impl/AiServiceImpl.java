@@ -1,5 +1,7 @@
 package iuh.fit.goat.service.impl;
 
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.genai.Client;
 import com.google.genai.types.GenerateContentResponse;
 import iuh.fit.goat.common.Role;
@@ -24,7 +26,7 @@ import java.util.stream.Collectors;
 @Service
 @RequiredArgsConstructor
 public class AiServiceImpl implements AiService {
-//    private final Client client;
+    private final Client client;
 //
 //    private final UserService userService;
 //    private final ConversationService conversationService;
@@ -39,9 +41,20 @@ public class AiServiceImpl implements AiService {
 //    private final BlogRepository blogRepository;
 //    private final CareerRepository careerRepository;
 //    private final SkillRepository skillRepository;
-//
-//    @Value("${google.api.model}")
-//    private String MODEL;
+
+    private static final List<String> VIETNAM_CITIES = List.of(
+            "Hà Nội", "Hải Phòng", "Đà Nẵng", "Hồ Chí Minh", "Cần Thơ", "Thừa Thiên Huế",
+            "Khánh Hòa", "Bình Định", "Quảng Nam", "Quảng Ngãi", "Ninh Thuận", "Bình Thuận",
+            "Đắk Lắk", "Đắk Nông", "Gia Lai", "Kon Tum", "Lâm Đồng",
+            "Hà Giang", "Tuyên Quang", "Yên Bái", "Lào Cai", "Sơn La", "Điện Biên", "Hòa Bình",
+            "Thanh Hóa", "Nghệ An", "Hà Tĩnh", "Quảng Bình", "Quảng Trị",
+            "Thái Nguyên", "Lạng Sơn", "Cao Bằng", "Bắc Kạn", "Hà Nam"
+    );
+
+
+
+    @Value("${google.api.model}")
+    private String MODEL;
 //    @Value("${goat.fe.url}")
 //    private String FE;
 //
@@ -487,6 +500,36 @@ public class AiServiceImpl implements AiService {
 //        }
 //    }
 //    // Lấy dữ liệu lưu vào cache
+
+    // Gom các địa chỉ theo thành phố
+    @Override
+    public Map<String, List<String>> groupAddressesByCityWithAi(List<String> addresses) {
+        String buildSystemPrompt = """
+        Bạn là hệ thống phân tích địa chỉ Việt Nam.
+
+        QUY TẮC BẮT BUỘC:
+        - CHỈ được sử dụng MỘT trong các tỉnh/thành sau
+        - KHÔNG được sáng tạo tên mới
+        - Có thể được viết khác chính tả (có dấu hay không dấu)
+        - Nếu không chắc chắn → trả "UNKNOWN"
+        - Trả về JSON THUẦN, không markdown, không giải thích
+
+        DANH SÁCH TỈNH/THÀNH:
+        """ + String.join(", ", VIETNAM_CITIES);
+
+        String aiResponse = callAiApi(
+                buildSystemPrompt,
+                "",
+                "",
+                buildUserMessage(addresses)
+        );
+
+        Map<String, List<String>> parsed = parseGroupedResult(aiResponse);
+
+        return validateCities(parsed);
+    }
+    // Gom các địa chỉ theo thành phố
+
 //
 //
 //    // Format response
@@ -850,22 +893,96 @@ public class AiServiceImpl implements AiService {
 //    // Lấy dữ liệu
 //
 //
-//    // Gọi tới AI để lấy response
-//    private String callAiApi(String systemPrompt, String context, String history, String userMessage) {
-//        try {
-//            String fullPrompt = systemPrompt + context + history +
-//                    "\n\nHãy trả lời câu hỏi sau dựa trên dữ liệu context:\n\nUser: " + userMessage;
-//
-//            GenerateContentResponse response = this.client.models
-//                    .generateContent(MODEL, fullPrompt, null);
-//
-//            return response.text();
-//        } catch (Exception e) {
-//            e.printStackTrace();
-//            return "Xin lỗi, hiện tại tôi không thể xử lý yêu cầu. Vui lòng thử lại sau.";
-//        }
-//    }
-//    // Gọi tới AI để lấy response
+
+    // Gọi tới AI để lấy response
+    private String callAiApi(String systemPrompt, String context, String history, String userMessage) {
+        try {
+            String fullPrompt = systemPrompt + context + history +
+                    "\n\nHãy trả lời câu hỏi sau dựa trên dữ liệu context(nếu có):\n\nUser: " + userMessage;
+
+            GenerateContentResponse response = this.client.models
+                    .generateContent(MODEL, fullPrompt, null);
+
+            return response.text();
+        } catch (Exception e) {
+            e.printStackTrace();
+            return "Xin lỗi, hiện tại tôi không thể xử lý yêu cầu. Vui lòng thử lại sau.";
+        }
+    }
+    // Gọi tới AI để lấy response
+
+    private String buildUserMessage(List<String> addresses) {
+        StringBuilder sb = new StringBuilder();
+        sb.append("Hãy group các địa chỉ sau theo tỉnh/thành:\n\n");
+
+        for (int i = 0; i < addresses.size(); i++) {
+            sb.append(i + 1)
+                    .append(". ")
+                    .append(addresses.get(i))
+                    .append("\n");
+        }
+
+        sb.append("""
+        
+        Format JSON bắt buộc (ví dụ):
+        {
+          "Hà Nội": ["address1"],
+          "Hồ Chí Minh": ["address2"],
+          "UNKNOWN": ["address3"]
+        }
+        """);
+
+        return sb.toString();
+    }
+
+    private Map<String, List<String>> parseGroupedResult(String aiResponse) {
+        try {
+            String json = extractJson(aiResponse);
+
+            ObjectMapper mapper = new ObjectMapper();
+            return mapper.readValue(
+                    json,
+                    new TypeReference<Map<String, List<String>>>() {}
+            );
+        } catch (Exception e) {
+            e.printStackTrace();
+            return Map.of("UNKNOWN", List.of(aiResponse));
+        }
+    }
+
+    private String extractJson(String text) {
+        if (text == null) {
+            throw new IllegalArgumentException("AI response is null");
+        }
+
+        int start = text.indexOf('{');
+        int end = text.lastIndexOf('}');
+
+        if (start == -1 || end == -1 || start > end) {
+            throw new IllegalArgumentException("No valid JSON object found");
+        }
+
+        return text.substring(start, end + 1);
+    }
+
+    private Map<String, List<String>> validateCities(Map<String, List<String>> aiResult) {
+
+        Map<String, List<String>> safeResult = new HashMap<>();
+
+        for (var entry : aiResult.entrySet()) {
+            String city = entry.getKey();
+
+            if (VIETNAM_CITIES.contains(city) || "UNKNOWN".equals(city)) {
+                safeResult.put(city, entry.getValue());
+            } else {
+                safeResult
+                        .computeIfAbsent("UNKNOWN", k -> new ArrayList<>())
+                        .addAll(entry.getValue());
+            }
+        }
+        return safeResult;
+    }
+
 //
 //    private String getOrSet(String key, Supplier<String> supplier ) {
 //        return this.cacheService.getOrSet(

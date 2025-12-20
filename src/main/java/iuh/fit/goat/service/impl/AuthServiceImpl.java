@@ -358,9 +358,14 @@ public class AuthServiceImpl implements AuthService {
         // Thông tin riêng của User
         if (account instanceof User) {
             User user = (User) account;
+            List<String> addresses = new ArrayList<>();
+            if(user.getAddress() != null && !user.getAddress().isEmpty()) {
+                addresses.add(user.getAddress());
+            }
+
             loginResponse.setPhone(user.getPhone());
-            loginResponse.setAddress(user.getAddress());
             loginResponse.setDob(user.getDob());
+            loginResponse.setAddresses(addresses);
             loginResponse.setGender(user.getGender());
             loginResponse.setFullName(Objects.requireNonNullElse(user.getFullName(), ""));
             loginResponse.setType(user instanceof Applicant ? Role.APPLICANT.getValue() : Role.RECRUITER.getValue());
@@ -368,7 +373,7 @@ public class AuthServiceImpl implements AuthService {
         // Thông tin riêng của Company
         else if (account instanceof Company company) {
             loginResponse.setPhone(company.getPhone());
-            loginResponse.setAddress(company.getAddress());
+            loginResponse.setAddresses(company.getAddresses());
             loginResponse.setFullName(Objects.requireNonNullElse(company.getName(), ""));
             loginResponse.setType(Role.COMPANY.getValue());
         }

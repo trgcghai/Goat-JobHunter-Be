@@ -28,7 +28,8 @@ public class Company extends Account {
     private String logo;
     private String coverPhoto;
     private String website;
-    private String address;
+    @ElementCollection
+    private List<String> addresses;
     private String phone;
     @Enumerated(EnumType.STRING)
     private CompanySize size;

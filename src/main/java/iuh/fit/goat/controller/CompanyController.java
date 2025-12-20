@@ -16,6 +16,8 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.util.List;
+import java.util.Map;
 import java.util.regex.Pattern;
 
 @RestController
@@ -45,6 +47,24 @@ public class CompanyController {
             @Filter Specification<Company> spec, Pageable pageable
     ) {
         ResultPaginationResponse res = this.companyService.handleGetAllCompanies(spec, pageable);
+        return ResponseEntity.status(HttpStatus.OK).body(res);
+    }
+
+    @GetMapping("/{id}/group-addresses")
+    public ResponseEntity<Map<String, List<String>>> groupAddressesCityByCompany(
+            @PathVariable("id") String id
+    ) throws InvalidException {
+        Pattern pattern = Pattern.compile("^[0-9]+$");
+        if(!pattern.matcher(id).matches()) {
+            throw new InvalidException("Id is number");
+        }
+
+        Company company = this.companyService.handleGetCompanyById(Long.parseLong(id));
+        if(company == null) {
+            throw new InvalidException("Company not found");
+        }
+
+        Map<String, List<String>> res = this.companyService.handleGroupAddressesCityByCompany(Long.parseLong(id));
         return ResponseEntity.status(HttpStatus.OK).body(res);
     }
 }

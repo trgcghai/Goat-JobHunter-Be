@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+                      http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-5.0.xsd"
+>
+    <changeSet id="insert-addresses-company-1" author="goat">
+        <insert tableName="company_addresses">
+            <column name="company_account_id" valueNumeric="2"/>
+            <column name="addresses" value="Tòa nhà MB, số 18 Lê Văn Lương, Phường Yên Hòa, Hà Nội"/>
+        </insert>
+    </changeSet>
+
+    <changeSet id="insert-addresses-company-2" author="goat">
+        <insert tableName="company_addresses">
+            <column name="company_account_id" valueNumeric="4"/>
+            <column name="addresses" value="Level 6-7, East Tower, Lumiere Riverside, 277 Vo Nguyen Giap, An Khanh Ward, Thu Duc City, Ho Chi Minh"/>
+        </insert>
+        <insert tableName="company_addresses">
+            <column name="company_account_id" valueNumeric="4"/>
+            <column name="addresses" value="Capital Place, 29 Lieu Giai, Ngoc Khanh Ward, Ba Dinh, Ha Noi"/>
+        </insert>
+    </changeSet>
+
+    <changeSet id="insert-addresses-company-3" author="goat">
+        <insert tableName="company_addresses">
+            <column name="company_account_id" valueNumeric="5"/>
+            <column name="addresses" value="The Capital Place, 29 Lieu Giai Street, Ngoc Ha Ward, Hanoi City, Vietnam, Ba Dinh, Ha Noi"/>
+        </insert>
+        <insert tableName="company_addresses">
+            <column name="company_account_id" valueNumeric="5"/>
+            <column name="addresses" value="The Hallmark, 15 Tran Bach Dang, Thu Thiem Ward, Thu Duc City, Ho Chi Minh"/>
+        </insert>
+    </changeSet>
+
+    <changeSet id="insert-addresses-company-4" author="goat">
+        <insert tableName="company_addresses">
+            <column name="company_account_id" valueNumeric="6"/>
+            <column name="addresses" value="1 Tran Huu Duc, Hanoi, Nam Tu Liem, Ha Noi"/>
+        </insert>
+        <insert tableName="company_addresses">
+            <column name="company_account_id" valueNumeric="6"/>
+            <column name="addresses" value="Tầng 3&amp;4, Trung Tâm đổi mới sáng tạo Quốc gia, Lô D25, KĐT Mới Cầu giấy, Hà Nội, Cau Giay, Ha Noi"/>
+        </insert>
+        <insert tableName="company_addresses">
+            <column name="company_account_id" valueNumeric="6"/>
+            <column name="addresses" value="Tổng Công ty Công nghiệp Công nghệ cao Viettel - Tòa nhà Viettel, Số 380 Lạc Long Quân, Tây Hồ, Hà Nội và Tòa nhà Viettel, Khu CNC Hòa Lạc, Other, Ha Noi"/>
+        </insert>
+    </changeSet>
+
+    <changeSet id="insert-addresses-company-5" author="goat">
+        <insert tableName="company_addresses">
+            <column name="company_account_id" valueNumeric="7"/>
+            <column name="addresses" value="106 Nguyen Van Troi, Phu Nhuan, Ho Chi Minh"/>
+        </insert>
+    </changeSet>
+
+    <changeSet id="insert-addresses-company-6" author="goat">
+        <insert tableName="company_addresses">
+            <column name="company_account_id" valueNumeric="8"/>
+            <column name="addresses" value="364 Cong Hoa street, ward 13, Tan Binh, Ho Chi Minh"/>
+        </insert>
+        <insert tableName="company_addresses">
+            <column name="company_account_id" valueNumeric="8"/>
+            <column name="addresses" value="OfficeHaus Building, 32 Tan Thang street, Son Ky ward, Tan Phu, Ho Chi Minh"/>
+        </insert>
+        <insert tableName="company_addresses">
+            <column name="company_account_id" valueNumeric="8"/>
+            <column name="addresses" value="15 Tran Bach Dang Street, Thu Thiem New Urban Area, An Phu , District 2, Thu Duc City, Ho Chi Minh"/>
+        </insert>
+        <insert tableName="company_addresses">
+            <column name="company_account_id" valueNumeric="8"/>
+            <column name="addresses" value="Capital Place, 29 Lieu Giai Street, Ba Dinh, Ha Noi"/>
+        </insert>
+    </changeSet>
+    
+</databaseChangeLog>

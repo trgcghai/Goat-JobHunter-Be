@@ -7,6 +7,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import java.time.Instant;
+import java.util.List;
 
 @Getter
 @Setter
@@ -19,7 +20,7 @@ public class CompanyResponse {
     private String logo;
     private String coverPhoto;
     private String website;
-    private String address;
+    private List<String> addresses;
     private String phone;
     private CompanySize size;
     private boolean verified;
