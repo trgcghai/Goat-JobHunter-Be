@@ -17,12 +17,10 @@ import java.util.List;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class BlogResponse {
     private long blogId;
-    private String title;
     private List<String> images;
     private String description;
     private String content;
     private List<String> tags;
-    private boolean draft;
     private boolean enabled;
     private BlogActivity activity = new BlogActivity();
     private Instant createdAt;

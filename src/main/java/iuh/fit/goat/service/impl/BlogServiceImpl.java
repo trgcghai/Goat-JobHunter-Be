@@ -6,6 +6,7 @@ import iuh.fit.goat.dto.request.blog.BlogCreateRequest;
 import iuh.fit.goat.dto.request.blog.BlogIdsRequest;
 import iuh.fit.goat.dto.request.blog.BlogUpdateRequest;
 import iuh.fit.goat.dto.request.user.LikeBlogRequest;
+import iuh.fit.goat.dto.response.CloudinaryResponse;
 import iuh.fit.goat.dto.response.blog.BlogResponse;
 import iuh.fit.goat.dto.response.blog.BlogStatusResponse;
 import iuh.fit.goat.dto.response.ResultPaginationResponse;
@@ -16,9 +17,11 @@ import iuh.fit.goat.exception.InvalidException;
 import iuh.fit.goat.repository.BlogRepository;
 import iuh.fit.goat.repository.UserRepository;
 import iuh.fit.goat.service.*;
+import iuh.fit.goat.util.FileUploadUtil;
 import iuh.fit.goat.util.SecurityUtil;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.io.FilenameUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.data.domain.Page;
@@ -26,7 +29,9 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -53,32 +58,38 @@ public class BlogServiceImpl implements BlogService {
     private final NotificationService notificationService;
     private final BlogRepository blogRepository;
     private final UserRepository userRepository;
+    private final CloudinaryService cloudinaryService;
 
 
     @Override
-    public Blog handleCreateBlog(BlogCreateRequest request) {
+    public Blog handleCreateBlog(BlogCreateRequest request) throws InvalidException {
         String email = SecurityUtil.getCurrentUserLogin().isPresent() ? SecurityUtil.getCurrentUserLogin().get() : "";
         User currentUser = this.userRepository.findByEmail(email);
 
-        // Generate description if not provided
-        String description = request.getDescription();
-        if (description == null || description.trim().isEmpty()) {
-            description = this.aiService.generateBlogDescription(request.getContent());
+        // Handle file uploads
+        List<String> imageUrls = new ArrayList<>();
+        if (request.getFiles() != null) {
+            for (MultipartFile file : request.getFiles()) {
+                if (file.isEmpty()) continue;
+
+                FileUploadUtil.assertAllowed(file, FileUploadUtil.FILE_PATTERN);
+                String fileName = FileUploadUtil.getFileName(FilenameUtils.getBaseName(file.getOriginalFilename()));
+                CloudinaryResponse response = this.cloudinaryService.handleUploadFile(file, "blogs", fileName);
+                imageUrls.add(response.getUrl());
+            }
         }
 
-        // Generate tags if not provided or empty
-        List<String> tags = request.getTags();
-        if (tags == null || tags.isEmpty()) {
-            tags = this.aiService.generateBlogTags(request.getContent());
-        }
+        // Generate description
+        String description = this.aiService.generateBlogDescription(request.getContent());
+
+        // Generate tags
+        List<String> tags = this.aiService.generateBlogTags(request.getContent());
 
         Blog blog = new Blog();
-        blog.setTitle(request.getTitle());
-        blog.setImages(request.getImages());
+        blog.setImages(imageUrls);
         blog.setDescription(description);
         blog.setContent(request.getContent());
         blog.setTags(tags);
-        blog.setDraft(request.getDraft());
         blog.setAuthor(currentUser);
         blog.setEnabled(true);
 
@@ -90,12 +101,10 @@ public class BlogServiceImpl implements BlogService {
         Blog currentBlog = this.handleGetBlogById(request.getBlogId());
 
         if (currentBlog != null) {
-            currentBlog.setTitle(request.getTitle());
             currentBlog.setImages(request.getImages());
             currentBlog.setDescription(request.getDescription());
             currentBlog.setContent(request.getContent());
             currentBlog.setTags(request.getTags());
-            currentBlog.setDraft(request.getDraft());
 
             return this.blogRepository.save(currentBlog);
         }
@@ -178,7 +187,7 @@ public class BlogServiceImpl implements BlogService {
         blog.getActivity().setTotalLikes(Math.max(newTotalLikes, 0));
         Blog updatedBlog = this.blogRepository.save(blog);
 
-        if(likeBlogRequest.isLiked()) {
+        if (likeBlogRequest.isLiked()) {
             this.notificationService.handleNotifyLikeBlog(updatedBlog);
         }
     }
@@ -186,13 +195,13 @@ public class BlogServiceImpl implements BlogService {
     @Override
     public void handleIncrementTotalReadValue(Long blogId, String guestId) {
         String currentEmail = SecurityUtil.getCurrentUserLogin().isPresent()
-                ? SecurityUtil.getCurrentUserLogin().get(): "";
+                ? SecurityUtil.getCurrentUserLogin().get() : "";
         User currentUser = this.userService.handleGetUserByEmail(currentEmail);
 
         String viewer = currentUser != null ? "User" + currentUser.getAccountId() : "Guest" + guestId;
         String key = "view:blog:" + blogId + ":" + viewer;
 
-        if(this.redisService.hasKey(key)) return;
+        if (this.redisService.hasKey(key)) return;
         this.redisService.saveWithTTL(
                 key,
                 "1",
@@ -305,12 +314,10 @@ public class BlogServiceImpl implements BlogService {
         BlogResponse response = new BlogResponse();
 
         response.setBlogId(blog.getBlogId());
-        response.setTitle(blog.getTitle());
         response.setImages(blog.getImages());
         response.setDescription(blog.getDescription());
         response.setContent(blog.getContent());
         response.setTags(blog.getTags());
-        response.setDraft(blog.isDraft());
         response.setEnabled(blog.isEnabled());
         response.setActivity(blog.getActivity());
         response.setCreatedAt(blog.getCreatedAt());

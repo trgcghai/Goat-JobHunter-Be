@@ -10,7 +10,6 @@ import iuh.fit.goat.dto.response.ResultPaginationResponse;
 import iuh.fit.goat.entity.Blog;
 import iuh.fit.goat.exception.InvalidException;
 import iuh.fit.goat.service.BlogService;
-import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Pageable;
@@ -28,17 +27,21 @@ import java.util.regex.Pattern;
 public class BlogController {
     private final BlogService blogService;
 
-    @PostMapping
-    public ResponseEntity<?> createBlog(@Valid @RequestBody BlogCreateRequest request) {
-        Blog res = this.blogService.handleCreateBlog(request);
-        BlogResponse blogResponse = this.blogService.convertToBlogResponse(res);
-        return ResponseEntity.status(HttpStatus.CREATED).body(blogResponse);
+    @PostMapping(consumes = {"multipart/form-data"})
+    public ResponseEntity<?> createBlog(@Valid @ModelAttribute BlogCreateRequest request) {
+        try {
+            Blog res = this.blogService.handleCreateBlog(request);
+            BlogResponse blogResponse = this.blogService.convertToBlogResponse(res);
+            return ResponseEntity.status(HttpStatus.CREATED).body(blogResponse);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
+        }
     }
 
     @PutMapping
     public ResponseEntity<?> updateBlog(@Valid @RequestBody BlogUpdateRequest request) throws InvalidException {
         Blog res = this.blogService.handleUpdateBlog(request);
-        if(res == null) throw new InvalidException("Blog doesn't exist");
+        if (res == null) throw new InvalidException("Blog doesn't exist");
         BlogResponse blogResponse = this.blogService.convertToBlogResponse(res);
         return ResponseEntity.status(HttpStatus.OK).body(blogResponse);
     }
@@ -56,10 +59,10 @@ public class BlogController {
             @CookieValue(value = "guestId", required = false) String guestId
     ) throws InvalidException {
         Pattern pattern = Pattern.compile("^[0-9]+$");
-        if(!pattern.matcher(id).matches()) throw new InvalidException("Id is number");
+        if (!pattern.matcher(id).matches()) throw new InvalidException("Id is number");
 
         Blog res = this.blogService.handleGetBlogById(Long.parseLong(id));
-        if(res == null) throw new InvalidException("Blog doesn't exist");
+        if (res == null) throw new InvalidException("Blog doesn't exist");
 
         if (Boolean.TRUE.equals(read)) {
             this.blogService.handleIncrementTotalReadValue(res.getBlogId(), guestId);
@@ -85,7 +88,6 @@ public class BlogController {
         Specification<Blog> baseSpec = (spec != null) ? spec : Specification.unrestricted();
 
         Specification<Blog> finalSpec = baseSpec
-                .and((root, query, criteriaBuilder) -> criteriaBuilder.isFalse(root.get("draft")))
                 .and((root, query, criteriaBuilder) -> criteriaBuilder.isTrue(root.get("enabled")));
 
         ResultPaginationResponse res = this.blogService.handleGetAllBlogs(finalSpec, pageable);
