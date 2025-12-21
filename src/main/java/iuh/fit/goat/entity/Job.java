@@ -47,7 +47,7 @@ public class Job extends BaseEntity {
     @OneToOne(mappedBy = "job", cascade = {PERSIST, MERGE})
     private Address address;
 
-    @ManyToOne(fetch = LAZY)
+    @ManyToOne
     @JoinColumn(name = "company_id")
     private Company company;
 
@@ -72,7 +72,7 @@ public class Job extends BaseEntity {
     )
     private List<Application> applications = new ArrayList<>();
 
-    @ManyToOne(fetch = LAZY)
+    @ManyToOne
     @JoinColumn(name = "career_id")
     private Career career;
 

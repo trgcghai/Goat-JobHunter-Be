@@ -40,7 +40,7 @@ public class JobServiceImpl implements JobService {
 //    private final ApplicantService applicantService;
 //    private final EmailNotificationService emailNotificationService;
 //    private final ApplicantRepository applicantRepository;
-//    private final JobRepository jobRepository;
+    private final JobRepository jobRepository;
 //    private final SkillRepository skillRepository;
 //    private final CareerRepository careerRepository;
 //    private final ApplicationRepository applicationRepository;
@@ -156,12 +156,10 @@ public class JobServiceImpl implements JobService {
 //
 //    }
 //
-//    @Override
-//    public Job handleGetJobById(long id) {
-//        Optional<Job> job = this.jobRepository.findById(id);
-//
-//        return job.orElse(null);
-//    }
+    @Override
+    public Job handleGetJobById(long id) {
+        return this.jobRepository.findById(id).orElse(null);
+    }
 //
 //    @Override
 //    public ResultPaginationResponse handleGetAllJobs(Specification<Job> spec, Pageable pageable) {
@@ -180,16 +178,16 @@ public class JobServiceImpl implements JobService {
 //        return new ResultPaginationResponse(meta, responses);
 //    }
 //
-//    @Override
-//    public Map<Long, Long> handleCountJobByRecruiter(){
-//        return this.jobRepository.countJobs()
-//                .stream().collect(
-//                        Collectors.toMap(
-//                                row-> (Long)row[0],
-//                                row-> (Long)row[1]
-//                        )
-//                );
-//    }
+    @Override
+    public Map<Long, Long> handleCountJobByCompany(){
+        return this.jobRepository.countJobs()
+                .stream().collect(
+                        Collectors.toMap(
+                                row-> (Long)row[0],
+                                row-> (Long)row[1]
+                        )
+                );
+    }
 //
 //    @Override
 //    public List<Long> handleGetAllJobIdsByRecruiter() {
@@ -415,41 +413,49 @@ public class JobServiceImpl implements JobService {
 //        ).collect(Collectors.toList());
 //    }
 //
-//    @Override
-//    public JobResponse convertToJobResponse(Job job) {
-//        JobResponse jobResponse = new JobResponse();
-//
-//        jobResponse.setJobId(job.getJobId());
-//        jobResponse.setTitle(job.getTitle());
-//        jobResponse.setLocation(job.getLocation());
-//        jobResponse.setSalary(job.getSalary());
-//        jobResponse.setQuantity(job.getQuantity());
-//        jobResponse.setDescription(job.getDescription());
-//        jobResponse.setLevel(job.getLevel());
-//        jobResponse.setStartDate(job.getStartDate());
-//        jobResponse.setEndDate(job.getEndDate());
-//        jobResponse.setActive(job.isActive());
-//        jobResponse.setEnabled(job.isEnabled());
-//        jobResponse.setWorkingType(job.getWorkingType());
-//
-//        if(job.getSkills() != null){
-//            jobResponse.setSkills(job.getSkills());
-//        }
-//
-//        if(job.getCareer() != null){
-//            jobResponse.setCareer(job.getCareer());
-//        }
-//
-//        if(job.getRecruiter() != null){
-//            JobResponse.RecruiterJob recruiterJob = new JobResponse.RecruiterJob(
-//                    job.getRecruiter().getUserId(),
-//                    job.getRecruiter().getFullName()
-//            );
-//            jobResponse.setRecruiter(recruiterJob);
-//        }
-//
-//        return jobResponse;
-//    }
+    @Override
+    public JobResponse convertToJobResponse(Job job) {
+        JobResponse jobResponse = new JobResponse();
+
+        jobResponse.setJobId(job.getJobId());
+        jobResponse.setTitle(job.getTitle());
+        jobResponse.setSalary(job.getSalary());
+        jobResponse.setQuantity(job.getQuantity());
+        jobResponse.setDescription(job.getDescription());
+        jobResponse.setLevel(job.getLevel());
+        jobResponse.setStartDate(job.getStartDate());
+        jobResponse.setEndDate(job.getEndDate());
+        jobResponse.setActive(job.isActive());
+        jobResponse.setEnabled(job.isEnabled());
+        jobResponse.setWorkingType(job.getWorkingType());
+
+        if(job.getSkills() != null){
+            jobResponse.setSkills(job.getSkills());
+        }
+
+        if(job.getCareer() != null){
+            jobResponse.setCareer(job.getCareer());
+        }
+
+        if(job.getCompany() != null){
+            JobResponse.JobCompany jobCompany = new JobResponse.JobCompany(
+                    job.getCompany().getAccountId(),
+                    job.getCompany().getName()
+            );
+            jobResponse.setCompany(jobCompany);
+        }
+
+        if(job.getAddress() != null){
+            JobResponse.JobAddress jobAddress = new JobResponse.JobAddress(
+                    job.getAddress().getAddressId(),
+                    job.getAddress().getProvince(),
+                    job.getAddress().getFullAddress()
+            );
+            jobResponse.setAddress(jobAddress);
+        }
+
+        return jobResponse;
+    }
 //
 //    private List<JobActivateResponse> handleSetActiveForJobs(List<Long> jobIds, boolean activeFlag) {
 //        if (jobIds == null || jobIds.isEmpty()) {

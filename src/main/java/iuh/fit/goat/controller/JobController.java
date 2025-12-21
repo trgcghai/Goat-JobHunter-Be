@@ -29,10 +29,10 @@ import java.util.Map;
 import java.util.regex.Pattern;
 
 @RestController
-@RequestMapping("/api/v1")
+@RequestMapping("/api/v1/jobs")
 @RequiredArgsConstructor
 public class JobController {
-//    private final JobService jobService;
+    private final JobService jobService;
 //
 //    @PostMapping("/jobs")
 //    public ResponseEntity<JobResponse> createJob(@Valid @RequestBody CreateJobRequest job) {
@@ -69,20 +69,21 @@ public class JobController {
 //        return ResponseEntity.status(HttpStatus.OK).body(null);
 //    }
 //
-//    @GetMapping("/jobs/{id}")
-//    public ResponseEntity<JobResponse> getJobById(@PathVariable("id") String id) throws InvalidException {
-//        Pattern pattern = Pattern.compile("^[0-9]+$");
-//        if (pattern.matcher(id).matches()) {
-//            Job currentJob = this.jobService.handleGetJobById(Long.parseLong(id));
-//            if (currentJob == null) {
-//                throw new InvalidException("Job doesn't exist");
-//            }
-//            return ResponseEntity.status(HttpStatus.OK).body(this.jobService.convertToJobResponse(currentJob));
-//        } else {
-//            throw new InvalidException("Id is number");
-//        }
-//    }
-//
+    @GetMapping("/{id}")
+    public ResponseEntity<JobResponse> getJobById(@PathVariable("id") String id) throws InvalidException {
+        Pattern pattern = Pattern.compile("^[0-9]+$");
+        if(!pattern.matcher(id).matches()){
+            throw new InvalidException("Id is number");
+        }
+
+        Job currentJob = this.jobService.handleGetJobById(Long.parseLong(id));
+        if (currentJob == null) {
+            throw new InvalidException("Job doesn't exist");
+        }
+
+        return ResponseEntity.status(HttpStatus.OK).body(this.jobService.convertToJobResponse(currentJob));
+    }
+
 //    @GetMapping("/jobs")
 //    public ResponseEntity<ResultPaginationResponse> getAllJobs(
 //            @Filter Specification<Job> spec, Pageable pageable
@@ -91,11 +92,11 @@ public class JobController {
 //        return ResponseEntity.status(HttpStatus.OK).body(result);
 //    }
 //
-//    @GetMapping("/jobs/recruiters/count")
-//    public ResponseEntity<Map<Long, Long>> countJobByRecruiter() {
-//        Map<Long, Long> result = this.jobService.handleCountJobByRecruiter();
-//        return ResponseEntity.status(HttpStatus.OK).body(result);
-//    }
+    @GetMapping("/companies/count")
+    public ResponseEntity<Map<Long, Long>> countJobByCompany() {
+        Map<Long, Long> result = this.jobService.handleCountJobByCompany();
+        return ResponseEntity.status(HttpStatus.OK).body(result);
+    }
 //
 //    @GetMapping("/jobs/count-applications")
 //    public ResponseEntity<List<JobApplicationCountResponse>> countApplications(
