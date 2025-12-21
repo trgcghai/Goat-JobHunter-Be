@@ -741,7 +741,7 @@ public class UserServiceImpl implements UserService {
         userResponse.setUsername(user.getUsername());
         userResponse.setEmail(user.getEmail());
         userResponse.setPhone(user.getPhone());
-        userResponse.setAddress(user.getAddress());
+        userResponse.setAddresses(user.getAddresses());
         userResponse.setFullName(user.getFullName());
         userResponse.setAvatar(user.getAvatar());
         userResponse.setGender(user.getGender());

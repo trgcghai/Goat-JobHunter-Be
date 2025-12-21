@@ -1,6 +1,7 @@
 package iuh.fit.goat.dto.response.user;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
+import iuh.fit.goat.entity.Address;
 import iuh.fit.goat.enumeration.Gender;
 import iuh.fit.goat.entity.embeddable.Contact;
 import lombok.AllArgsConstructor;
@@ -10,6 +11,7 @@ import lombok.Setter;
 
 import java.time.Instant;
 import java.time.LocalDate;
+import java.util.List;
 
 @Getter
 @Setter
@@ -21,7 +23,7 @@ public class UserResponse {
     private String username;
     private String email;
     private String phone;
-    private String address;
+    private List<Address> addresses;
     private String fullName;
     private String avatar;
     private Gender gender;

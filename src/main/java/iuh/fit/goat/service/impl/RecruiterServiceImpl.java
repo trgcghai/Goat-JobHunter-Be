@@ -101,8 +101,8 @@ public class RecruiterServiceImpl implements RecruiterService {
         if (updateRequest.getPhone() != null) {
             currentRecruiter.setPhone(updateRequest.getPhone());
         }
-        if (updateRequest.getAddress() != null) {
-            currentRecruiter.setAddress(updateRequest.getAddress());
+        if (updateRequest.getAddresses() != null) {
+            currentRecruiter.setAddresses(updateRequest.getAddresses());
         }
         if (updateRequest.getDob() != null) {
             currentRecruiter.setDob(updateRequest.getDob());
@@ -163,7 +163,7 @@ public class RecruiterServiceImpl implements RecruiterService {
         recruiterResponse.setUsername(recruiter.getUsername());
         recruiterResponse.setEmail(recruiter.getEmail());
         recruiterResponse.setPhone(recruiter.getPhone());
-        recruiterResponse.setAddress(recruiter.getAddress());
+        recruiterResponse.setAddresses(recruiter.getAddresses());
         recruiterResponse.setFullName(recruiter.getFullName());
         recruiterResponse.setAvatar(recruiter.getAvatar());
         recruiterResponse.setGender(recruiter.getGender());
