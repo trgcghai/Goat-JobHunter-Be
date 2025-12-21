@@ -13,30 +13,62 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
 import java.net.URISyntaxException;
+import java.util.ArrayList;
+import java.util.List;
 
 @RestController
 @RequestMapping("/api/v1")
 public class CloudinaryController {
-//    private final CloudinaryService cloudinaryService;
-//
-//    public CloudinaryController(CloudinaryService cloudinaryService) {
-//        this.cloudinaryService = cloudinaryService;
-//    }
-//
-//    @PostMapping("/files")
-//    public ResponseEntity<CloudinaryResponse> uploadFile(
-//            @RequestParam(name = "file", required = false) MultipartFile file,
-//            @RequestParam(name = "folder") String folder
-//    ) throws StorageException, URISyntaxException, IOException, InvalidException {
-//        if(file == null || file.isEmpty()) {
-//            throw new StorageException("File is empty. Please upload file");
-//        }
-//
-//        FileUploadUtil.assertAllowed(file, FileUploadUtil.FILE_PATTERN);
-//
-//        String fileName = FileUploadUtil.getFileName(FilenameUtils.getBaseName(file.getOriginalFilename()));
-//        CloudinaryResponse response = this.cloudinaryService.handleUploadFile(file, folder, fileName);
-//
-//        return ResponseEntity.status(HttpStatus.OK).body(response);
-//    }
+    private final CloudinaryService cloudinaryService;
+
+    public CloudinaryController(CloudinaryService cloudinaryService) {
+        this.cloudinaryService = cloudinaryService;
+    }
+
+    @PostMapping("/files")
+    public ResponseEntity<?> uploadFile(
+            @RequestParam(name = "file", required = false) MultipartFile file,
+            @RequestParam(name = "folder") String folder
+    ) throws InvalidException {
+        if(file == null || file.isEmpty()) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("File is empty. Please upload file");
+        }
+
+        FileUploadUtil.assertAllowed(file, FileUploadUtil.FILE_PATTERN);
+
+        String fileName = FileUploadUtil.getFileName(FilenameUtils.getBaseName(file.getOriginalFilename()));
+        CloudinaryResponse response = this.cloudinaryService.handleUploadFile(file, folder, fileName);
+
+        return ResponseEntity.status(HttpStatus.OK).body(response);
+    }
+
+    @PostMapping("/files/multiple")
+    public ResponseEntity<?> uploadMultipleFiles(
+            @RequestParam(name = "files", required = false) MultipartFile[] files,
+            @RequestParam(name = "folder") String folder
+    ) throws InvalidException {
+        if(files == null || files.length == 0) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Files are empty. Please upload files");
+        }
+
+        List<CloudinaryResponse> responses = new ArrayList<>();
+
+        for (MultipartFile file : files) {
+            if (file.isEmpty()) {
+                continue;
+            }
+
+            FileUploadUtil.assertAllowed(file, FileUploadUtil.FILE_PATTERN);
+
+            String fileName = FileUploadUtil.getFileName(FilenameUtils.getBaseName(file.getOriginalFilename()));
+            CloudinaryResponse response = this.cloudinaryService.handleUploadFile(file, folder, fileName);
+            responses.add(response);
+        }
+
+        if (responses.isEmpty()) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("All uploaded files are empty. Please upload valid files");
+        }
+
+        return ResponseEntity.status(HttpStatus.OK).body(responses);
+    }
 }

@@ -24,7 +24,7 @@ import java.util.regex.Pattern;
 @RequestMapping("/api/v1")
 @RequiredArgsConstructor
 public class ApplicantController {
-//    private final ApplicantService applicantService;
+    private final ApplicantService applicantService;
 //    private final UserService userService;
 //    private final PasswordEncoder passwordEncoder;
 //
@@ -48,21 +48,21 @@ public class ApplicantController {
 //        this.applicantService.handleDeleteApplicant(id);
 //        return ResponseEntity.status(HttpStatus.OK).body(null);
 //    }
-//
-//    @PutMapping("/applicants")
-//    public ResponseEntity<ApplicantResponse> updateApplicant(
-//            @Valid @RequestBody ApplicantUpdateRequest updateRequest) throws InvalidException {
-//
-//        Applicant updatedApplicant = this.applicantService.handleUpdateApplicant(updateRequest);
-//
-//        if (updatedApplicant != null) {
-//            ApplicantResponse applicantResponse = this.applicantService.convertToApplicantResponse(updatedApplicant);
-//            return ResponseEntity.status(HttpStatus.OK).body(applicantResponse);
-//        } else {
-//            throw new InvalidException("Applicant not found");
-//        }
-//    }
-//
+
+    @PutMapping("/applicants")
+    public ResponseEntity<ApplicantResponse> updateApplicant(
+            @Valid @RequestBody ApplicantUpdateRequest updateRequest) throws InvalidException {
+
+        Applicant updatedApplicant = this.applicantService.handleUpdateApplicant(updateRequest);
+
+        if (updatedApplicant != null) {
+            ApplicantResponse applicantResponse = this.applicantService.convertToApplicantResponse(updatedApplicant);
+            return ResponseEntity.status(HttpStatus.OK).body(applicantResponse);
+        } else {
+            throw new InvalidException("Applicant not found");
+        }
+    }
+
 //    @GetMapping("/applicants/me")
 //    public ResponseEntity<ApplicantResponse> getCurrentApplicant() throws InvalidException {
 //        Applicant applicant = this.applicantService.handleGetCurrentApplicant();

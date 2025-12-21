@@ -20,96 +20,84 @@ import java.util.List;
 @Service
 @RequiredArgsConstructor
 public class RoleServiceImpl implements RoleService {
-//    private final RoleRepository roleRepository;
-//    private final PermissionRepository permissionRepository;
-//    private final UserRepository userRepository;
-//
-//    @Override
-//    public Role handleCreateRole(RoleCreateRequest request) {
-//        Role role = new Role();
-//        role.setName(request.getName());
-//        if (request.getDescription() != null) {
-//            role.setDescription(request.getDescription());
-//        } else {
-//            role.setDescription("");
-//        }
-//        role.setActive(true);
-//        role.setPermissions(List.of());
-//        return this.roleRepository.save(role);
-//    }
-//
-//    @Override
-//    public Role handleUpdateRole(Role role) {
-//        Role resRole = this.handleGetRoleById(role.getRoleId());
-//
-//        if(role.getPermissions() != null){
-//            List<Long> permissionIds = role.getPermissions().stream().map(Permission::getPermissionId).toList();
-//            List<Permission> permissions = this.permissionRepository.findByPermissionIdIn(permissionIds);
-//            role.setPermissions(permissions);
-//        }
-//
-//        resRole.setDescription(role.getDescription());
-//        resRole.setActive(role.isActive());
-//        resRole.setName(role.getName());
-//        resRole.setPermissions(role.getPermissions());
-//
-//        return this.roleRepository.save(resRole);
-//    }
-//
-//    @Override
-//    public Role handleActivateRole(long id) throws InvalidException {
-//        Role role = this.roleRepository.findById(id)
-//                .orElseThrow(() -> new InvalidException("Role doesn't exist"));
-//        if (!role.isActive()) {
-//            role.setActive(true);
-//            return this.roleRepository.save(role);
-//        }
-//        return role;
-//    }
-//
-//    @Override
-//    public Role handleDeactivateRole(long id) throws InvalidException {
-//        Role role = this.roleRepository.findById(id)
-//                .orElseThrow(() -> new InvalidException("Role doesn't exist"));
-//        if (role.isActive()) {
-//            role.setActive(false);
-//            return this.roleRepository.save(role);
-//        }
-//        return role;
-//    }
-//
-//    @Override
-//    public void handleDeleteRole(long id) {
-//        Role currentRole = this.handleGetRoleById(id);
-//        if(currentRole.getUsers() != null){
-//            currentRole.getUsers().forEach(user -> {
-//                user.setRole(null);
-//                this.userRepository.save(user);
-//            });
-//        }
-//        this.roleRepository.deleteById(id);
-//    }
-//
-//    @Override
-//    public Role handleGetRoleById(long id) {
-//        return this.roleRepository.findById(id).orElse(null);
-//    }
-//
-//    @Override
-//    public Role handleGetRoleByName(String name) {
-//        return this.roleRepository.findByName(name);
-//    }
-//
-//    @Override
-//    public ResultPaginationResponse handleGetAllRoles(Specification<Role> spec, Pageable pageable) {
-//        Page<Role> page = this.roleRepository.findAll(spec, pageable);
-//
-//        ResultPaginationResponse.Meta meta = new ResultPaginationResponse.Meta();
-//        meta.setPage(pageable.getPageNumber() + 1);
-//        meta.setPageSize(pageable.getPageSize());
-//        meta.setTotal(page.getTotalElements());
-//        meta.setPages(page.getTotalPages());
-//
-//        return new ResultPaginationResponse(meta, page.getContent());
-//    }
+    private final RoleRepository roleRepository;
+    private final PermissionRepository permissionRepository;
+    private final UserRepository userRepository;
+
+    @Override
+    public Role handleCreateRole(RoleCreateRequest request) {
+        Role role = new Role();
+        role.setName(request.getName());
+        if (request.getDescription() != null) {
+            role.setDescription(request.getDescription());
+        } else {
+            role.setDescription("");
+        }
+        role.setActive(true);
+        role.setPermissions(List.of());
+        return this.roleRepository.save(role);
+    }
+
+    @Override
+    public Role handleUpdateRole(Role role) {
+        Role resRole = this.handleGetRoleById(role.getRoleId());
+
+        if(role.getPermissions() != null){
+            List<Long> permissionIds = role.getPermissions().stream().map(Permission::getPermissionId).toList();
+            List<Permission> permissions = this.permissionRepository.findByPermissionIdIn(permissionIds);
+            role.setPermissions(permissions);
+        }
+
+        resRole.setDescription(role.getDescription());
+        resRole.setActive(role.isActive());
+        resRole.setName(role.getName());
+        resRole.setPermissions(role.getPermissions());
+
+        return this.roleRepository.save(resRole);
+    }
+
+    @Override
+    public Role handleActivateRole(long id) throws InvalidException {
+        Role role = this.roleRepository.findById(id)
+                .orElseThrow(() -> new InvalidException("Role doesn't exist"));
+        if (!role.isActive()) {
+            role.setActive(true);
+            return this.roleRepository.save(role);
+        }
+        return role;
+    }
+
+    @Override
+    public Role handleDeactivateRole(long id) throws InvalidException {
+        Role role = this.roleRepository.findById(id)
+                .orElseThrow(() -> new InvalidException("Role doesn't exist"));
+        if (role.isActive()) {
+            role.setActive(false);
+            return this.roleRepository.save(role);
+        }
+        return role;
+    }
+
+    @Override
+    public Role handleGetRoleById(long id) {
+        return this.roleRepository.findById(id).orElse(null);
+    }
+
+    @Override
+    public Role handleGetRoleByName(String name) {
+        return this.roleRepository.findByName(name);
+    }
+
+    @Override
+    public ResultPaginationResponse handleGetAllRoles(Specification<Role> spec, Pageable pageable) {
+        Page<Role> page = this.roleRepository.findAll(spec, pageable);
+
+        ResultPaginationResponse.Meta meta = new ResultPaginationResponse.Meta();
+        meta.setPage(pageable.getPageNumber() + 1);
+        meta.setPageSize(pageable.getPageSize());
+        meta.setTotal(page.getTotalElements());
+        meta.setPages(page.getTotalPages());
+
+        return new ResultPaginationResponse(meta, page.getContent());
+    }
 }

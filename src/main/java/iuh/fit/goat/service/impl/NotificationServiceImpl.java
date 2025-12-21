@@ -27,19 +27,19 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class NotificationServiceImpl implements NotificationService {
 //    private final NotificationRepository notificationRepository;
-//    private final UserRepository userRepository;
+    private final UserRepository userRepository;
 //    private final BlogRepository blogRepository;
 //    private final CommentRepository commentRepository;
 //    private final SimpMessagingTemplate messagingTemplate;
-//    private final RedisService redisService;
-//    private final ObjectMapper objectMapper;
-//
-//    private User handleGetCurrentUser() {
-//        String currentEmail = SecurityUtil.getCurrentUserLogin()
-//                .orElse("");
-//        return this.userRepository.findByContact_Email(currentEmail);
-//    }
-//
+    private final RedisService redisService;
+    private final ObjectMapper objectMapper;
+
+    private User handleGetCurrentUser() {
+        String currentEmail = SecurityUtil.getCurrentUserLogin()
+                .orElse("");
+        return this.userRepository.findByEmail(currentEmail);
+    }
+
 //    @Override
 //    public Notification createNotification(Notification notification) {
 //        return this.notificationRepository.save(notification);
@@ -161,52 +161,52 @@ public class NotificationServiceImpl implements NotificationService {
 //            log.error("Failed to process reply notification for comment {}: {}", parent.getCommentId(), e.getMessage());
 //        }
 //    }
-//
-//    @Override
-//    public void handleNotifyLikeBlog(Blog blog) {
-//        User actor = this.handleGetCurrentUser();
-//        if (actor == null || blog == null || blog.getAuthor() == null) return;
-//
-//        User recipient = blog.getAuthor();
-//        if (actor.getUserId() == recipient.getUserId()) return;
-//
-//        String redisKey = String.format("notification:%d:blog:%d:recipient:%d",
-//                NotificationType.LIKE.ordinal(), blog.getBlogId(), recipient.getUserId());
-//
-//        try {
-//            // Check if notification exists in Redis
-//            if (redisService.hasKey(redisKey)) {
-//                // Get existing data, add actor to list
-//                String existingPayload = redisService.getValue(redisKey);
-//                @SuppressWarnings("unchecked")
-//                Map<String, Object> existingData = objectMapper.readValue(existingPayload, Map.class);
-//
-//                @SuppressWarnings("unchecked")
-//                List<Number> actorIds = (List<Number>) existingData.get("actorIds");
-//                Long actorId = actor.getUserId();
-//
-//                if (!actorIds.contains(actorId)) {
-//                    actorIds.add(actorId);
-//                    existingData.put("actorIds", actorIds);
-//
-//                    String updatedPayload = objectMapper.writeValueAsString(existingData);
-//                    redisService.updateValue(redisKey, updatedPayload);
-//                }
-//            } else {
-//                // Create new notification in Redis
-//                Notification notification = new Notification();
-//                notification.setType(NotificationType.LIKE);
-//                notification.setBlog(blog);
-//                notification.setActors(List.of(actor));
-//                notification.setRecipient(recipient);
-//
-//                setNotificationToRedis(notification, redisKey);
-//            }
-//        } catch (JsonProcessingException e) {
-//            log.error("Failed to process like notification for blog {}: {}", blog.getBlogId(), e.getMessage());
-//        }
-//    }
-//
+
+    @Override
+    public void handleNotifyLikeBlog(Blog blog) {
+        User actor = this.handleGetCurrentUser();
+        if (actor == null || blog == null || blog.getAuthor() == null) return;
+
+        User recipient = blog.getAuthor();
+        if (actor.getAccountId() == recipient.getAccountId()) return;
+
+        String redisKey = String.format("notification:%d:blog:%d:recipient:%d",
+                NotificationType.LIKE.ordinal(), blog.getBlogId(), recipient.getAccountId());
+
+        try {
+            // Check if notification exists in Redis
+            if (redisService.hasKey(redisKey)) {
+                // Get existing data, add actor to list
+                String existingPayload = redisService.getValue(redisKey);
+                @SuppressWarnings("unchecked")
+                Map<String, Object> existingData = objectMapper.readValue(existingPayload, Map.class);
+
+                @SuppressWarnings("unchecked")
+                List<Number> actorIds = (List<Number>) existingData.get("actorIds");
+                Long actorId = actor.getAccountId();
+
+                if (!actorIds.contains(actorId)) {
+                    actorIds.add(actorId);
+                    existingData.put("actorIds", actorIds);
+
+                    String updatedPayload = objectMapper.writeValueAsString(existingData);
+                    redisService.updateValue(redisKey, updatedPayload);
+                }
+            } else {
+                // Create new notification in Redis
+                Notification notification = new Notification();
+                notification.setType(NotificationType.LIKE);
+                notification.setBlog(blog);
+                notification.setActors(List.of(actor));
+                notification.setRecipient(recipient);
+
+                setNotificationToRedis(notification, redisKey);
+            }
+        } catch (JsonProcessingException e) {
+            log.error("Failed to process like notification for blog {}: {}", blog.getBlogId(), e.getMessage());
+        }
+    }
+
 //    @Override
 //    public void handleNotifyFollowRecruiter(Recruiter recruiter) {
 //        User actor = this.handleGetCurrentUser();
@@ -369,26 +369,26 @@ public class NotificationServiceImpl implements NotificationService {
 //
 //        return notification;
 //    }
-//
-//    private void setNotificationToRedis(Notification notification, String redisKey) throws JsonProcessingException {
-//        Map<String, Object> notificationData = new HashMap<>();
-//
-//        notificationData.put("type", notification.getType().name());
-//        notificationData.put("recipientId", notification.getRecipient().getUserId());
-//
-//        List<Long> actorIds = notification.getActors().stream()
-//                .map(User::getUserId)
-//                .collect(Collectors.toList());
-//        notificationData.put("actorIds", actorIds);
-//
-//        if (notification.getBlog() != null) {
-//            notificationData.put("blogId", notification.getBlog().getBlogId());
-//        }
-//
-//        if (notification.getComment() != null) {
-//            notificationData.put("commentId", notification.getComment().getCommentId());
-//        }
-//
+
+    private void setNotificationToRedis(Notification notification, String redisKey) throws JsonProcessingException {
+        Map<String, Object> notificationData = new HashMap<>();
+
+        notificationData.put("type", notification.getType().name());
+        notificationData.put("recipientId", notification.getRecipient().getAccountId());
+
+        List<Long> actorIds = notification.getActors().stream()
+                .map(User::getAccountId)
+                .collect(Collectors.toList());
+        notificationData.put("actorIds", actorIds);
+
+        if (notification.getBlog() != null) {
+            notificationData.put("blogId", notification.getBlog().getBlogId());
+        }
+
+        if (notification.getComment() != null) {
+            notificationData.put("commentId", notification.getComment().getCommentId());
+        }
+
 //        if (notification.getReply() != null) {
 //            notificationData.put("replyId", notification.getReply().getCommentId());
 //        }
@@ -396,14 +396,14 @@ public class NotificationServiceImpl implements NotificationService {
 //        if (notification.getRepliedOnComment() != null) {
 //            notificationData.put("repliedOnCommentId", notification.getRepliedOnComment().getCommentId());
 //        }
-//
-//        String payload = objectMapper.writeValueAsString(notificationData);
-//        int throttleNotificationTime = 120; // 2 Minutes, 120 Seconds
-//        int delay = 30; // 30 Seconds delay to ensure listener processes after throttle period
-//
-//        redisService.saveWithTTL(redisKey + ":listener", "1", throttleNotificationTime, TimeUnit.SECONDS);
-//
-//        // Save to Redis with TTL, listen event when key expires to create notification in DB
-//        redisService.saveWithTTL(redisKey, payload, throttleNotificationTime + delay, TimeUnit.SECONDS);
-//    }
+
+        String payload = objectMapper.writeValueAsString(notificationData);
+        int throttleNotificationTime = 120; // 2 Minutes, 120 Seconds
+        int delay = 30; // 30 Seconds delay to ensure listener processes after throttle period
+
+        redisService.saveWithTTL(redisKey + ":listener", "1", throttleNotificationTime, TimeUnit.SECONDS);
+
+        // Save to Redis with TTL, listen event when key expires to create notification in DB
+        redisService.saveWithTTL(redisKey, payload, throttleNotificationTime + delay, TimeUnit.SECONDS);
+    }
 }

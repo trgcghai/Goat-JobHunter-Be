@@ -65,11 +65,11 @@ public class UserServiceImpl implements UserService {
     public User handleGetUserByEmail(String email) {
         return this.userRepository.findByEmailWithRole(email).orElse(null);
     }
-//
-//    @Override
-//    public boolean handleExistsByEmail(String email) {
-//        return this.userRepository.existsByContact_Email(email);
-//    }
+
+    @Override
+    public boolean handleExistsByEmail(String email) {
+        return this.userRepository.existsByEmail(email);
+    }
 //
 //    @Override
 //    public User handleGetUserById(long id) {
@@ -733,29 +733,34 @@ public class UserServiceImpl implements UserService {
 //                .collect(Collectors.toList());
 //    }
 //
-//    @Override
-//    public UserResponse convertToUserResponse(User user) {
-//        UserResponse userResponse = new UserResponse();
-//
-//        userResponse.setUserId(user.getUserId());
-//        userResponse.setContact(user.getContact());
-//        userResponse.setAddress(user.getAddress());
-//        userResponse.setUsername(user.getUsername());
-//        userResponse.setFullName(user.getFullName());
-//        userResponse.setAvatar(user.getAvatar());
-//        userResponse.setEnabled(user.isEnabled());
-//        userResponse.setCreatedAt(user.getCreatedAt());
-//        userResponse.setUpdatedAt(user.getUpdatedAt());
-//
-//        if (user.getRole() != null) {
-//            UserResponse.RoleUser roleUser = new UserResponse.RoleUser();
-//            roleUser.setRoleId(user.getRole().getRoleId());
-//            roleUser.setName(user.getRole().getName());
-//
-//            userResponse.setRole(roleUser);
-//        }
-//
-//        return userResponse;
-//    }
+    @Override
+    public UserResponse convertToUserResponse(User user) {
+        UserResponse userResponse = new UserResponse();
 
+        userResponse.setAccountId(user.getAccountId());
+        userResponse.setUsername(user.getUsername());
+        userResponse.setEmail(user.getEmail());
+        userResponse.setPhone(user.getPhone());
+        userResponse.setAddress(user.getAddress());
+        userResponse.setFullName(user.getFullName());
+        userResponse.setAvatar(user.getAvatar());
+        userResponse.setGender(user.getGender());
+        userResponse.setDob(user.getDob());
+        userResponse.setEnabled(user.isEnabled());
+        userResponse.setCoverPhoto(user.getCoverPhoto());
+        userResponse.setHeadline(user.getHeadline());
+        userResponse.setBio(user.getBio());
+        userResponse.setCreatedAt(user.getCreatedAt());
+        userResponse.setUpdatedAt(user.getUpdatedAt());
+
+        if (user.getRole() != null) {
+            UserResponse.RoleUser roleUser = new UserResponse.RoleUser();
+            roleUser.setRoleId(user.getRole().getRoleId());
+            roleUser.setName(user.getRole().getName());
+
+            userResponse.setRole(roleUser);
+        }
+
+        return userResponse;
+    }
 }
