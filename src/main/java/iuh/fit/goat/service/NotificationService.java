@@ -16,8 +16,8 @@ public interface NotificationService {
 //    void handleNotifyCommentBlog(Blog blog, Comment comment);
 //
 //    void handleNotifyReplyComment(Comment parent, Comment reply);
-//
-//    void handleNotifyLikeBlog(Blog blog);
+
+    void handleNotifyLikeBlog(Blog blog);
 //
 //    void handleNotifyFollowRecruiter(Recruiter recruiter);
 //

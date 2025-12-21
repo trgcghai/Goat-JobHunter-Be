@@ -11,6 +11,15 @@
     <!--  Seed user for admin  -->
     <include file="db.changelog/data.2025-12-18/2025-12-18-seed-user-for-admin.xml" />
 
+    <!--  Drop draft column  -->
+    <include file="/db.changelog/data.2025-12-20/drop-blog-draft-column.xml"/>
+
+    <!--  Add new address column for table companies  -->
+    <include file="/db.changelog/data.2025-12-20/add-company-address-column.xml"/>
+
+    <!--  Drop title column  -->
+    <include file="/db.changelog/data.2025-12-20/drop-blog-title-column.xml"/>
+
     <!--      Initial database setup      -->
     <include file="/db.changelog/schema/2025-12-16/2025-12-16-create-sequences.xml"/>
     <include file="/db.changelog/schema/2025-12-16/2025-12-16-create-tables.xml"/>

@@ -24,7 +24,7 @@ import java.util.stream.Collectors;
 @Service
 @RequiredArgsConstructor
 public class AiServiceImpl implements AiService {
-//    private final Client client;
+    private final Client client;
 //
 //    private final UserService userService;
 //    private final ConversationService conversationService;
@@ -39,9 +39,9 @@ public class AiServiceImpl implements AiService {
 //    private final BlogRepository blogRepository;
 //    private final CareerRepository careerRepository;
 //    private final SkillRepository skillRepository;
-//
-//    @Value("${google.api.model}")
-//    private String MODEL;
+
+    @Value("${google.api.model}")
+    private String MODEL;
 //    @Value("${goat.fe.url}")
 //    private String FE;
 //
@@ -419,73 +419,73 @@ public class AiServiceImpl implements AiService {
 //        );
 //    }
 //
-//    @Override
-//    public String generateBlogDescription(String content) {
-//        if (content == null || content.trim().isEmpty()) {
-//            return "";
-//        }
-//
-//        String prompt = """
-//            Dựa trên nội dung bài viết sau, hãy tạo một mô tả ngắn gọn (khoảng 100-150 từ) để thu hút người đọc.
-//            Mô tả phải:
-//            - Tóm tắt ý chính của bài viết
-//            - Hấp dẫn và khơi gợi sự tò mò
-//            - Viết bằng Tiếng Việt
-//            - Không dùng ký tự đặc biệt hay markdown
-//
-//            Nội dung bài viết:
-//            %s
-//
-//            Chỉ trả về mô tả, không thêm gì khác.
-//            """.formatted(content);
-//
-//        try {
-//            GenerateContentResponse response = this.client.models
-//                    .generateContent(MODEL, prompt, null);
-//            return response.text().trim();
-//        } catch (Exception e) {
-//            e.printStackTrace();
-//            return "";
-//        }
-//    }
-//
-//    @Override
-//    public List<String> generateBlogTags(String content) {
-//        if (content == null || content.trim().isEmpty()) {
-//            return List.of();
-//        }
-//
-//        String prompt = """
-//            Dựa trên nội dung bài viết sau, hãy tạo 5-7 thẻ tag phù hợp.
-//            Các tag phải:
-//            - Ngắn gọn (1-3 từ)
-//            - Liên quan trực tiếp đến chủ đề
-//            - Viết bằng Tiếng Việt hoặc tiếng Anh (tùy ngữ cảnh)
-//            - Phân tách bằng dấu phẩy
-//
-//            Nội dung bài viết:
-//            %s
-//
-//            Chỉ trả về danh sách các tag cách nhau bằng dấu phẩy, không thêm gì khác.
-//            Ví dụ: Java, Spring Boot, Backend, API, Microservices
-//            """.formatted(content);
-//
-//        try {
-//            GenerateContentResponse response = this.client.models
-//                    .generateContent(MODEL, prompt, null);
-//            String tagsText = response.text().trim();
-//
-//            return List.of(tagsText.split(","))
-//                    .stream()
-//                    .map(String::trim)
-//                    .filter(tag -> !tag.isEmpty())
-//                    .limit(7)
-//                    .toList();
-//        } catch (Exception e) {
-//            e.printStackTrace();
-//            return List.of();
-//        }
-//    }
+    @Override
+    public String generateBlogDescription(String content) {
+        if (content == null || content.trim().isEmpty()) {
+            return "";
+        }
+
+        String prompt = """
+            Dựa trên nội dung bài viết sau, hãy tạo một mô tả ngắn gọn (khoảng 100-150 từ) để thu hút người đọc.
+            Mô tả phải:
+            - Tóm tắt ý chính của bài viết
+            - Hấp dẫn và khơi gợi sự tò mò
+            - Viết bằng Tiếng Việt
+            - Không dùng ký tự đặc biệt hay markdown
+
+            Nội dung bài viết:
+            %s
+
+            Chỉ trả về mô tả, không thêm gì khác.
+            """.formatted(content);
+
+        try {
+            GenerateContentResponse response = this.client.models
+                    .generateContent(MODEL, prompt, null);
+            return response.text().trim();
+        } catch (Exception e) {
+            e.printStackTrace();
+            return "";
+        }
+    }
+
+    @Override
+    public List<String> generateBlogTags(String content) {
+        if (content == null || content.trim().isEmpty()) {
+            return List.of();
+        }
+
+        String prompt = """
+            Dựa trên nội dung bài viết sau, hãy tạo 5-7 thẻ tag phù hợp.
+            Các tag phải:
+            - Ngắn gọn (1-3 từ)
+            - Liên quan trực tiếp đến chủ đề
+            - Viết bằng Tiếng Việt hoặc tiếng Anh (tùy ngữ cảnh)
+            - Phân tách bằng dấu phẩy
+
+            Nội dung bài viết:
+            %s
+
+            Chỉ trả về danh sách các tag cách nhau bằng dấu phẩy, không thêm gì khác.
+            Ví dụ: Java, Spring Boot, Backend, API, Microservices
+            """.formatted(content);
+
+        try {
+            GenerateContentResponse response = this.client.models
+                    .generateContent(MODEL, prompt, null);
+            String tagsText = response.text().trim();
+
+            return List.of(tagsText.split(","))
+                    .stream()
+                    .map(String::trim)
+                    .filter(tag -> !tag.isEmpty())
+                    .limit(7)
+                    .toList();
+        } catch (Exception e) {
+            e.printStackTrace();
+            return List.of();
+        }
+    }
 //    // Lấy dữ liệu lưu vào cache
 //
 //

@@ -17,12 +17,10 @@ import java.util.List;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class BlogResponse {
     private long blogId;
-    private String title;
-    private String banner;
+    private List<String> images;
     private String description;
     private String content;
     private List<String> tags;
-    private boolean draft;
     private boolean enabled;
     private BlogActivity activity = new BlogActivity();
     private Instant createdAt;
@@ -36,7 +34,12 @@ public class BlogResponse {
     @NoArgsConstructor
     @AllArgsConstructor
     public static class BlogAuthor {
-        private long userId;
+        private long accountId;
         private String fullName;
+        private String username;
+        private String avatar;
+        private String bio;
+        private String headline;
+        private String coverPhoto;
     }
 }

@@ -37,7 +37,7 @@ public class EmailNotificationServiceImpl implements EmailNotificationService {
 //        String content = this.templateEngine.process(templateName, context);
 //        this.asyncEmailService.handleSendEmailSync(recipient, subject, content, false, true);
 //    }
-//
+
     @Override
     public void handleSendVerificationEmail(String email, String verificationCode) {
         String subject = "Account Verification";
@@ -47,35 +47,35 @@ public class EmailNotificationServiceImpl implements EmailNotificationService {
 
         this.asyncEmailService.handleSendEmailSync(email, subject, content, false, true);
     }
-//
-//    @Override
-//    public void handleSendBlogActionNotice(
-//            String recipient, String username, Object object, String reason, ActionType mode
-//    ) {
-//        String subject;
-//
-//        switch (mode) {
-//            case ACCEPT -> subject = "Bài viết của bạn đã được duyệt";
-//            case DELETE -> subject = "Bài viết của bạn đã bị xóa";
-//            case REJECT -> subject = "Bài viết của bạn không được duyệt";
-//            default -> subject = "Thông báo về bài viết của bạn";
-//        }
-//
-//        Context context = new Context();
-//        context.setVariable("username", username);
-//        context.setVariable("blogs", object);
-//        context.setVariable("mode", mode);
-//
-//        if (mode == ActionType.DELETE || mode == ActionType.REJECT) {
-//            context.setVariable("reason", reason);
-//        } else {
-//            context.setVariable("reason", null);
-//        }
-//
-//        String content = this.templateEngine.process("blog", context);
-//        this.asyncEmailService.handleSendEmailSync(recipient, subject, content, false, true);
-//    }
-//
+
+    @Override
+    public void handleSendBlogActionNotice(
+            String recipient, String username, Object object, String reason, ActionType mode
+    ) {
+        String subject;
+
+        switch (mode) {
+            case ACCEPT -> subject = "Bài viết của bạn đã được duyệt";
+            case DELETE -> subject = "Bài viết của bạn đã bị xóa";
+            case REJECT -> subject = "Bài viết của bạn không được duyệt";
+            default -> subject = "Thông báo về bài viết của bạn";
+        }
+
+        Context context = new Context();
+        context.setVariable("username", username);
+        context.setVariable("blogs", object);
+        context.setVariable("mode", mode);
+
+        if (mode == ActionType.DELETE || mode == ActionType.REJECT) {
+            context.setVariable("reason", reason);
+        } else {
+            context.setVariable("reason", null);
+        }
+
+        String content = this.templateEngine.process("blog", context);
+        this.asyncEmailService.handleSendEmailSync(recipient, subject, content, false, true);
+    }
+
 //    @Override
 //    public void handleSendJobActionNotice(String recipient, String username, Object object, String reason, ActionType mode) {
 //        String subject;

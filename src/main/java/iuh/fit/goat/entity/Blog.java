@@ -3,7 +3,6 @@ package iuh.fit.goat.entity;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import iuh.fit.goat.entity.embeddable.BlogActivity;
 import jakarta.persistence.*;
-import jakarta.validation.constraints.NotBlank;
 import lombok.*;
 import org.hibernate.annotations.Filter;
 import org.hibernate.annotations.FilterDef;
@@ -26,8 +25,6 @@ public class Blog extends BaseEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
     private long blogId;
-    @NotBlank(message = "Title is not empty")
-    private String title;
     @ElementCollection
     private List<String> images;
     @Column(columnDefinition = "TEXT")
@@ -35,8 +32,8 @@ public class Blog extends BaseEntity {
     @Column(columnDefinition = "TEXT")
     private String content;
     @ElementCollection
+    @Column(columnDefinition = "TEXT")
     private List<String> tags;
-    private boolean draft;
     private boolean enabled = false;
     @Embedded
     private BlogActivity activity = new BlogActivity();
