@@ -31,6 +31,8 @@
     <include file="db.changelog/schema/2025-12-20/2025-12-20-update-column-address.xml"/>
     <include file="db.changelog/data/2025-12-20/2025-12-20-insert-addresses-for-companies.xml"/>
     <include file="db.changelog/schema/2025-12-20/2025-12-20-enable-citext-extension.xml"/>
+    <include file="db.changelog/schema/2025-12-21/2025-12-21-add-address-entity.xml"/>
+    <include file="db.changelog/schema/2025-12-21/2025-12-21-update-schema-account.xml"/>
     <!--      History      -->
 
 </databaseChangeLog>

@@ -1,5 +1,6 @@
 package iuh.fit.goat.dto.response.company;
 
+import iuh.fit.goat.entity.Address;
 import iuh.fit.goat.enumeration.CompanySize;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -21,7 +22,7 @@ public class CompanyResponse {
     private String logo;
     private String coverPhoto;
     private String website;
-    private List<String> addresses;
+    private List<Address> addresses;
     private String phone;
     private CompanySize size;
     private boolean verified;

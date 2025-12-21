@@ -29,6 +29,4 @@ public interface AiService {
 //    String generateBlogDescription(String content);
 //
 //    List<String> generateBlogTags(String content);
-
-    Map<String, List<String>> groupAddressesByCityWithAi(List<String> addresses);
 }

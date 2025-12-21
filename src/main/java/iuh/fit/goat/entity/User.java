@@ -53,7 +53,6 @@ import static jakarta.persistence.FetchType.LAZY;
         @JsonSubTypes.Type(value = Applicant.class, name = "applicant"),
 })
 public class User extends Account {
-    protected String address;
     protected String phone;
     protected LocalDate dob;
     protected String fullName;

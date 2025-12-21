@@ -2,6 +2,7 @@ package iuh.fit.goat.service.impl;
 
 import iuh.fit.goat.dto.response.ResultPaginationResponse;
 import iuh.fit.goat.dto.response.company.CompanyResponse;
+import iuh.fit.goat.entity.Address;
 import iuh.fit.goat.entity.Company;
 import iuh.fit.goat.repository.CompanyRepository;
 import iuh.fit.goat.service.AiService;
@@ -14,7 +15,7 @@ import org.springframework.stereotype.Service;
 
 import java.util.List;
 import java.util.Map;
-import java.util.function.Predicate;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -73,6 +74,14 @@ public class CompanyServiceImpl implements CompanyService {
         Company company = this.handleGetCompanyById(id);
         if(company == null) return Map.of();
 
-        return this.aiService.groupAddressesByCityWithAi(company.getAddresses());
+        return company.getAddresses()
+                .stream()
+                .filter(addr -> addr.getProvince() != null && addr.getFullAddress() != null)
+                .collect(
+                        Collectors.groupingBy(
+                            Address::getProvince,
+                            Collectors.mapping(Address::getFullAddress, Collectors.toList())
+                        )
+                );
     }
 }

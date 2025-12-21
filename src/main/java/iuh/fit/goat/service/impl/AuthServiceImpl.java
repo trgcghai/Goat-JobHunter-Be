@@ -358,14 +358,10 @@ public class AuthServiceImpl implements AuthService {
         // Thông tin riêng của User
         if (account instanceof User) {
             User user = (User) account;
-            List<String> addresses = new ArrayList<>();
-            if(user.getAddress() != null && !user.getAddress().isEmpty()) {
-                addresses.add(user.getAddress());
-            }
 
             loginResponse.setPhone(user.getPhone());
             loginResponse.setDob(user.getDob());
-            loginResponse.setAddresses(addresses);
+            loginResponse.setAddresses(user.getAddresses());
             loginResponse.setGender(user.getGender());
             loginResponse.setFullName(Objects.requireNonNullElse(user.getFullName(), ""));
             loginResponse.setType(user instanceof Applicant ? Role.APPLICANT.getValue() : Role.RECRUITER.getValue());
