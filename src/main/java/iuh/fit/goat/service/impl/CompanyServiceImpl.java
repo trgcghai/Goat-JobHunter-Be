@@ -14,6 +14,7 @@ import org.springframework.stereotype.Service;
 
 import java.util.List;
 import java.util.Map;
+import java.util.function.Predicate;
 
 @Service
 @RequiredArgsConstructor
@@ -50,6 +51,7 @@ public class CompanyServiceImpl implements CompanyService {
     public CompanyResponse convertToCompanyResponse(Company company) {
         CompanyResponse companyResponse = new CompanyResponse();
 
+        companyResponse.setAccountId(company.getAccountId());
         companyResponse.setEmail(company.getEmail());
         companyResponse.setName(company.getName());
         companyResponse.setDescription(company.getDescription());

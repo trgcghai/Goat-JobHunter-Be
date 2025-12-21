@@ -14,6 +14,7 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 public class CompanyResponse {
+    private long accountId;
     private String email;
     private String name;
     private String description;

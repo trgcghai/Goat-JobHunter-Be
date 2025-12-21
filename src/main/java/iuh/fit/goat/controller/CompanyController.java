@@ -67,4 +67,19 @@ public class CompanyController {
         Map<String, List<String>> res = this.companyService.handleGroupAddressesCityByCompany(Long.parseLong(id));
         return ResponseEntity.status(HttpStatus.OK).body(res);
     }
+
+    @GetMapping("/available")
+    public ResponseEntity<ResultPaginationResponse> getAllAvailableCompanies(
+            @Filter Specification<Company> spec, Pageable pageable
+    ) {
+        Specification<Company> baseSpec = (spec != null) ? spec : Specification.unrestricted();
+
+        Specification<Company> finalSpec = baseSpec.and(
+                (root, query, criteriaBuilder)
+                        -> criteriaBuilder.isTrue(root.get("enabled"))
+        );
+
+        ResultPaginationResponse res = this.companyService.handleGetAllCompanies(finalSpec, pageable);
+        return ResponseEntity.status(HttpStatus.OK).body(res);
+    }
 }
