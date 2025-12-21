@@ -59,12 +59,25 @@ public class CompanyServiceImpl implements CompanyService {
         companyResponse.setLogo(company.getLogo());
         companyResponse.setCoverPhoto(company.getCoverPhoto());
         companyResponse.setWebsite(company.getWebsite());
-        companyResponse.setAddresses(company.getAddresses());
         companyResponse.setPhone(company.getPhone());
         companyResponse.setSize(company.getSize());
         companyResponse.setVerified(company.isVerified());
         companyResponse.setCreatedAt(company.getCreatedAt());
         companyResponse.setUpdatedAt(company.getUpdatedAt());
+
+        if(company.getAddresses() != null) {
+            List<CompanyResponse.CompanyAddress> addresses = company.getAddresses()
+                    .stream()
+                    .map(addr -> {
+                        CompanyResponse.CompanyAddress companyAddress = new CompanyResponse.CompanyAddress();
+                        companyAddress.setAddressId(addr.getAddressId());
+                        companyAddress.setProvince(addr.getProvince());
+                        companyAddress.setFullAddress(addr.getFullAddress());
+                        return companyAddress;
+                    })
+                    .toList();
+            companyResponse.setAddresses(addresses);
+        }
 
         return companyResponse;
     }

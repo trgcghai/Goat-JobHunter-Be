@@ -22,10 +22,20 @@ public class CompanyResponse {
     private String logo;
     private String coverPhoto;
     private String website;
-    private List<Address> addresses;
+    private List<CompanyAddress> addresses;
     private String phone;
     private CompanySize size;
     private boolean verified;
     private Instant createdAt;
     private Instant updatedAt;
+
+    @Getter
+    @Setter
+    @NoArgsConstructor
+    @AllArgsConstructor
+    public static class CompanyAddress {
+        private long addressId;
+        private String province;
+        private String fullAddress;
+    }
 }
