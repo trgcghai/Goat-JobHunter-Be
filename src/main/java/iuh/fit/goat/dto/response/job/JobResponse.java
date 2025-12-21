@@ -22,7 +22,6 @@ import java.util.List;
 public class JobResponse {
     private long jobId;
     private String title;
-    private String location;
     private double salary;
     private int quantity;
     private String description;
@@ -34,7 +33,8 @@ public class JobResponse {
     private boolean enabled;
     private List<Skill> skills;
     private Career career;
-    private RecruiterJob recruiter;
+    private JobCompany company;
+    private JobAddress address;
 
     private Instant createdAt;
     private String createdBy;
@@ -45,8 +45,18 @@ public class JobResponse {
     @Setter
     @NoArgsConstructor
     @AllArgsConstructor
-    public static class RecruiterJob {
-        private long userId;
-        private String fullName;
+    public static class JobCompany {
+        private long accountId;
+        private String name;
+    }
+
+    @Getter
+    @Setter
+    @NoArgsConstructor
+    @AllArgsConstructor
+    public static class JobAddress {
+        private long addressId;
+        private String province;
+        private String fullAddress;
     }
 }

@@ -23,11 +23,11 @@ public interface JobService {
 //
 //    void handleDeleteJob(JobIdsActionRequest request);
 //
-//    Job handleGetJobById(long id);
+    Job handleGetJobById(long id);
 //
 //    ResultPaginationResponse handleGetAllJobs(Specification<Job> spec, Pageable pageable);
 //
-//    Map<Long, Long> handleCountJobByRecruiter();
+    Map<Long, Long> handleCountJobByCompany();
 //
 //    List<Long> handleGetAllJobIdsByRecruiter();
 //
@@ -35,7 +35,7 @@ public interface JobService {
 //
 //    ResultPaginationResponse handleGetJobsByRecruiterId(Long recruiterId, Specification<Job> spec, Pageable pageable);
 //
-//    JobResponse convertToJobResponse(Job job);
+    JobResponse convertToJobResponse(Job job);
 //
 //    List<JobActivateResponse> handleActivateJobs(List<Long> jobIds);
 //

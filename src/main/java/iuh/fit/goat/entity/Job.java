@@ -42,11 +42,12 @@ public class Job extends BaseEntity {
     private String title;
     @Enumerated(EnumType.STRING)
     private WorkingType workingType;
-    @NotBlank(message = "Location is not empty")
-    private String location;
     private boolean enabled = false;
 
-    @ManyToOne(fetch = LAZY)
+    @OneToOne(mappedBy = "job", cascade = {PERSIST, MERGE})
+    private Address address;
+
+    @ManyToOne
     @JoinColumn(name = "company_id")
     private Company company;
 
@@ -71,7 +72,7 @@ public class Job extends BaseEntity {
     )
     private List<Application> applications = new ArrayList<>();
 
-    @ManyToOne(fetch = LAZY)
+    @ManyToOne
     @JoinColumn(name = "career_id")
     private Career career;
 
