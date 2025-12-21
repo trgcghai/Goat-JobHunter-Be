@@ -42,9 +42,10 @@ public class Job extends BaseEntity {
     private String title;
     @Enumerated(EnumType.STRING)
     private WorkingType workingType;
-    @NotBlank(message = "Location is not empty")
-    private String location;
     private boolean enabled = false;
+
+    @OneToOne(mappedBy = "job", cascade = {PERSIST, MERGE})
+    private Address address;
 
     @ManyToOne(fetch = LAZY)
     @JoinColumn(name = "company_id")
