@@ -1,0 +1,391 @@
+skill_id,name
+1,3ds Max
+2,ABAP
+3,Adobe
+4,Adobe Photoshop
+5,Adobe XD
+6,Agile
+7,AI
+8,Android
+9,Android studio
+10,Angular
+11,AngularJS
+12,Ansible
+13,Anti-malware
+14,Antivirus
+15,Apache Airflow
+16,Apache HttpClient
+17,Apache Spark
+18,API
+19,Appium
+20,Application Security
+21,ASP.NET
+22,Automation Test
+23,AUTOSAR
+24,AVR
+25,AWS
+26,AWS CloudFormation
+27,AWS Lambda
+28,Axure
+29,Azure
+30,Bash Shell
+31,Big Data
+32,Black box testing
+33,Blazor
+34,BLE
+35,Blender
+36,Blockchain
+37,Bootstrap
+38,BPMN
+39,Bridge Engineer
+40,BrowserStack
+41,Burp Suite
+42,Business Analysis
+43,Business Intelligence
+44,C#
+45,C++
+46,Change Management
+47,Chinese
+48,CI/CD
+49,Cisco
+50,C language
+51,Clean Architecture
+52,Cloud
+53,Cloud-native Architecture
+54,Cloud Security
+55,CompTIA Security+
+56,Computer Vision
+57,CRM
+58,CSS
+59,CSS 3
+60,Cucumber
+61,Cybersecurity
+62,Cypress
+63,Dart
+64,Data Analysis
+65,Database
+66,Databricks
+67,Data cleaning
+68,Data-driven
+69,Data Engineer
+70,Data mining
+71,Data modeling
+72,Data Quality Tools
+73,Data Science
+74,Data Warehousing
+75,DBA
+76,Deep Learning
+77,Design
+78,Design Systems
+79,DevOps
+80,DevSecOps
+81,Digital Forensics
+82,Django
+83,Docker
+84,Domain-Driven Design
+85,Ec-cube
+86,Elasticsearch
+87,Elixir
+88,ELK Stack
+89,ELT
+90,Embedded
+91,Embedded C
+92,English
+93,Enterprise Architecture
+94,Entity Framework
+95,ERP
+96,Ethers.js
+97,ETL
+98,Exploit Development
+99,Express
+100,ExpressJS
+101,F#
+102,FastAPI
+103,Figma
+104,Fiori
+105,Firebase
+106,Firewall
+107,Flask
+108,Flutter
+109,Fullstack
+110,Functional specifications
+111,Games
+112,GCP
+113,Generative AI
+114,Gin
+115,Git
+116,GitHub
+117,GitHub Actions
+118,GitLab
+119,Golang
+120,Google Cloud
+121,Risk & Compliance
+122,Grafana
+123,GraphQL
+124,Groovy
+125,Hadoop
+126,Hardware Troubleshooting
+127,Helm
+128,Hibernate
+129,HPE LoadRunner
+130,HTML
+131,HTML5
+132,Hugging Face Transformers
+133,Illustrator
+134,Information Security
+135,Integration test
+136,Interaction Design
+137,iOS
+138,IoT
+139,ISO 27001
+140,IT Audit
+141,IT Communication/Translation
+142,IT Governance
+143,ITIL Foundation
+144,IT Support
+145,J2EE
+146,Japanese
+147,Japanese IT Communication
+148,Java
+149,JavaScript
+150,Jenkins
+151,Jest
+152,Jira
+153,Jmeter
+154,JQuery
+155,JSON
+156,Juniper
+157,JUnit
+158,Kafka
+159,Katalon
+160,Koa
+161,Korean
+162,Kotlin
+163,Kubernetes
+164,Laravel
+165,Leadership
+166,LINQ
+167,Linux
+168,Live2D
+169,LLM
+170,Lua
+171,Machine Learning
+172,Magento
+173,Market research
+174,Maven
+175,Maya
+176,MFA
+177,MFC
+178,Microservices
+179,Microservices Architecture
+180,Microsoft Azure SQL Database
+181,Microsoft Dynamics 365
+182,Microsoft Power Apps
+183,Microsoft SQL Server
+184,MLOps
+185,Mobile Apps
+186,MongoDB
+187,Motion Design
+188,MVC
+189,MVP
+190,MVVM
+191,MySQL
+192,Neo4j
+193,NestJS
+194,.NET
+195,.Net Core
+196,Networking
+197,NextJS
+198,NLP
+199,Nmap
+200,NodeJS
+201,NoSQL
+202,NumPy
+203,Nuxt.js
+204,Objective C
+205,OCR
+206,Odoo
+207,OLTP
+208,OOP
+209,OpenCV
+210,OpenStack
+211,Oracle
+212,OutSystems
+213,Penetration Testing
+214,Pentest
+215,PHP
+216,Playwright
+217,PL/SQL
+218,PostgreSql
+219,Postman
+220,Power BI
+221,PowerShell
+222,PQA
+223,Presale
+224,Product Design
+225,Product Management
+226,Product Metrics
+227,Product Owner
+228,Product roadmap
+229,Product strategy
+230,Project Management
+231,Prometheus
+232,Prompt Engineering
+233,Prototyping
+234,Python
+235,PyTorch
+236,QA QC
+237,R
+238,Razor
+239,ReactJS
+240,React Native
+241,Redis
+242,Redux
+243,REST Assured
+244,Retrofit
+245,Risk Management
+246,Robot Framework
+247,ROS
+248,Ruby
+249,Ruby on Rails
+250,Rust
+251,RxJS
+252,Salesforce
+253,SAP
+254,Sass
+255,Scala
+256,Scrum
+257,SCSS
+258,Security
+259,Security Awareness Training
+260,Selenium
+261,Sharepoint
+262,Shopify
+263,SIEM
+264,Sketch
+265,SOAP
+266,SOAR
+267,Software Architecture
+268,SOLID Principles
+269,Solution Architecture
+270,Spark
+271,Splunk
+272,Spring
+273,Spring Boot
+274,SQL
+275,SQLite
+276,SRS
+277,Stakeholder management
+278,Statistical Analysis
+279,Strategy planning
+280,Swift
+281,Symfony
+282,System Admin
+283,System Architecture
+284,Tableau
+285,Tailwind
+286,Team Management
+287,TensorFlow
+288,Terraform
+289,TestComplete
+290,Tester
+291,TestNG
+292,Trello
+293,T-SQL
+294,TypeScript
+295,Ui5
+296,UI-UX
+297,UML
+298,Unit test
+299,Unity
+300,Unix
+301,Unreal Engine
+302,Usability testing
+303,User diagram
+304,User flows
+305,VBA
+306,vb.net
+307,Visual Basic
+308,Visual Design
+309,VMware
+310,VueJS
+311,Vuex
+312,Waterfall Methodology
+313,Web3.js
+314,Web API
+315,Web Application Firewall
+316,White box testing
+317,Windows
+318,Windows PowerShell
+319,Windows Server
+320,WinForms
+321,Wireframing
+322,Wordpress
+323,WPF
+324,XML
+325,Zend
+326,Lập kế hoạch bán hàng
+327,Đàm phán
+328,Phát triển kinh doanh
+329,Tạo khách hàng tiềm năng
+330,Tiếp thị kỹ thuật số
+331,Tiếp thị nội dung
+332,Quảng cáo Google
+333,Quảng cáo Facebook
+334,Tối ưu hóa công cụ tìm kiếm (SEO)
+335,Tiếp thị qua email
+336,Nghiên cứu thị trường
+337,Quản lý mạng xã hội
+338,Chăm sóc khách hàng
+339,Bán hàng qua điện thoại
+340,Quản lý tài khoản khách hàng
+341,Tiếp thị liên kết
+342,Lên kế hoạch bài giảng
+343,Thiết kế chương trình đào tạo
+344,Quản lý lớp học
+345,Công nghệ giáo dục
+346,Học trực tuyến
+347,Thiết kế bài kiểm tra
+348,Thuyết trình trước công chúng
+349,Cố vấn/Hướng dẫn
+350,Phát triển chương trình học
+351,Dạy học qua Zoom
+352,Google Classroom
+353,Hệ thống quản lý học tập (LMS)
+354,Quản lý khách sạn – nhà hàng
+355,Dịch vụ ăn uống (F&B)
+356,Tổ chức sự kiện
+357,Quản lý đặt chỗ
+358,Hệ thống POS
+359,Pha chế
+360,Dọn phòng khách sạn
+361,Hướng dẫn du lịch
+362,Giao tiếp đa ngôn ngữ
+363,Lễ tân khách sạn
+364,Phần mềm quản lý khách sạn
+365,AutoCAD
+366,Revit
+367,SolidWorks
+368,Thiết kế mô hình 3D
+369,Đọc bản vẽ kỹ thuật
+370,Kỹ thuật xây dựng dân dụng
+371,Dự toán công trình
+372,Thiết kế cơ khí
+373,Thiết kế hệ thống ống dẫn
+374,Đo đạc – Trắc địa
+375,Giám sát công trình
+376,Thiết kế hệ thống điện
+377,Phân tích kết cấu
+378,Tuân thủ tiêu chuẩn an toàn
+379,Chăm sóc điều dưỡng cơ bản
+380,Theo dõi dấu hiệu sinh tồn
+381,Sơ cứu
+382,Thuật ngữ y khoa
+383,Chăm sóc bệnh nhân
+384,Cấp phát thuốc
+385,Giáo dục sức khỏe
+386,Thủ thuật lâm sàng
+387,Hồ sơ y tế điện tử (EHR)
+388,Chứng nhận hồi sức tim phổi (CPR)
+389,Kiểm soát nhiễm khuẩn
+390,Chăm sóc người bệnh/già yếu

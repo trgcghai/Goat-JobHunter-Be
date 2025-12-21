@@ -19,6 +19,7 @@
     <include file="/db.changelog/data/2025-12-16/2025-12-16-init-accounts.xml"/>
     <include file="/db.changelog/data/2025-12-21/2025-12-21-insert-skills.xml"/>
     <include file="/db.changelog/data/2025-12-21/2025-12-21-insert-careers.xml"/>
+    <include file="/db.changelog/data/2025-12-21/2025-12-21-insert-jobs.xml"/>
     <!--      Seed data      -->
 
     <!--      History      -->
