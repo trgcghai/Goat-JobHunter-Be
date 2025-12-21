@@ -41,6 +41,7 @@
     <include file="db.changelog/schema/2025-12-21/2025-12-20-drop-column-title-blogs.xml"/>
     <include file="db.changelog/data/2025-12-21/2025-12-21-insert-addresses-for-companies.xml"/>
     <include file="/db.changelog/schema/2025-12-21/2025-12-21-map-jobs-addresses.xml"/>
+    <include file="db.changelog/schema/2025-12-21/2025-12-21-drop-unique-address.xml"/>
     <!--      History      -->
 
 </databaseChangeLog>
