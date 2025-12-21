@@ -1,12 +1,14 @@
 package iuh.fit.goat.dto.request.recruiter;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
+import iuh.fit.goat.entity.Address;
 import iuh.fit.goat.enumeration.Gender;
 import iuh.fit.goat.entity.embeddable.Contact;
 import jakarta.validation.constraints.NotNull;
 import lombok.Data;
 
 import java.time.LocalDate;
+import java.util.List;
 
 @Data
 @JsonInclude(JsonInclude.Include.NON_NULL)
@@ -18,7 +20,7 @@ public class RecruiterUpdateRequest {
     private String fullName;
     private String email;
     private String phone;
-    private String address;
+    private List<Address> addresses;
     private LocalDate dob;
     private Gender gender;
     private String position;

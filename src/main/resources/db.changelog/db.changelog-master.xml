@@ -5,20 +5,6 @@
         xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
                       http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-5.0.xsd"
 >
-    <!--  Update admin password  -->
-    <include file="/db.changelog/data.2025-12-17/2025-12-17-update-admin-password.xml"/>
-
-    <!--  Seed user for admin  -->
-    <include file="db.changelog/data.2025-12-18/2025-12-18-seed-user-for-admin.xml" />
-
-    <!--  Drop draft column  -->
-    <include file="/db.changelog/data.2025-12-20/drop-blog-draft-column.xml"/>
-
-    <!--  Add new address column for table companies  -->
-    <include file="/db.changelog/data.2025-12-20/add-company-address-column.xml"/>
-
-    <!--  Drop title column  -->
-    <include file="/db.changelog/data.2025-12-20/drop-blog-title-column.xml"/>
 
     <!--      Initial database setup      -->
     <include file="/db.changelog/schema/2025-12-16/2025-12-16-create-sequences.xml"/>
@@ -36,5 +22,20 @@
     <!--      History      -->
     <include file="db.changelog/schema/2025-12-16/2025-12-16-update-users-blogs.xml"/>
     <include file="/db.changelog/schema/2025-12-16/2025-12-16-update-foreign-key-blogs-users.xml"/>
+    <include file="/db.changelog/data/2025-12-17/2025-12-17-update-admin-password.xml"/>
+    <include file="/db.changelog/data/2025-12-18/2025-12-18-seed-user-for-admin.xml" />
+    <include file="db.changelog/schema/2025-12-18/2025-12-18-create-users-companies-reviews-relation.xml"/>
+    <include file="db.changelog/data/2025-12-18/2025-12-18-seed-mbbank.xml"/>
+    <include file="db.changelog/schema/2025-12-19/2025-12-19-add-coverPhoto-company.xml"/>
+    <include file="db.changelog/data/2025-12-20/2025-12-20-seed-5-companies.xml"/>
+    <include file="db.changelog/schema/2025-12-20/2025-12-20-update-column-address.xml"/>
+    <include file="db.changelog/data/2025-12-20/2025-12-20-insert-addresses-for-companies.xml"/>
+    <include file="db.changelog/schema/2025-12-20/2025-12-20-enable-citext-extension.xml"/>
+    <include file="db.changelog/schema/2025-12-21/2025-12-21-add-address-entity.xml"/>
+    <include file="db.changelog/schema/2025-12-21/2025-12-21-update-schema-account.xml"/>
+    <include file="/db.changelog/data/2025-12-20/drop-blog-draft-column.xml"/>
+    <include file="/db.changelog/data/2025-12-20/add-company-address-column.xml"/>
+    <include file="db.changelog/schema/2025-12-21/2025-12-20-drop-column-title-blogs.xml"/>
     <!--      History      -->
+
 </databaseChangeLog>

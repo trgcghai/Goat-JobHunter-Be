@@ -13,7 +13,7 @@ public class RequireAddressIfRecruiterValidator implements ConstraintValidator<R
     @Override
     public boolean isValid(Object o, ConstraintValidatorContext constraintValidatorContext) {
         if(o instanceof Recruiter recruiter){
-            if (recruiter.getAddress() == null || recruiter.getAddress().isEmpty()) {
+            if (recruiter.getAddresses() == null || recruiter.getAddresses().isEmpty()) {
                 constraintValidatorContext.disableDefaultConstraintViolation();
                 constraintValidatorContext
                         .buildConstraintViolationWithTemplate(

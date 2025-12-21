@@ -1,5 +1,7 @@
 package iuh.fit.goat.service.impl;
 
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.genai.Client;
 import com.google.genai.types.GenerateContentResponse;
 import iuh.fit.goat.common.Role;
@@ -487,6 +489,7 @@ public class AiServiceImpl implements AiService {
         }
     }
 //    // Lấy dữ liệu lưu vào cache
+
 //
 //
 //    // Format response
@@ -850,23 +853,24 @@ public class AiServiceImpl implements AiService {
 //    // Lấy dữ liệu
 //
 //
-//    // Gọi tới AI để lấy response
-//    private String callAiApi(String systemPrompt, String context, String history, String userMessage) {
-//        try {
-//            String fullPrompt = systemPrompt + context + history +
-//                    "\n\nHãy trả lời câu hỏi sau dựa trên dữ liệu context:\n\nUser: " + userMessage;
-//
-//            GenerateContentResponse response = this.client.models
-//                    .generateContent(MODEL, fullPrompt, null);
-//
-//            return response.text();
-//        } catch (Exception e) {
-//            e.printStackTrace();
-//            return "Xin lỗi, hiện tại tôi không thể xử lý yêu cầu. Vui lòng thử lại sau.";
-//        }
-//    }
-//    // Gọi tới AI để lấy response
-//
+
+    // Gọi tới AI để lấy response
+    private String callAiApi(String systemPrompt, String context, String history, String userMessage) {
+        try {
+            String fullPrompt = systemPrompt + context + history +
+                    "\n\nHãy trả lời câu hỏi sau dựa trên dữ liệu context(nếu có):\n\nUser: " + userMessage;
+
+            GenerateContentResponse response = this.client.models
+                    .generateContent(MODEL, fullPrompt, null);
+
+            return response.text();
+        } catch (Exception e) {
+            e.printStackTrace();
+            return "Xin lỗi, hiện tại tôi không thể xử lý yêu cầu. Vui lòng thử lại sau.";
+        }
+    }
+    // Gọi tới AI để lấy response
+
 //    private String getOrSet(String key, Supplier<String> supplier ) {
 //        return this.cacheService.getOrSet(
 //                CACHE_NAME,

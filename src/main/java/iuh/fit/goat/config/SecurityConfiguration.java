@@ -119,6 +119,7 @@ public class SecurityConfiguration {
 
                 "/storage/**",                        // Truy cập file tĩnh – public
                 "/api/v1/recruiters/**",              // Danh sách/chi tiết nhà tuyển dụng – public
+                "/api/v1/companies/**",               // Danh sách/chi tiết công ty – public
 
                 "/api/v1/email/**",                   // Gửi email / form liên hệ – public
                 "/api/v1/users/reset-password",       // Quên mật khẩu / đặt lại mật khẩu – public
@@ -141,6 +142,7 @@ public class SecurityConfiguration {
                 .authorizeHttpRequests( request ->
                         request.requestMatchers(whiteList).permitAll()
                                 .requestMatchers(HttpMethod.GET, "/api/v1/recruiters/**").permitAll()
+                                .requestMatchers(HttpMethod.GET, "/api/v1/companies/**").permitAll()
                                 .requestMatchers(HttpMethod.GET, "/api/v1/jobs/**").permitAll()
                                 .requestMatchers(HttpMethod.GET, "/api/v1/skills/**").permitAll()
                                 .requestMatchers(HttpMethod.GET, "/api/v1/careers/**").permitAll()

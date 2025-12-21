@@ -275,7 +275,7 @@ public class AuthServiceImpl implements AuthService {
             applicant.setFullName(request.getFullName());
             applicant.setEmail(request.getEmail());
             applicant.setPassword(hashPassword);
-            applicant.setAddress(request.getAddress());
+            applicant.setAddresses(request.getAddresses());
             applicant.setPhone(request.getPhone());
 
             // create applicant to save to database
@@ -304,7 +304,7 @@ public class AuthServiceImpl implements AuthService {
             recruiter.setFullName(request.getFullName());
             recruiter.setEmail(request.getEmail());
             recruiter.setPassword(hashPassword);
-            recruiter.setAddress(request.getAddress());
+            recruiter.setAddresses(request.getAddresses());
             recruiter.setPhone(request.getPhone());
 
             // create recruiter to save to database
@@ -404,9 +404,10 @@ public class AuthServiceImpl implements AuthService {
         // Thông tin riêng của User
         if (account instanceof User) {
             User user = (User) account;
+
             loginResponse.setPhone(user.getPhone());
-            loginResponse.setAddress(user.getAddress());
             loginResponse.setDob(user.getDob());
+            loginResponse.setAddresses(user.getAddresses());
             loginResponse.setGender(user.getGender());
             loginResponse.setFullName(Objects.requireNonNullElse(user.getFullName(), ""));
             loginResponse.setType(user instanceof Applicant ? Role.APPLICANT.getValue() : Role.RECRUITER.getValue());
@@ -414,7 +415,7 @@ public class AuthServiceImpl implements AuthService {
         // Thông tin riêng của Company
         else if (account instanceof Company company) {
             loginResponse.setPhone(company.getPhone());
-            loginResponse.setAddress(company.getAddress());
+            loginResponse.setAddresses(company.getAddresses());
             loginResponse.setFullName(Objects.requireNonNullElse(company.getName(), ""));
             loginResponse.setType(Role.COMPANY.getValue());
         }

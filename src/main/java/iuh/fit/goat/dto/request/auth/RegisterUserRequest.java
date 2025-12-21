@@ -1,5 +1,6 @@
 package iuh.fit.goat.dto.request.auth;
 
+import iuh.fit.goat.entity.Address;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Pattern;
@@ -8,6 +9,8 @@ import jakarta.validation.constraints.AssertTrue;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+
+import java.util.List;
 
 @Data
 @NoArgsConstructor
@@ -41,7 +44,7 @@ public class RegisterUserRequest {
     private String phone;
 
     @NotBlank(message = "Địa chỉ không được để trống")
-    private String address;
+    private List<Address> addresses;
 
     @NotBlank(message = "Loại người dùng không được để trống")
     @Pattern(

@@ -88,8 +88,8 @@ public class ApplicantServiceImpl implements ApplicantService {
         if (updateRequest.getPhone() != null) {
             currentApplicant.setPhone(updateRequest.getPhone());
         }
-        if (updateRequest.getAddress() != null) {
-            currentApplicant.setAddress(updateRequest.getAddress());
+        if (updateRequest.getAddresses() != null) {
+            currentApplicant.setAddresses(updateRequest.getAddresses());
         }
         if (updateRequest.getDob() != null) {
             currentApplicant.setDob(updateRequest.getDob());
@@ -155,7 +155,7 @@ public class ApplicantServiceImpl implements ApplicantService {
         applicantResponse.setUsername(applicant.getUsername());
         applicantResponse.setEmail(applicant.getEmail());
         applicantResponse.setPhone(applicant.getPhone());
-        applicantResponse.setAddress(applicant.getAddress());
+        applicantResponse.setAddresses(applicant.getAddresses());
         applicantResponse.setFullName(applicant.getFullName());
         applicantResponse.setAvatar(applicant.getAvatar());
         applicantResponse.setGender(applicant.getGender());

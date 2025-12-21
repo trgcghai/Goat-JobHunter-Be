@@ -39,7 +39,8 @@ import static jakarta.persistence.FetchType.LAZY;
         "blogReactions",
         "commentReactions",
         "reportedTickets",
-        "assignedTickets"}
+        "assignedTickets",
+        "reviews"}
 )
 @RequireAddressIfRecruiter
 @JsonTypeInfo(
@@ -52,7 +53,6 @@ import static jakarta.persistence.FetchType.LAZY;
         @JsonSubTypes.Type(value = Applicant.class, name = "applicant"),
 })
 public class User extends Account {
-    protected String address;
     protected String phone;
     protected LocalDate dob;
     protected String fullName;
@@ -197,4 +197,12 @@ public class User extends Account {
             condition = "deleted_at IS NULL"
     )
     private List<Ticket> assignedTickets = new ArrayList<>();
+
+    @OneToMany(mappedBy = "user", fetch = LAZY, cascade = {PERSIST, MERGE})
+    @JsonIgnore
+    @Filter(
+            name = "activeReviewFilter",
+            condition = "deleted_at IS NULL"
+    )
+    private List<Review> reviews = new ArrayList<>();
 }

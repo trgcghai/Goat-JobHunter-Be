@@ -1,0 +1,229 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+                      http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-5.0.xsd"
+>
+    <changeSet id="update-column-coverPhoto-company-1" author="goat">
+        <update tableName="companies">
+            <column name="cover_photo" value="https://res.cloudinary.com/dfwttyfwk/image/upload/v1766052143/MB_bank_logo_b9twwz.jpg"/>
+            <where>account_id = 2</where>
+        </update>
+    </changeSet>
+
+    <changeSet id="seed-company-2" author="goat">
+        <insert tableName="accounts">
+            <column name="account_id" valueNumeric="4"/>
+            <column name="username" value="tymex"/>
+            <column name="email" value="tymex@gmail.com"/>
+            <column name="password" value="$2a$10$cNkKjLeLzT/fqEBYRNc3yuUbEc3rH6ZVH9hIIqzDnR3mbIBs4tuDO"/>
+            <column name="enabled" valueBoolean="true"/>
+        </insert>
+
+        <sql><![CDATA[
+            INSERT INTO companies (
+                account_id,
+                name,
+                description,
+                logo,
+                cover_photo,
+                website,
+                address,
+                phone,
+                size,
+                verified
+            )
+            VALUES (
+                       4,
+                       'TymeX',
+                       'TymeX is a part of Tyme Group - one of the world’s fastest-growing digital banking groups.
+                        Tyme Group is one of the world’s fastest-growing digital banking groups, building high-tech and high-touch banks in fast-growing, emerging markets. Headquartered in Singapore with a Technology and product Development Hub in Vietnam, Tyme designs, builds, and commercializes digital banks for emerging markets, with particular expertise in serving under-served and under-banked populations.
+                        Established in 2016, TymeX has been Tyme Group''s Product & Technology Development Hub, bringing together engineering and product people who share a global mission to become serial bank builders, shaping the future of banking through technology. We build products with the principle of finding the right balance between the digital and physical worlds.
+                        We have proudly provided the banking platform as a service for:
+                        TymeBank, based in South Africa, is one of the world’s fastest-growing digital banks, with over 7 million customers since launching in February 2019.
+                        GoTyme Bank, based in the Philippines, is a joint venture between the Gokongwei Group and Tyme Group with the official launch in October 2022 and onboarded more than 1 million customers in less than nine months.',
+                       'https://res.cloudinary.com/dfwttyfwk/image/upload/v1766233662/Screenshot_2025-12-20_192650_nkwii4.png',
+                       'https://res.cloudinary.com/dfwttyfwk/image/upload/v1766233662/Screenshot_2025-12-20_192650_nkwii4.png',
+                       'https://vietnam.tyme.com/',
+                       'Level 6-7, East Tower, Lumiere Riverside, 277 Vo Nguyen Giap, An Khanh Ward, Thu Duc City, Ho Chi Minh',
+                       '0987654321',
+                       'ENTERPRISE',
+                       TRUE
+                   );
+            ]]></sql>
+    </changeSet>
+
+    <changeSet id="seed-company-3" author="goat">
+        <insert tableName="accounts">
+            <column name="account_id" valueNumeric="5"/>
+            <column name="username" value="nab"/>
+            <column name="email" value="nab@gmail.com"/>
+            <column name="password" value="$2a$10$cNkKjLeLzT/fqEBYRNc3yuUbEc3rH6ZVH9hIIqzDnR3mbIBs4tuDO"/>
+            <column name="enabled" valueBoolean="true"/>
+        </insert>
+
+        <sql><![CDATA[
+            INSERT INTO companies (
+                account_id,
+                name,
+                description,
+                logo,
+                cover_photo,
+                website,
+                address,
+                phone,
+                size,
+                verified
+            )
+            VALUES (
+                       5,
+                       'NAB Innovation Centre Vietnam',
+                       'The NAB Innovation Centre Vietnam is owned by NAB - Australia’s largest business bank.
+                        The NAB Innovation Centre Vietnam (NAB Vietnam) is part of National Australia Bank (NAB) Technology & Enterprise Operations division. The mission of the NAB Vietnam is to connect the talents of Vietnam to NAB and together improve the lives of those in the Vietnam technology community.
+                        As Australia’s largest business bank, NAB is focused on delivering great experiences for customers. To do this it uses modern technologies, alongside great technology talent including leading software engineers, cloud experts and quality engineers.
+                        We’re working on interesting projects to help NAB’s 10 million customers: By joining us, local software engineers will have access to a wide variety of projects and opportunities, working closely with colleagues in Australia and with global partners such as AWS and Microsoft to take advantage of the latest modern technologies.
+                        We’re investing in you: We strive to create not only a great place to work, but also the best technology centre for tech engineers to thrive.
+                        It’s more than just a career!
+                        We believe in people with ideas and dreams, and we want you to achieve your aspirations. If you have an appetite to learn, grow and elevate others around you, this is the place for you!',
+                       'https://res.cloudinary.com/dfwttyfwk/image/upload/Screenshot_2025-12-20_193330_y4lxps.png',
+                       'https://res.cloudinary.com/dfwttyfwk/image/upload/Screenshot_2025-12-20_193330_y4lxps.png',
+                       'https://nab.wd3.myworkdayjobs.com/en-US/nab_careers',
+                       'The Capital Place, 29 Lieu Giai Street, Ngoc Ha Ward, Hanoi City, Vietnam, Ba Dinh, Ha Noi',
+                       '0987654321',
+                       'ENTERPRISE',
+                       TRUE
+                   );
+            ]]></sql>
+    </changeSet>
+
+    <changeSet id="seed-company-4" author="goat">
+        <insert tableName="accounts">
+            <column name="account_id" valueNumeric="6"/>
+            <column name="username" value="viettel"/>
+            <column name="email" value="viettel@gmail.com"/>
+            <column name="password" value="$2a$10$cNkKjLeLzT/fqEBYRNc3yuUbEc3rH6ZVH9hIIqzDnR3mbIBs4tuDO"/>
+            <column name="enabled" valueBoolean="true"/>
+        </insert>
+
+        <sql><![CDATA[
+            INSERT INTO companies (
+                account_id,
+                name,
+                description,
+                logo,
+                cover_photo,
+                website,
+                address,
+                phone,
+                size,
+                verified
+            )
+            VALUES (
+                       6,
+                       'Viettel Group',
+                       'SHOW US YOUR WAY
+                        Tập đoàn Công nghiệp – Viễn thông Quân đội Viettel - Nơi làm việc tốt nhất Việt Nam 2017, 2018 ngành Viễn thông (theo khảo sát Anphabe) là Doanh nghiệp viễn thông có tốc độ tăng trưởng nhanh nhất thế giới, luôn đi đầu trong đổi mới sáng tạo và luôn lắng nghe, thấu hiểu để đem tới những dịch vụ tốt nhất cho khách hàng.
+                        Viettel hiện là tập đoàn Viễn thông - CNTT lớn nhất Việt Nam, top 30 công ty viễn thông toàn cầu với hơn 13.000 nhân viên và đang kinh doanh tại 11 thị trường trải dài từ Châu Á, Châu Mỹ, Châu Phi. Bên cạnh viễn thông, Viettel còn tham gia vào lĩnh vực nghiên cứu sản xuất công nghệ cao, phát triển ứng dụng công nghệ số, hàng không vũ trụ và nhiều lĩnh vực khác.
+                        Chúng tôi học hỏi lẫn nhau.
+                        Chúng tôi tin tưởng nhân viên của mình ở những nhiệm vụ đầy thách thức.
+                        Chúng tôi không chỉ là Viettel, chúng tôi là Việt Nam.',
+                       'https://res.cloudinary.com/dfwttyfwk/image/upload/Screenshot_2025-12-20_193725_xc2kro.png',
+                       'https://res.cloudinary.com/dfwttyfwk/image/upload/Screenshot_2025-12-20_193725_xc2kro.png',
+                       'https://tuyendung.viettel.vn/',
+                       'Tổng Công ty Công nghiệp Công nghệ cao Viettel - Tòa nhà Viettel, Số 380 Lạc Long Quân, Tây Hồ, Hà Nội và Tòa nhà Viettel, Khu CNC Hòa Lạc, Other, Ha Noi',
+                       '0987654321',
+                       'ENTERPRISE',
+                       TRUE
+                   );
+            ]]></sql>
+    </changeSet>
+
+    <changeSet id="seed-company-5" author="goat">
+        <insert tableName="accounts">
+            <column name="account_id" valueNumeric="7"/>
+            <column name="username" value="capgemini"/>
+            <column name="email" value="capgemini@gmail.com"/>
+            <column name="password" value="$2a$10$cNkKjLeLzT/fqEBYRNc3yuUbEc3rH6ZVH9hIIqzDnR3mbIBs4tuDO"/>
+            <column name="enabled" valueBoolean="true"/>
+        </insert>
+
+        <sql><![CDATA[
+            INSERT INTO companies (
+                account_id,
+                name,
+                description,
+                logo,
+                cover_photo,
+                website,
+                address,
+                phone,
+                size,
+                verified
+            )
+            VALUES (
+                       7,
+                       'Capgemini Vietnam',
+                       'One of the world leading company in IT services
+                        Overview about Capgemini Vietnam
+                        Capgemini is a multicultural company of 300,000 people in nearly 50 countries, who work with world-renowned clients to find solutions to their most demanding challenges. As a global leader in consulting, digital transformation, technology and engineering services – with unrivaled sectorial expertise – we enable our clients to design and build tomorrow’s businesses, make the most of the opportunities offered by technology, and boost their competitiveness and agility.
+                        Our Brand promise
+                        | GET THE FUTURE YOU WANT
+                        Our brand promise captures the spirit of our people, committed to bringing to life our purpose of unleashing human energy through technology for a sustainable and inclusive future. We want our teams, our clients, our partners, and our communities to feel that change can happen the way they want it to, and that we will help them achieve it.
+                        Reimagining the way we work
+                        Hybrid working is becoming a day-to-day reality at Capgemini. Underpinned by our trust-based managerial culture, we aim to empower everyone, in all countries, to deliver exceptional work, contributing to an inclusive and sustainable future for our people, our clients, and society.',
+                       'https://res.cloudinary.com/dfwttyfwk/image/upload/Screenshot_2025-12-20_194211_xyctij.png',
+                       'https://res.cloudinary.com/dfwttyfwk/image/upload/Screenshot_2025-12-20_194211_xyctij.png',
+                       'https://www.capgemini.com/',
+                       '106 Nguyen Van Troi, Phu Nhuan, Ho Chi Minh',
+                       '0987654321',
+                       'ENTERPRISE',
+                       TRUE
+                   );
+            ]]></sql>
+    </changeSet>
+
+    <changeSet id="seed-company-6" author="goat">
+        <insert tableName="accounts">
+            <column name="account_id" valueNumeric="8"/>
+            <column name="username" value="bosch"/>
+            <column name="email" value="bosch@gmail.com"/>
+            <column name="password" value="$2a$10$cNkKjLeLzT/fqEBYRNc3yuUbEc3rH6ZVH9hIIqzDnR3mbIBs4tuDO"/>
+            <column name="enabled" valueBoolean="true"/>
+        </insert>
+
+        <sql><![CDATA[
+            INSERT INTO companies (
+                account_id,
+                name,
+                description,
+                logo,
+                cover_photo,
+                website,
+                address,
+                phone,
+                size,
+                verified
+            )
+            VALUES (
+                       8,
+                       'Bosch Global Software Technologies Company Limited',
+                       'The Bosch Group is a leading global supplier of technology and services
+                        The Bosch Group is a leading global supplier of technology and services. Its operations have been divided into four business sectors: Automotive Technology, Industrial Technology, Consumer Goods, and Energy and Building Technology.
+                        The Bosch Group comprises Robert Bosch GmbH and its roughly 460 subsidiaries and regional companies in some 60 countries. If its sales and service partners are included, then Bosch is represented in roughly 150 countries.
+                        Bosch Global Software Technologies Company Limited (BGSV) is 100% owned subsidiary of Robert Bosch GmbH - one of the world’s leading global suppliers of technology and services, offering end-to-end Engineering, IT, and Business Solutions.
+                        Starting its operation from 2010 at Etown 2 in HCMC, BGSV is the first software development center of Bosch in Southeast Asia. BGSV nowadays have over 4,000 associates, with a global footprint and presence in the US, Europe, and the Asia Pacific region.
+                        With our unique ability to offer end-to-end solutions that connect sensors, software, and services, we enable businesses to move from the traditional to digital or improve businesses by introducing a digital element in their products and processes.',
+                       'https://res.cloudinary.com/dfwttyfwk/image/upload/Screenshot_2025-12-20_194513_gsfrhh.png',
+                       'https://res.cloudinary.com/dfwttyfwk/image/upload/Screenshot_2025-12-20_194513_gsfrhh.png',
+                       'https://www.bosch.com.vn/',
+                       'OfficeHaus Building, 32 Tan Thang street, Son Ky ward, Tan Phu, Ho Chi Minh',
+                       '0987654321',
+                       'ENTERPRISE',
+                       TRUE
+                   );
+            ]]></sql>
+    </changeSet>
+
+
+</databaseChangeLog>

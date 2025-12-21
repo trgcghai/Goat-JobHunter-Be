@@ -1,10 +1,16 @@
 package iuh.fit.goat.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
 import lombok.*;
 import org.hibernate.annotations.FilterDef;
 
+import java.util.ArrayList;
+import java.util.List;
+
+import static jakarta.persistence.CascadeType.MERGE;
+import static jakarta.persistence.CascadeType.PERSIST;
 import static jakarta.persistence.FetchType.LAZY;
 
 @Entity
@@ -14,7 +20,7 @@ import static jakarta.persistence.FetchType.LAZY;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-@ToString(exclude = {"role"})
+@ToString(exclude = {"role", "addresses"})
 @FilterDef(name = "activeAccountFilter")
 public abstract class Account extends BaseEntity {
     @Id
@@ -32,4 +38,8 @@ public abstract class Account extends BaseEntity {
     @ManyToOne(fetch = LAZY)
     @JoinColumn(name = "role_id")
     private Role role;
+
+    @OneToMany(mappedBy = "account", fetch = LAZY, cascade = {PERSIST, MERGE})
+    @JsonIgnore
+    private List<Address> addresses = new ArrayList<>();
 }

@@ -1,14 +1,15 @@
 package iuh.fit.goat.dto.response.auth;
 
+import iuh.fit.goat.entity.Address;
 import iuh.fit.goat.enumeration.Gender;
 import iuh.fit.goat.entity.Role;
-import iuh.fit.goat.entity.embeddable.Contact;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import java.time.LocalDate;
+import java.util.List;
 
 @Getter
 @Setter
@@ -18,7 +19,7 @@ public class LoginResponse {
     private long accountId;
     private String email;
     private String phone;
-    private String address;
+    private List<Address> addresses;
     private LocalDate dob;
     private Gender gender;
     private String fullName;
