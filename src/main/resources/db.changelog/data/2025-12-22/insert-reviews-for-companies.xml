@@ -1,0 +1,296 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+                      http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-5.0.xsd">
+
+    <changeSet id="insert-review-company-2" author="minhdat">
+        <sql><![CDATA[
+            INSERT INTO reviews (
+                review_id,
+                created_at,
+                created_by,
+                rating,
+                summary,
+                experience,
+                suggestion,
+                recommended,
+                verified,
+                user_id,
+                company_id
+            ) VALUES
+            (
+                1,
+                '2025-12-22',
+                'conghai.tpma@gmail.com',
+                4,
+                'Công ty tốt, chế độ lương thưởng hấp dẫn',
+                'Công ty ngân hàng hàng đầu Việt Nam và tôi tin rằng mình có cơ hội khi làm việc ở nơi đây\n' ||
+                'Chính sách tốt, phúc lợi xã hội khá tốt. Đây là điều tôi cảm thấy hài lòng.',
+                'Cần hỗ trợ phúc lợi, lương hưu cho nhân viên. Tăng lương nhân viên',
+                true,
+                true,
+                3,
+                2
+            ),
+            (
+                2,
+                '2025-12-21',
+                'haitruong.tpma@gmail.com',
+                5,
+                'Chế độ ok. Vài ng hl tí thôi, nhưng đâu chả có this có that',
+                'Ko giống big4 =)))\n' ||
+                'Ko toxic, chế độ lương thưởng private, ko quá can lộ lộ như big4\n' ||
+                'Nào đã đc tính tiền OT đâu mà biếc. Nghe nói 100k/h',
+                'Bảo hiểm MIC hơi phèn, các ac phòng chế độ có đọc đc thì xin hãy làm nó bớt phèn',
+                true,
+                true,
+                52,
+                2
+            );
+            ]]>
+        </sql>
+    </changeSet>
+
+    <changeSet id="insert-review-company-4" author="minhdat">
+        <sql><![CDATA[
+            INSERT INTO reviews (
+                review_id,
+                created_at,
+                created_by,
+                rating,
+                summary,
+                experience,
+                suggestion,
+                recommended,
+                verified,
+                user_id,
+                company_id
+            ) VALUES
+                (
+                    3,
+                    '2025-12-22',
+                    'conghai.tpma@gmail.com',
+                    2,
+                    'Công ty tốt, chế độ lương thưởng hấp dẫn',
+                    'Công ty ngân hàng hàng đầu Việt Nam và tôi tin rằng mình có cơ hội khi làm việc ở nơi đây\n' ||
+                    'Chính sách tốt, phúc lợi xã hội khá tốt. Đây là điều tôi cảm thấy hài lòng.',
+                    'Cần hỗ trợ phúc lợi, lương hưu cho nhân viên. Tăng lương nhân viên',
+                    true,
+                    true,
+                    3,
+                    4
+                ),
+                (
+                    4,
+                    '2025-12-21',
+                    'haitruong.tpma@gmail.com',
+                    5,
+                    'Chế độ ok. Vài ng hl tí thôi, nhưng đâu chả có this có that',
+                    'Ko giống big4 =)))\n' ||
+                    'Ko toxic, chế độ lương thưởng private, ko quá can lộ lộ như big4\n' ||
+                    'Nào đã đc tính tiền OT đâu mà biếc. Nghe nói 100k/h',
+                    'Bảo hiểm MIC hơi phèn, các ac phòng chế độ có đọc đc thì xin hãy làm nó bớt phèn',
+                    true,
+                    true,
+                    52,
+                    4
+                );
+            ]]>
+        </sql>
+    </changeSet>
+
+    <changeSet id="insert-review-company-5" author="minhdat">
+        <sql><![CDATA[
+            INSERT INTO reviews (
+                review_id,
+                created_at,
+                created_by,
+                rating,
+                summary,
+                experience,
+                suggestion,
+                recommended,
+                verified,
+                user_id,
+                company_id
+            ) VALUES
+                (
+                    5,
+                    '2025-12-22',
+                    'conghai.tpma@gmail.com',
+                    4,
+                    'Công ty tốt, chế độ lương thưởng hấp dẫn',
+                    'Công ty ngân hàng hàng đầu Việt Nam và tôi tin rằng mình có cơ hội khi làm việc ở nơi đây\n' ||
+                    'Chính sách tốt, phúc lợi xã hội khá tốt. Đây là điều tôi cảm thấy hài lòng.',
+                    'Cần hỗ trợ phúc lợi, lương hưu cho nhân viên. Tăng lương nhân viên',
+                    true,
+                    true,
+                    3,
+                    5
+                ),
+                (
+                    6,
+                    '2025-12-21',
+                    'haitruong.tpma@gmail.com',
+                    5,
+                    'Chế độ ok. Vài ng hl tí thôi, nhưng đâu chả có this có that',
+                    'Ko giống big4 =)))\n' ||
+                    'Ko toxic, chế độ lương thưởng private, ko quá can lộ lộ như big4\n' ||
+                    'Nào đã đc tính tiền OT đâu mà biếc. Nghe nói 100k/h',
+                    'Bảo hiểm MIC hơi phèn, các ac phòng chế độ có đọc đc thì xin hãy làm nó bớt phèn',
+                    true,
+                    true,
+                    52,
+                    5
+                );
+            ]]>
+        </sql>
+    </changeSet>
+
+    <changeSet id="insert-review-company-6" author="minhdat">
+        <sql><![CDATA[
+            INSERT INTO reviews (
+                review_id,
+                created_at,
+                created_by,
+                rating,
+                summary,
+                experience,
+                suggestion,
+                recommended,
+                verified,
+                user_id,
+                company_id
+            ) VALUES
+                (
+                    7,
+                    '2025-12-22',
+                    'conghai.tpma@gmail.com',
+                    4,
+                    'Công ty tốt, chế độ lương thưởng hấp dẫn',
+                    'Công ty ngân hàng hàng đầu Việt Nam và tôi tin rằng mình có cơ hội khi làm việc ở nơi đây\n' ||
+                    'Chính sách tốt, phúc lợi xã hội khá tốt. Đây là điều tôi cảm thấy hài lòng.',
+                    'Cần hỗ trợ phúc lợi, lương hưu cho nhân viên. Tăng lương nhân viên',
+                    true,
+                    true,
+                    3,
+                    6
+                ),
+                (
+                    8,
+                    '2025-12-21',
+                    'haitruong.tpma@gmail.com',
+                    5,
+                    'Chế độ ok. Vài ng hl tí thôi, nhưng đâu chả có this có that',
+                    'Ko giống big4 =)))\n' ||
+                    'Ko toxic, chế độ lương thưởng private, ko quá can lộ lộ như big4\n' ||
+                    'Nào đã đc tính tiền OT đâu mà biếc. Nghe nói 100k/h',
+                    'Bảo hiểm MIC hơi phèn, các ac phòng chế độ có đọc đc thì xin hãy làm nó bớt phèn',
+                    true,
+                    true,
+                    52,
+                    6
+                );
+            ]]>
+        </sql>
+    </changeSet>
+
+    <changeSet id="insert-review-company-7" author="minhdat">
+        <sql><![CDATA[
+            INSERT INTO reviews (
+                review_id,
+                created_at,
+                created_by,
+                rating,
+                summary,
+                experience,
+                suggestion,
+                recommended,
+                verified,
+                user_id,
+                company_id
+            ) VALUES
+                (
+                    9,
+                    '2025-12-22',
+                    'conghai.tpma@gmail.com',
+                    4,
+                    'Công ty tốt, chế độ lương thưởng hấp dẫn',
+                    'Công ty ngân hàng hàng đầu Việt Nam và tôi tin rằng mình có cơ hội khi làm việc ở nơi đây\n' ||
+                    'Chính sách tốt, phúc lợi xã hội khá tốt. Đây là điều tôi cảm thấy hài lòng.',
+                    'Cần hỗ trợ phúc lợi, lương hưu cho nhân viên. Tăng lương nhân viên',
+                    true,
+                    true,
+                    3,
+                    7
+                ),
+                (
+                    10,
+                    '2025-12-21',
+                    'haitruong.tpma@gmail.com',
+                    5,
+                    'Chế độ ok. Vài ng hl tí thôi, nhưng đâu chả có this có that',
+                    'Ko giống big4 =)))\n' ||
+                    'Ko toxic, chế độ lương thưởng private, ko quá can lộ lộ như big4\n' ||
+                    'Nào đã đc tính tiền OT đâu mà biếc. Nghe nói 100k/h',
+                    'Bảo hiểm MIC hơi phèn, các ac phòng chế độ có đọc đc thì xin hãy làm nó bớt phèn',
+                    true,
+                    true,
+                    52,
+                    7
+                );
+            ]]>
+        </sql>
+    </changeSet>
+
+    <changeSet id="insert-review-company-8" author="minhdat">
+        <sql><![CDATA[
+            INSERT INTO reviews (
+                review_id,
+                created_at,
+                created_by,
+                rating,
+                summary,
+                experience,
+                suggestion,
+                recommended,
+                verified,
+                user_id,
+                company_id
+            ) VALUES
+            (
+                11,
+                '2025-12-22',
+                'conghai.tpma@gmail.com',
+                4,
+                'Công ty tốt, chế độ lương thưởng hấp dẫn',
+                'Công ty ngân hàng hàng đầu Việt Nam và tôi tin rằng mình có cơ hội khi làm việc ở nơi đây\n' ||
+                'Chính sách tốt, phúc lợi xã hội khá tốt. Đây là điều tôi cảm thấy hài lòng.',
+                'Cần hỗ trợ phúc lợi, lương hưu cho nhân viên. Tăng lương nhân viên',
+                true,
+                true,
+                3,
+                8
+            ),
+            (
+                12,
+                '2025-12-21',
+                'haitruong.tpma@gmail.com',
+                5,
+                'Chế độ ok. Vài ng hl tí thôi, nhưng đâu chả có this có that',
+                'Ko giống big4 =)))\n' ||
+                'Ko toxic, chế độ lương thưởng private, ko quá can lộ lộ như big4\n' ||
+                'Nào đã đc tính tiền OT đâu mà biếc. Nghe nói 100k/h',
+                'Bảo hiểm MIC hơi phèn, các ac phòng chế độ có đọc đc thì xin hãy làm nó bớt phèn',
+                true,
+                true,
+                52,
+                8
+            );
+        ]]>
+        </sql>
+    </changeSet>
+
+</databaseChangeLog>

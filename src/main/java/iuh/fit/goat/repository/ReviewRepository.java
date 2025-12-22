@@ -16,4 +16,6 @@ public interface ReviewRepository extends JpaRepository<Review, Long>, JpaSpecif
 
     @Query("SELECT r.company.accountId, AVG(r.rating) FROM Review r GROUP BY r.company.accountId")
     List<Object[]> averageRatingsByCompany();
+
+    List<Review> findTop5ByOrderByCreatedAtDesc();
 }
