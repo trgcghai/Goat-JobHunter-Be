@@ -49,6 +49,22 @@ public class CompanyServiceImpl implements CompanyService {
     }
 
     @Override
+    public Map<String, List<String>> handleGroupAddressesCityByCompany(long id) {
+        Company company = this.handleGetCompanyById(id);
+        if(company == null) return Map.of();
+
+        return company.getAddresses()
+                .stream()
+                .filter(addr -> addr.getProvince() != null && addr.getFullAddress() != null)
+                .collect(
+                        Collectors.groupingBy(
+                            Address::getProvince,
+                            Collectors.mapping(Address::getFullAddress, Collectors.toList())
+                        )
+                );
+    }
+
+    @Override
     public CompanyResponse convertToCompanyResponse(Company company) {
         CompanyResponse companyResponse = new CompanyResponse();
 
@@ -80,21 +96,5 @@ public class CompanyServiceImpl implements CompanyService {
         }
 
         return companyResponse;
-    }
-
-    @Override
-    public Map<String, List<String>> handleGroupAddressesCityByCompany(long id) {
-        Company company = this.handleGetCompanyById(id);
-        if(company == null) return Map.of();
-
-        return company.getAddresses()
-                .stream()
-                .filter(addr -> addr.getProvince() != null && addr.getFullAddress() != null)
-                .collect(
-                        Collectors.groupingBy(
-                            Address::getProvince,
-                            Collectors.mapping(Address::getFullAddress, Collectors.toList())
-                        )
-                );
     }
 }
