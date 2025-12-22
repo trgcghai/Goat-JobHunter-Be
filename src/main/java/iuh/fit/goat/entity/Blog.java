@@ -28,8 +28,6 @@ public class Blog extends BaseEntity {
     @ElementCollection
     private List<String> images;
     @Column(columnDefinition = "TEXT")
-    private String description;
-    @Column(columnDefinition = "TEXT")
     private String content;
     @ElementCollection
     @Column(columnDefinition = "TEXT")

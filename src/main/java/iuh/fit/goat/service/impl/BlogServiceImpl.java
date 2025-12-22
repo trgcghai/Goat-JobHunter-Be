@@ -79,15 +79,11 @@ public class BlogServiceImpl implements BlogService {
             }
         }
 
-        // Generate description
-        String description = this.aiService.generateBlogDescription(request.getContent());
-
         // Generate tags
         List<String> tags = this.aiService.generateBlogTags(request.getContent());
 
         Blog blog = new Blog();
         blog.setImages(imageUrls);
-        blog.setDescription(description);
         blog.setContent(request.getContent());
         blog.setTags(tags);
         blog.setAuthor(currentUser);
@@ -102,7 +98,6 @@ public class BlogServiceImpl implements BlogService {
 
         if (currentBlog != null) {
             currentBlog.setImages(request.getImages());
-            currentBlog.setDescription(request.getDescription());
             currentBlog.setContent(request.getContent());
             currentBlog.setTags(request.getTags());
 
@@ -315,7 +310,6 @@ public class BlogServiceImpl implements BlogService {
 
         response.setBlogId(blog.getBlogId());
         response.setImages(blog.getImages());
-        response.setDescription(blog.getDescription());
         response.setContent(blog.getContent());
         response.setTags(blog.getTags());
         response.setEnabled(blog.isEnabled());
