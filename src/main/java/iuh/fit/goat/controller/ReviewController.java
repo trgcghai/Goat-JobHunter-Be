@@ -76,4 +76,9 @@ public class ReviewController {
         return ResponseEntity.ok(result);
     }
 
+    @GetMapping("/count")
+    public ResponseEntity<Long> countAllReviews() {
+        return ResponseEntity.ok(this.reviewService.handleCountAllReviews());
+    }
+
 }

@@ -18,5 +18,7 @@ public interface ReviewService {
 
     List<ReviewResponse> handleGetLatest5Reviews();
 
+    Long handleCountAllReviews();
+
     ReviewResponse handleConvertToReviewResponse(Review review);
 }

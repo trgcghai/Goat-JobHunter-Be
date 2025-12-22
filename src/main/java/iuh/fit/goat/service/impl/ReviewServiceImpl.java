@@ -68,6 +68,11 @@ public class ReviewServiceImpl implements ReviewService {
     }
 
     @Override
+    public Long handleCountAllReviews() {
+        return this.reviewRepository.count();
+    }
+
+    @Override
     public ReviewResponse handleConvertToReviewResponse(Review review) {
         ReviewResponse response = new ReviewResponse();
 
