@@ -16,7 +16,7 @@ public interface CompanyService {
 
     Company handleGetCompanyByEmail(String email);
 
-    CompanyResponse convertToCompanyResponse(Company company);
-
     Map<String, List<String>> handleGroupAddressesCityByCompany(long id);
+
+    CompanyResponse convertToCompanyResponse(Company company);
 }
