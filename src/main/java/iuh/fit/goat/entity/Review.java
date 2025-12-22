@@ -37,11 +37,11 @@ public class Review extends BaseEntity{
     private boolean recommended;
     private boolean verified = false;
 
-    @ManyToOne(fetch = LAZY)
+    @ManyToOne
     @JoinColumn(name = "user_id")
     private User user;
 
-    @ManyToOne(fetch = LAZY)
+    @ManyToOne
     @JoinColumn(name = "company_id")
     private Company company;
 }

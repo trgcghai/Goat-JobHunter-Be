@@ -5,7 +5,6 @@ import iuh.fit.goat.dto.response.company.CompanyResponse;
 import iuh.fit.goat.entity.Address;
 import iuh.fit.goat.entity.Company;
 import iuh.fit.goat.repository.CompanyRepository;
-import iuh.fit.goat.service.AiService;
 import iuh.fit.goat.service.CompanyService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -20,12 +19,16 @@ import java.util.stream.Collectors;
 @Service
 @RequiredArgsConstructor
 public class CompanyServiceImpl implements CompanyService {
-    private final AiService aiService;
     private final CompanyRepository companyRepository;
 
     @Override
     public Company handleGetCompanyById(long id) {
         return this.companyRepository.findById(id).orElse(null);
+    }
+
+    @Override
+    public Company handleGetCompanyByName(String name) {
+        return this.companyRepository.findByNameIgnoreCase(name).orElse(null);
     }
 
     @Override
