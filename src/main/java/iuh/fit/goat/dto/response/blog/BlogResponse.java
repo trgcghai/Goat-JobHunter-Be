@@ -18,7 +18,6 @@ import java.util.List;
 public class BlogResponse {
     private long blogId;
     private List<String> images;
-    private String description;
     private String content;
     private List<String> tags;
     private boolean enabled;

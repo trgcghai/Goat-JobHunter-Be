@@ -421,35 +421,6 @@ public class AiServiceImpl implements AiService {
 //        );
 //    }
 //
-    @Override
-    public String generateBlogDescription(String content) {
-        if (content == null || content.trim().isEmpty()) {
-            return "";
-        }
-
-        String prompt = """
-            Dựa trên nội dung bài viết sau, hãy tạo một mô tả ngắn gọn (khoảng 100-150 từ) để thu hút người đọc.
-            Mô tả phải:
-            - Tóm tắt ý chính của bài viết
-            - Hấp dẫn và khơi gợi sự tò mò
-            - Viết bằng Tiếng Việt
-            - Không dùng ký tự đặc biệt hay markdown
-
-            Nội dung bài viết:
-            %s
-
-            Chỉ trả về mô tả, không thêm gì khác.
-            """.formatted(content);
-
-        try {
-            GenerateContentResponse response = this.client.models
-                    .generateContent(MODEL, prompt, null);
-            return response.text().trim();
-        } catch (Exception e) {
-            e.printStackTrace();
-            return "";
-        }
-    }
 
     @Override
     public List<String> generateBlogTags(String content) {
