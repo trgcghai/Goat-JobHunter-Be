@@ -1,6 +1,7 @@
 package iuh.fit.goat.service;
 
 import iuh.fit.goat.dto.response.ResultPaginationResponse;
+import iuh.fit.goat.dto.response.review.RatingResponse;
 import iuh.fit.goat.dto.response.review.ReviewResponse;
 import iuh.fit.goat.entity.Review;
 import org.springframework.data.domain.Pageable;
@@ -19,6 +20,8 @@ public interface ReviewService {
     List<ReviewResponse> handleGetLatest5Reviews();
 
     Long handleCountAllReviews();
+
+    RatingResponse handleGetRatingByCompany(Long companyId);
 
     ReviewResponse handleConvertToReviewResponse(Review review);
 }
