@@ -12,10 +12,10 @@ public interface NotificationService {
 //    Notification createNotification(Notification notification);
 //
 //    void handleMarkNotificationsAsSeen(List<Long> notificationIds);
-//
-//    void handleNotifyCommentBlog(Blog blog, Comment comment);
-//
-//    void handleNotifyReplyComment(Comment parent, Comment reply);
+
+    void handleNotifyCommentBlog(Blog blog, Comment comment);
+
+    void handleNotifyReplyComment(Comment parent, Comment reply);
 
     void handleNotifyLikeBlog(Blog blog);
 //
