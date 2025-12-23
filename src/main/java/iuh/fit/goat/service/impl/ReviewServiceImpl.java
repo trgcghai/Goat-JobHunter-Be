@@ -1,16 +1,20 @@
 package iuh.fit.goat.service.impl;
 
+import iuh.fit.goat.common.RatingType;
 import iuh.fit.goat.dto.response.ResultPaginationResponse;
+import iuh.fit.goat.dto.response.review.RatingResponse;
 import iuh.fit.goat.dto.response.review.ReviewResponse;
 import iuh.fit.goat.entity.Review;
 import iuh.fit.goat.repository.ReviewRepository;
 import iuh.fit.goat.service.ReviewService;
+import iuh.fit.goat.util.RatingDistributionUtil;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -49,8 +53,8 @@ public class ReviewServiceImpl implements ReviewService {
     }
 
     @Override
-    public Map<Long, Double> handleAverageRatingByCompany() {
-        return this.reviewRepository.averageRatingsByCompany()
+    public Map<Long, Double> handleOverallAverageRatingByCompany() {
+        return this.reviewRepository.averageOverallRatingsByCompany()
                 .stream().collect(
                         Collectors.toMap(
                                 row -> (Long) row[0],
@@ -61,7 +65,7 @@ public class ReviewServiceImpl implements ReviewService {
 
     @Override
     public List<ReviewResponse> handleGetLatest5Reviews() {
-        return this.reviewRepository.findTop5ByOrderByCreatedAtDesc()
+        return this.reviewRepository.findTop5ByVerifiedIsTrueOrderByCreatedAtDesc()
                 .stream()
                 .map(this::handleConvertToReviewResponse)
                 .toList();
@@ -69,7 +73,26 @@ public class ReviewServiceImpl implements ReviewService {
 
     @Override
     public Long handleCountAllReviews() {
-        return this.reviewRepository.count();
+        return this.reviewRepository.countByVerifiedIsTrue();
+    }
+
+    @Override
+    public RatingResponse handleGetRatingByCompany(Long companyId) {
+        Map<String, RatingResponse.RatingStats> result = new LinkedHashMap<>();
+
+        for (RatingType type : RatingType.values()) {
+
+            Double average = this.reviewRepository.averageRating(companyId, type.getType());
+            Map<Integer, Integer> distribution = RatingDistributionUtil.build(
+                    this.reviewRepository.countDistributionByRating(companyId, type.getType())
+            );
+
+            RatingResponse.RatingStats stats = new RatingResponse.RatingStats(average, distribution);
+
+            result.put(type.getValue(), stats);
+        }
+
+        return new RatingResponse(result);
     }
 
     @Override

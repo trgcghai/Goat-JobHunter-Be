@@ -1,5 +1,6 @@
 package iuh.fit.goat.dto.response.review;
 
+import iuh.fit.goat.entity.embeddable.Rating;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -13,7 +14,7 @@ import java.time.Instant;
 @AllArgsConstructor
 public class ReviewResponse {
     private long reviewId;
-    private long rating;
+    private Rating rating;
     private String summary;
     private String experience;
     private String suggestion;

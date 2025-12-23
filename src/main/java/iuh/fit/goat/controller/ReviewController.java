@@ -2,6 +2,7 @@ package iuh.fit.goat.controller;
 
 import com.turkraft.springfilter.boot.Filter;
 import iuh.fit.goat.dto.response.ResultPaginationResponse;
+import iuh.fit.goat.dto.response.review.RatingResponse;
 import iuh.fit.goat.dto.response.review.ReviewResponse;
 import iuh.fit.goat.entity.Company;
 import iuh.fit.goat.entity.Review;
@@ -16,6 +17,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 import java.util.Map;
+import java.util.regex.Pattern;
 
 @RestController
 @RequiredArgsConstructor
@@ -64,6 +66,11 @@ public class ReviewController {
         return ResponseEntity.ok(responses);
     }
 
+    @GetMapping("/count")
+    public ResponseEntity<Long> countAllReviews() {
+        return ResponseEntity.ok(this.reviewService.handleCountAllReviews());
+    }
+
     @GetMapping("/companies/count")
     public ResponseEntity<Map<Long, Long>> countReviewByCompany() {
         Map<Long, Long> result = this.reviewService.handleCountReviewByCompany();
@@ -71,14 +78,24 @@ public class ReviewController {
     }
 
     @GetMapping("/companies/ratings/average")
-    public ResponseEntity<Map<Long, Double>> averageRatingByCompany() {
-        Map<Long, Double> result = this.reviewService.handleAverageRatingByCompany();
+    public ResponseEntity<Map<Long, Double>> averageOverallRatingByCompany() {
+        Map<Long, Double> result = this.reviewService.handleOverallAverageRatingByCompany();
         return ResponseEntity.ok(result);
     }
 
-    @GetMapping("/count")
-    public ResponseEntity<Long> countAllReviews() {
-        return ResponseEntity.ok(this.reviewService.handleCountAllReviews());
+    @GetMapping("/companies/{companyId}/ratings/summary")
+    public ResponseEntity<RatingResponse> getRatingByCompany(@PathVariable("companyId") String companyId)
+            throws InvalidException
+    {
+        Pattern pattern = Pattern.compile("^[0-9]+$");
+        if (!pattern.matcher(companyId).matches()) throw new InvalidException("Id is number");
+
+        Company company = this.companyService.handleGetCompanyById(Long.parseLong(companyId));
+        if (company == null) throw new InvalidException("Company not found");
+
+        RatingResponse response = this.reviewService.handleGetRatingByCompany(Long.parseLong(companyId));
+
+        return ResponseEntity.ok(response);
     }
 
 }
