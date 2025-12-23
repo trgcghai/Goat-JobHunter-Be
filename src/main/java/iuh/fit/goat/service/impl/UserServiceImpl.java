@@ -2,6 +2,7 @@ package iuh.fit.goat.service.impl;
 
 import iuh.fit.goat.dto.request.user.CreateUserRequest;
 import iuh.fit.goat.dto.request.user.LikeBlogRequest;
+import iuh.fit.goat.dto.response.blog.BlogResponse;
 import iuh.fit.goat.entity.embeddable.Contact;
 import iuh.fit.goat.common.Role;
 import iuh.fit.goat.dto.request.user.ResetPasswordRequest;
@@ -38,19 +39,19 @@ import java.util.stream.Collectors;
 public class UserServiceImpl implements UserService {
 //
 //    // avoid circular dependency between user service impl, ai service impl and blog service impl
-//    @Lazy
-//    @Autowired
-//    private final BlogService blogService;
+    @Lazy
+    @Autowired
+    private final BlogService blogService;
 //
 //    private final RedisService redisService;
 //    private final NotificationService notificationService;
 //    private final EmailNotificationService emailNotificationService;
 //
     private final UserRepository userRepository;
-//    private final JobRepository jobRepository;
+    private final JobRepository jobRepository;
 //    private final RecruiterRepository recruiterRepository;
 //    private final NotificationRepository notificationRepository;
-//    private final BlogRepository blogRepository;
+    private final BlogRepository blogRepository;
 //
 //    private final PasswordEncoder passwordEncoder;
 //    private final SecurityUtil securityUtil;
@@ -245,133 +246,268 @@ public class UserServiceImpl implements UserService {
 //            throw new InvalidException("User not found");
 //        }
 //    }
-//
-//    @Override
-//    public ResultPaginationResponse handleGetCurrentUserSavedJobs(Pageable pageable) {
-//        String currentEmail = SecurityUtil.getCurrentUserLogin().isPresent() ?
-//                SecurityUtil.getCurrentUserLogin().get() : "";
-//
-//        if (currentEmail.isEmpty()) {
-//            return new ResultPaginationResponse(
-//                    new ResultPaginationResponse.Meta(0, 0, 0, 0L),
-//                    new ArrayList<>()
-//            );
-//        }
-//
-//        User currentUser = this.handleGetUserByEmail(currentEmail);
-//        if (currentUser == null || currentUser.getSavedJobs() == null) {
-//            return new ResultPaginationResponse(
-//                    new ResultPaginationResponse.Meta(0, 0, 0, 0L),
-//                    new ArrayList<>()
-//            );
-//        }
-//
-//        List<Job> savedJobs = currentUser.getSavedJobs();
-//        int total = savedJobs.size();
-//        int pageNumber = pageable.getPageNumber();
-//        int pageSize = pageable.getPageSize();
-//        int start = pageNumber * pageSize;
-//        List<Job> content;
-//
-//        if (start >= total || pageSize <= 0) {
-//            content = new ArrayList<>();
-//        } else {
-//            int end = Math.min(start + pageSize, total);
-//            content = savedJobs.subList(start, end);
-//        }
-//
-//        ResultPaginationResponse.Meta meta = new ResultPaginationResponse.Meta();
-//        meta.setPage(pageNumber + 1);
-//        meta.setPageSize(pageSize);
-//        int pages = pageSize > 0 ? (int) Math.ceil((double) total / pageSize) : 0;
-//        meta.setPages(pages);
-//        meta.setTotal((long) total);
-//
-//        return new ResultPaginationResponse(meta, content);
-//    }
-//
-//    @Override
-//    public List<Map<String, Object>> handleCheckJobsSaved(List<Long> jobIds) {
-//        String currentEmail = SecurityUtil.getCurrentUserLogin().isPresent() ?
-//                SecurityUtil.getCurrentUserLogin().get() : "";
-//
-//        if (currentEmail.isEmpty()) {
-//            return new ArrayList<>();
-//        }
-//
-//        User currentUser = this.handleGetUserByEmail(currentEmail);
-//        List<Long> savedJobIds = currentUser.getSavedJobs() != null
-//                ? currentUser.getSavedJobs().stream().map(Job::getJobId).toList()
-//                : new ArrayList<>();
-//
-//        return jobIds.stream()
-//                .map(jobId -> {
-//                    Map<String, Object> result = new HashMap<>();
-//                    result.put("jobId", jobId);
-//                    result.put("result", savedJobIds.contains(jobId));
-//                    return result;
-//                })
-//                .collect(Collectors.toList());
-//    }
-//
-//    @Override
-//    public UserResponse handleSaveJobsForCurrentUser(List<Long> jobIds) {
-//        String currentEmail = SecurityUtil.getCurrentUserLogin().isPresent() ?
-//                SecurityUtil.getCurrentUserLogin().get() : "";
-//
-//        if (currentEmail.isEmpty()) {
-//            return null;
-//        }
-//
-//        User currentUser = this.handleGetUserByEmail(currentEmail);
-//        if (currentUser == null) {
-//            return null;
-//        }
-//
-//        List<Job> currentSavedJobs = currentUser.getSavedJobs() != null
-//                ? new ArrayList<>(currentUser.getSavedJobs())
-//                : new ArrayList<>();
-//
-//        List<Job> jobsToAdd = this.jobRepository.findByJobIdIn(jobIds);
-//
-//        for (Job job : jobsToAdd) {
-//            if (currentSavedJobs.stream().noneMatch(j -> j.getJobId() == job.getJobId())) {
-//                currentSavedJobs.add(job);
-//            }
-//        }
-//
-//        currentUser.setSavedJobs(currentSavedJobs);
-//        this.userRepository.save(currentUser);
-//
-//        return this.convertToUserResponse(currentUser);
-//    }
-//
-//    @Override
-//    public UserResponse handleUnsaveJobsForCurrentUser(List<Long> jobIds) {
-//        String currentEmail = SecurityUtil.getCurrentUserLogin().isPresent() ?
-//                SecurityUtil.getCurrentUserLogin().get() : "";
-//
-//        if (currentEmail.isEmpty()) {
-//            return null;
-//        }
-//
-//        User currentUser = this.handleGetUserByEmail(currentEmail);
-//        if (currentUser == null) {
-//            return null;
-//        }
-//
-//        List<Job> currentSavedJobs = currentUser.getSavedJobs() != null
-//                ? new ArrayList<>(currentUser.getSavedJobs())
-//                : new ArrayList<>();
-//
-//        currentSavedJobs.removeIf(job -> jobIds.contains(job.getJobId()));
-//
-//        currentUser.setSavedJobs(currentSavedJobs);
-//        this.userRepository.save(currentUser);
-//
-//        return this.convertToUserResponse(currentUser);
-//    }
-//
+
+
+    /*     ========================= Saved Job Related Methods =========================  */
+
+    @Override
+    public ResultPaginationResponse handleGetCurrentUserSavedJobs(Pageable pageable) {
+        String currentEmail = SecurityUtil.getCurrentUserLogin().isPresent() ?
+                SecurityUtil.getCurrentUserLogin().get() : "";
+
+        if (currentEmail.isEmpty()) {
+            return new ResultPaginationResponse(
+                    new ResultPaginationResponse.Meta(0, 0, 0, 0L),
+                    new ArrayList<>()
+            );
+        }
+
+        User currentUser = this.handleGetUserByEmail(currentEmail);
+        if (currentUser == null || currentUser.getSavedJobs() == null) {
+            return new ResultPaginationResponse(
+                    new ResultPaginationResponse.Meta(0, 0, 0, 0L),
+                    new ArrayList<>()
+            );
+        }
+
+        List<Job> savedJobs = currentUser.getSavedJobs();
+        int total = savedJobs.size();
+        int pageNumber = pageable.getPageNumber();
+        int pageSize = pageable.getPageSize();
+        int start = pageNumber * pageSize;
+        List<Job> content;
+
+        if (start >= total || pageSize <= 0) {
+            content = new ArrayList<>();
+        } else {
+            int end = Math.min(start + pageSize, total);
+            content = savedJobs.subList(start, end);
+        }
+
+        ResultPaginationResponse.Meta meta = new ResultPaginationResponse.Meta();
+        meta.setPage(pageNumber + 1);
+        meta.setPageSize(pageSize);
+        int pages = pageSize > 0 ? (int) Math.ceil((double) total / pageSize) : 0;
+        meta.setPages(pages);
+        meta.setTotal((long) total);
+
+        return new ResultPaginationResponse(meta, content);
+    }
+
+    @Override
+    public List<Map<String, Object>> handleCheckJobsSaved(List<Long> jobIds) {
+        String currentEmail = SecurityUtil.getCurrentUserLogin().isPresent() ?
+                SecurityUtil.getCurrentUserLogin().get() : "";
+
+        if (currentEmail.isEmpty()) {
+            return new ArrayList<>();
+        }
+
+        User currentUser = this.handleGetUserByEmail(currentEmail);
+        List<Long> savedJobIds = currentUser.getSavedJobs() != null
+                ? currentUser.getSavedJobs().stream().map(Job::getJobId).toList()
+                : new ArrayList<>();
+
+        return jobIds.stream()
+                .map(jobId -> {
+                    Map<String, Object> result = new HashMap<>();
+                    result.put("jobId", jobId);
+                    result.put("result", savedJobIds.contains(jobId));
+                    return result;
+                })
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    public UserResponse handleSaveJobsForCurrentUser(List<Long> jobIds) {
+        String currentEmail = SecurityUtil.getCurrentUserLogin().isPresent() ?
+                SecurityUtil.getCurrentUserLogin().get() : "";
+
+        if (currentEmail.isEmpty()) {
+            return null;
+        }
+
+        User currentUser = this.handleGetUserByEmail(currentEmail);
+        if (currentUser == null) {
+            return null;
+        }
+
+        List<Job> currentSavedJobs = currentUser.getSavedJobs() != null
+                ? new ArrayList<>(currentUser.getSavedJobs())
+                : new ArrayList<>();
+
+        List<Job> jobsToAdd = this.jobRepository.findByJobIdIn(jobIds);
+
+        for (Job job : jobsToAdd) {
+            if (currentSavedJobs.stream().noneMatch(j -> j.getJobId() == job.getJobId())) {
+                currentSavedJobs.add(job);
+            }
+        }
+
+        currentUser.setSavedJobs(currentSavedJobs);
+        this.userRepository.save(currentUser);
+
+        return this.convertToUserResponse(currentUser);
+    }
+
+    @Override
+    public UserResponse handleUnsaveJobsForCurrentUser(List<Long> jobIds) {
+        String currentEmail = SecurityUtil.getCurrentUserLogin().isPresent() ?
+                SecurityUtil.getCurrentUserLogin().get() : "";
+
+        if (currentEmail.isEmpty()) {
+            return null;
+        }
+
+        User currentUser = this.handleGetUserByEmail(currentEmail);
+        if (currentUser == null) {
+            return null;
+        }
+
+        List<Job> currentSavedJobs = currentUser.getSavedJobs() != null
+                ? new ArrayList<>(currentUser.getSavedJobs())
+                : new ArrayList<>();
+
+        currentSavedJobs.removeIf(job -> jobIds.contains(job.getJobId()));
+
+        currentUser.setSavedJobs(currentSavedJobs);
+        this.userRepository.save(currentUser);
+
+        return this.convertToUserResponse(currentUser);
+    }
+
+    /*     ========================= ========================= =========================  */
+
+
+
+    /*     ========================= Saved Blogs Related Methods =========================  */
+
+    @Override
+    public ResultPaginationResponse handleGetCurrentUserSavedBlogs(Specification<Blog> spec, Pageable pageable) {
+        String currentEmail = SecurityUtil.getCurrentUserLogin().isPresent() ?
+                SecurityUtil.getCurrentUserLogin().get() : "";
+
+        if (currentEmail.isEmpty()) {
+            return new ResultPaginationResponse(
+                    new ResultPaginationResponse.Meta(0, 0, 0, 0L),
+                    new ArrayList<>()
+            );
+        }
+
+        User currentUser = this.handleGetUserByEmail(currentEmail);
+        if (currentUser == null) {
+            return new ResultPaginationResponse(
+                    new ResultPaginationResponse.Meta(0, 0, 0, 0L),
+                    new ArrayList<>()
+            );
+        }
+
+        // Create specification to filter blogs saved by user
+        Specification<Blog> userSavedSpec = (root, query, cb) ->
+                cb.isMember(currentUser, root.get("users"));
+
+        // Combine with spec from request
+        Specification<Blog> finalSpec = spec == null ? userSavedSpec : spec.and(userSavedSpec);
+
+        Page<Blog> page = this.blogRepository.findAll(finalSpec, pageable);
+
+        ResultPaginationResponse.Meta meta = new ResultPaginationResponse.Meta();
+        meta.setPage(pageable.getPageNumber() + 1);
+        meta.setPageSize(pageable.getPageSize());
+        meta.setPages(page.getTotalPages());
+        meta.setTotal(page.getTotalElements());
+
+        List<BlogResponse> blogResponses = page.getContent().stream()
+                .map(blogService::convertToBlogResponse)
+                .collect(Collectors.toList());
+
+        return new ResultPaginationResponse(meta, blogResponses);
+    }
+
+    @Override
+    public List<Map<String, Object>> handleCheckBlogsSaved(List<Long> blogIds) {
+        String currentEmail = SecurityUtil.getCurrentUserLogin().isPresent() ?
+                SecurityUtil.getCurrentUserLogin().get() : "";
+
+        if (currentEmail.isEmpty()) {
+            return new ArrayList<>();
+        }
+
+        User currentUser = this.handleGetUserByEmail(currentEmail);
+        List<Long> savedBlogIds = currentUser.getSavedBlogs() != null
+                ? currentUser.getSavedBlogs().stream().map(Blog::getBlogId).toList()
+                : new ArrayList<>();
+
+        return blogIds.stream()
+                .map(blogId -> {
+                    Map<String, Object> result = new HashMap<>();
+                    result.put("blogId", blogId);
+                    result.put("result", savedBlogIds.contains(blogId));
+                    return result;
+                })
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    public UserResponse handleSaveBlogsForCurrentUser(List<Long> blogIds) {
+        String currentEmail = SecurityUtil.getCurrentUserLogin().isPresent() ?
+                SecurityUtil.getCurrentUserLogin().get() : "";
+
+        if (currentEmail.isEmpty()) {
+            return null;
+        }
+
+        User currentUser = this.handleGetUserByEmail(currentEmail);
+        if (currentUser == null) {
+            return null;
+        }
+
+        List<Blog> currentSavedBlogs = currentUser.getSavedBlogs() != null
+                ? new ArrayList<>(currentUser.getSavedBlogs())
+                : new ArrayList<>();
+
+        List<Blog> blogsToAdd = this.blogRepository.findByBlogIdIn((blogIds));
+
+        for (Blog blog : blogsToAdd) {
+            if (currentSavedBlogs.stream().noneMatch(b -> b.getBlogId() == blog.getBlogId())) {
+                currentSavedBlogs.add(blog);
+            }
+        }
+
+        currentUser.setSavedBlogs(currentSavedBlogs);
+        this.userRepository.save(currentUser);
+
+        return this.convertToUserResponse(currentUser);
+    }
+
+    @Override
+    public UserResponse handleUnsaveBlogsForCurrentUser(List<Long> blogIds) {
+        String currentEmail = SecurityUtil.getCurrentUserLogin().isPresent() ?
+                SecurityUtil.getCurrentUserLogin().get() : "";
+
+        if (currentEmail.isEmpty()) {
+            return null;
+        }
+
+        User currentUser = this.handleGetUserByEmail(currentEmail);
+        if (currentUser == null) {
+            return null;
+        }
+
+        List<Blog> currentSavedBlogs = currentUser.getSavedBlogs() != null
+                ? new ArrayList<>(currentUser.getSavedBlogs())
+                : new ArrayList<>();
+
+        currentSavedBlogs.removeIf(blog -> blogIds.contains(blog.getBlogId()));
+
+        currentUser.setSavedBlogs(currentSavedBlogs);
+        this.userRepository.save(currentUser);
+
+        return this.convertToUserResponse(currentUser);
+    }
+
+    /*     ========================= ========================= =========================  */
+
 //    @Override
 //    public ResultPaginationResponse handleGetCurrentUserLikedBlogs(Specification<Blog> spec, Pageable pageable) {
 //        String currentEmail = SecurityUtil.getCurrentUserLogin().orElse("");

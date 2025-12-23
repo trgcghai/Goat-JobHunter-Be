@@ -8,6 +8,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import java.util.Collection;
 import java.util.List;
 
 @Repository
@@ -23,6 +24,5 @@ public interface BlogRepository extends JpaRepository<Blog, Long>, JpaSpecificat
     """)
     List<Object[]> findAllTags(@Param("keyword") String keyword);
 
-
-//    List<Blog> findByBlogIdIn(List<Long> blogIds);
+    List<Blog> findByBlogIdIn(List<Long> blogIds);
 }

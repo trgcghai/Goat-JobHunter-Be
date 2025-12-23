@@ -35,14 +35,30 @@ public interface UserService {
 
     UserResponse convertToUserResponse(User user);
 
-//    // Job related methods
-//    ResultPaginationResponse handleGetCurrentUserSavedJobs(Pageable pageable);
-//
-//    List<Map<String, Object>> handleCheckJobsSaved(List<Long> jobIds);
-//
-//    UserResponse handleSaveJobsForCurrentUser(List<Long> jobIds);
-//
-//    UserResponse handleUnsaveJobsForCurrentUser(List<Long> jobIds);
+    /*     ========================= Saved Job Related Methods =========================  */
+
+    ResultPaginationResponse handleGetCurrentUserSavedJobs(Pageable pageable);
+
+    List<Map<String, Object>> handleCheckJobsSaved(List<Long> jobIds);
+
+    UserResponse handleSaveJobsForCurrentUser(List<Long> jobIds);
+
+    UserResponse handleUnsaveJobsForCurrentUser(List<Long> jobIds);
+
+    /*     ========================= ========================= =========================  */
+
+    /*     ========================= Saved Blogs Related Methods =========================  */
+
+    ResultPaginationResponse handleGetCurrentUserSavedBlogs(Specification<Blog> spec, Pageable pageable);
+
+    List<Map<String, Object>> handleCheckBlogsSaved(List<Long> blogIds);
+
+    UserResponse handleSaveBlogsForCurrentUser(List<Long> blogIds);
+
+    UserResponse handleUnsaveBlogsForCurrentUser(List<Long> blogIds);
+
+    /*     ========================= ========================= =========================  */
+
 //
 //    // Blog related methods
 //    ResultPaginationResponse handleGetCurrentUserLikedBlogs(Specification<Blog> spec, Pageable pageable);
