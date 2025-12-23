@@ -14,7 +14,7 @@ public interface ReviewService {
 
     Map<Long, Long> handleCountReviewByCompany();
 
-    Map<Long, Double> handleAverageRatingByCompany();
+    Map<Long, Double> handleOverallAverageRatingByCompany();
 
     List<ReviewResponse> handleGetLatest5Reviews();
 

@@ -49,8 +49,8 @@ public class ReviewServiceImpl implements ReviewService {
     }
 
     @Override
-    public Map<Long, Double> handleAverageRatingByCompany() {
-        return this.reviewRepository.averageRatingsByCompany()
+    public Map<Long, Double> handleOverallAverageRatingByCompany() {
+        return this.reviewRepository.averageOverallRatingsByCompany()
                 .stream().collect(
                         Collectors.toMap(
                                 row -> (Long) row[0],

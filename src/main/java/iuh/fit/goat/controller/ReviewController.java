@@ -70,15 +70,15 @@ public class ReviewController {
         return ResponseEntity.ok(result);
     }
 
-    @GetMapping("/companies/ratings/average")
-    public ResponseEntity<Map<Long, Double>> averageRatingByCompany() {
-        Map<Long, Double> result = this.reviewService.handleAverageRatingByCompany();
-        return ResponseEntity.ok(result);
-    }
-
     @GetMapping("/count")
     public ResponseEntity<Long> countAllReviews() {
         return ResponseEntity.ok(this.reviewService.handleCountAllReviews());
+    }
+
+    @GetMapping("/companies/ratings/average")
+    public ResponseEntity<Map<Long, Double>> averageOverallRatingByCompany() {
+        Map<Long, Double> result = this.reviewService.handleOverallAverageRatingByCompany();
+        return ResponseEntity.ok(result);
     }
 
 }

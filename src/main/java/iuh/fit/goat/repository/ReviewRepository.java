@@ -14,8 +14,8 @@ public interface ReviewRepository extends JpaRepository<Review, Long>, JpaSpecif
     @Query("SELECT r.company.accountId, COUNT(r) FROM Review r GROUP BY r.company.accountId")
     List<Object[]> countReviews();
 
-    @Query("SELECT r.company.accountId, AVG(r.rating) FROM Review r GROUP BY r.company.accountId")
-    List<Object[]> averageRatingsByCompany();
+    @Query("SELECT r.company.accountId, AVG(r.rating.overall) FROM Review r GROUP BY r.company.accountId")
+    List<Object[]> averageOverallRatingsByCompany();
 
     List<Review> findTop5ByOrderByCreatedAtDesc();
 }
