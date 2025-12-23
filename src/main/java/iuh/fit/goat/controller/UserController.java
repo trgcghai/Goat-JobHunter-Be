@@ -228,45 +228,7 @@ public class UserController {
 
     /*     ========================= ========================= =========================  */
 
-//    @GetMapping("/users/me/liked-blogs")
-//    public ResponseEntity<ResultPaginationResponse> getCurrentUserLikedBlogs(
-//            @Filter Specification<Blog> spec,
-//            Pageable pageable
-//    ) {
-//        ResultPaginationResponse result = this.userService.handleGetCurrentUserLikedBlogs(spec, pageable);
-//        return ResponseEntity.status(HttpStatus.OK).body(result);
-//    }
-//
-//    @GetMapping("/users/me/liked-blogs/contains")
-//    public ResponseEntity<List<Map<String, Object>>> checkBlogsLiked(@RequestParam List<Long> blogIds) {
-//        List<Map<String, Object>> result = this.userService.handleCheckBlogsLiked(blogIds);
-//        return ResponseEntity.status(HttpStatus.OK).body(result);
-//    }
-//
-//    @PutMapping("/users/me/liked-blogs")
-//    public ResponseEntity<List<Map<String, Object>>> likeBlogs(@RequestBody Map<String, List<Long>> request)
-//            throws InvalidException {
-//        List<Long> blogIds = request.get("blogIds");
-//        if (blogIds == null || blogIds.isEmpty()) {
-//            throw new InvalidException("Blog IDs list cannot be empty");
-//        }
-//
-//        List<Map<String, Object>> results = this.userService.handleLikeBlogs(blogIds);
-//        return ResponseEntity.status(HttpStatus.OK).body(results);
-//    }
-//
-//    @DeleteMapping("/users/me/liked-blogs")
-//    public ResponseEntity<List<Map<String, Object>>> unlikeBlogs(@RequestBody Map<String, List<Long>> request)
-//            throws InvalidException {
-//        List<Long> blogIds = request.get("blogIds");
-//        if (blogIds == null || blogIds.isEmpty()) {
-//            throw new InvalidException("Blog IDs list cannot be empty");
-//        }
-//
-//        List<Map<String, Object>> results = this.userService.handleUnlikeBlogs(blogIds);
-//        return ResponseEntity.status(HttpStatus.OK).body(results);
-//    }
-//
+
 //    @GetMapping("/users/me/notifications")
 //    public ResponseEntity<ResultPaginationResponse> getCurrentUserNotifications(Pageable pageable) {
 //        ResultPaginationResponse result = this.userService.handleGetCurrentUserNotifications(pageable);

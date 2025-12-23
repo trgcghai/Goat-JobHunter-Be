@@ -59,16 +59,6 @@ public interface UserService {
 
     /*     ========================= ========================= =========================  */
 
-//
-//    // Blog related methods
-//    ResultPaginationResponse handleGetCurrentUserLikedBlogs(Specification<Blog> spec, Pageable pageable);
-//
-//    List<Map<String, Object>> handleCheckBlogsLiked(List<Long> blogIds);
-//
-//    List<Map<String, Object>> handleLikeBlogs(List<Long> blogIds);
-//
-//    List<Map<String, Object>> handleUnlikeBlogs(List<Long> blogIds);
-//
 //    // Notification related methods
 //    ResultPaginationResponse handleGetCurrentUserNotifications(Pageable pageable);
 //
