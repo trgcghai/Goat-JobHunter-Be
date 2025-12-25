@@ -60,7 +60,7 @@ public class Blog extends BaseEntity {
     )
     private List<Ticket> tickets = new ArrayList<>();
 
-    @OneToMany(mappedBy = "blog", fetch = LAZY,  cascade = {PERSIST, MERGE})
+    @OneToMany(mappedBy = "blog", fetch = LAZY, cascade = {PERSIST, MERGE})
     @JsonIgnore
     @Filter(
             name = "activeNotificationFilter",

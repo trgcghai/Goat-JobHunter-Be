@@ -25,6 +25,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -448,6 +449,7 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
+    @Transactional
     public UserResponse handleSaveBlogsForCurrentUser(List<Long> blogIds) {
         String currentEmail = SecurityUtil.getCurrentUserLogin().isPresent() ?
                 SecurityUtil.getCurrentUserLogin().get() : "";
@@ -461,11 +463,16 @@ public class UserServiceImpl implements UserService {
             return null;
         }
 
+        List<Blog> blogsToAdd = this.blogRepository.findByBlogIdIn((blogIds));
+
+        if (blogsToAdd.isEmpty()) {
+            return this.convertToUserResponse(currentUser);
+        }
+
         List<Blog> currentSavedBlogs = currentUser.getSavedBlogs() != null
                 ? new ArrayList<>(currentUser.getSavedBlogs())
                 : new ArrayList<>();
 
-        List<Blog> blogsToAdd = this.blogRepository.findByBlogIdIn((blogIds));
 
         for (Blog blog : blogsToAdd) {
             if (currentSavedBlogs.stream().noneMatch(b -> b.getBlogId() == blog.getBlogId())) {
