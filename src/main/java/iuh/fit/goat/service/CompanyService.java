@@ -20,5 +20,7 @@ public interface CompanyService {
 
     Map<String, List<String>> handleGroupAddressesCityByCompany(long id);
 
+    Map<Long, String> handleFindDistinctSkillsByCompany(long id);
+
     CompanyResponse convertToCompanyResponse(Company company);
 }
