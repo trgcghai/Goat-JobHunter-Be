@@ -35,24 +35,30 @@ public interface UserService {
 
     UserResponse convertToUserResponse(User user);
 
-//    // Job related methods
-//    ResultPaginationResponse handleGetCurrentUserSavedJobs(Pageable pageable);
-//
-//    List<Map<String, Object>> handleCheckJobsSaved(List<Long> jobIds);
-//
-//    UserResponse handleSaveJobsForCurrentUser(List<Long> jobIds);
-//
-//    UserResponse handleUnsaveJobsForCurrentUser(List<Long> jobIds);
-//
-//    // Blog related methods
-//    ResultPaginationResponse handleGetCurrentUserLikedBlogs(Specification<Blog> spec, Pageable pageable);
-//
-//    List<Map<String, Object>> handleCheckBlogsLiked(List<Long> blogIds);
-//
-//    List<Map<String, Object>> handleLikeBlogs(List<Long> blogIds);
-//
-//    List<Map<String, Object>> handleUnlikeBlogs(List<Long> blogIds);
-//
+    /*     ========================= Saved Job Related Methods =========================  */
+
+    ResultPaginationResponse handleGetCurrentUserSavedJobs(Pageable pageable);
+
+    List<Map<String, Object>> handleCheckJobsSaved(List<Long> jobIds);
+
+    UserResponse handleSaveJobsForCurrentUser(List<Long> jobIds);
+
+    UserResponse handleUnsaveJobsForCurrentUser(List<Long> jobIds);
+
+    /*     ========================= ========================= =========================  */
+
+    /*     ========================= Saved Blogs Related Methods =========================  */
+
+    ResultPaginationResponse handleGetCurrentUserSavedBlogs(Specification<Blog> spec, Pageable pageable);
+
+    List<Map<String, Object>> handleCheckBlogsSaved(List<Long> blogIds);
+
+    UserResponse handleSaveBlogsForCurrentUser(List<Long> blogIds);
+
+    UserResponse handleUnsaveBlogsForCurrentUser(List<Long> blogIds);
+
+    /*     ========================= ========================= =========================  */
+
 //    // Notification related methods
 //    ResultPaginationResponse handleGetCurrentUserNotifications(Pageable pageable);
 //

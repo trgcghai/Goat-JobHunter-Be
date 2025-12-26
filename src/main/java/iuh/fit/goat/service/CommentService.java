@@ -10,17 +10,17 @@ import org.springframework.data.jpa.domain.Specification;
 import java.util.List;
 
 public interface CommentService {
-//    Comment handleCreateComment(CreateCommentRequest comment);
-//
-//    Comment handleUpdateComment(Comment comment);
-//
-//    void handleDeleteComment(long id);
-//
-//    Comment handleGetCommentById(long id);
-//
-//    ResultPaginationResponse handleGetAllComments(Specification<Comment> spec, Pageable pageable);
-//
-//    List<CommentResponse> handleGetCommentsByBlogId(long blogId);
-//
-//    CommentResponse convertToCommentResponse(Comment comment);
+    Comment handleCreateComment(CreateCommentRequest comment);
+
+    Comment handleUpdateComment(Comment comment);
+
+    void handleDeleteComment(long id);
+
+    Comment handleGetCommentById(long id);
+
+    ResultPaginationResponse handleGetAllComments(Specification<Comment> spec, Pageable pageable);
+
+    List<CommentResponse> handleGetCommentsByBlogId(long blogId);
+
+    CommentResponse convertToCommentResponse(Comment comment);
 }

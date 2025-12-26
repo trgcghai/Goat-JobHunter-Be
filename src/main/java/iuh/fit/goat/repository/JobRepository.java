@@ -14,9 +14,13 @@ import java.util.List;
 @Repository
 public interface JobRepository extends JpaRepository<Job, Long>, JpaSpecificationExecutor<Job> {
 //    List<Job> findByRecruiter(Recruiter recruiter);
+
     List<Job> findByCareer(Career career);
+
 //    List<Job> findBySkillsIn(List<Skill> skills);
-//    List<Job> findByJobIdIn(List<Long> jobIds);
+
+    List<Job> findByJobIdIn(List<Long> jobIds);
+
 //    Long countByActive(boolean active);
 //
     @Query("SELECT j.company.accountId, COUNT(j) FROM Job j GROUP BY j.company.accountId")

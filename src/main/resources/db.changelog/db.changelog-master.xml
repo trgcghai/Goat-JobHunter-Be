@@ -45,6 +45,7 @@
     <include file="db.changelog/schema/2025-12-21/2025-12-21-drop-unique-address.xml"/>
     <include file="db.changelog/data/2025-12-22/drop-column-description-blogs.xml"/>
     <include file="/db.changelog/schema/2025-12-22/2025-12-22-enable-citext-column-name-companies.xml"/>
+    <include file="/db.changelog/schema/2025-12-24/create-blog-reaction-sequence.xml"/>
     <include file="/db.changelog/schema/2025-12-22/2025-12-22changelog.xml"/>
     <include file="db.changelog/schema/2025-12-22/2025-12-22-unique-constraint-name-companies.xml"/>
     <include file="db.changelog/schema/2025-12-23/2025-12-23-update-rating-column-reviews.xml"/>

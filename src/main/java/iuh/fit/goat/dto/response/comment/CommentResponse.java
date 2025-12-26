@@ -36,7 +36,7 @@ public class CommentResponse {
     @NoArgsConstructor
     @AllArgsConstructor
     public static class UserCommented {
-        private long userId;
+        private long accountId;
         private String fullName;
         private String username;
         private String avatar;

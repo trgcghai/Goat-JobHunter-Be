@@ -25,6 +25,7 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseCookie;
 import org.springframework.http.ResponseEntity;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -127,90 +128,108 @@ public class UserController {
 //            return ResponseEntity.badRequest().body(e.getMessage());
 //        }
 //    }
-//
-//    @GetMapping("/users/me/saved-jobs")
-//    public ResponseEntity<ResultPaginationResponse> getCurrentUserSavedJobs(Pageable pageable) {
-//        ResultPaginationResponse result = this.userService.handleGetCurrentUserSavedJobs(pageable);
-//        return ResponseEntity.status(HttpStatus.OK).body(result);
-//    }
-//
-//    @GetMapping("/users/me/saved-jobs/contains")
-//    public ResponseEntity<List<Map<String, Object>>> checkJobsSaved(@RequestParam List<Long> jobIds) {
-//        List<Map<String, Object>> result = this.userService.handleCheckJobsSaved(jobIds);
-//        return ResponseEntity.status(HttpStatus.OK).body(result);
-//    }
-//
-//    @PutMapping("/users/me/saved-jobs")
-//    public ResponseEntity<UserResponse> saveJobsForCurrentUser(@RequestBody Map<String, List<Long>> request)
-//            throws InvalidException {
-//        List<Long> jobIds = request.get("jobIds");
-//        if (jobIds == null || jobIds.isEmpty()) {
-//            throw new InvalidException("Job IDs list cannot be empty");
-//        }
-//
-//        UserResponse userResponse = this.userService.handleSaveJobsForCurrentUser(jobIds);
-//        if (userResponse == null) {
-//            throw new InvalidException("Failed to save jobs");
-//        }
-//
-//        return ResponseEntity.status(HttpStatus.OK).body(userResponse);
-//    }
-//
-//    @DeleteMapping("/users/me/saved-jobs")
-//    public ResponseEntity<UserResponse> unsaveJobsForCurrentUser(@RequestBody Map<String, List<Long>> request)
-//            throws InvalidException {
-//        List<Long> jobIds = request.get("jobIds");
-//        if (jobIds == null || jobIds.isEmpty()) {
-//            throw new InvalidException("Job IDs list cannot be empty");
-//        }
-//
-//        UserResponse userResponse = this.userService.handleUnsaveJobsForCurrentUser(jobIds);
-//        if (userResponse == null) {
-//            throw new InvalidException("Failed to unsave jobs");
-//        }
-//
-//        return ResponseEntity.status(HttpStatus.OK).body(userResponse);
-//    }
-//
-//    @GetMapping("/users/me/liked-blogs")
-//    public ResponseEntity<ResultPaginationResponse> getCurrentUserLikedBlogs(
-//            @Filter Specification<Blog> spec,
-//            Pageable pageable
-//    ) {
-//        ResultPaginationResponse result = this.userService.handleGetCurrentUserLikedBlogs(spec, pageable);
-//        return ResponseEntity.status(HttpStatus.OK).body(result);
-//    }
-//
-//    @GetMapping("/users/me/liked-blogs/contains")
-//    public ResponseEntity<List<Map<String, Object>>> checkBlogsLiked(@RequestParam List<Long> blogIds) {
-//        List<Map<String, Object>> result = this.userService.handleCheckBlogsLiked(blogIds);
-//        return ResponseEntity.status(HttpStatus.OK).body(result);
-//    }
-//
-//    @PutMapping("/users/me/liked-blogs")
-//    public ResponseEntity<List<Map<String, Object>>> likeBlogs(@RequestBody Map<String, List<Long>> request)
-//            throws InvalidException {
-//        List<Long> blogIds = request.get("blogIds");
-//        if (blogIds == null || blogIds.isEmpty()) {
-//            throw new InvalidException("Blog IDs list cannot be empty");
-//        }
-//
-//        List<Map<String, Object>> results = this.userService.handleLikeBlogs(blogIds);
-//        return ResponseEntity.status(HttpStatus.OK).body(results);
-//    }
-//
-//    @DeleteMapping("/users/me/liked-blogs")
-//    public ResponseEntity<List<Map<String, Object>>> unlikeBlogs(@RequestBody Map<String, List<Long>> request)
-//            throws InvalidException {
-//        List<Long> blogIds = request.get("blogIds");
-//        if (blogIds == null || blogIds.isEmpty()) {
-//            throw new InvalidException("Blog IDs list cannot be empty");
-//        }
-//
-//        List<Map<String, Object>> results = this.userService.handleUnlikeBlogs(blogIds);
-//        return ResponseEntity.status(HttpStatus.OK).body(results);
-//    }
-//
+
+    /*     ========================= Saved Job Related Endpoints =========================  */
+
+    @GetMapping("/users/me/saved-jobs")
+    public ResponseEntity<ResultPaginationResponse> getCurrentUserSavedJobs(Pageable pageable) {
+        ResultPaginationResponse result = this.userService.handleGetCurrentUserSavedJobs(pageable);
+        return ResponseEntity.status(HttpStatus.OK).body(result);
+    }
+
+    @GetMapping("/users/me/saved-jobs/contains")
+    public ResponseEntity<List<Map<String, Object>>> checkJobsSaved(@RequestParam List<Long> jobIds) {
+        List<Map<String, Object>> result = this.userService.handleCheckJobsSaved(jobIds);
+        return ResponseEntity.status(HttpStatus.OK).body(result);
+    }
+
+    @PutMapping("/users/me/saved-jobs")
+    public ResponseEntity<UserResponse> saveJobsForCurrentUser(@RequestBody Map<String, List<Long>> request)
+            throws InvalidException {
+        List<Long> jobIds = request.get("jobIds");
+        if (jobIds == null || jobIds.isEmpty()) {
+            throw new InvalidException("Job IDs list cannot be empty");
+        }
+
+        UserResponse userResponse = this.userService.handleSaveJobsForCurrentUser(jobIds);
+        if (userResponse == null) {
+            throw new InvalidException("Failed to save jobs");
+        }
+
+        return ResponseEntity.status(HttpStatus.OK).body(userResponse);
+    }
+
+    @DeleteMapping("/users/me/saved-jobs")
+    public ResponseEntity<UserResponse> unsaveJobsForCurrentUser(@RequestBody Map<String, List<Long>> request)
+            throws InvalidException {
+        List<Long> jobIds = request.get("jobIds");
+        if (jobIds == null || jobIds.isEmpty()) {
+            throw new InvalidException("Job IDs list cannot be empty");
+        }
+
+        UserResponse userResponse = this.userService.handleUnsaveJobsForCurrentUser(jobIds);
+        if (userResponse == null) {
+            throw new InvalidException("Failed to unsave jobs");
+        }
+
+        return ResponseEntity.status(HttpStatus.OK).body(userResponse);
+    }
+
+    /*     ========================= ========================= =========================  */
+
+
+    /*     ========================= Saved Blog Related Endpoints =========================  */
+
+    @GetMapping("/users/me/saved-blogs")
+    public ResponseEntity<ResultPaginationResponse> getCurrentUserSavedBlogs(
+            @Filter Specification<Blog> spec,
+            Pageable pageable
+    ) {
+        ResultPaginationResponse result = this.userService.handleGetCurrentUserSavedBlogs(spec, pageable);
+        return ResponseEntity.status(HttpStatus.OK).body(result);
+    }
+
+    @GetMapping("/users/me/saved-blogs/contains")
+    public ResponseEntity<List<Map<String, Object>>> checkBlogsSaved(@RequestParam List<Long> blogIds) {
+        List<Map<String, Object>> result = this.userService.handleCheckBlogsSaved(blogIds);
+        return ResponseEntity.status(HttpStatus.OK).body(result);
+    }
+
+    @PutMapping("/users/me/saved-blogs")
+    public ResponseEntity<UserResponse> saveBlogsForCurrentUser(@RequestBody Map<String, List<Long>> request)
+            throws InvalidException {
+        List<Long> blogIds = request.get("blogIds");
+        if (blogIds == null || blogIds.isEmpty()) {
+            throw new InvalidException("Blog IDs list cannot be empty");
+        }
+
+        UserResponse userResponse = this.userService.handleSaveBlogsForCurrentUser(blogIds);
+        if (userResponse == null) {
+            throw new InvalidException("Failed to save blogs");
+        }
+
+        return ResponseEntity.status(HttpStatus.OK).body(userResponse);
+    }
+
+    @DeleteMapping("/users/me/saved-blogs")
+    public ResponseEntity<UserResponse> unsaveBlogsForCurrentUser(@RequestBody Map<String, List<Long>> request)
+            throws InvalidException {
+        List<Long> blogIds = request.get("blogIds");
+        if (blogIds == null || blogIds.isEmpty()) {
+            throw new InvalidException("Blog IDs list cannot be empty");
+        }
+
+        UserResponse userResponse = this.userService.handleUnsaveBlogsForCurrentUser(blogIds);
+        if (userResponse == null) {
+            throw new InvalidException("Failed to unsave blogs");
+        }
+
+        return ResponseEntity.status(HttpStatus.OK).body(userResponse);
+    }
+
+    /*     ========================= ========================= =========================  */
+
+
 //    @GetMapping("/users/me/notifications")
 //    public ResponseEntity<ResultPaginationResponse> getCurrentUserNotifications(Pageable pageable) {
 //        ResultPaginationResponse result = this.userService.handleGetCurrentUserNotifications(pageable);

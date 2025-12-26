@@ -20,7 +20,8 @@ import static jakarta.persistence.FetchType.LAZY;
 @ToString(exclude = {"user", "blog"})
 public class BlogReaction extends BaseEntity {
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "blog_reaction_gen")
+    @SequenceGenerator(name = "blog_reaction_gen", sequenceName = "blog_reactions_reaction_id_seq", allocationSize = 1)
     private long reactionId;
     @Enumerated(EnumType.STRING)
     private ReactionType type;

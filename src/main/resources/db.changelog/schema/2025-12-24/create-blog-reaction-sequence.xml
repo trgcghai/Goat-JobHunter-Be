@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.20.xsd">
+
+    <changeSet id="create-blog-reactions-sequence" author="trgcghai">
+        <createSequence sequenceName="blog_reactions_reaction_id_seq"
+                        startValue="1"
+                        incrementBy="1"/>
+    </changeSet>
+
+    <changeSet id="alter-blog-reactions-default" author="trgcghai">
+        <sql>
+            ALTER TABLE blog_reactions
+            ALTER COLUMN reaction_id SET DEFAULT nextval('blog_reactions_reaction_id_seq');
+        </sql>
+    </changeSet>
+
+</databaseChangeLog>

@@ -66,101 +66,99 @@ public class NotificationServiceImpl implements NotificationService {
 //        notifications.forEach(n -> n.setSeen(true));
 //        this.notificationRepository.saveAll(notifications);
 //    }
-//
-//    @Override
-//    public void handleNotifyCommentBlog(Blog blog, Comment comment) {
-//        User actor = this.handleGetCurrentUser();
-//        if (actor == null) return;
-//
-//        User recipient = blog.getAuthor();
-//        if (actor.getUserId() == recipient.getUserId()) return;
-//
-//        String redisKey = String.format("notification:%d:blog:%d:recipient:%d",
-//                NotificationType.COMMENT.ordinal(), blog.getBlogId(), recipient.getUserId());
-//
-//        try {
-//            if (redisService.hasKey(redisKey)) {
-//                String existingPayload = redisService.getValue(redisKey);
-//                @SuppressWarnings("unchecked")
-//                Map<String, Object> existingData = objectMapper.readValue(existingPayload, Map.class);
-//
-//                @SuppressWarnings("unchecked")
-//                List<Number> actorIds = (List<Number>) existingData.get("actorIds");
-//
-//                // Convert to Set for uniqueness
-//                List<Long> newActorIds = actorIds.stream()
-//                        .map(Number::longValue)
-//                        .collect(Collectors.toList());
-//
-//                newActorIds.add(actor.getUserId());
-//
-//                existingData.put("actorIds", newActorIds);
-//                existingData.put("commentId", comment.getCommentId());
-//
-//                String updatedPayload = objectMapper.writeValueAsString(existingData);
-//                redisService.updateValue(redisKey, updatedPayload);
-//            } else {
-//                Notification notification = new Notification();
-//                notification.setType(NotificationType.COMMENT);
-//                notification.setBlog(blog);
-//                notification.setComment(comment);
-//                notification.setActors(List.of(actor));
-//                notification.setRecipient(recipient);
-//
-//                setNotificationToRedis(notification, redisKey);
-//            }
-//        } catch (JsonProcessingException e) {
-//            log.error("Failed to process comment notification for blog {}: {}", blog.getBlogId(), e.getMessage());
-//        }
-//    }
-//
-//    @Override
-//    public void handleNotifyReplyComment(Comment parent, Comment reply) {
-//        User actor = this.handleGetCurrentUser();
-//        if (actor == null) return;
-//
-//        User recipient = parent.getCommentedBy();
-//        if (actor.getUserId() == recipient.getUserId()) return;
-//
-//        String redisKey = String.format("notification:%d:comment:%d:recipient:%d",
-//                NotificationType.REPLY.ordinal(), parent.getCommentId(), recipient.getUserId());
-//
-//        try {
-//            if (redisService.hasKey(redisKey)) {
-//                String existingPayload = redisService.getValue(redisKey);
-//                @SuppressWarnings("unchecked")
-//                Map<String, Object> existingData = objectMapper.readValue(existingPayload, Map.class);
-//
-//                @SuppressWarnings("unchecked")
-//                List<Number> actorIds = (List<Number>) existingData.get("actorIds");
-//
-//                // Convert to Set for uniqueness
-//                List<Long> newActorIds = actorIds.stream()
-//                        .map(Number::longValue)
-//                        .collect(Collectors.toList());
-//
-//                newActorIds.add(actor.getUserId());
-//
-//                existingData.put("actorIds", newActorIds);
-//                existingData.put("replyId", reply.getCommentId());
-//
-//                String updatedPayload = objectMapper.writeValueAsString(existingData);
-//                redisService.updateValue(redisKey, updatedPayload);
-//            } else {
-//                Notification notification = new Notification();
-//                notification.setType(NotificationType.REPLY);
-//                notification.setBlog(parent.getBlog());
-//                notification.setReply(reply);
-//                notification.setRepliedOnComment(parent);
-//                notification.setActors(List.of(actor));
-//                notification.setRecipient(recipient);
-//
-//                setNotificationToRedis(notification, redisKey);
-//            }
-//        } catch (JsonProcessingException e) {
-//            log.error("Failed to process reply notification for comment {}: {}", parent.getCommentId(), e.getMessage());
-//        }
-//    }
+
+    @Override
+    public void handleNotifyCommentBlog(Blog blog, Comment comment) {
+        User actor = this.handleGetCurrentUser();
+        if (actor == null) return;
+
+        User recipient = blog.getAuthor();
+        if (actor.getAccountId() == recipient.getAccountId()) return;
+
+        String redisKey = String.format("notification:%d:blog:%d:recipient:%d",
+                NotificationType.COMMENT.ordinal(), blog.getBlogId(), recipient.getAccountId());
+
+        try {
+            if (redisService.hasKey(redisKey)) {
+                String existingPayload = redisService.getValue(redisKey);
+                @SuppressWarnings("unchecked")
+                Map<String, Object> existingData = objectMapper.readValue(existingPayload, Map.class);
+
+                @SuppressWarnings("unchecked")
+                List<Number> actorIds = (List<Number>) existingData.get("actorIds");
+
+                // Convert to Set for uniqueness
+                List<Long> newActorIds = actorIds.stream()
+                        .map(Number::longValue)
+                        .collect(Collectors.toList());
+
+                newActorIds.add(actor.getAccountId());
+
+                existingData.put("actorIds", newActorIds);
+                existingData.put("commentId", comment.getCommentId());
+
+                String updatedPayload = objectMapper.writeValueAsString(existingData);
+                redisService.updateValue(redisKey, updatedPayload);
+            } else {
+                Notification notification = new Notification();
+                notification.setType(NotificationType.COMMENT);
+                notification.setBlog(blog);
+                notification.setComment(comment);
+                notification.setActors(List.of(actor));
+                notification.setRecipient(recipient);
+
+                setNotificationToRedis(notification, redisKey);
+            }
+        } catch (JsonProcessingException e) {
+            log.error("Failed to process comment notification for blog {}: {}", blog.getBlogId(), e.getMessage());
+        }
+    }
+
+    @Override
+    public void handleNotifyReplyComment(Comment parent, Comment reply) {
+        User actor = this.handleGetCurrentUser();
+        if (actor == null) return;
+
+        User recipient = parent.getCommentedBy();
+        if (actor.getAccountId() == recipient.getAccountId()) return;
+
+        String redisKey = String.format("notification:%d:comment:%d:recipient:%d",
+                NotificationType.REPLY.ordinal(), parent.getCommentId(), recipient.getAccountId());
+
+        try {
+            if (redisService.hasKey(redisKey)) {
+                String existingPayload = redisService.getValue(redisKey);
+                @SuppressWarnings("unchecked")
+                Map<String, Object> existingData = objectMapper.readValue(existingPayload, Map.class);
+
+                @SuppressWarnings("unchecked")
+                List<Number> actorIds = (List<Number>) existingData.get("actorIds");
+
+                // Convert to Set for uniqueness
+                List<Long> newActorIds = actorIds.stream()
+                        .map(Number::longValue)
+                        .collect(Collectors.toList());
+
+                newActorIds.add(actor.getAccountId());
+
+                existingData.put("actorIds", newActorIds);
+                existingData.put("replyId", reply.getCommentId());
+
+                String updatedPayload = objectMapper.writeValueAsString(existingData);
+                redisService.updateValue(redisKey, updatedPayload);
+            } else {
+                Notification notification = new Notification();
+                notification.setType(NotificationType.REPLY);
+                notification.setBlog(parent.getBlog());
+                notification.setActors(List.of(actor));
+                notification.setRecipient(recipient);
+
+                setNotificationToRedis(notification, redisKey);
+            }
+        } catch (JsonProcessingException e) {
+            log.error("Failed to process reply notification for comment {}: {}", parent.getCommentId(), e.getMessage());
+        }
+    }
 
     @Override
     public void handleNotifyLikeBlog(Blog blog) {
