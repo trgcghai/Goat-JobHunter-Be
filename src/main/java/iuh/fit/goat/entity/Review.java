@@ -1,8 +1,10 @@
 package iuh.fit.goat.entity;
 
+import iuh.fit.goat.entity.embeddable.Rating;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.Null;
 import lombok.*;
 import org.hibernate.annotations.FilterDef;
 
@@ -25,9 +27,8 @@ public class Review extends BaseEntity{
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
     private long reviewId;
-    @Min(1)
-    @Max(5)
-    private long rating;
+    @Embedded
+    private Rating rating;
     @Column(columnDefinition = "TEXT")
     private String summary;
     @Column(columnDefinition = "TEXT")
@@ -37,11 +38,11 @@ public class Review extends BaseEntity{
     private boolean recommended;
     private boolean verified = false;
 
-    @ManyToOne(fetch = LAZY)
+    @ManyToOne
     @JoinColumn(name = "user_id")
     private User user;
 
-    @ManyToOne(fetch = LAZY)
+    @ManyToOne
     @JoinColumn(name = "company_id")
     private Company company;
 }

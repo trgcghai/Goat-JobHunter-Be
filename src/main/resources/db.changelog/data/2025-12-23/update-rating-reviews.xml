@@ -1,0 +1,153 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+                      http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-5.0.xsd"
+>
+
+    <changeSet id="update-rating-review-1" author="minhdat">
+        <update tableName="reviews">
+            <column name="culture_fun" valueNumeric="1"/>
+            <column name="management_cares_about_me" valueNumeric="2"/>
+            <column name="office_workspace" valueNumeric="3"/>
+            <column name="salary_benefits" valueNumeric="4"/>
+            <column name="training_learning" valueNumeric="5"/>
+            <column name="overall" valueNumeric="4"/>
+            <where>review_id = 1</where>
+        </update>
+    </changeSet>
+
+    <changeSet id="update-rating-review-2" author="minhdat">
+        <update tableName="reviews">
+            <column name="culture_fun" valueNumeric="1"/>
+            <column name="management_cares_about_me" valueNumeric="2"/>
+            <column name="office_workspace" valueNumeric="3"/>
+            <column name="salary_benefits" valueNumeric="4"/>
+            <column name="training_learning" valueNumeric="5"/>
+            <column name="overall" valueNumeric="4"/>
+            <where>review_id = 2</where>
+        </update>
+    </changeSet>
+
+    <changeSet id="update-rating-review-3" author="minhdat">
+        <update tableName="reviews">
+            <column name="culture_fun" valueNumeric="1"/>
+            <column name="management_cares_about_me" valueNumeric="2"/>
+            <column name="office_workspace" valueNumeric="3"/>
+            <column name="salary_benefits" valueNumeric="4"/>
+            <column name="training_learning" valueNumeric="5"/>
+            <column name="overall" valueNumeric="4"/>
+            <where>review_id = 3</where>
+        </update>
+    </changeSet>
+
+    <changeSet id="update-rating-review-4" author="minhdat">
+        <update tableName="reviews">
+            <column name="culture_fun" valueNumeric="1"/>
+            <column name="management_cares_about_me" valueNumeric="2"/>
+            <column name="office_workspace" valueNumeric="3"/>
+            <column name="salary_benefits" valueNumeric="4"/>
+            <column name="training_learning" valueNumeric="5"/>
+            <column name="overall" valueNumeric="4"/>
+            <where>review_id = 4</where>
+        </update>
+    </changeSet>
+
+    <changeSet id="update-rating-review-5" author="minhdat">
+        <update tableName="reviews">
+            <column name="culture_fun" valueNumeric="1"/>
+            <column name="management_cares_about_me" valueNumeric="2"/>
+            <column name="office_workspace" valueNumeric="3"/>
+            <column name="salary_benefits" valueNumeric="4"/>
+            <column name="training_learning" valueNumeric="5"/>
+            <column name="overall" valueNumeric="4"/>
+            <where>review_id = 5</where>
+        </update>
+    </changeSet>
+
+    <changeSet id="update-rating-review-6" author="minhdat">
+        <update tableName="reviews">
+            <column name="culture_fun" valueNumeric="1"/>
+            <column name="management_cares_about_me" valueNumeric="2"/>
+            <column name="office_workspace" valueNumeric="3"/>
+            <column name="salary_benefits" valueNumeric="4"/>
+            <column name="training_learning" valueNumeric="5"/>
+            <column name="overall" valueNumeric="4"/>
+            <where>review_id = 6</where>
+        </update>
+    </changeSet>
+
+    <changeSet id="update-rating-review-7" author="minhdat">
+        <update tableName="reviews">
+            <column name="culture_fun" valueNumeric="1"/>
+            <column name="management_cares_about_me" valueNumeric="2"/>
+            <column name="office_workspace" valueNumeric="3"/>
+            <column name="salary_benefits" valueNumeric="4"/>
+            <column name="training_learning" valueNumeric="5"/>
+            <column name="overall" valueNumeric="4"/>
+            <where>review_id = 7</where>
+        </update>
+    </changeSet>
+
+    <changeSet id="update-rating-review-8" author="minhdat">
+        <update tableName="reviews">
+            <column name="culture_fun" valueNumeric="1"/>
+            <column name="management_cares_about_me" valueNumeric="2"/>
+            <column name="office_workspace" valueNumeric="3"/>
+            <column name="salary_benefits" valueNumeric="4"/>
+            <column name="training_learning" valueNumeric="5"/>
+            <column name="overall" valueNumeric="4"/>
+            <where>review_id = 8</where>
+        </update>
+    </changeSet>
+
+    <changeSet id="update-rating-review-9" author="minhdat">
+        <update tableName="reviews">
+            <column name="culture_fun" valueNumeric="1"/>
+            <column name="management_cares_about_me" valueNumeric="2"/>
+            <column name="office_workspace" valueNumeric="3"/>
+            <column name="salary_benefits" valueNumeric="4"/>
+            <column name="training_learning" valueNumeric="5"/>
+            <column name="overall" valueNumeric="4"/>
+            <where>review_id = 9</where>
+        </update>
+    </changeSet>
+
+    <changeSet id="update-rating-review-10" author="minhdat">
+        <update tableName="reviews">
+            <column name="culture_fun" valueNumeric="1"/>
+            <column name="management_cares_about_me" valueNumeric="2"/>
+            <column name="office_workspace" valueNumeric="3"/>
+            <column name="salary_benefits" valueNumeric="4"/>
+            <column name="training_learning" valueNumeric="5"/>
+            <column name="overall" valueNumeric="4"/>
+            <where>review_id = 10</where>
+        </update>
+    </changeSet>
+
+    <changeSet id="update-rating-review-11" author="minhdat">
+        <update tableName="reviews">
+            <column name="culture_fun" valueNumeric="1"/>
+            <column name="management_cares_about_me" valueNumeric="2"/>
+            <column name="office_workspace" valueNumeric="3"/>
+            <column name="salary_benefits" valueNumeric="4"/>
+            <column name="training_learning" valueNumeric="5"/>
+            <column name="overall" valueNumeric="4"/>
+            <where>review_id = 11</where>
+        </update>
+    </changeSet>
+
+    <changeSet id="update-rating-review-12" author="minhdat">
+        <update tableName="reviews">
+            <column name="culture_fun" valueNumeric="1"/>
+            <column name="management_cares_about_me" valueNumeric="2"/>
+            <column name="office_workspace" valueNumeric="3"/>
+            <column name="salary_benefits" valueNumeric="4"/>
+            <column name="training_learning" valueNumeric="5"/>
+            <column name="overall" valueNumeric="4"/>
+            <where>review_id = 12</where>
+        </update>
+    </changeSet>
+
+</databaseChangeLog>

@@ -107,7 +107,7 @@ public class SecurityConfiguration {
         String[] whiteList = {
                 "/api/v1/ping",                       // Endpoint kiểm tra trạng thái server
                 "/api/v1/clear-cookies",              // Xóa toàn bộ cookies trên FE – không cần phân quyền
-                "/api/v1/uuid",                      // Tạo UUID cho user chưa đăng nhập – không cần phân quyền
+                "/api/v1/uuid",                       // Tạo UUID cho user chưa đăng nhập – không cần phân quyền
 
                 "/",                                  // Trang gốc
 
@@ -131,8 +131,8 @@ public class SecurityConfiguration {
                 "/api/v1/ai/**",                      // Role cũng có thể dùng chat
 
                 "/actuator",
-                "/actuator/health",                      // Actuator để kiểm tra sức khỏe ứng dụng – public
-                "/actuator/health/**"                        // Actuator để kiểm tra sức khỏe ứng dụng – public
+                "/actuator/health",                   // Actuator để kiểm tra sức khỏe ứng dụng – public
+                "/actuator/health/**"                 // Actuator để kiểm tra sức khỏe ứng dụng – public
         };
 
 
@@ -141,8 +141,10 @@ public class SecurityConfiguration {
                 .cors(Customizer.withDefaults())
                 .authorizeHttpRequests( request ->
                         request.requestMatchers(whiteList).permitAll()
+                                .requestMatchers(HttpMethod.GET, "/api/v1/reviews").hasRole("SUPER_ADMIN")
                                 .requestMatchers(HttpMethod.GET, "/api/v1/recruiters/**").permitAll()
                                 .requestMatchers(HttpMethod.GET, "/api/v1/companies/**").permitAll()
+                                .requestMatchers(HttpMethod.GET, "/api/v1/reviews/**").permitAll()
                                 .requestMatchers(HttpMethod.GET, "/api/v1/jobs/**").permitAll()
                                 .requestMatchers(HttpMethod.GET, "/api/v1/skills/**").permitAll()
                                 .requestMatchers(HttpMethod.GET, "/api/v1/careers/**").permitAll()

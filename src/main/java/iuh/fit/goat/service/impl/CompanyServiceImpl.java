@@ -5,7 +5,6 @@ import iuh.fit.goat.dto.response.company.CompanyResponse;
 import iuh.fit.goat.entity.Address;
 import iuh.fit.goat.entity.Company;
 import iuh.fit.goat.repository.CompanyRepository;
-import iuh.fit.goat.service.AiService;
 import iuh.fit.goat.service.CompanyService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -20,12 +19,16 @@ import java.util.stream.Collectors;
 @Service
 @RequiredArgsConstructor
 public class CompanyServiceImpl implements CompanyService {
-    private final AiService aiService;
     private final CompanyRepository companyRepository;
 
     @Override
     public Company handleGetCompanyById(long id) {
         return this.companyRepository.findById(id).orElse(null);
+    }
+
+    @Override
+    public Company handleGetCompanyByName(String name) {
+        return this.companyRepository.findByNameIgnoreCase(name).orElse(null);
     }
 
     @Override
@@ -46,6 +49,22 @@ public class CompanyServiceImpl implements CompanyService {
     @Override
     public Company handleGetCompanyByEmail(String email) {
         return this.companyRepository.findByEmailWithRole(email).orElse(null);
+    }
+
+    @Override
+    public Map<String, List<String>> handleGroupAddressesCityByCompany(long id) {
+        Company company = this.handleGetCompanyById(id);
+        if(company == null) return Map.of();
+
+        return company.getAddresses()
+                .stream()
+                .filter(addr -> addr.getProvince() != null && addr.getFullAddress() != null)
+                .collect(
+                        Collectors.groupingBy(
+                            Address::getProvince,
+                            Collectors.mapping(Address::getFullAddress, Collectors.toList())
+                        )
+                );
     }
 
     @Override
@@ -80,21 +99,5 @@ public class CompanyServiceImpl implements CompanyService {
         }
 
         return companyResponse;
-    }
-
-    @Override
-    public Map<String, List<String>> handleGroupAddressesCityByCompany(long id) {
-        Company company = this.handleGetCompanyById(id);
-        if(company == null) return Map.of();
-
-        return company.getAddresses()
-                .stream()
-                .filter(addr -> addr.getProvince() != null && addr.getFullAddress() != null)
-                .collect(
-                        Collectors.groupingBy(
-                            Address::getProvince,
-                            Collectors.mapping(Address::getFullAddress, Collectors.toList())
-                        )
-                );
     }
 }

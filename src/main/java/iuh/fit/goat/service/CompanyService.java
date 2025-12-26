@@ -12,11 +12,13 @@ import java.util.Map;
 public interface CompanyService {
     Company handleGetCompanyById(long id);
 
+    Company handleGetCompanyByName(String name);
+
     ResultPaginationResponse handleGetAllCompanies(Specification<Company>  spec, Pageable pageable);
 
     Company handleGetCompanyByEmail(String email);
 
-    CompanyResponse convertToCompanyResponse(Company company);
-
     Map<String, List<String>> handleGroupAddressesCityByCompany(long id);
+
+    CompanyResponse convertToCompanyResponse(Company company);
 }

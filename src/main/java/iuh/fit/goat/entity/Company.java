@@ -14,7 +14,12 @@ import static jakarta.persistence.CascadeType.*;
 import static jakarta.persistence.FetchType.LAZY;
 
 @Entity
-@Table(name = "companies")
+@Table(
+        name = "companies",
+        uniqueConstraints = {
+                @UniqueConstraint(columnNames = "name"),
+        }
+)
 @Getter
 @Setter
 @NoArgsConstructor
@@ -22,6 +27,7 @@ import static jakarta.persistence.FetchType.LAZY;
 @ToString(callSuper = true, exclude = {"jobs", "recruiters", "followers", "reviews"})
 public class Company extends Account {
     @NotBlank(message = "Company name is required")
+    @Column(columnDefinition = "citext")
     private String name;
     @Column(columnDefinition = "TEXT")
     private String description;
