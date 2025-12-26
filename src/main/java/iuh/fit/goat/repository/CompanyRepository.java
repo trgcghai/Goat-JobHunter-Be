@@ -8,6 +8,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import java.util.List;
 import java.util.Optional;
 
 @Repository
@@ -18,5 +19,16 @@ public interface CompanyRepository extends JpaRepository<Company, Long>,
 
     @Query("SELECT c FROM Company c LEFT JOIN FETCH c.role WHERE c.email = :email")
     Optional<Company> findByEmailWithRole(@Param("email") String email);
+
+    @Query(
+        """
+        SELECT DISTINCT s.skillId, s.name
+        FROM Company c
+        JOIN c.jobs j
+        JOIN j.skills s
+        WHERE c.accountId = :companyId
+        """
+    )
+    List<Object[]> findDistinctSkillsByCompanyId(@Param("companyId") Long companyId);
 
 }

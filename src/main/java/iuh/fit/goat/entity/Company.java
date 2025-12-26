@@ -38,6 +38,10 @@ public class Company extends Account {
     @Enumerated(EnumType.STRING)
     private CompanySize size;
     private boolean verified = false;
+    private String country;
+    private String industry;
+    private String workingDays;
+    private String overtimePolicy;
 
     @OneToMany(mappedBy = "company", fetch = LAZY, cascade = {PERSIST, MERGE})
     @JsonIgnore

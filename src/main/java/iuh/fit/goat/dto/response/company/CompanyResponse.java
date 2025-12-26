@@ -26,6 +26,10 @@ public class CompanyResponse {
     private String phone;
     private CompanySize size;
     private boolean verified;
+    private String country;
+    private String industry;
+    private String workingDays;
+    private String overtimePolicy;
     private Instant createdAt;
     private Instant updatedAt;
 

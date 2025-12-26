@@ -42,6 +42,18 @@ public class CompanyController {
         return ResponseEntity.status(HttpStatus.OK).body(response);
     }
 
+    @GetMapping("/slug/{name}")
+    public ResponseEntity<CompanyResponse> getCompanyByName(@PathVariable("name") String name) throws InvalidException {
+        String normalizedName = name.replace("-", " ");
+        Company company = this.companyService.handleGetCompanyByName(normalizedName);
+        if(company == null) {
+            throw new InvalidException("Company not found");
+        }
+
+        CompanyResponse response = this.companyService.convertToCompanyResponse(company);
+        return ResponseEntity.status(HttpStatus.OK).body(response);
+    }
+
     @GetMapping
     public ResponseEntity<ResultPaginationResponse> getAllCompanies(
             @Filter Specification<Company> spec, Pageable pageable
@@ -81,5 +93,22 @@ public class CompanyController {
 
         ResultPaginationResponse res = this.companyService.handleGetAllCompanies(finalSpec, pageable);
         return ResponseEntity.status(HttpStatus.OK).body(res);
+    }
+
+    @GetMapping("/{companyId}/jobs/skills")
+    public ResponseEntity<Map<Long, String>> findDistinctSkillsByCompany(
+            @PathVariable("companyId") String companyId
+    ) throws InvalidException {
+        Pattern pattern = Pattern.compile("^[0-9]+$");
+        if(!pattern.matcher(companyId).matches()) {
+            throw new InvalidException("Id is number");
+        }
+
+        Company company = this.companyService.handleGetCompanyById(Long.parseLong(companyId));
+        if(company == null) {
+            throw new InvalidException("Company not found");
+        }
+
+        return ResponseEntity.ok(this.companyService.handleFindDistinctSkillsByCompany(Long.parseLong(companyId)));
     }
 }

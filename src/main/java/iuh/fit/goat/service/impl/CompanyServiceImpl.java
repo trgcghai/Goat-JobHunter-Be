@@ -68,6 +68,18 @@ public class CompanyServiceImpl implements CompanyService {
     }
 
     @Override
+    public Map<Long, String> handleFindDistinctSkillsByCompany(long id) {
+        List<Object[]> results = this.companyRepository.findDistinctSkillsByCompanyId(id);
+        return results.stream()
+                .collect(
+                        Collectors.toMap(
+                                row -> (Long) row[0],
+                                row -> (String) row[1]
+                        )
+                );
+    }
+
+    @Override
     public CompanyResponse convertToCompanyResponse(Company company) {
         CompanyResponse companyResponse = new CompanyResponse();
 
@@ -81,6 +93,10 @@ public class CompanyServiceImpl implements CompanyService {
         companyResponse.setPhone(company.getPhone());
         companyResponse.setSize(company.getSize());
         companyResponse.setVerified(company.isVerified());
+        companyResponse.setCountry(company.getCountry());
+        companyResponse.setIndustry(company.getIndustry());
+        companyResponse.setWorkingDays(company.getWorkingDays());
+        companyResponse.setOvertimePolicy(company.getOvertimePolicy());
         companyResponse.setCreatedAt(company.getCreatedAt());
         companyResponse.setUpdatedAt(company.getUpdatedAt());
 
