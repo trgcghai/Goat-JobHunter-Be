@@ -17,12 +17,12 @@ import iuh.fit.goat.service.*;
 import java.util.regex.Pattern;
 
 @RestController
-@RequestMapping("/api/v1")
+@RequestMapping("/api/v1/skills")
 @RequiredArgsConstructor
 public class SkillController {
     private final SkillService skillService;
 
-    @PostMapping("/skills")
+    @PostMapping
     public ResponseEntity<Skill> createSkill(@Valid @RequestBody Skill skill) throws InvalidException {
         if(skill.getName() != null && this.skillService.handleExistSkill(skill.getName())) {
             throw new InvalidException("Skill exists");
@@ -32,7 +32,7 @@ public class SkillController {
         return ResponseEntity.status(HttpStatus.CREATED).body(newSkill);
     }
 
-    @PutMapping("/skills")
+    @PutMapping
     public ResponseEntity<Skill> updateSkill(@Valid @RequestBody Skill skill) throws InvalidException {
         if(skill.getName() != null && this.skillService.handleExistSkill(skill.getName())) {
             throw new InvalidException("Skill exists");
@@ -46,7 +46,7 @@ public class SkillController {
         return ResponseEntity.status(HttpStatus.OK).body(updateSkill);
     }
 
-    @DeleteMapping("/skills/{id}")
+    @DeleteMapping("/{id}")
     @ApiMessage("Delete skill by id")
     public ResponseEntity<Void> deleteSkill(@PathVariable("id") String id) throws InvalidException {
         Pattern pattern = Pattern.compile("^[0-9]+$");
@@ -64,7 +64,7 @@ public class SkillController {
         }
     }
 
-    @GetMapping("/skills/{id}")
+    @GetMapping("/{id}")
     public ResponseEntity<Skill> getSkillById(@PathVariable("id") String id) throws InvalidException {
         Pattern pattern = Pattern.compile("^[0-9]+$");
 
@@ -80,11 +80,19 @@ public class SkillController {
         }
     }
 
-    @GetMapping("/skills")
-    public ResponseEntity<ResultPaginationResponse> getAllSkills(
+    @GetMapping
+    public ResponseEntity<ResultPaginationResponse> getSkills(
             @Filter Specification<Skill> spec, Pageable pageable
     ) {
-        ResultPaginationResponse result = this.skillService.handleGetAllSkills(spec, pageable);
+        ResultPaginationResponse result = this.skillService.handleGetSkills(spec, pageable);
+        return ResponseEntity.status(HttpStatus.OK).body(result);
+    }
+
+    @GetMapping("/all")
+    public ResponseEntity<ResultPaginationResponse> getAllSkills(
+            @Filter Specification<Skill> spec
+    ) {
+        ResultPaginationResponse result = this.skillService.handleGetAllSkills(spec);
         return ResponseEntity.status(HttpStatus.OK).body(result);
     }
 }
