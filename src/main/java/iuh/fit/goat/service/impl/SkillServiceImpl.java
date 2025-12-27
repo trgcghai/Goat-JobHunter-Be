@@ -10,6 +10,7 @@ import org.springframework.stereotype.Service;
 import iuh.fit.goat.entity.*;
 import iuh.fit.goat.repository.*;
 
+import java.util.List;
 import java.util.Optional;
 
 @Service
@@ -56,7 +57,7 @@ public class SkillServiceImpl implements SkillService {
     }
 
     @Override
-    public ResultPaginationResponse handleGetAllSkills(Specification<Skill> spec, Pageable pageable) {
+    public ResultPaginationResponse handleGetSkills(Specification<Skill> spec, Pageable pageable) {
         Page<Skill> page = this.skillRepository.findAll(spec, pageable);
 
         ResultPaginationResponse.Meta meta = new ResultPaginationResponse.Meta();
@@ -66,6 +67,19 @@ public class SkillServiceImpl implements SkillService {
         meta.setTotal(page.getTotalElements());
 
         return new ResultPaginationResponse(meta, page.getContent());
+    }
+
+    @Override
+    public ResultPaginationResponse handleGetAllSkills(Specification<Skill> spec) {
+        List<Skill> allSkills = this.skillRepository.findAll(spec);
+
+        ResultPaginationResponse.Meta meta = new ResultPaginationResponse.Meta();
+        meta.setPage(1);
+        meta.setPageSize(allSkills.size());
+        meta.setPages(1);
+        meta.setTotal(allSkills.size());
+
+        return new ResultPaginationResponse(meta, allSkills);
     }
 
     @Override

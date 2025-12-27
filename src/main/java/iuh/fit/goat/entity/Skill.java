@@ -25,6 +25,7 @@ public class Skill extends BaseEntity {
     @GeneratedValue(strategy = GenerationType.AUTO)
     private long skillId;
     @NotBlank(message = "Skill name is not empty")
+    @Column(columnDefinition = "citext")
     private String name;
 
     public Skill(String name) {

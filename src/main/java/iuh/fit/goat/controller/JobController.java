@@ -84,14 +84,14 @@ public class JobController {
         return ResponseEntity.status(HttpStatus.OK).body(this.jobService.convertToJobResponse(currentJob));
     }
 
-//    @GetMapping("/jobs")
-//    public ResponseEntity<ResultPaginationResponse> getAllJobs(
-//            @Filter Specification<Job> spec, Pageable pageable
-//    ) {
-//        ResultPaginationResponse result = this.jobService.handleGetAllJobs(spec, pageable);
-//        return ResponseEntity.status(HttpStatus.OK).body(result);
-//    }
-//
+    @GetMapping
+    public ResponseEntity<ResultPaginationResponse> getAllJobs(
+            @Filter Specification<Job> spec, Pageable pageable
+    ) {
+        ResultPaginationResponse result = this.jobService.handleGetAllJobs(spec, pageable);
+        return ResponseEntity.status(HttpStatus.OK).body(result);
+    }
+
     @GetMapping("/companies/count")
     public ResponseEntity<Map<Long, Long>> countJobByCompany() {
         Map<Long, Long> result = this.jobService.handleCountJobByCompany();

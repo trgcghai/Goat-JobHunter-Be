@@ -160,24 +160,24 @@ public class JobServiceImpl implements JobService {
     public Job handleGetJobById(long id) {
         return this.jobRepository.findById(id).orElse(null);
     }
-//
-//    @Override
-//    public ResultPaginationResponse handleGetAllJobs(Specification<Job> spec, Pageable pageable) {
-//        Page<Job> page = this.jobRepository.findAll(spec, pageable);
-//
-//        ResultPaginationResponse.Meta meta = new ResultPaginationResponse.Meta();
-//        meta.setPage(pageable.getPageNumber() + 1);
-//        meta.setPageSize(pageable.getPageSize());
-//        meta.setPages(page.getTotalPages());
-//        meta.setTotal(page.getTotalElements());
-//
-//        List<JobResponse> responses = page.getContent().stream()
-//                .map(this::convertToJobResponse)
-//                .toList();
-//
-//        return new ResultPaginationResponse(meta, responses);
-//    }
-//
+
+    @Override
+    public ResultPaginationResponse handleGetAllJobs(Specification<Job> spec, Pageable pageable) {
+        Page<Job> page = this.jobRepository.findAll(spec, pageable);
+
+        ResultPaginationResponse.Meta meta = new ResultPaginationResponse.Meta();
+        meta.setPage(pageable.getPageNumber() + 1);
+        meta.setPageSize(pageable.getPageSize());
+        meta.setPages(page.getTotalPages());
+        meta.setTotal(page.getTotalElements());
+
+        List<JobResponse> responses = page.getContent().stream()
+                .map(this::convertToJobResponse)
+                .toList();
+
+        return new ResultPaginationResponse(meta, responses);
+    }
+
     @Override
     public Map<Long, Long> handleCountJobByCompany(){
         return this.jobRepository.countJobs()

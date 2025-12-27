@@ -25,7 +25,7 @@ public interface JobService {
 //
     Job handleGetJobById(long id);
 //
-//    ResultPaginationResponse handleGetAllJobs(Specification<Job> spec, Pageable pageable);
+    ResultPaginationResponse handleGetAllJobs(Specification<Job> spec, Pageable pageable);
 //
     Map<Long, Long> handleCountJobByCompany();
 //

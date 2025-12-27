@@ -98,4 +98,17 @@ public class ReviewController {
         return ResponseEntity.ok(response);
     }
 
+    @GetMapping("/companies/{companyId}/recommendation-rate")
+    public ResponseEntity<Double> calculateRecommendedPercentageByCompany(@PathVariable("companyId") String companyId)
+            throws InvalidException
+    {
+        Pattern pattern = Pattern.compile("^[0-9]+$");
+        if (!pattern.matcher(companyId).matches()) throw new InvalidException("Id is number");
+
+        Company company = this.companyService.handleGetCompanyById(Long.parseLong(companyId));
+        if (company == null) throw new InvalidException("Company not found");
+
+        return ResponseEntity.ok(this.reviewService.handleCalculateRecommendedPercentageByCompany(Long.parseLong(companyId)));
+    }
+
 }

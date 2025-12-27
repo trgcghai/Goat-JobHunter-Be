@@ -60,4 +60,17 @@ public interface ReviewRepository extends JpaRepository<Review, Long>, JpaSpecif
     )
     List<Object[]> countDistributionByRating( @Param("companyId") Long companyId, @Param("ratingType") String ratingType);
 
+    @Query(
+        """
+        SELECT
+            CASE
+                WHEN COUNT(r) = 0 THEN 0
+                ELSE (SUM(CASE WHEN r.recommended = true THEN 1 ELSE 0 END) * 100.0 / COUNT(r))
+            END
+        FROM Review r
+        WHERE r.company.accountId = :companyId
+        """
+    )
+    Double calculateRecommendedPercentageByCompany(@Param("companyId") Long companyId);
+
 }

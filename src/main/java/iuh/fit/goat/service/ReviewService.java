@@ -23,5 +23,7 @@ public interface ReviewService {
 
     RatingResponse handleGetRatingByCompany(Long companyId);
 
+    Double handleCalculateRecommendedPercentageByCompany(Long companyId);
+
     ReviewResponse handleConvertToReviewResponse(Review review);
 }

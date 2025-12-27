@@ -14,7 +14,9 @@ public interface SkillService {
 
     Skill handGetSkillById(long id);
 
-    ResultPaginationResponse handleGetAllSkills(Specification<Skill> spec, Pageable pageable);
+    ResultPaginationResponse handleGetSkills(Specification<Skill> spec, Pageable pageable);
+
+    ResultPaginationResponse handleGetAllSkills(Specification<Skill> spec);
 
     boolean handleExistSkill(String name);
 }
