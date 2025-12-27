@@ -27,14 +27,14 @@ public interface JobService {
 //
     ResultPaginationResponse handleGetAllJobs(Specification<Job> spec, Pageable pageable);
 //
-    Map<Long, Long> handleCountJobByCompany();
+    Map<Long, Long> handleCountAvailableJobByCompany();
 //
 //    List<Long> handleGetAllJobIdsByRecruiter();
 //
 //    ResultPaginationResponse handleGetCurrentRecruiterJobs(Specification<Job> spec, Pageable pageable);
 //
-//    ResultPaginationResponse handleGetJobsByRecruiterId(Long recruiterId, Specification<Job> spec, Pageable pageable);
-//
+    List<JobResponse> handleGetAllAvailableJobsByCompanyId(Long companyId, Specification<Job> spec);
+
     JobResponse convertToJobResponse(Job job);
 //
 //    List<JobActivateResponse> handleActivateJobs(List<Long> jobIds);
