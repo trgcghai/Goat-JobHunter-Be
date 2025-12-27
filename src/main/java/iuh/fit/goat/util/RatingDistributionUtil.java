@@ -14,6 +14,7 @@ public final class RatingDistributionUtil {
 
         Map<Integer, Integer> dist = IntStream
                 .rangeClosed(1, 5)
+                .map(i -> 6-i)
                 .boxed()
                 .collect(
                         Collectors.toMap(

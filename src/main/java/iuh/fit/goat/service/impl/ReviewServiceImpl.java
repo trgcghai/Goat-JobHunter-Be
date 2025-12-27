@@ -96,6 +96,11 @@ public class ReviewServiceImpl implements ReviewService {
     }
 
     @Override
+    public Double handleCalculateRecommendedPercentageByCompany(Long companyId) {
+        return this.reviewRepository.calculateRecommendedPercentageByCompany(companyId);
+    }
+
+    @Override
     public ReviewResponse handleConvertToReviewResponse(Review review) {
         ReviewResponse response = new ReviewResponse();
 
