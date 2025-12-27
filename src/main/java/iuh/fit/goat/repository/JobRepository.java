@@ -1,12 +1,9 @@
 package iuh.fit.goat.repository;
 
 import iuh.fit.goat.entity.*;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.data.jpa.repository.Query;
-import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
@@ -23,6 +20,6 @@ public interface JobRepository extends JpaRepository<Job, Long>, JpaSpecificatio
 
 //    Long countByActive(boolean active);
 //
-    @Query("SELECT j.company.accountId, COUNT(j) FROM Job j GROUP BY j.company.accountId")
-    List<Object[]> countJobs();
+    @Query("SELECT j.company.accountId, COUNT(j) FROM Job j WHERE j.active = true AND j.enabled = true GROUP BY j.company.accountId")
+    List<Object[]> countAvailableJobs();
 }

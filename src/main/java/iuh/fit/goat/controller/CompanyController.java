@@ -3,9 +3,12 @@ package iuh.fit.goat.controller;
 import com.turkraft.springfilter.boot.Filter;
 import iuh.fit.goat.dto.response.ResultPaginationResponse;
 import iuh.fit.goat.dto.response.company.CompanyResponse;
+import iuh.fit.goat.dto.response.job.JobResponse;
 import iuh.fit.goat.entity.Company;
+import iuh.fit.goat.entity.Job;
 import iuh.fit.goat.exception.InvalidException;
 import iuh.fit.goat.service.CompanyService;
+import iuh.fit.goat.service.JobService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
@@ -25,6 +28,7 @@ import java.util.regex.Pattern;
 @RequiredArgsConstructor
 public class CompanyController {
     private final CompanyService companyService;
+    private final JobService jobService;
 
     @GetMapping("/{id}")
     public ResponseEntity<CompanyResponse> getCompanyById(@PathVariable("id") String id) throws InvalidException {
@@ -111,4 +115,19 @@ public class CompanyController {
 
         return ResponseEntity.ok(this.companyService.handleFindDistinctSkillsByCompany(Long.parseLong(companyId)));
     }
+
+    @GetMapping("/{companyId}/jobs")
+    public ResponseEntity<List<JobResponse>> getAllAvailableJobsByCompanyId(
+            @PathVariable("companyId") String companyId, @Filter Specification<Job> spec
+    ) throws InvalidException {
+        Pattern pattern = Pattern.compile("^[0-9]+$");
+        if (!pattern.matcher(companyId).matches()) {
+            throw new InvalidException("Id is number");
+        }
+
+        List<JobResponse> result = this.jobService.handleGetAllAvailableJobsByCompanyId(Long.parseLong(companyId), spec);
+        return ResponseEntity.status(HttpStatus.OK).body(result);
+    }
+
+
 }

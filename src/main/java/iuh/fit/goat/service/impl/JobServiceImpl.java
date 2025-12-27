@@ -179,8 +179,8 @@ public class JobServiceImpl implements JobService {
     }
 
     @Override
-    public Map<Long, Long> handleCountJobByCompany(){
-        return this.jobRepository.countJobs()
+    public Map<Long, Long> handleCountAvailableJobByCompany(){
+        return this.jobRepository.countAvailableJobs()
                 .stream().collect(
                         Collectors.toMap(
                                 row-> (Long)row[0],
@@ -224,36 +224,21 @@ public class JobServiceImpl implements JobService {
 //        Long recruiterId = currentUser.getUserId();
 //        return handleGetJobsByRecruiterId(recruiterId, spec, pageable);
 //    }
-//
-//    @Override
-//    public ResultPaginationResponse handleGetJobsByRecruiterId(Long recruiterId, Specification<Job> spec, Pageable pageable) {
-//        if (recruiterId == null) {
-//            return new ResultPaginationResponse(
-//                    new ResultPaginationResponse.Meta(0, 0, 0, 0L),
-//                    new ArrayList<>()
-//            );
-//        }
-//
-//        Specification<Job> recruiterSpec = (root, query, criteriaBuilder) ->
-//                criteriaBuilder.equal(root.get("recruiter").get("userId"), recruiterId);
-//
-//        Specification<Job> finalSpec = (spec != null) ? spec.and(recruiterSpec) : recruiterSpec;
-//
-//        Page<Job> page = this.jobRepository.findAll(finalSpec, pageable);
-//
-//        ResultPaginationResponse.Meta meta = new ResultPaginationResponse.Meta();
-//        meta.setPage(pageable.getPageNumber() + 1);
-//        meta.setPageSize(pageable.getPageSize());
-//        meta.setPages(page.getTotalPages());
-//        meta.setTotal(page.getTotalElements());
-//
-//        List<JobResponse> responses = page.getContent().stream()
-//                .map(this::convertToJobResponse)
-//                .toList();
-//
-//        return new ResultPaginationResponse(meta, responses);
-//    }
-//
+
+    @Override
+    public List<JobResponse> handleGetAllAvailableJobsByCompanyId(Long companyId, Specification<Job> spec) {
+        Specification<Job> companySpec = ((root, query, cb) ->
+                cb.equal(root.get("company").get("accountId"), companyId));
+
+        Specification<Job> finalSpec = (spec != null) ? spec.and(companySpec) : companySpec;
+
+        List<Job> jobs = this.jobRepository.findAll(finalSpec);
+
+        return jobs.stream()
+                .map(this::convertToJobResponse)
+                .toList();
+    }
+
 //    @Override
 //    public List<JobActivateResponse> handleActivateJobs(List<Long> jobIds) {
 //        return handleSetActiveForJobs(jobIds, true);
@@ -412,7 +397,7 @@ public class JobServiceImpl implements JobService {
 //                )
 //        ).collect(Collectors.toList());
 //    }
-//
+
     @Override
     public JobResponse convertToJobResponse(Job job) {
         JobResponse jobResponse = new JobResponse();
@@ -456,7 +441,7 @@ public class JobServiceImpl implements JobService {
 
         return jobResponse;
     }
-//
+
 //    private List<JobActivateResponse> handleSetActiveForJobs(List<Long> jobIds, boolean activeFlag) {
 //        if (jobIds == null || jobIds.isEmpty()) {
 //            return Collections.emptyList();
