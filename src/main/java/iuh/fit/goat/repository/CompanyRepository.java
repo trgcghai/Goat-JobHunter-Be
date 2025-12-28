@@ -17,6 +17,8 @@ public interface CompanyRepository extends JpaRepository<Company, Long>,
 
     Optional<Company> findByNameIgnoreCase(String name);
 
+    List<Company> findByAccountIdIn(List<Long> accountIds);
+
     @Query("SELECT c FROM Company c LEFT JOIN FETCH c.role WHERE c.email = :email")
     Optional<Company> findByEmailWithRole(@Param("email") String email);
 

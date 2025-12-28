@@ -9,10 +9,7 @@ import iuh.fit.goat.dto.response.auth.LoginResponse;
 import iuh.fit.goat.dto.response.ResultPaginationResponse;
 import iuh.fit.goat.dto.response.user.UserEnabledResponse;
 import iuh.fit.goat.dto.response.user.UserResponse;
-import iuh.fit.goat.entity.Blog;
-import iuh.fit.goat.entity.Notification;
-import iuh.fit.goat.entity.Recruiter;
-import iuh.fit.goat.entity.User;
+import iuh.fit.goat.entity.*;
 import iuh.fit.goat.exception.InvalidException;
 import iuh.fit.goat.service.UserService;
 import iuh.fit.goat.util.SecurityUtil;
@@ -32,7 +29,7 @@ import java.util.List;
 import java.util.Map;
 
 @RestController
-@RequestMapping("/api/v1")
+@RequestMapping("/api/v1/users")
 @RequiredArgsConstructor
 public class UserController {
     private final UserService userService;
@@ -60,7 +57,7 @@ public class UserController {
 //        return ResponseEntity.status(HttpStatus.OK).body(userResponse);
 //    }
 //
-    @GetMapping("/users/me")
+    @GetMapping("/me")
     public <T extends User> ResponseEntity<T> getCurrentUserByEmail() {
         String email = SecurityUtil.getCurrentUserLogin().isPresent() ? SecurityUtil.getCurrentUserLogin().get() : null;
         User user = this.userService.handleGetUserByEmail(email);
@@ -131,19 +128,19 @@ public class UserController {
 
     /*     ========================= Saved Job Related Endpoints =========================  */
 
-    @GetMapping("/users/me/saved-jobs")
+    @GetMapping("/me/saved-jobs")
     public ResponseEntity<ResultPaginationResponse> getCurrentUserSavedJobs(Pageable pageable) {
         ResultPaginationResponse result = this.userService.handleGetCurrentUserSavedJobs(pageable);
         return ResponseEntity.status(HttpStatus.OK).body(result);
     }
 
-    @GetMapping("/users/me/saved-jobs/contains")
+    @GetMapping("/me/saved-jobs/contains")
     public ResponseEntity<List<Map<String, Object>>> checkJobsSaved(@RequestParam List<Long> jobIds) {
         List<Map<String, Object>> result = this.userService.handleCheckJobsSaved(jobIds);
         return ResponseEntity.status(HttpStatus.OK).body(result);
     }
 
-    @PutMapping("/users/me/saved-jobs")
+    @PutMapping("/me/saved-jobs")
     public ResponseEntity<UserResponse> saveJobsForCurrentUser(@RequestBody Map<String, List<Long>> request)
             throws InvalidException {
         List<Long> jobIds = request.get("jobIds");
@@ -159,7 +156,7 @@ public class UserController {
         return ResponseEntity.status(HttpStatus.OK).body(userResponse);
     }
 
-    @DeleteMapping("/users/me/saved-jobs")
+    @DeleteMapping("/me/saved-jobs")
     public ResponseEntity<UserResponse> unsaveJobsForCurrentUser(@RequestBody Map<String, List<Long>> request)
             throws InvalidException {
         List<Long> jobIds = request.get("jobIds");
@@ -179,8 +176,7 @@ public class UserController {
 
 
     /*     ========================= Saved Blog Related Endpoints =========================  */
-
-    @GetMapping("/users/me/saved-blogs")
+    @GetMapping("/me/saved-blogs")
     public ResponseEntity<ResultPaginationResponse> getCurrentUserSavedBlogs(
             @Filter Specification<Blog> spec,
             Pageable pageable
@@ -189,13 +185,13 @@ public class UserController {
         return ResponseEntity.status(HttpStatus.OK).body(result);
     }
 
-    @GetMapping("/users/me/saved-blogs/contains")
+    @GetMapping("/me/saved-blogs/contains")
     public ResponseEntity<List<Map<String, Object>>> checkBlogsSaved(@RequestParam List<Long> blogIds) {
         List<Map<String, Object>> result = this.userService.handleCheckBlogsSaved(blogIds);
         return ResponseEntity.status(HttpStatus.OK).body(result);
     }
 
-    @PutMapping("/users/me/saved-blogs")
+    @PutMapping("/me/saved-blogs")
     public ResponseEntity<UserResponse> saveBlogsForCurrentUser(@RequestBody Map<String, List<Long>> request)
             throws InvalidException {
         List<Long> blogIds = request.get("blogIds");
@@ -211,7 +207,7 @@ public class UserController {
         return ResponseEntity.status(HttpStatus.OK).body(userResponse);
     }
 
-    @DeleteMapping("/users/me/saved-blogs")
+    @DeleteMapping("/me/saved-blogs")
     public ResponseEntity<UserResponse> unsaveBlogsForCurrentUser(@RequestBody Map<String, List<Long>> request)
             throws InvalidException {
         List<Long> blogIds = request.get("blogIds");
@@ -226,7 +222,6 @@ public class UserController {
 
         return ResponseEntity.status(HttpStatus.OK).body(userResponse);
     }
-
     /*     ========================= ========================= =========================  */
 
 
@@ -262,51 +257,52 @@ public class UserController {
 //                Map.of("message", "Notifications marked as seen successfully")
 //        );
 //    }
-//
-//    // endpoints for follow recruiters feature
-//    @GetMapping("/users/me/followed-recruiters")
-//    public ResponseEntity<List<Recruiter>> getCurrentUserFollowedRecruiters() {
-//        List<Recruiter> followed = this.userService.handleGetCurrentUserFollowedRecruiters();
-//        return ResponseEntity.status(HttpStatus.OK).body(followed);
-//    }
-//
-//    @GetMapping("/users/me/followed-recruiters/contains")
-//    public ResponseEntity<List<Map<String, Object>>> checkRecruitersFollowed(@RequestParam List<Long> recruiterIds) {
-//        List<Map<String, Object>> result = this.userService.handleCheckRecruitersFollowed(recruiterIds);
-//        return ResponseEntity.status(HttpStatus.OK).body(result);
-//    }
-//
-//    @PutMapping("/users/me/followed-recruiters")
-//    public ResponseEntity<UserResponse> followRecruiters(@RequestBody Map<String, List<Long>> request)
-//            throws InvalidException {
-//        List<Long> recruiterIds = request.get("recruiterIds");
-//        if (recruiterIds == null || recruiterIds.isEmpty()) {
-//            throw new InvalidException("Recruiter IDs list cannot be empty");
-//        }
-//
-//        UserResponse userResponse = this.userService.handleFollowRecruiters(recruiterIds);
-//        if (userResponse == null) {
-//            throw new InvalidException("Failed to follow recruiters");
-//        }
-//
-//        return ResponseEntity.status(HttpStatus.OK).body(userResponse);
-//    }
-//
-//    @DeleteMapping("/users/me/followed-recruiters")
-//    public ResponseEntity<UserResponse> unfollowRecruiters(@RequestBody Map<String, List<Long>> request)
-//            throws InvalidException {
-//        List<Long> recruiterIds = request.get("recruiterIds");
-//        if (recruiterIds == null || recruiterIds.isEmpty()) {
-//            throw new InvalidException("Recruiter IDs list cannot be empty");
-//        }
-//
-//        UserResponse userResponse = this.userService.handleUnfollowRecruiters(recruiterIds);
-//        if (userResponse == null) {
-//            throw new InvalidException("Failed to unfollow recruiters");
-//        }
-//
-//        return ResponseEntity.status(HttpStatus.OK).body(userResponse);
-//    }
+
+    /*     ========================= Followed Companies Related Endpoints =========================  */
+    @GetMapping("/me/followed-companies")
+    public ResponseEntity<List<Company>> getCurrentUserFollowedCompanies() {
+        List<Company> followed = this.userService.handleGetCurrentUserFollowedCompanies();
+        return ResponseEntity.status(HttpStatus.OK).body(followed);
+    }
+
+    @GetMapping("/me/followed-companies/contains")
+    public ResponseEntity<List<Map<String, Object>>> checkCompaniesFollowed(@RequestParam List<Long> companyIds) {
+        List<Map<String, Object>> result = this.userService.handleCheckCompaniesFollowed(companyIds);
+        return ResponseEntity.status(HttpStatus.OK).body(result);
+    }
+
+    @PutMapping("/me/followed-companies")
+    public ResponseEntity<Void> followCompanies(@RequestBody Map<String, List<Long>> request)
+            throws InvalidException {
+        List<Long> companyIds = request.get("companyIds");
+        if (companyIds == null || companyIds.isEmpty()) {
+            throw new InvalidException("Company IDs list cannot be empty");
+        }
+
+        boolean result = this.userService.handleFollowCompanies(companyIds);
+        if (!result) {
+            throw new InvalidException("Failed to follow recruiters");
+        }
+
+        return ResponseEntity.status(HttpStatus.OK).body(null);
+    }
+
+    @DeleteMapping("/me/followed-companies")
+    public ResponseEntity<Void> unfollowCompanies(@RequestBody Map<String, List<Long>> request)
+            throws InvalidException {
+        List<Long> companyIds = request.get("companyIds");
+        if (companyIds == null || companyIds.isEmpty()) {
+            throw new InvalidException("Company IDs list cannot be empty");
+        }
+
+        boolean result = this.userService.handleUnfollowCompanies(companyIds);
+        if (!result) {
+            throw new InvalidException("Failed to unfollow recruiters");
+        }
+
+        return ResponseEntity.status(HttpStatus.OK).body(null);
+    }
+    /*     ========================= ========================= =========================  */
 //
 //    @PutMapping("/users/activate")
 //    public ResponseEntity<List<UserEnabledResponse>> activateUsers(@RequestBody UserEnabledRequest request)

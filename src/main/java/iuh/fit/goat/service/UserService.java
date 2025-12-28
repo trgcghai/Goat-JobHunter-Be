@@ -5,10 +5,7 @@ import iuh.fit.goat.dto.request.user.ResetPasswordRequest;
 import iuh.fit.goat.dto.response.ResultPaginationResponse;
 import iuh.fit.goat.dto.response.user.UserEnabledResponse;
 import iuh.fit.goat.dto.response.user.UserResponse;
-import iuh.fit.goat.entity.Blog;
-import iuh.fit.goat.entity.Notification;
-import iuh.fit.goat.entity.Recruiter;
-import iuh.fit.goat.entity.User;
+import iuh.fit.goat.entity.*;
 import iuh.fit.goat.exception.InvalidException;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
@@ -66,14 +63,15 @@ public interface UserService {
 //
 //    void handleMarkNotificationsAsSeen(List<Long> notificationIds);
 //
-//    // Recruiter related methods
-//    List<Recruiter> handleGetCurrentUserFollowedRecruiters();
-//
-//    List<Map<String, Object>> handleCheckRecruitersFollowed(List<Long> recruiterIds);
-//
-//    UserResponse handleFollowRecruiters(List<Long> recruiterIds);
-//
-//    UserResponse handleUnfollowRecruiters(List<Long> recruiterIds);
+    /*     ========================= Followed Companies Related Endpoints =========================  */
+    List<Company> handleGetCurrentUserFollowedCompanies();
+
+    List<Map<String, Object>> handleCheckCompaniesFollowed(List<Long> companyIds);
+
+    boolean handleFollowCompanies(List<Long> companyIds);
+
+    boolean handleUnfollowCompanies(List<Long> companyIds);
+    /*     ========================= ========================= =========================  */
 //
 //    // Admin related methods
 //    List<UserEnabledResponse> handleActivateUsers(List<Long> userIds);
