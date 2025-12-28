@@ -53,6 +53,7 @@
     <include file="db.changelog/schema/2025-12-25/update-column-companies.xml"/>
     <include file="db.changelog/data/2025-12-25/update-data-for-column-companies.xml"/>
     <include file="db.changelog/schema/2025-12-26/modify-type-name-skills.xml"/>
+    <include file="db.changelog/schema/2025-12-28/modify-relation-users-notifications-accounts.xml"/>
     <!--      History      -->
 
 </databaseChangeLog>

@@ -1,5 +1,6 @@
 package iuh.fit.goat.service;
 
+import iuh.fit.goat.dto.request.review.CreateReviewRequest;
 import iuh.fit.goat.dto.response.ResultPaginationResponse;
 import iuh.fit.goat.dto.response.review.RatingResponse;
 import iuh.fit.goat.dto.response.review.ReviewResponse;
@@ -11,6 +12,8 @@ import java.util.List;
 import java.util.Map;
 
 public interface ReviewService {
+    Review handleCreateReview(CreateReviewRequest review);
+
     ResultPaginationResponse handleGetAllReviews(Specification<Review> specification, Pageable pageable);
 
     Map<Long, Long> handleCountReviewByCompany();
@@ -24,6 +27,8 @@ public interface ReviewService {
     RatingResponse handleGetRatingByCompany(Long companyId);
 
     Double handleCalculateRecommendedPercentageByCompany(Long companyId);
+
+    Review findByUserAndCompany(Long userId, Long companyId);
 
     ReviewResponse handleConvertToReviewResponse(Review review);
 }

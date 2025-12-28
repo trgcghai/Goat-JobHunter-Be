@@ -1,13 +1,19 @@
 package iuh.fit.goat.service.impl;
 
 import iuh.fit.goat.common.RatingType;
+import iuh.fit.goat.dto.request.review.CreateReviewRequest;
 import iuh.fit.goat.dto.response.ResultPaginationResponse;
 import iuh.fit.goat.dto.response.review.RatingResponse;
 import iuh.fit.goat.dto.response.review.ReviewResponse;
+import iuh.fit.goat.entity.Company;
 import iuh.fit.goat.entity.Review;
+import iuh.fit.goat.entity.User;
+import iuh.fit.goat.repository.CompanyRepository;
 import iuh.fit.goat.repository.ReviewRepository;
+import iuh.fit.goat.repository.UserRepository;
 import iuh.fit.goat.service.ReviewService;
 import iuh.fit.goat.util.RatingDistributionUtil;
+import iuh.fit.goat.util.SecurityUtil;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -17,12 +23,36 @@ import org.springframework.stereotype.Service;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
 public class ReviewServiceImpl implements ReviewService {
     private final ReviewRepository reviewRepository;
+    private final UserRepository userRepository;
+    private final CompanyRepository companyRepository;
+
+    @Override
+    public Review handleCreateReview(CreateReviewRequest review) {
+        String email = SecurityUtil.getCurrentUserLogin().isPresent() ? SecurityUtil.getCurrentUserLogin().get() : "";
+        User currentUser = this.userRepository.findByEmail(email);
+
+        Review newReview = new Review();
+        newReview.setRating(review.getRating());
+        newReview.setSummary(review.getSummary());
+        newReview.setExperience(review.getExperience());
+        newReview.setSuggestion(review.getSuggestion());
+        newReview.setRecommended(review.isRecommended());
+        newReview.setUser(currentUser);
+
+        if(review.getCompanyId() != null) {
+            Optional<Company> company = this.companyRepository.findById(review.getCompanyId());
+            company.ifPresent(newReview::setCompany);
+        }
+
+        return this.reviewRepository.save(newReview);
+    }
 
     @Override
     public ResultPaginationResponse handleGetAllReviews(Specification<Review> specification, Pageable pageable) {
@@ -101,6 +131,11 @@ public class ReviewServiceImpl implements ReviewService {
     }
 
     @Override
+    public Review findByUserAndCompany(Long userId, Long companyId) {
+        return this.reviewRepository.findByUser_AccountIdAndCompany_AccountId(userId, companyId);
+    }
+
+    @Override
     public ReviewResponse handleConvertToReviewResponse(Review review) {
         ReviewResponse response = new ReviewResponse();
 
@@ -111,6 +146,7 @@ public class ReviewServiceImpl implements ReviewService {
         response.setSuggestion(review.getSuggestion());
         response.setRecommended(review.isRecommended());
         response.setVerified(review.isVerified());
+        response.setEnabled(review.isEnabled());
         response.setCreatedAt(review.getCreatedAt());
         response.setUpdatedAt(review.getUpdatedAt());
 

@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+                      http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-5.0.xsd"
+        objectQuotingStrategy="QUOTE_ONLY_RESERVED_WORDS">
+    <changeSet id="1766926659817-5" author="minhdat">
+        <dropForeignKeyConstraint baseTableName="notification_actors" constraintName="fk_notact_on_user"/>
+    </changeSet>
+    <changeSet id="1766926659817-6" author="minhdat">
+        <dropForeignKeyConstraint baseTableName="notifications" constraintName="fk_notifications_on_recipient"/>
+    </changeSet>
+    <changeSet id="1766926659817-1" author="minhdat">
+        <addColumn tableName="reviews">
+            <column name="enabled" type="BOOLEAN"/>
+        </addColumn>
+    </changeSet>
+    <changeSet id="1766926659817-2" author="minhdat">
+        <addNotNullConstraint columnName="enabled" tableName="reviews" defaultNullValue="true"/>
+    </changeSet>
+    <changeSet id="1766926659817-4" author="minhdat">
+        <addForeignKeyConstraint baseColumnNames="actor_id" baseTableName="notification_actors"
+                                 constraintName="fk_notact_on_account" referencedColumnNames="account_id"
+                                 referencedTableName="accounts"/>
+
+        <addForeignKeyConstraint baseColumnNames="recipient_id" baseTableName="notifications"
+                                 constraintName="FK_NOTIFICATIONS_ON_RECIPIENT" referencedColumnNames="account_id"
+                                 referencedTableName="accounts"/>
+    </changeSet>
+
+</databaseChangeLog>

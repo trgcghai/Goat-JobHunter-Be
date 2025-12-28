@@ -16,10 +16,12 @@ public interface ReviewRepository extends JpaRepository<Review, Long>, JpaSpecif
 
     Long countByVerifiedIsTrue();
 
-    @Query("SELECT r.company.accountId, COUNT(r) FROM Review r WHERE r.verified = true GROUP BY r.company.accountId")
+    Review findByUser_AccountIdAndCompany_AccountId(Long userId, Long companyId);
+
+    @Query("SELECT r.company.accountId, COUNT(r) FROM Review r WHERE r.verified = true AND r.enabled = true GROUP BY r.company.accountId")
     List<Object[]> countReviews();
 
-    @Query("SELECT r.company.accountId, AVG(r.rating.overall) FROM Review r WHERE r.verified = true GROUP BY r.company.accountId")
+    @Query("SELECT r.company.accountId, AVG(r.rating.overall) FROM Review r WHERE r.verified = true AND r.enabled = true GROUP BY r.company.accountId")
     List<Object[]> averageOverallRatingsByCompany();
 
     @Query(
@@ -36,6 +38,7 @@ public interface ReviewRepository extends JpaRepository<Review, Long>, JpaSpecif
         FROM Review r
         WHERE r.company.accountId = :companyId
         AND r.verified = true
+        AND r.enabled = true
         """
     )
     Double averageRating(@Param("companyId") Long companyId, @Param("ratingType") String ratingType);
@@ -55,6 +58,7 @@ public interface ReviewRepository extends JpaRepository<Review, Long>, JpaSpecif
         FROM Review r
         WHERE r.company.accountId = :companyId
         AND r.verified = true
+        AND r.enabled = true
         GROUP BY star
         """
     )
@@ -69,6 +73,8 @@ public interface ReviewRepository extends JpaRepository<Review, Long>, JpaSpecif
             END
         FROM Review r
         WHERE r.company.accountId = :companyId
+        AND r.verified = true
+        AND r.enabled = true
         """
     )
     Double calculateRecommendedPercentageByCompany(@Param("companyId") Long companyId);

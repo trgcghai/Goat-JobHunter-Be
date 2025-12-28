@@ -1,17 +1,23 @@
 package iuh.fit.goat.controller;
 
 import com.turkraft.springfilter.boot.Filter;
+import iuh.fit.goat.dto.request.review.CreateReviewRequest;
 import iuh.fit.goat.dto.response.ResultPaginationResponse;
 import iuh.fit.goat.dto.response.review.RatingResponse;
 import iuh.fit.goat.dto.response.review.ReviewResponse;
 import iuh.fit.goat.entity.Company;
 import iuh.fit.goat.entity.Review;
+import iuh.fit.goat.entity.User;
 import iuh.fit.goat.exception.InvalidException;
 import iuh.fit.goat.service.CompanyService;
 import iuh.fit.goat.service.ReviewService;
+import iuh.fit.goat.service.UserService;
+import iuh.fit.goat.util.SecurityUtil;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -25,6 +31,30 @@ import java.util.regex.Pattern;
 public class ReviewController {
     private final ReviewService reviewService;
     private final CompanyService companyService;
+    private final UserService userService;
+
+    @PostMapping
+    public ResponseEntity<ReviewResponse> createReview(@Valid @RequestBody CreateReviewRequest review) throws InvalidException {
+        Long companyId = review.getCompanyId();
+        Company company = this.companyService.handleGetCompanyById(companyId);
+        if(company == null) {
+            throw new InvalidException("Company not found");
+        }
+
+        String email = SecurityUtil.getCurrentUserLogin().isPresent() ? SecurityUtil.getCurrentUserLogin().get() : "";
+        User user = this.userService.handleGetUserByEmail(email);
+        if(user == null) {
+            throw new InvalidException("User not found");
+        }
+
+        Review existingReview = this.reviewService.findByUserAndCompany(user.getAccountId(), companyId);
+        if(existingReview != null) {
+            throw new InvalidException("You have already reviewed this company");
+        }
+
+        Review newReview = this.reviewService.handleCreateReview(review);
+        return ResponseEntity.status(HttpStatus.CREATED).body(this.reviewService.handleConvertToReviewResponse(newReview));
+    }
 
     @GetMapping
     public ResponseEntity<ResultPaginationResponse> getAllReviews(
@@ -49,6 +79,8 @@ public class ReviewController {
         Specification<Review> baseSpec = spec != null ? spec : Specification.unrestricted();
         Specification<Review> finalSpec = baseSpec
                 .and((root, query, cb) -> cb.isTrue(root.get("verified")))
+                .and((root, query, cb) -> cb.isTrue(root.get("enabled")))
+                .and((root, query, cb) -> cb.isNull(root.get("deletedAt")))
                 .and((root, query, cb)
                         -> cb.equal(
                                 cb.lower(root.join("company").get("name")),
