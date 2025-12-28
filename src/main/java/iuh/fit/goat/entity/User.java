@@ -134,22 +134,6 @@ public class User extends Account {
     )
     private List<Comment> comments = new ArrayList<>();
 
-    @ManyToMany(mappedBy = "actors", fetch = LAZY)
-    @JsonIgnore
-    @Filter(
-            name = "activeNotificationFilter",
-            condition = "deleted_at IS NULL"
-    )
-    private List<Notification> actorNotifications = new ArrayList<>();
-
-    @OneToMany(mappedBy = "recipient", fetch = LAZY, cascade = {PERSIST, MERGE})
-    @JsonIgnore
-    @Filter(
-            name = "activeNotificationFilter",
-            condition = "deleted_at IS NULL"
-    )
-    private List<Notification> recipientNotifications = new ArrayList<>();
-
     @OneToMany(mappedBy = "user", fetch = LAZY, cascade = {PERSIST, MERGE})
     @JsonIgnore
     @Filter(
