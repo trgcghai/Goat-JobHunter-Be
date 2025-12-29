@@ -99,6 +99,11 @@ public class SecurityUtil {
         return Math.max(seconds, 0);
     }
 
+    public static String getCurrentUserEmail() {
+        return getCurrentUserLogin().isPresent() ? getCurrentUserLogin().get() : "";
+    }
+
+
     public static Optional<String> getCurrentUserLogin(){
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         return Optional.ofNullable(extractPrincipal(authentication));

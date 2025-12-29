@@ -27,10 +27,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
@@ -50,7 +47,8 @@ public class UserServiceImpl implements UserService {
     private final UserRepository userRepository;
     private final JobRepository jobRepository;
     private final CompanyRepository companyRepository;
-//    private final NotificationRepository notificationRepository;
+    private final ReviewRepository reviewRepository;
+    private final NotificationRepository notificationRepository;
     private final BlogRepository blogRepository;
 //
 //    private final PasswordEncoder passwordEncoder;
@@ -252,8 +250,7 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public ResultPaginationResponse handleGetCurrentUserSavedJobs(Pageable pageable) {
-        String currentEmail = SecurityUtil.getCurrentUserLogin().isPresent() ?
-                SecurityUtil.getCurrentUserLogin().get() : "";
+        String currentEmail = SecurityUtil.getCurrentUserEmail();
 
         if (currentEmail.isEmpty()) {
             return new ResultPaginationResponse(
@@ -296,8 +293,7 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public List<Map<String, Object>> handleCheckJobsSaved(List<Long> jobIds) {
-        String currentEmail = SecurityUtil.getCurrentUserLogin().isPresent() ?
-                SecurityUtil.getCurrentUserLogin().get() : "";
+        String currentEmail = SecurityUtil.getCurrentUserEmail();
 
         if (currentEmail.isEmpty()) {
             return new ArrayList<>();
@@ -320,8 +316,7 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public UserResponse handleSaveJobsForCurrentUser(List<Long> jobIds) {
-        String currentEmail = SecurityUtil.getCurrentUserLogin().isPresent() ?
-                SecurityUtil.getCurrentUserLogin().get() : "";
+        String currentEmail = SecurityUtil.getCurrentUserEmail();
 
         if (currentEmail.isEmpty()) {
             return null;
@@ -352,8 +347,7 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public UserResponse handleUnsaveJobsForCurrentUser(List<Long> jobIds) {
-        String currentEmail = SecurityUtil.getCurrentUserLogin().isPresent() ?
-                SecurityUtil.getCurrentUserLogin().get() : "";
+        String currentEmail = SecurityUtil.getCurrentUserEmail();
 
         if (currentEmail.isEmpty()) {
             return null;
@@ -378,14 +372,10 @@ public class UserServiceImpl implements UserService {
 
     /*     ========================= ========================= =========================  */
 
-
-
     /*     ========================= Saved Blogs Related Methods =========================  */
-
     @Override
     public ResultPaginationResponse handleGetCurrentUserSavedBlogs(Specification<Blog> spec, Pageable pageable) {
-        String currentEmail = SecurityUtil.getCurrentUserLogin().isPresent() ?
-                SecurityUtil.getCurrentUserLogin().get() : "";
+        String currentEmail = SecurityUtil.getCurrentUserEmail();
 
         if (currentEmail.isEmpty()) {
             return new ResultPaginationResponse(
@@ -426,8 +416,7 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public List<Map<String, Object>> handleCheckBlogsSaved(List<Long> blogIds) {
-        String currentEmail = SecurityUtil.getCurrentUserLogin().isPresent() ?
-                SecurityUtil.getCurrentUserLogin().get() : "";
+        String currentEmail = SecurityUtil.getCurrentUserEmail();
 
         if (currentEmail.isEmpty()) {
             return new ArrayList<>();
@@ -451,8 +440,7 @@ public class UserServiceImpl implements UserService {
     @Override
     @Transactional
     public UserResponse handleSaveBlogsForCurrentUser(List<Long> blogIds) {
-        String currentEmail = SecurityUtil.getCurrentUserLogin().isPresent() ?
-                SecurityUtil.getCurrentUserLogin().get() : "";
+        String currentEmail = SecurityUtil.getCurrentUserEmail();
 
         if (currentEmail.isEmpty()) {
             return null;
@@ -488,8 +476,7 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public UserResponse handleUnsaveBlogsForCurrentUser(List<Long> blogIds) {
-        String currentEmail = SecurityUtil.getCurrentUserLogin().isPresent() ?
-                SecurityUtil.getCurrentUserLogin().get() : "";
+        String currentEmail = SecurityUtil.getCurrentUserEmail();
 
         if (currentEmail.isEmpty()) {
             return null;
@@ -597,8 +584,7 @@ public class UserServiceImpl implements UserService {
     /*     ========================= Followed Companies Related Endpoints =========================  */
     @Override
     public List<Company> handleGetCurrentUserFollowedCompanies() {
-        String currentEmail = SecurityUtil.getCurrentUserLogin().isPresent() ?
-                SecurityUtil.getCurrentUserLogin().get() : "";
+        String currentEmail = SecurityUtil.getCurrentUserEmail();
 
         if (currentEmail.isEmpty()) {
             return new ArrayList<>();
@@ -614,8 +600,7 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public List<Map<String, Object>> handleCheckCompaniesFollowed(List<Long> companyIds) {
-        String currentEmail = SecurityUtil.getCurrentUserLogin().isPresent() ?
-                SecurityUtil.getCurrentUserLogin().get() : "";
+        String currentEmail = SecurityUtil.getCurrentUserEmail();
 
         if (currentEmail.isEmpty()) {
             return new ArrayList<>();
@@ -639,8 +624,7 @@ public class UserServiceImpl implements UserService {
     @Override
     @Transactional
     public boolean handleFollowCompanies(List<Long> companyIds) {
-        String currentEmail = SecurityUtil.getCurrentUserLogin().isPresent() ?
-                SecurityUtil.getCurrentUserLogin().get() : "";
+        String currentEmail = SecurityUtil.getCurrentUserEmail();
 
         if (currentEmail.isEmpty()) {
             return false;
@@ -659,8 +643,7 @@ public class UserServiceImpl implements UserService {
     @Override
     @Transactional
     public boolean handleUnfollowCompanies(List<Long> companyIds) {
-        String currentEmail = SecurityUtil.getCurrentUserLogin().isPresent() ?
-                SecurityUtil.getCurrentUserLogin().get() : "";
+        String currentEmail = SecurityUtil.getCurrentUserEmail();
 
         if (currentEmail.isEmpty()) {
             return false;
@@ -675,7 +658,33 @@ public class UserServiceImpl implements UserService {
 
         return result > 0;
     }
+    /*     ========================= ========================= =========================  */
 
+    /*     ========================= Reviewed Companies Related Endpoints =========================  */
+    @Override
+    public List<Map<String, Object>> handleCheckReviewedCompanies(List<Long> companyIds) {
+        String currentEmail = SecurityUtil.getCurrentUserEmail();
+
+        if (currentEmail.isEmpty()) {
+            return new ArrayList<>();
+        }
+
+        User currentUser = this.handleGetUserByEmail(currentEmail);
+        List<Long> reviewedIds = Optional.ofNullable(currentUser.getReviews())
+                .orElse(new ArrayList<>())
+                .stream()
+                .map(review -> review.getCompany().getAccountId())
+                .toList();
+
+        return companyIds.stream()
+                .map(companyId -> {
+                    Map<String, Object> result = new HashMap<>();
+                    result.put("companyId", companyId);
+                    result.put("result", reviewedIds.contains(companyId));
+                    return result;
+                })
+                .collect(Collectors.toList());
+    }
     /*     ========================= ========================= =========================  */
 
 //    @Override

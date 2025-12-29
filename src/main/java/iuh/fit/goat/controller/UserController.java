@@ -303,6 +303,15 @@ public class UserController {
         return ResponseEntity.status(HttpStatus.OK).body(null);
     }
     /*     ========================= ========================= =========================  */
+
+    /*     ========================= Reviewed Companies Related Endpoints =========================  */
+    @GetMapping("/me/reviewed-companies/contains")
+    public ResponseEntity<List<Map<String, Object>>> checkReviewedCompanies(@RequestParam List<Long> companyIds) {
+        List<Map<String, Object>> result = this.userService.handleCheckReviewedCompanies(companyIds);
+        return ResponseEntity.status(HttpStatus.OK).body(result);
+    }
+    /*     ========================= ========================= =========================  */
+
 //
 //    @PutMapping("/users/activate")
 //    public ResponseEntity<List<UserEnabledResponse>> activateUsers(@RequestBody UserEnabledRequest request)

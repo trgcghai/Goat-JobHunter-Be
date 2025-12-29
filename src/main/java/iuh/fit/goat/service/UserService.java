@@ -72,6 +72,11 @@ public interface UserService {
 
     boolean handleUnfollowCompanies(List<Long> companyIds);
     /*     ========================= ========================= =========================  */
+
+    /*     ========================= Reviewed Companies Related Endpoints =========================  */
+    List<Map<String, Object>> handleCheckReviewedCompanies(List<Long> companyIds);
+    /*     ========================= ========================= =========================  */
+
 //
 //    // Admin related methods
 //    List<UserEnabledResponse> handleActivateUsers(List<Long> userIds);
