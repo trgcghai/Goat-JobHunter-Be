@@ -3,8 +3,8 @@ package iuh.fit.goat.config;
 
 import com.nimbusds.jose.jwk.source.ImmutableSecret;
 import com.nimbusds.jose.util.Base64;
-import iuh.fit.goat.config.components.AuthenticationEntryPointCustom;
-import iuh.fit.goat.config.components.RedisTokenBlacklistFilter;
+import iuh.fit.goat.config.component.AuthenticationEntryPointCustom;
+import iuh.fit.goat.config.component.RedisTokenBlacklistFilter;
 import iuh.fit.goat.util.SecurityUtil;
 import jakarta.servlet.http.Cookie;
 import org.springframework.beans.factory.annotation.Value;
@@ -23,7 +23,6 @@ import org.springframework.security.oauth2.jwt.JwtEncoder;
 import org.springframework.security.oauth2.jwt.NimbusJwtDecoder;
 import org.springframework.security.oauth2.jwt.NimbusJwtEncoder;
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationConverter;
-import org.springframework.security.oauth2.server.resource.authentication.JwtGrantedAuthoritiesConverter;
 import org.springframework.security.oauth2.server.resource.web.BearerTokenAuthenticationEntryPoint;
 import org.springframework.security.oauth2.server.resource.web.BearerTokenAuthenticationFilter;
 import org.springframework.security.oauth2.server.resource.web.BearerTokenResolver;

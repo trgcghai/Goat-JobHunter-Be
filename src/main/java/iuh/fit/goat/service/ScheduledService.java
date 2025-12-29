@@ -6,4 +6,6 @@ public interface ScheduledService {
 //    void handleSendSuitableJobs();
 //
 //    void handleRefreshAiCache();
+
+    void calculateLastYearAwards();
 }

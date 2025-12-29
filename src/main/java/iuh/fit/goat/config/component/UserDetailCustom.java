@@ -1,9 +1,8 @@
-package iuh.fit.goat.config.components;
+package iuh.fit.goat.config.component;
 
 import iuh.fit.goat.entity.Account;
 import iuh.fit.goat.entity.Company;
 import iuh.fit.goat.entity.User;
-import iuh.fit.goat.service.AccountService;
 import iuh.fit.goat.service.CompanyService;
 import iuh.fit.goat.service.UserService;
 import lombok.RequiredArgsConstructor;

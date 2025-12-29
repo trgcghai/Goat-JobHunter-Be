@@ -1,4 +1,4 @@
-package iuh.fit.goat.config.components;
+package iuh.fit.goat.config.component;
 
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;

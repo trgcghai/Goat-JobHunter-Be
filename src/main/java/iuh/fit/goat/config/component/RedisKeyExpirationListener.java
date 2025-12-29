@@ -1,7 +1,6 @@
-package iuh.fit.goat.config.components;
+package iuh.fit.goat.config.component;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import iuh.fit.goat.entity.Notification;
 import iuh.fit.goat.service.NotificationService;
 import iuh.fit.goat.service.RedisService;
 import lombok.RequiredArgsConstructor;
@@ -9,9 +8,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.connection.Message;
 import org.springframework.data.redis.connection.MessageListener;
 import org.springframework.stereotype.Component;
-
-import java.nio.charset.StandardCharsets;
-import java.util.Map;
 
 @Slf4j
 @Component

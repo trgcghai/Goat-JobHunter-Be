@@ -1,6 +1,6 @@
 package iuh.fit.goat.service.impl;
 
-import iuh.fit.goat.common.RatingType;
+import iuh.fit.goat.enumeration.RatingType;
 import iuh.fit.goat.dto.request.review.CreateReviewRequest;
 import iuh.fit.goat.dto.response.ResultPaginationResponse;
 import iuh.fit.goat.dto.response.review.RatingResponse;
@@ -95,7 +95,7 @@ public class ReviewServiceImpl implements ReviewService {
 
     @Override
     public List<ReviewResponse> handleGetLatest5Reviews() {
-        return this.reviewRepository.findTop5ByVerifiedIsTrueOrderByCreatedAtDesc()
+        return this.reviewRepository.findTop5ByVerifiedIsTrueAndEnabledIsTrueAndDeletedAtNullOrderByCreatedAtDesc()
                 .stream()
                 .map(this::handleConvertToReviewResponse)
                 .toList();
@@ -103,7 +103,7 @@ public class ReviewServiceImpl implements ReviewService {
 
     @Override
     public Long handleCountAllReviews() {
-        return this.reviewRepository.countByVerifiedIsTrue();
+        return this.reviewRepository.countByVerifiedIsTrueAndEnabledIsTrueAndDeletedAtNull();
     }
 
     @Override

@@ -1,4 +1,4 @@
-package iuh.fit.goat.config.components;
+package iuh.fit.goat.config.component;
 
 import iuh.fit.goat.service.AiService;
 import lombok.RequiredArgsConstructor;

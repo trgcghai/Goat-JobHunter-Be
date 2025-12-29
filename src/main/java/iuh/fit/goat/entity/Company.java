@@ -24,7 +24,7 @@ import static jakarta.persistence.FetchType.LAZY;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-@ToString(callSuper = true, exclude = {"jobs", "recruiters", "followers", "reviews"})
+@ToString(callSuper = true, exclude = {"jobs", "recruiters", "followers", "reviews", "awards"})
 public class Company extends Account {
     @NotBlank(message = "Company name is required")
     @Column(columnDefinition = "citext")
@@ -74,4 +74,8 @@ public class Company extends Account {
             condition = "deleted_at IS NULL"
     )
     private List<Review> reviews = new ArrayList<>();
+
+    @OneToMany(mappedBy = "company", fetch = LAZY, cascade = {PERSIST, MERGE})
+    @JsonIgnore
+    private List<CompanyAward> awards = new ArrayList<>();
 }
