@@ -38,5 +38,9 @@ public interface ReviewService {
 
     List<ReviewStatusResponse> handleUnverifyReviews(ReviewIdsRequest request);
 
+    List<ReviewStatusResponse> handleEnableReviews(ReviewIdsRequest request);
+
+    List<ReviewStatusResponse> handleDisableReviews(ReviewIdsRequest request);
+
     ReviewResponse handleConvertToReviewResponse(Review review);
 }

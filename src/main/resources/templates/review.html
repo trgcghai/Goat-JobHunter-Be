@@ -115,6 +115,14 @@
     Đánh giá của bạn đã bị xóa
   </h2>
 
+  <h2 th:if="${mode.getValue() == 'enable'}" class="accept">
+    Đánh giá của bạn đã được hiển thị
+  </h2>
+
+  <h2 th:if="${mode.getValue() == 'disable'}" class="accept">
+    Đánh giá của bạn đã bị ẩn
+  </h2>
+
   <!-- ===== GREETING ===== -->
   <p>Xin chào <strong th:text="${username}"></strong>,</p>
 
@@ -176,7 +184,7 @@
 
   </div>
 
-  <!-- ===== REASON (REJECT / DELETE ONLY) ===== -->
+  <!-- ===== REASON (REJECT / DELETE / DISABLE ONLY) ===== -->
   <div th:if="${mode.getValue() == 'reject' || mode.getValue() == 'delete'}">
     <p><strong>Lý do:</strong></p>
     <div class="reason">

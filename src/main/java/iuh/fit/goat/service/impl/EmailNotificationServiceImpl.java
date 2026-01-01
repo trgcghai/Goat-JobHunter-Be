@@ -84,6 +84,8 @@ public class EmailNotificationServiceImpl implements EmailNotificationService {
             case ACCEPT -> subject = "Đánh giá của bạn đã được duyệt";
             case DELETE -> subject = "Đánh giá của bạn đã bị xóa";
             case REJECT -> subject = "Đánh giá của bạn không được duyệt";
+            case ENABLE -> subject = "Đánh giá của bạn đã được hiển thị";
+            case DISABLE -> subject = "Đánh giá của bạn đã bị ẩn";
             default -> subject = "Thông báo về đánh giá của bạn";
         }
 
@@ -92,7 +94,7 @@ public class EmailNotificationServiceImpl implements EmailNotificationService {
         context.setVariable("reviews", object);
         context.setVariable("mode", mode);
 
-        if (mode == ActionType.DELETE || mode == ActionType.REJECT) {
+        if (mode == ActionType.DELETE || mode == ActionType.REJECT || mode == ActionType.DISABLE) {
             context.setVariable("reason", reason);
         } else {
             context.setVariable("reason", null);

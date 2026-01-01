@@ -195,6 +195,62 @@ public class ReviewServiceImpl implements ReviewService {
     }
 
     @Override
+    public List<ReviewStatusResponse> handleEnableReviews(ReviewIdsRequest request) {
+        List<Review> reviews = this.reviewRepository.findAllById(request.getReviewIds());
+        if (reviews.isEmpty()) return Collections.emptyList();
+
+        reviews.forEach(review -> review.setEnabled(true));
+        this.reviewRepository.saveAll(reviews);
+
+        Map<String, List<Review>> reviewByEmail =
+                reviews.stream().collect(Collectors.groupingBy(review -> review.getUser().getEmail()));
+
+        reviewByEmail.forEach((email, rs) -> {
+            if (rs.isEmpty()) return;
+
+            this.emailNotificationService.handleSendReviewActionNotice(
+                    email, rs.getFirst().getUser().getUsername(),
+                    rs, null, ActionType.ENABLE
+            );
+        });
+
+        return reviews.stream().map(
+                review -> new ReviewStatusResponse(
+                        review.getReviewId(),
+                        review.isEnabled()
+                )
+        ).collect(Collectors.toList());
+    }
+
+    @Override
+    public List<ReviewStatusResponse> handleDisableReviews(ReviewIdsRequest request) {
+        List<Review> reviews = this.reviewRepository.findAllById(request.getReviewIds());
+        if (reviews.isEmpty()) return Collections.emptyList();
+
+        reviews.forEach(review -> review.setEnabled(false));
+        this.reviewRepository.saveAll(reviews);
+
+        Map<String, List<Review>> reviewByEmail =
+                reviews.stream().collect(Collectors.groupingBy(review -> review.getUser().getEmail()));
+
+        reviewByEmail.forEach((email, rs) -> {
+            if (rs.isEmpty()) return;
+
+            this.emailNotificationService.handleSendReviewActionNotice(
+                    email, rs.getFirst().getUser().getUsername(),
+                    rs, request.getReason(), ActionType.DISABLE
+            );
+        });
+
+        return reviews.stream().map(
+                review -> new ReviewStatusResponse(
+                        review.getReviewId(),
+                        review.isVerified()
+                )
+        ).collect(Collectors.toList());
+    }
+
+    @Override
     public ReviewResponse handleConvertToReviewResponse(Review review) {
         ReviewResponse response = new ReviewResponse();
 

@@ -34,11 +34,11 @@ public class RequireReviewReasonIfAdminValidator implements ConstraintValidator<
             return true;
         }
 
-        boolean requireReason = (mode == ActionType.DELETE || mode == ActionType.REJECT);
+        boolean requireReason = (mode == ActionType.DELETE || mode == ActionType.REJECT || mode == ActionType.DISABLE);
 
         if (requireReason && (request.getReason() == null || request.getReason().trim().isEmpty())) {
             context.disableDefaultConstraintViolation();
-            context.buildConstraintViolationWithTemplate("reason is required for ADMIN when mode is DELETE or REJECT")
+            context.buildConstraintViolationWithTemplate("reason is required for ADMIN when mode is DELETE or REJECT or DISABLE")
                     .addPropertyNode("reason")
                     .addConstraintViolation();
             return false;

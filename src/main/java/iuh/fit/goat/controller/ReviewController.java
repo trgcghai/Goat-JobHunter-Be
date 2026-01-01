@@ -51,6 +51,22 @@ public class ReviewController {
         return ResponseEntity.status(HttpStatus.OK).body(result);
     }
 
+    @PutMapping("/enabled")
+    public ResponseEntity<List<ReviewStatusResponse>> enableReviews(
+            @Valid @RequestBody ReviewIdsRequest request
+    ) {
+        List<ReviewStatusResponse> result = this.reviewService.handleEnableReviews(request);
+        return ResponseEntity.status(HttpStatus.OK).body(result);
+    }
+
+    @PutMapping("/disabled")
+    public ResponseEntity<List<ReviewStatusResponse>> disableReviews(
+            @Valid @RequestBody ReviewIdsRequest request
+    ) {
+        List<ReviewStatusResponse> result = this.reviewService.handleDisableReviews(request);
+        return ResponseEntity.status(HttpStatus.OK).body(result);
+    }
+
     @PostMapping
     public ResponseEntity<ReviewResponse> createReview(@Valid @RequestBody CreateReviewRequest review) throws InvalidException {
         Long companyId = review.getCompanyId();
