@@ -1,5 +1,8 @@
 package iuh.fit.goat.service.impl;
 
+import iuh.fit.goat.common.ActionType;
+import iuh.fit.goat.dto.request.review.ReviewIdsRequest;
+import iuh.fit.goat.dto.response.review.ReviewStatusResponse;
 import iuh.fit.goat.enumeration.RatingType;
 import iuh.fit.goat.dto.request.review.CreateReviewRequest;
 import iuh.fit.goat.dto.response.ResultPaginationResponse;
@@ -11,6 +14,7 @@ import iuh.fit.goat.entity.User;
 import iuh.fit.goat.repository.CompanyRepository;
 import iuh.fit.goat.repository.ReviewRepository;
 import iuh.fit.goat.repository.UserRepository;
+import iuh.fit.goat.service.EmailNotificationService;
 import iuh.fit.goat.service.ReviewService;
 import iuh.fit.goat.util.RatingDistributionUtil;
 import iuh.fit.goat.util.SecurityUtil;
@@ -20,15 +24,14 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
 public class ReviewServiceImpl implements ReviewService {
+    private final EmailNotificationService emailNotificationService;
+
     private final ReviewRepository reviewRepository;
     private final UserRepository userRepository;
     private final CompanyRepository companyRepository;
@@ -133,6 +136,62 @@ public class ReviewServiceImpl implements ReviewService {
     @Override
     public Review findByUserAndCompany(Long userId, Long companyId) {
         return this.reviewRepository.findByUser_AccountIdAndCompany_AccountId(userId, companyId);
+    }
+
+    @Override
+    public List<ReviewStatusResponse> handleVerifyReviews(ReviewIdsRequest request) {
+        List<Review> reviews = this.reviewRepository.findAllById(request.getReviewIds());
+        if (reviews.isEmpty()) return Collections.emptyList();
+
+        reviews.forEach(review -> review.setVerified(true));
+        this.reviewRepository.saveAll(reviews);
+
+        Map<String, List<Review>> reviewByEmail =
+                reviews.stream().collect(Collectors.groupingBy(review -> review.getUser().getEmail()));
+
+        reviewByEmail.forEach((email, rs) -> {
+            if (rs.isEmpty()) return;
+
+            this.emailNotificationService.handleSendReviewActionNotice(
+                    email, rs.getFirst().getUser().getUsername(),
+                    rs, null, ActionType.ACCEPT
+            );
+        });
+
+        return reviews.stream().map(
+                review -> new ReviewStatusResponse(
+                        review.getReviewId(),
+                        review.isVerified()
+                )
+        ).collect(Collectors.toList());
+    }
+
+    @Override
+    public List<ReviewStatusResponse> handleUnverifyReviews(ReviewIdsRequest request) {
+        List<Review> reviews = this.reviewRepository.findAllById(request.getReviewIds());
+        if (reviews.isEmpty()) return Collections.emptyList();
+
+        reviews.forEach(review -> review.setVerified(false));
+        this.reviewRepository.saveAll(reviews);
+
+        Map<String, List<Review>> reviewByEmail =
+                reviews.stream().collect(Collectors.groupingBy(review -> review.getUser().getEmail()));
+
+        reviewByEmail.forEach((email, rs) -> {
+            if (rs.isEmpty()) return;
+
+            this.emailNotificationService.handleSendReviewActionNotice(
+                    email, rs.getFirst().getUser().getUsername(),
+                    rs, request.getReason(), ActionType.REJECT
+            );
+        });
+
+        return reviews.stream().map(
+                review -> new ReviewStatusResponse(
+                        review.getReviewId(),
+                        review.isVerified()
+                )
+        ).collect(Collectors.toList());
     }
 
     @Override

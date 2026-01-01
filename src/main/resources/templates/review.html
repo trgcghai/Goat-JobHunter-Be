@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8">
+  <title>Job Hunter</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background-color: #f4f6f8;
+      margin: 0;
+      padding: 0;
+      color: #333;
+    }
+    .container {
+      max-width: 650px;
+      margin: 40px auto;
+      background-color: #ffffff;
+      padding: 30px;
+      border-radius: 12px;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+    }
+    h2 {
+      margin-top: 0;
+      font-size: 22px;
+      font-weight: 600;
+    }
+    .delete { color: #d9534f; }
+    .reject { color: #f0ad4e; }
+    .accept { color: #28a745; }
+
+    p {
+      font-size: 16px;
+      line-height: 1.6;
+    }
+
+    .review-box {
+      background-color: #f8f9fa;
+      border-radius: 10px;
+      padding: 20px;
+      margin: 20px 0;
+    }
+
+    .review-section {
+      margin-bottom: 14px;
+    }
+
+    .review-section strong {
+      display: block;
+      margin-bottom: 6px;
+      font-size: 15px;
+    }
+
+    .rating-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 8px;
+    }
+
+    .rating-table td {
+      padding: 6px 0;
+      font-size: 14px;
+    }
+
+    .rating-score {
+      font-weight: bold;
+      color: #28a745;
+    }
+
+    .reason {
+      background-color: #f9f2f4;
+      border-left: 5px solid #d9534f;
+      padding: 12px 15px;
+      margin: 15px 0;
+      border-radius: 6px;
+      color: #555;
+      font-style: italic;
+    }
+
+    .btn-contact {
+      display: inline-block;
+      padding: 10px 20px;
+      background-color: #0275d8;
+      color: #fff !important;
+      text-decoration: none;
+      border-radius: 6px;
+      margin-top: 10px;
+      font-weight: bold;
+    }
+
+    .btn-contact:hover {
+      background-color: #025aa5;
+    }
+
+    .footer {
+      font-size: 14px;
+      color: #888;
+      margin-top: 30px;
+    }
+  </style>
+</head>
+
+<body>
+<div class="container">
+
+  <!-- ===== TITLE ===== -->
+  <h2 th:if="${mode.getValue() == 'accept'}" class="accept">
+    Đánh giá của bạn đã được duyệt
+  </h2>
+
+  <h2 th:if="${mode.getValue() == 'reject'}" class="reject">
+    Đánh giá của bạn không được duyệt
+  </h2>
+
+  <h2 th:if="${mode.getValue() == 'delete'}" class="delete">
+    Đánh giá của bạn đã bị xóa
+  </h2>
+
+  <!-- ===== GREETING ===== -->
+  <p>Xin chào <strong th:text="${username}"></strong>,</p>
+
+  <p th:if="${mode.getValue() == 'accept'}">
+    Cảm ơn bạn đã chia sẻ trải nghiệm. Đánh giá của bạn đã được phê duyệt và hiển thị công khai.
+  </p>
+
+  <p th:if="${mode.getValue() != 'accept'}">
+    Đánh giá của bạn đã được hệ thống kiểm tra và cập nhật trạng thái như sau:
+  </p>
+
+  <!-- ===== REVIEW CONTENT ===== -->
+  <div th:each="review : ${reviews}" class="review-box">
+
+    <div class="review-section">
+      <strong>Tóm tắt:</strong>
+      <p th:text="${review.summary}"></p>
+    </div>
+
+    <div class="review-section">
+      <strong>Trải nghiệm:</strong>
+      <p th:text="${review.experience}"></p>
+    </div>
+
+    <div class="review-section" th:if="${review.suggestion != null}">
+      <strong>Đề xuất:</strong>
+      <p th:text="${review.suggestion}"></p>
+    </div>
+
+    <div class="review-section">
+      <strong>Đánh giá chi tiết</strong>
+      <table class="rating-table">
+        <tr>
+          <td>Tổng thể</td>
+          <td class="rating-score" th:text="${review.rating.overall} + '/5'"></td>
+        </tr>
+        <tr>
+          <td>Lương & Phúc lợi</td>
+          <td th:text="${review.rating.salaryBenefits} + '/5'"></td>
+        </tr>
+        <tr>
+          <td>Đào tạo & Học hỏi</td>
+          <td th:text="${review.rating.trainingLearning} + '/5'"></td>
+        </tr>
+        <tr>
+          <td>Quản lý & Quan tâm nhân viên</td>
+          <td th:text="${review.rating.managementCaresAboutMe} + '/5'"></td>
+        </tr>
+        <tr>
+          <td>Văn hóa & Môi trường</td>
+          <td th:text="${review.rating.cultureFun} + '/5'"></td>
+        </tr>
+        <tr>
+          <td>Văn phòng & Không gian làm việc</td>
+          <td th:text="${review.rating.officeWorkspace} + '/5'"></td>
+        </tr>
+      </table>
+    </div>
+
+  </div>
+
+  <!-- ===== REASON (REJECT / DELETE ONLY) ===== -->
+  <div th:if="${mode.getValue() == 'reject' || mode.getValue() == 'delete'}">
+    <p><strong>Lý do:</strong></p>
+    <div class="reason">
+      <span th:text="${reason}">Không có lý do được cung cấp</span>
+    </div>
+
+    <p>Nếu bạn cho rằng đây là nhầm lẫn, vui lòng liên hệ bộ phận hỗ trợ:</p>
+    <a href="mailto:nguyenthangdat84@gmail.com" class="btn-contact">
+      Liên hệ hỗ trợ
+    </a>
+  </div>
+
+  <!-- ===== FOOTER ===== -->
+  <div class="footer">
+    <p>Trân trọng,<br>GOAT</p>
+  </div>
+
+</div>
+</body>
+</html>

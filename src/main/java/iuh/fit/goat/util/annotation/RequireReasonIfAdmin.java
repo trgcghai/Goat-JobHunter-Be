@@ -2,6 +2,7 @@ package iuh.fit.goat.util.annotation;
 
 import iuh.fit.goat.util.validation.RequireBlogReasonIfAdminValidator;
 import iuh.fit.goat.util.validation.RequireJobReasonIfAdminValidator;
+import iuh.fit.goat.util.validation.RequireReviewReasonIfAdminValidator;
 import jakarta.validation.Constraint;
 import jakarta.validation.Payload;
 
@@ -12,7 +13,10 @@ import java.lang.annotation.Target;
 
 @Target({ElementType.TYPE})
 @Retention(RetentionPolicy.RUNTIME)
-@Constraint(validatedBy = {RequireBlogReasonIfAdminValidator.class, RequireJobReasonIfAdminValidator.class})
+@Constraint(validatedBy = {
+        RequireBlogReasonIfAdminValidator.class, RequireJobReasonIfAdminValidator.class,
+        RequireReviewReasonIfAdminValidator.class
+})
 public @interface RequireReasonIfAdmin {
     String message() default "reason is required for ADMIN";
     Class<?>[] groups() default {};

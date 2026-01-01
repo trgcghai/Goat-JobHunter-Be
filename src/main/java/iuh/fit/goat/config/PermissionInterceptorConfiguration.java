@@ -25,7 +25,6 @@ public class PermissionInterceptorConfiguration implements WebMvcConfigurer {
                 "/storage/**",                       // Tải/hiển thị file tĩnh – public
                 "/api/v1/recruiters/**",             // Danh sách/Nội dung nhà tuyển dụng – public
                 "/api/v1/companies/**",              // Danh sách/Nội dung công ty – public
-                "/api/v1/reviews/**",                // Danh sách đánh giá công ty – public
                 "/api/v1/jobs/**",                   // Danh sách/Nội dung công việc – public
                 "/api/v1/skills/**",                 // Dữ liệu kỹ năng tham chiếu – public
                 "/api/v1/files",                     // Upload/Download file – không yêu cầu phân quyền
@@ -53,6 +52,10 @@ public class PermissionInterceptorConfiguration implements WebMvcConfigurer {
                 "/api/v1/notifications/**",          // Server sent event, nhận thông báo khi comment, reply, like blog
                 "/api/v1/ai/**",                     // Role cũng có thể dùng chat
                 "/api/v1/applications/count",        // Lấy số application mà applicant đã ứng tuyển vào 1 job
+
+                "/api/v1/reviews/companies/**",      // Danh sách đánh giá của từng công ty - public
+                "/api/v1/reviews/latest",            // Danh sách đánh giá gần nhất - public
+                "/api/v1/reviews/count",             // Tổng số lượng đánh giá - public
         };
 
         registry.addInterceptor(getPermissionInterceptor())

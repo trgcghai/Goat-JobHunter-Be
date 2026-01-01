@@ -1,9 +1,13 @@
 package iuh.fit.goat.service;
 
+import iuh.fit.goat.dto.request.blog.BlogIdsRequest;
 import iuh.fit.goat.dto.request.review.CreateReviewRequest;
+import iuh.fit.goat.dto.request.review.ReviewIdsRequest;
 import iuh.fit.goat.dto.response.ResultPaginationResponse;
+import iuh.fit.goat.dto.response.blog.BlogStatusResponse;
 import iuh.fit.goat.dto.response.review.RatingResponse;
 import iuh.fit.goat.dto.response.review.ReviewResponse;
+import iuh.fit.goat.dto.response.review.ReviewStatusResponse;
 import iuh.fit.goat.entity.Review;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
@@ -29,6 +33,10 @@ public interface ReviewService {
     Double handleCalculateRecommendedPercentageByCompany(Long companyId);
 
     Review findByUserAndCompany(Long userId, Long companyId);
+
+    List<ReviewStatusResponse> handleVerifyReviews(ReviewIdsRequest request);
+
+    List<ReviewStatusResponse> handleUnverifyReviews(ReviewIdsRequest request);
 
     ReviewResponse handleConvertToReviewResponse(Review review);
 }

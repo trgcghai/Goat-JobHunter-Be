@@ -2,9 +2,11 @@ package iuh.fit.goat.controller;
 
 import com.turkraft.springfilter.boot.Filter;
 import iuh.fit.goat.dto.request.review.CreateReviewRequest;
+import iuh.fit.goat.dto.request.review.ReviewIdsRequest;
 import iuh.fit.goat.dto.response.ResultPaginationResponse;
 import iuh.fit.goat.dto.response.review.RatingResponse;
 import iuh.fit.goat.dto.response.review.ReviewResponse;
+import iuh.fit.goat.dto.response.review.ReviewStatusResponse;
 import iuh.fit.goat.entity.Company;
 import iuh.fit.goat.entity.Review;
 import iuh.fit.goat.entity.User;
@@ -32,6 +34,22 @@ public class ReviewController {
     private final ReviewService reviewService;
     private final CompanyService companyService;
     private final UserService userService;
+
+    @PutMapping("/verified")
+    public ResponseEntity<List<ReviewStatusResponse>> verifyReviews(
+            @Valid @RequestBody ReviewIdsRequest request
+    ) {
+        List<ReviewStatusResponse> result = this.reviewService.handleVerifyReviews(request);
+        return ResponseEntity.status(HttpStatus.OK).body(result);
+    }
+
+    @PutMapping("/unverified")
+    public ResponseEntity<List<ReviewStatusResponse>> unverifyReviews(
+            @Valid @RequestBody ReviewIdsRequest request
+    ) {
+        List<ReviewStatusResponse> result = this.reviewService.handleUnverifyReviews(request);
+        return ResponseEntity.status(HttpStatus.OK).body(result);
+    }
 
     @PostMapping
     public ResponseEntity<ReviewResponse> createReview(@Valid @RequestBody CreateReviewRequest review) throws InvalidException {
