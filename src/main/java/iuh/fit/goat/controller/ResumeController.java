@@ -7,6 +7,7 @@ import iuh.fit.goat.exception.InvalidException;
 import iuh.fit.goat.service.ResumeService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -24,6 +25,6 @@ public class ResumeController {
         Resume resume = this.resumeService.handleCreateResume(request);
         if(resume == null) throw new InvalidException("You should be logged in");
 
-        return ResponseEntity.ok(this.resumeService.handleConvertToResumeResponse(resume));
+        return ResponseEntity.status(HttpStatus.CREATED).body(this.resumeService.handleConvertToResumeResponse(resume));
     }
 }

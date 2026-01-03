@@ -20,7 +20,7 @@ import static jakarta.persistence.FetchType.LAZY;
 @FilterDef(name = "activeApplicationFilter")
 public class Application extends BaseEntity{
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @GeneratedValue(strategy = GenerationType.AUTO)
     private long applicationId;
     private String email;
     @Column(columnDefinition = "TEXT")
