@@ -1,10 +1,8 @@
 package iuh.fit.goat.service;
 
-import iuh.fit.goat.dto.request.blog.BlogIdsRequest;
 import iuh.fit.goat.dto.request.review.CreateReviewRequest;
 import iuh.fit.goat.dto.request.review.ReviewIdsRequest;
 import iuh.fit.goat.dto.response.ResultPaginationResponse;
-import iuh.fit.goat.dto.response.blog.BlogStatusResponse;
 import iuh.fit.goat.dto.response.review.RatingResponse;
 import iuh.fit.goat.dto.response.review.ReviewResponse;
 import iuh.fit.goat.dto.response.review.ReviewStatusResponse;

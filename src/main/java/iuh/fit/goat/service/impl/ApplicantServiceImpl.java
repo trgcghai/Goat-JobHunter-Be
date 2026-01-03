@@ -115,9 +115,7 @@ public class ApplicantServiceImpl implements ApplicantService {
 
     @Override
     public Applicant handleGetApplicantById(long id) {
-        Optional<Applicant> result = this.applicantRepository.findById(id);
-
-        return result.orElse(null);
+        return this.applicantRepository.findById(id).orElse(null);
     }
 
 //    @Override
