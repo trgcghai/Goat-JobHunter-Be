@@ -4,6 +4,7 @@ import iuh.fit.goat.dto.request.recruiter.RecruiterUpdateRequest;
 import iuh.fit.goat.dto.response.recruiter.RecruiterResponse;
 import iuh.fit.goat.dto.response.ResultPaginationResponse;
 import iuh.fit.goat.dto.response.user.UserResponse;
+import iuh.fit.goat.entity.Address;
 import iuh.fit.goat.entity.Job;
 import iuh.fit.goat.entity.Recruiter;
 import iuh.fit.goat.entity.Role;
@@ -18,8 +19,9 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -29,6 +31,7 @@ public class RecruiterServiceImpl implements RecruiterService {
 //    private final CommentRepository commentRepository;
 //    private final BlogRepository blogRepository;
 //    private final NotificationRepository notificationRepository;
+    private final AddressRepository addressRepository;
     private final RoleService roleService;
     private final String HR = "HR";
 
@@ -101,8 +104,52 @@ public class RecruiterServiceImpl implements RecruiterService {
         if (updateRequest.getPhone() != null) {
             currentRecruiter.setPhone(updateRequest.getPhone());
         }
+        // Handle addresses
         if (updateRequest.getAddresses() != null) {
-            currentRecruiter.setAddresses(updateRequest.getAddresses());
+            List<Address> currentAddresses = currentRecruiter.getAddresses();
+            List<Address> requestAddresses = updateRequest.getAddresses();
+
+            // Map current address theo addressId
+            Map<Long, Address> currentMap = currentAddresses.stream()
+                    .collect(Collectors.toMap(Address::getAddressId, Function.identity()));
+
+            // Lấy danh sách addressId từ request
+            Set<Long> requestIds = requestAddresses.stream()
+                    .map(Address::getAddressId)
+                    .filter(id -> id > 0)
+                    .collect(Collectors.toSet());
+
+            /* ================= DELETE ================= */
+            Iterator<Address> iterator = currentAddresses.iterator();
+            while (iterator.hasNext()) {
+                Address addr = iterator.next();
+                if (!requestIds.contains(addr.getAddressId())) {
+                    iterator.remove();
+                    this.addressRepository.delete(addr);
+                }
+            }
+
+            /* ================= UPDATE & CREATE ================= */
+            for (Address reqAddr : requestAddresses) {
+                // ===== UPDATE =====
+                if (reqAddr.getAddressId() > 0 && currentMap.containsKey(reqAddr.getAddressId())) {
+                    Address currentAddr = currentMap.get(reqAddr.getAddressId());
+
+                    if (!Objects.equals(currentAddr.getProvince(), reqAddr.getProvince()) ||
+                            !Objects.equals(currentAddr.getFullAddress(), reqAddr.getFullAddress())) {
+                        currentAddr.setProvince(reqAddr.getProvince());
+                        currentAddr.setFullAddress(reqAddr.getFullAddress());
+                    }
+                }
+                // ===== CREATE =====
+                else if (reqAddr.getProvince() != null && reqAddr.getFullAddress() != null) {
+                    Address newAddress = new Address();
+                    newAddress.setProvince(reqAddr.getProvince());
+                    newAddress.setFullAddress(reqAddr.getFullAddress());
+                    newAddress.setAccount(currentRecruiter);
+                    currentAddresses.add(newAddress);
+                }
+            }
         }
         if (updateRequest.getDob() != null) {
             currentRecruiter.setDob(updateRequest.getDob());
