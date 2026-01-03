@@ -43,9 +43,6 @@ public class RegisterUserRequest {
     )
     private String phone;
 
-    @NotBlank(message = "Địa chỉ không được để trống")
-    private List<Address> addresses;
-
     @NotBlank(message = "Loại người dùng không được để trống")
     @Pattern(
             regexp = "^(applicant|recruiter)$",
