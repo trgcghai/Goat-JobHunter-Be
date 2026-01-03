@@ -43,17 +43,17 @@ public class Notification extends BaseEntity {
             name = "activeAccountFilter",
             condition = "deleted_at IS NULL"
     )
-    private List<User> actors = new ArrayList<>();
+    private List<Account> actors = new ArrayList<>();
 
     @ManyToOne(fetch = LAZY)
     @JoinColumn(name = "recipient_id")
-    private User recipient;
+    private Account recipient;
 
     @ManyToOne(fetch = LAZY)
     @JoinColumn(name = "comment_id")
     private Comment comment;
 
-    public User getLastActor() {
+    public Account getLastActor() {
         if (actors != null && !actors.isEmpty()) {
             return actors.getLast();
         }

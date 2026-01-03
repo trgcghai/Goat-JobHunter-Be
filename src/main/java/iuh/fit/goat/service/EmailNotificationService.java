@@ -30,4 +30,8 @@ public interface EmailNotificationService {
 //    void handleSendUserEnabledEmail(
 //            String recipient, String username, boolean enabled
 //    );
+
+    void handleSendReviewActionNotice(
+            String recipient, String username, Object object, String reason, ActionType mode
+    );
 }

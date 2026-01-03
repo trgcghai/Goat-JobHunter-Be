@@ -3,7 +3,7 @@ package iuh.fit.goat.config;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
-import iuh.fit.goat.config.components.RedisKeyExpirationListener;
+import iuh.fit.goat.config.component.RedisKeyExpirationListener;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;

@@ -1,4 +1,4 @@
-package iuh.fit.goat.config.components;
+package iuh.fit.goat.config.component;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import iuh.fit.goat.dto.response.RestResponse;

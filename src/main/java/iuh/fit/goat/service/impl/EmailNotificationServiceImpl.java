@@ -76,6 +76,34 @@ public class EmailNotificationServiceImpl implements EmailNotificationService {
         this.asyncEmailService.handleSendEmailSync(recipient, subject, content, false, true);
     }
 
+    @Override
+    public void handleSendReviewActionNotice(String recipient, String username, Object object, String reason, ActionType mode) {
+        String subject;
+
+        switch (mode) {
+            case ACCEPT -> subject = "Đánh giá của bạn đã được duyệt";
+            case DELETE -> subject = "Đánh giá của bạn đã bị xóa";
+            case REJECT -> subject = "Đánh giá của bạn không được duyệt";
+            case ENABLE -> subject = "Đánh giá của bạn đã được hiển thị";
+            case DISABLE -> subject = "Đánh giá của bạn đã bị ẩn";
+            default -> subject = "Thông báo về đánh giá của bạn";
+        }
+
+        Context context = new Context();
+        context.setVariable("username", username);
+        context.setVariable("reviews", object);
+        context.setVariable("mode", mode);
+
+        if (mode == ActionType.DELETE || mode == ActionType.REJECT || mode == ActionType.DISABLE) {
+            context.setVariable("reason", reason);
+        } else {
+            context.setVariable("reason", null);
+        }
+
+        String content = this.templateEngine.process("review", context);
+        this.asyncEmailService.handleSendEmailSync(recipient, subject, content, false, true);
+    }
+
 //    @Override
 //    public void handleSendJobActionNotice(String recipient, String username, Object object, String reason, ActionType mode) {
 //        String subject;

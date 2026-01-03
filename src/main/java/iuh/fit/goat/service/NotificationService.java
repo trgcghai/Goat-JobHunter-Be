@@ -19,7 +19,7 @@ public interface NotificationService {
 
     void handleNotifyLikeBlog(Blog blog);
 //
-//    void handleNotifyFollowRecruiter(Recruiter recruiter);
+    void handleNotifyFollowCompany(Company company);
 //
 //    void sendNotificationToUser(User user, Notification notification);
 //

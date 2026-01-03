@@ -4,7 +4,8 @@ import lombok.Getter;
 
 @Getter
 public enum ActionType {
-    DELETE("delete"), REJECT("reject"), ACCEPT("accept");
+    DELETE("delete"), REJECT("reject"), ACCEPT("accept"),
+    ENABLE("enable"), DISABLE("disable");
 
     private final String value;
 

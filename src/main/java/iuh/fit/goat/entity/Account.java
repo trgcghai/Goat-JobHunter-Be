@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
 import lombok.*;
+import org.hibernate.annotations.Filter;
 import org.hibernate.annotations.FilterDef;
 
 import java.util.ArrayList;
@@ -42,4 +43,20 @@ public abstract class Account extends BaseEntity {
     @OneToMany(mappedBy = "account", fetch = LAZY, cascade = {PERSIST, MERGE})
     @JsonIgnore
     private List<Address> addresses = new ArrayList<>();
+
+    @ManyToMany(mappedBy = "actors", fetch = LAZY)
+    @JsonIgnore
+    @Filter(
+            name = "activeNotificationFilter",
+            condition = "deleted_at IS NULL"
+    )
+    private List<Notification> actorNotifications = new ArrayList<>();
+
+    @OneToMany(mappedBy = "recipient", fetch = LAZY, cascade = {PERSIST, MERGE})
+    @JsonIgnore
+    @Filter(
+            name = "activeNotificationFilter",
+            condition = "deleted_at IS NULL"
+    )
+    private List<Notification> recipientNotifications = new ArrayList<>();
 }

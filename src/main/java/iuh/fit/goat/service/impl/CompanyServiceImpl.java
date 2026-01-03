@@ -4,6 +4,7 @@ import iuh.fit.goat.dto.response.ResultPaginationResponse;
 import iuh.fit.goat.dto.response.company.CompanyResponse;
 import iuh.fit.goat.entity.Address;
 import iuh.fit.goat.entity.Company;
+import iuh.fit.goat.entity.CompanyAward;
 import iuh.fit.goat.repository.CompanyRepository;
 import iuh.fit.goat.service.CompanyService;
 import lombok.RequiredArgsConstructor;
@@ -12,6 +13,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 
+import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -112,6 +114,21 @@ public class CompanyServiceImpl implements CompanyService {
                     })
                     .toList();
             companyResponse.setAddresses(addresses);
+        }
+
+        if(company.getAwards() != null) {
+            List<CompanyResponse.CompanyAward> awards = company.getAwards()
+                    .stream()
+                    .sorted(Comparator.comparing(CompanyAward :: getCreatedAt).reversed())
+                    .map(award -> {
+                        CompanyResponse.CompanyAward companyAward = new CompanyResponse.CompanyAward();
+                        companyAward.setCompanyAwardId(award.getCompanyAwardId());
+                        companyAward.setType(award.getType().getValue());
+                        companyAward.setYear(award.getYear());
+                        return companyAward;
+                    })
+                    .toList();
+            companyResponse.setAwards(awards);
         }
 
         return companyResponse;

@@ -1,4 +1,4 @@
-package iuh.fit.goat.config.components;
+package iuh.fit.goat.config.component;
 
 import iuh.fit.goat.common.SoftDeleteFilter;
 import iuh.fit.goat.util.SecurityUtil;

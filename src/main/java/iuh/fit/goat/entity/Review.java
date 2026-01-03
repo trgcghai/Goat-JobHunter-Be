@@ -37,6 +37,7 @@ public class Review extends BaseEntity{
     private String suggestion;
     private boolean recommended;
     private boolean verified = false;
+    private boolean enabled = true;
 
     @ManyToOne
     @JoinColumn(name = "user_id")

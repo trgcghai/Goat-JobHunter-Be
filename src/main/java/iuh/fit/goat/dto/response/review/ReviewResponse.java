@@ -20,6 +20,7 @@ public class ReviewResponse {
     private String suggestion;
     private boolean recommended;
     private boolean verified;
+    private boolean enabled;
     private Instant createdAt;
     private Instant updatedAt;
     private ReviewUser user;
