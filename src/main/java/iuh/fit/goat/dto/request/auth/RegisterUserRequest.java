@@ -1,11 +1,7 @@
 package iuh.fit.goat.dto.request.auth;
 
 import iuh.fit.goat.entity.Address;
-import jakarta.validation.constraints.Email;
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.Pattern;
-import jakarta.validation.constraints.Size;
-import jakarta.validation.constraints.AssertTrue;
+import jakarta.validation.constraints.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -43,7 +39,8 @@ public class RegisterUserRequest {
     )
     private String phone;
 
-    @NotBlank(message = "Địa chỉ không được để trống")
+    @NotNull(message = "Danh sách địa chỉ không được trống")
+    @Size(min = 1, message = "Phải có ít nhất 1 địa chỉ")
     private List<Address> addresses;
 
     @NotBlank(message = "Loại người dùng không được để trống")

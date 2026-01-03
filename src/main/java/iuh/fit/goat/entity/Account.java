@@ -59,4 +59,9 @@ public abstract class Account extends BaseEntity {
             condition = "deleted_at IS NULL"
     )
     private List<Notification> recipientNotifications = new ArrayList<>();
+
+    public void addAddress(Address address) {
+        this.addresses.add(address);
+        address.setAccount(this);
+    }
 }
