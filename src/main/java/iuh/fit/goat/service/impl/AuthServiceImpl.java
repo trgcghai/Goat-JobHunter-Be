@@ -275,7 +275,6 @@ public class AuthServiceImpl implements AuthService {
             applicant.setFullName(request.getFullName());
             applicant.setEmail(request.getEmail());
             applicant.setPassword(hashPassword);
-            applicant.setAddresses(request.getAddresses());
             applicant.setPhone(request.getPhone());
 
             // create applicant to save to database
@@ -304,7 +303,6 @@ public class AuthServiceImpl implements AuthService {
             recruiter.setFullName(request.getFullName());
             recruiter.setEmail(request.getEmail());
             recruiter.setPassword(hashPassword);
-            recruiter.setAddresses(request.getAddresses());
             recruiter.setPhone(request.getPhone());
 
             // create recruiter to save to database
