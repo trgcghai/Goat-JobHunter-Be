@@ -34,4 +34,12 @@ public interface EmailNotificationService {
     void handleSendReviewActionNotice(
             String recipient, String username, Object object, String reason, ActionType mode
     );
+
+    void handleSendApplicationEmailToApplicant(
+            String recipient, String fullName, String jobTitle, String companyName
+    );
+
+    void handleSendApplicationEmailToCompany(
+            String recipient, String name, String jobTitle, String applicantName, String applicantEmail
+    );
 }

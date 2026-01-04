@@ -42,14 +42,20 @@ public class ApplicationController {
     public ResponseEntity<ApplicationResponse> createApplication(@Valid @RequestBody CreateApplicationRequest request)
             throws InvalidException
     {
+        long t0 = System.currentTimeMillis();
         boolean checkApplicantAndJobAndResume =
                 this.applicationService.checkApplicantAndJobAndResumeExist(request.getJobId(), request.getResumeId());
         if(!checkApplicantAndJobAndResume) throw new InvalidException("Applicant or Job or Resume doesn't exist");
+        System.out.println("Time checkApplicantAndJobAndResumeExist: " + (System.currentTimeMillis() - t0) + " ms");
 
+        long t1 = System.currentTimeMillis();
         boolean checkCanApplyToJob = this.applicationService.handleCanApplyToJob(request.getJobId());
         if(!checkCanApplyToJob) throw new InvalidException("You can submit a maximum of 3 applications for this job.");
+        System.out.println("Time handleCanApplyToJob: " + (System.currentTimeMillis() - t1) + " ms");
 
+        long t2 = System.currentTimeMillis();
         Application application= this.applicationService.handleCreateApplication(request);
+        System.out.println("Time handleCreateApplication: " + (System.currentTimeMillis() - t2) + " ms");
         ApplicationResponse response = this.applicationService.handleConvertToApplicationResponse(application);
 
         return ResponseEntity.status(HttpStatus.CREATED).body(response);

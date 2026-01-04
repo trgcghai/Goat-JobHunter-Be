@@ -1,6 +1,8 @@
 package iuh.fit.goat.service.impl;
 
+import iuh.fit.goat.component.redis.ApplicationEventProducer;
 import iuh.fit.goat.dto.request.application.CreateApplicationRequest;
+import iuh.fit.goat.dto.result.application.ApplicationCreatedEvent;
 import iuh.fit.goat.enumeration.Status;
 import iuh.fit.goat.dto.request.application.ApplicationIdsRequest;
 import iuh.fit.goat.dto.response.application.ApplicationResponse;
@@ -10,6 +12,7 @@ import iuh.fit.goat.service.ApplicationService;
 import iuh.fit.goat.service.EmailNotificationService;
 import iuh.fit.goat.util.SecurityUtil;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
@@ -25,11 +28,12 @@ import java.util.stream.Collectors;
 @Service
 @RequiredArgsConstructor
 public class ApplicationServiceImp implements ApplicationService {
-//    private final EmailNotificationService emailNotificationService;
     private final ApplicationRepository applicationRepository;
     private final JobRepository jobRepository;
     private final ApplicantRepository applicantRepository;
     private final ResumeRepository resumeRepository;
+
+    private final ApplicationEventProducer eventProducer;
 
     @Override
     public Application handleCreateApplication(CreateApplicationRequest request) {
@@ -38,6 +42,7 @@ public class ApplicationServiceImp implements ApplicationService {
         Job job = this.jobRepository.findById(request.getJobId()).orElse(null);
         Applicant applicant = this.applicantRepository.findByEmail(currentEmail).orElse(null);
         Resume resume = this.resumeRepository.findById(request.getResumeId()).orElse(null);
+        if(applicant == null || resume == null || job == null) return null;
 
         Application application = new Application();
         application.setEmail(request.getEmail() != null ?  request.getEmail() : currentEmail);
@@ -46,8 +51,15 @@ public class ApplicationServiceImp implements ApplicationService {
         application.setJob(job);
         application.setApplicant(applicant);
         application.setResume(resume);
+        Application saved= this.applicationRepository.save(application);
 
-        return this.applicationRepository.save(application);
+        ApplicationCreatedEvent event = new ApplicationCreatedEvent(
+                saved.getApplicationId(), applicant.getEmail(), applicant.getFullName(),
+                job.getCompany().getEmail(), job.getCompany().getName(), job.getTitle()
+        );
+        this.eventProducer.publishApplicationCreated(event);
+
+        return saved;
     }
 
 //    @Override

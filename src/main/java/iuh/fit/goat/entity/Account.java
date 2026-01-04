@@ -15,7 +15,12 @@ import static jakarta.persistence.CascadeType.PERSIST;
 import static jakarta.persistence.FetchType.LAZY;
 
 @Entity
-@Table(name = "accounts")
+@Table(
+        name = "accounts",
+        indexes = {
+                @Index(name = "idx_account_email", columnList = "email")
+        }
+)
 @Inheritance(strategy = InheritanceType.JOINED)
 @Getter
 @Setter
