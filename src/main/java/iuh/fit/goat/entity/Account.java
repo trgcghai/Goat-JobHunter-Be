@@ -26,7 +26,7 @@ import static jakarta.persistence.FetchType.LAZY;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-@ToString(exclude = {"role", "addresses"})
+@ToString(exclude = {"role", "addresses", "actorNotifications", "recipientNotifications"})
 @FilterDef(name = "activeAccountFilter")
 public abstract class Account extends BaseEntity {
     @Id
