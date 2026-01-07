@@ -17,27 +17,37 @@ import java.time.Instant;
 @AllArgsConstructor
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class ApplicationResponse {
-    private long applicationId;
+    private Long applicationId;
     private String email;
-    private String resumeUrl;
-    private String recruiterName;
-    @Enumerated(EnumType.STRING)
+    private String coverLetter;
     private Status status;
+
+    private ApplicationJob job;
+    private ApplicationApplicant applicant;
+    private ApplicationResume resume;
+    private ApplicationInterview interview;
 
     private Instant createdAt;
     private String createdBy;
     private Instant updatedAt;
     private String updatedBy;
 
-    private UserApplication user;
-    private JobApplication job;
+    @Getter
+    @Setter
+    @NoArgsConstructor
+    @AllArgsConstructor
+    public static class ApplicationJob {
+        private Long jobId;
+        private String title;
+    }
 
     @Getter
     @Setter
     @NoArgsConstructor
     @AllArgsConstructor
-    public static class UserApplication {
-        private long userId;
+    public static class ApplicationApplicant {
+        private Long accountId;
+        private String email;
         private String fullName;
     }
 
@@ -45,8 +55,17 @@ public class ApplicationResponse {
     @Setter
     @NoArgsConstructor
     @AllArgsConstructor
-    public static class JobApplication {
-        private long jobId;
-        private String title;
+    public static class ApplicationResume {
+        private Long resumeId;
+        private String fileUrl;
+    }
+
+    @Getter
+    @Setter
+    @NoArgsConstructor
+    @AllArgsConstructor
+    public static class ApplicationInterview {
+        private Long interviewId;
+        private Instant scheduledAt;
     }
 }

@@ -1,5 +1,8 @@
 package iuh.fit.goat.service.impl;
 
+import iuh.fit.goat.component.redis.ApplicationEventProducer;
+import iuh.fit.goat.dto.request.application.CreateApplicationRequest;
+import iuh.fit.goat.dto.result.application.ApplicationCreatedEvent;
 import iuh.fit.goat.enumeration.Status;
 import iuh.fit.goat.dto.request.application.ApplicationIdsRequest;
 import iuh.fit.goat.dto.response.application.ApplicationResponse;
@@ -7,7 +10,9 @@ import iuh.fit.goat.dto.response.application.ApplicationStatusResponse;
 import iuh.fit.goat.dto.response.ResultPaginationResponse;
 import iuh.fit.goat.service.ApplicationService;
 import iuh.fit.goat.service.EmailNotificationService;
+import iuh.fit.goat.util.SecurityUtil;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
@@ -23,23 +28,40 @@ import java.util.stream.Collectors;
 @Service
 @RequiredArgsConstructor
 public class ApplicationServiceImp implements ApplicationService {
-//    private final EmailNotificationService emailNotificationService;
-//    private final ApplicationRepository applicationRepository;
-//    private final JobRepository jobRepository;
-//    private final ApplicantRepository applicantRepository;
-//
-//    @Override
-//    public ApplicationResponse handleCreateApplication(Application application) {
-//        Application result = this.applicationRepository.save(application);
-//
-//        ApplicationResponse applicationResponse = new ApplicationResponse();
-//        applicationResponse.setApplicationId(result.getApplicationId());
-//        applicationResponse.setCreatedAt(result.getCreatedAt());
-//        applicationResponse.setCreatedBy(result.getCreatedBy());
-//
-//        return applicationResponse;
-//    }
-//
+    private final ApplicationRepository applicationRepository;
+    private final JobRepository jobRepository;
+    private final ApplicantRepository applicantRepository;
+    private final ResumeRepository resumeRepository;
+
+    private final ApplicationEventProducer eventProducer;
+
+    @Override
+    public Application handleCreateApplication(CreateApplicationRequest request) {
+        String currentEmail = SecurityUtil.getCurrentUserEmail();
+
+        Job job = this.jobRepository.findById(request.getJobId()).orElse(null);
+        Applicant applicant = this.applicantRepository.findByEmail(currentEmail).orElse(null);
+        Resume resume = this.resumeRepository.findById(request.getResumeId()).orElse(null);
+        if(applicant == null || resume == null || job == null) return null;
+
+        Application application = new Application();
+        application.setEmail(request.getEmail() != null ?  request.getEmail() : currentEmail);
+        application.setCoverLetter(request.getCoverLetter());
+        application.setStatus(Status.PENDING);
+        application.setJob(job);
+        application.setApplicant(applicant);
+        application.setResume(resume);
+        Application saved= this.applicationRepository.save(application);
+
+        ApplicationCreatedEvent event = new ApplicationCreatedEvent(
+                saved.getApplicationId(), applicant.getEmail(), applicant.getFullName(),
+                job.getCompany().getEmail(), job.getCompany().getName(), job.getTitle()
+        );
+        this.eventProducer.publishApplicationCreated(event);
+
+        return saved;
+    }
+
 //    @Override
 //    @Transactional
 //    public List<ApplicationStatusResponse> handleAcceptApplications(ApplicationIdsRequest request) {
@@ -145,37 +167,35 @@ public class ApplicationServiceImp implements ApplicationService {
 //
 //        return new ResultPaginationResponse(meta, applications);
 //    }
-//
-//    @Override
-//    public boolean checkApplicantAndJobExist(Application application) {
-//        if(application.getApplicant() == null || application.getJob() == null) {
-//            return false;
-//        }
-//
-//        Optional<Applicant> applicant = this.applicantRepository.findById(application.getApplicant().getUserId());
-//        Optional<Job> job = this.jobRepository.findById(application.getJob().getJobId());
-//
-//        return applicant.isPresent() && job.isPresent();
-//    }
-//
-//    @Override
-//    public boolean handleCanApplyToJob(Long applicantId, Long jobId) {
-//        if (applicantId == null || jobId == null) return false;
-//
-//        return this.handleCountApplicationsByApplicantForJob(applicantId, jobId) < 3;
-//    }
-//
-//    @Override
-//    public Long handleCountApplicationsByApplicantForJob(Long applicantId, Long jobId) {
-//        if (applicantId == null || jobId == null) return 0L;
-//
-//        return this.applicationRepository.findAll()
-//                .stream()
-//                .filter(app -> app.getApplicant() != null && app.getApplicant().getUserId() == applicantId)
-//                .filter(app -> app.getJob() != null && app.getJob().getJobId() == jobId)
-//                .count();
-//    }
-//
+
+    @Override
+    public boolean checkApplicantAndJobAndResumeExist(Long jobId, Long resumeId) {
+        if(jobId == null || resumeId == null) return false;
+
+        String currentEmail = SecurityUtil.getCurrentUserEmail();
+        Applicant applicant = this.applicantRepository.findByEmail(currentEmail).orElse(null);
+        Job job = this.jobRepository.findById(jobId).orElse(null);
+        Resume resume = this.resumeRepository.findById(resumeId).orElse(null);
+
+        return applicant != null && job != null && resume != null;
+    }
+
+    @Override
+    public boolean handleCanApplyToJob(Long jobId) {
+        if (jobId == null) return false;
+
+        return this.handleCountApplicationsByApplicantForJob(jobId) < 3;
+    }
+
+    @Override
+    public Long handleCountApplicationsByApplicantForJob(Long jobId) {
+        if (jobId == null) return 0L;
+
+        String currentEmail = SecurityUtil.getCurrentUserEmail();
+
+        return this.applicationRepository.countApplicationsByApplicantAndJob(currentEmail, jobId);
+    }
+
 //    @Override
 //    public Applicant handleGetApplicant(Application application) {
 //        Optional<Applicant> applicant = this.applicantRepository.findById(application.getApplicant().getUserId());
@@ -187,33 +207,43 @@ public class ApplicationServiceImp implements ApplicationService {
 //        Optional<Job> job = this.jobRepository.findById(application.getJob().getJobId());
 //        return job.orElse(null);
 //    }
-//
-//    @Override
-//    public ApplicationResponse convertToApplicationResponse(Application application) {
-//        ApplicationResponse applicationResponse = new ApplicationResponse();
-//        Applicant applicant = this.handleGetApplicant(application);
-//        Job job = this.handleGetJob(application);
-//
-//        applicationResponse.setApplicationId(application.getApplicationId());
-//        applicationResponse.setEmail(application.getEmail());
-//        applicationResponse.setResumeUrl(application.getResumeUrl());
-//        applicationResponse.setRecruiterName(job.getRecruiter().getFullName());
-//        applicationResponse.setStatus(application.getStatus());
-//        applicationResponse.setCreatedAt(application.getCreatedAt());
-//        applicationResponse.setCreatedBy(application.getCreatedBy());
-//        applicationResponse.setUpdatedAt(application.getUpdatedAt());
-//        applicationResponse.setUpdatedBy(application.getUpdatedBy());
-//
-//        ApplicationResponse.UserApplication user = new ApplicationResponse.UserApplication(
-//                applicant.getUserId(), applicant.getFullName()
-//        );
-//        applicationResponse.setUser(user);
-//
-//        ApplicationResponse.JobApplication resJob = new ApplicationResponse.JobApplication(
-//                job.getJobId(), job.getTitle()
-//        );
-//        applicationResponse.setJob(resJob);
-//
-//        return applicationResponse;
-//    }
+
+    @Override
+    public ApplicationResponse handleConvertToApplicationResponse(Application application) {
+        ApplicationResponse applicationResponse = new ApplicationResponse();
+        ApplicationResponse.ApplicationJob job = new ApplicationResponse.ApplicationJob(
+                application.getJob().getJobId(),
+                application.getJob().getTitle()
+        );
+        ApplicationResponse.ApplicationApplicant applicant = new ApplicationResponse.ApplicationApplicant(
+                application.getApplicant().getAccountId(),
+                application.getApplicant().getEmail(),
+                application.getApplicant().getFullName()
+        );
+        ApplicationResponse.ApplicationResume resume = new ApplicationResponse.ApplicationResume(
+                application.getResume().getResumeId(),
+                application.getResume().getFileUrl()
+        );
+        ApplicationResponse.ApplicationInterview interview = new ApplicationResponse.ApplicationInterview(
+                application.getInterview() != null ? application.getInterview().getInterviewId() : null,
+                application.getInterview() != null ? application.getInterview().getScheduledAt() : null
+        );
+
+        applicationResponse.setApplicationId(application.getApplicationId());
+        applicationResponse.setEmail(application.getEmail());
+        applicationResponse.setCoverLetter(application.getCoverLetter());
+        applicationResponse.setStatus(application.getStatus());
+
+        applicationResponse.setJob(job);
+        applicationResponse.setApplicant(applicant);
+        applicationResponse.setResume(resume);
+        applicationResponse.setInterview(interview);
+
+        applicationResponse.setCreatedAt(application.getCreatedAt());
+        applicationResponse.setCreatedBy(application.getCreatedBy());
+        applicationResponse.setUpdatedAt(application.getUpdatedAt());
+        applicationResponse.setUpdatedBy(application.getUpdatedBy());
+
+        return applicationResponse;
+    }
 }

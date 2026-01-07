@@ -15,7 +15,12 @@ import static jakarta.persistence.CascadeType.PERSIST;
 import static jakarta.persistence.FetchType.LAZY;
 
 @Entity
-@Table(name = "accounts")
+@Table(
+        name = "accounts",
+        indexes = {
+                @Index(name = "idx_account_email", columnList = "email")
+        }
+)
 @Inheritance(strategy = InheritanceType.JOINED)
 @Getter
 @Setter
@@ -59,4 +64,9 @@ public abstract class Account extends BaseEntity {
             condition = "deleted_at IS NULL"
     )
     private List<Notification> recipientNotifications = new ArrayList<>();
+
+    public void addAddress(Address address) {
+        this.addresses.add(address);
+        address.setAccount(this);
+    }
 }

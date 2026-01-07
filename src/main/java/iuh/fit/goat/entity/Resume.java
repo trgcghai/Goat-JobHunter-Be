@@ -24,7 +24,7 @@ import static jakarta.persistence.FetchType.*;
 @FilterDef(name = "activeResumeFilter")
 public class Resume extends BaseEntity {
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @GeneratedValue(strategy = GenerationType.AUTO)
     private long resumeId;
     @NotBlank(message = "Title is required")
     private String title;

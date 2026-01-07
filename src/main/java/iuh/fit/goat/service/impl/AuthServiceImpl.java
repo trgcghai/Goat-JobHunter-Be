@@ -277,6 +277,8 @@ public class AuthServiceImpl implements AuthService {
             applicant.setPassword(hashPassword);
             applicant.setPhone(request.getPhone());
 
+            request.getAddresses().forEach(applicant::addAddress);
+
             // create applicant to save to database
             Applicant newApplicant = this.applicantService.handleCreateApplicant(applicant);
 
@@ -304,6 +306,8 @@ public class AuthServiceImpl implements AuthService {
             recruiter.setEmail(request.getEmail());
             recruiter.setPassword(hashPassword);
             recruiter.setPhone(request.getPhone());
+
+            request.getAddresses().forEach(recruiter::addAddress);
 
             // create recruiter to save to database
             Recruiter newRecruiter = this.recruiterService.handleCreateRecruiter(recruiter);
@@ -391,6 +395,7 @@ public class AuthServiceImpl implements AuthService {
         loginResponse.setUsername(Objects.requireNonNullElse(account.getUsername(), ""));
         loginResponse.setAvatar(Objects.requireNonNullElse(account.getAvatar(), ""));
         loginResponse.setEnabled(account.isEnabled());
+        loginResponse.setAddresses(Objects.requireNonNullElse(account.getAddresses(), new ArrayList<>()));
 
         iuh.fit.goat.entity.Role role = account.getRole();
 

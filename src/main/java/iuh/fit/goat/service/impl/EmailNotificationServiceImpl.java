@@ -1,6 +1,7 @@
 package iuh.fit.goat.service.impl;
 
 import iuh.fit.goat.common.ActionType;
+import iuh.fit.goat.entity.Application;
 import iuh.fit.goat.enumeration.Status;
 import iuh.fit.goat.entity.Applicant;
 import iuh.fit.goat.entity.Job;
@@ -104,6 +105,34 @@ public class EmailNotificationServiceImpl implements EmailNotificationService {
         this.asyncEmailService.handleSendEmailSync(recipient, subject, content, false, true);
     }
 
+    @Override
+    public void handleSendApplicationEmailToApplicant(String recipient, String fullName, String jobTitle, String companyName) {
+        String subject = "Xác nhận ứng tuyển thành công";
+
+        Context context = new Context();
+        context.setVariable("fullName", fullName);
+        context.setVariable("jobTitle", jobTitle);
+        context.setVariable("companyName", companyName);
+
+        String content = this.templateEngine.process("application/application-applicant", context);
+        this.asyncEmailService.handleSendEmailSync(recipient, subject, content, false, true);
+    }
+
+    @Override
+    public void handleSendApplicationEmailToCompany(String recipient, String name, String jobTitle, String applicantName, String applicantEmail) {
+        String subject = "Ứng viên mới cho vị trí " + jobTitle;
+
+        Context context = new Context();
+        context.setVariable("name", name);
+        context.setVariable("jobTitle", jobTitle);
+        context.setVariable("applicantName", applicantName);
+        context.setVariable("applicantEmail", applicantEmail);
+
+
+        String content = this.templateEngine.process("application/application-company", context);
+        this.asyncEmailService.handleSendEmailSync(recipient, subject, content, false, true);
+    }
+
 //    @Override
 //    public void handleSendJobActionNotice(String recipient, String username, Object object, String reason, ActionType mode) {
 //        String subject;
@@ -154,7 +183,7 @@ public class EmailNotificationServiceImpl implements EmailNotificationService {
 //            context.setVariable("reason", reason);
 //        }
 //
-//        String content = this.templateEngine.process("application", context);
+//        String content = this.templateEngine.process("applicationStatus", context);
 //        this.asyncEmailService.handleSendEmailSync(recipient, subject, content, false, true);
 //    }
 //

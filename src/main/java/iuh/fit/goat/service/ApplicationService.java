@@ -1,6 +1,7 @@
 package iuh.fit.goat.service;
 
 import iuh.fit.goat.dto.request.application.ApplicationIdsRequest;
+import iuh.fit.goat.dto.request.application.CreateApplicationRequest;
 import iuh.fit.goat.dto.response.application.ApplicationResponse;
 import iuh.fit.goat.dto.response.application.ApplicationStatusResponse;
 import iuh.fit.goat.dto.response.ResultPaginationResponse;
@@ -13,8 +14,8 @@ import org.springframework.data.jpa.domain.Specification;
 import java.util.List;
 
 public interface ApplicationService {
-//    ApplicationResponse handleCreateApplication(Application application);
-//
+    Application handleCreateApplication(CreateApplicationRequest request);
+
 //    List<ApplicationStatusResponse> handleAcceptApplications(ApplicationIdsRequest request);
 //
 //    List<ApplicationStatusResponse> handleRejectApplications(ApplicationIdsRequest request);
@@ -27,16 +28,15 @@ public interface ApplicationService {
 //            Specification<Application> spec, Pageable pageable
 //    );
 //
-//    boolean checkApplicantAndJobExist(Application application);
-//
-//    boolean handleCanApplyToJob(Long applicantId, Long jobId);
-//
-//    Long handleCountApplicationsByApplicantForJob(Long applicantId, Long jobId);
-//
+    boolean checkApplicantAndJobAndResumeExist(Long jobId, Long resumeId);
+
+    boolean handleCanApplyToJob(Long jobId);
+
+    Long handleCountApplicationsByApplicantForJob(Long jobId);
+
 //    Applicant handleGetApplicant(Application application);
 //
 //    Job handleGetJob(Application application);
-//
-//
-//    ApplicationResponse convertToApplicationResponse(Application application);
+
+    ApplicationResponse handleConvertToApplicationResponse(Application application);
 }
