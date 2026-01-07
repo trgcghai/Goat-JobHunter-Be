@@ -33,4 +33,13 @@ public interface CompanyRepository extends JpaRepository<Company, Long>,
     )
     List<Object[]> findDistinctSkillsByCompanyId(@Param("companyId") Long companyId);
 
+    @Query(
+        """
+        SELECT c.name
+        FROM Company c
+        WHERE c.enabled = true
+        """
+    )
+    List<String> getAllCompanyNames();
+
 }

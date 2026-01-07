@@ -129,5 +129,11 @@ public class CompanyController {
         return ResponseEntity.status(HttpStatus.OK).body(result);
     }
 
+    @GetMapping("/name")
+    public ResponseEntity<List<String>> getAllCompanyNames() {
+        List<String> result = this.companyService.handleGetAllCompanyNames();
+        return ResponseEntity.status(HttpStatus.OK).body(result);
+    }
+
 
 }

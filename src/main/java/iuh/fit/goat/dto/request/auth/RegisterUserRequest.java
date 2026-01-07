@@ -1,16 +1,15 @@
 package iuh.fit.goat.dto.request.auth;
 
-import iuh.fit.goat.entity.Address;
+import iuh.fit.goat.util.annotation.RequireCompanyNameIfRecruiter;
 import jakarta.validation.constraints.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.util.List;
-
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
+@RequireCompanyNameIfRecruiter
 public class RegisterUserRequest {
     @NotBlank(message = "Tên hiển thị không được để trống")
     private String username;
@@ -45,6 +44,8 @@ public class RegisterUserRequest {
             message = "Loại người dùng phải là applicant hoặc recruiter"
     )
     private String type;
+
+    private String companyName;
 
     @AssertTrue(message = "Mật khẩu và xác nhận mật khẩu không khớp")
     public boolean isPasswordMatching() {

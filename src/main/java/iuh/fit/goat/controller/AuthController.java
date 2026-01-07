@@ -21,18 +21,18 @@ import org.springframework.web.bind.annotation.*;
 import java.util.Map;
 
 @RestController
-@RequestMapping("/api/v1")
+@RequestMapping("/api/v1/auth")
 @RequiredArgsConstructor
 public class AuthController {
     private final AuthService authService;
 
-    @PostMapping("/auth/login")
+    @PostMapping("/login")
     public ResponseEntity<?> login(@Valid @RequestBody LoginRequest loginRequest, HttpServletResponse response
     ) throws InvalidException {
         return ResponseEntity.ok(this.authService.handleLogin(loginRequest, response));
     }
 
-    @GetMapping("/auth/refresh")
+    @GetMapping("/refresh")
     @ApiMessage("Refresh account")
     public ResponseEntity<?> refresh(
             @CookieValue(name = "refreshToken", defaultValue = "missingValue") String refreshToken,
@@ -41,7 +41,7 @@ public class AuthController {
         return ResponseEntity.ok(this.authService.handleRefreshToken(refreshToken, response));
     }
 
-    @PostMapping("/auth/logout")
+    @PostMapping("/logout")
     @ApiMessage("Logout account")
     public ResponseEntity<Void> logout(
             @CookieValue("accessToken") String accessToken,
@@ -52,7 +52,7 @@ public class AuthController {
         return ResponseEntity.status(HttpStatus.OK).body(null);
     }
 
-    @GetMapping("/auth/account/users")
+    @GetMapping("/account/users")
     @ApiMessage("Get information account")
     public ResponseEntity<?> getCurrentAccount() {
         try {
@@ -63,7 +63,7 @@ public class AuthController {
         }
     }
 
-    @PostMapping("/auth/register/users")
+    @PostMapping("/register/users")
     public ResponseEntity<?> registerUsers(@Valid @RequestBody RegisterUserRequest request) throws InvalidException {
         Object result = this.authService.handleRegisterUser(request);
         return ResponseEntity.status(HttpStatus.CREATED).body(result);

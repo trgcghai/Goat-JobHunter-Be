@@ -298,12 +298,16 @@ public class AuthServiceImpl implements AuthService {
             return this.applicantService.convertToApplicantResponse(newApplicant);
 
         } else if ("recruiter".equals(type)) {
+            Company company = this.companyService.handleGetCompanyByName(request.getCompanyName());
+            if(company == null) throw new InvalidException("Company not found");
+
             Recruiter recruiter = new Recruiter();
             recruiter.setUsername(request.getUsername());
             recruiter.setFullName(request.getFullName());
             recruiter.setEmail(request.getEmail());
             recruiter.setPassword(hashPassword);
             recruiter.setPhone(request.getPhone());
+            recruiter.setCompany(company);
 
             // create recruiter to save to database
             Recruiter newRecruiter = this.recruiterService.handleCreateRecruiter(recruiter);
