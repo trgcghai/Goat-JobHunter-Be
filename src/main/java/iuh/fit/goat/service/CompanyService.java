@@ -1,5 +1,6 @@
 package iuh.fit.goat.service;
 
+import iuh.fit.goat.dto.request.company.CompanyUpdateRequest;
 import iuh.fit.goat.dto.response.ResultPaginationResponse;
 import iuh.fit.goat.dto.response.company.CompanyResponse;
 import iuh.fit.goat.entity.Company;
@@ -10,6 +11,12 @@ import java.util.List;
 import java.util.Map;
 
 public interface CompanyService {
+    Company handleCreateCompany(Company company);
+
+    Company handleUpdateCompany(CompanyUpdateRequest request);
+
+    void handleDeleteCompany(long id);
+
     Company handleGetCompanyById(long id);
 
     Company handleGetCompanyByName(String name);
@@ -21,6 +28,8 @@ public interface CompanyService {
     Map<String, List<String>> handleGroupAddressesCityByCompany(long id);
 
     Map<Long, String> handleFindDistinctSkillsByCompany(long id);
+
+    List<String> handleGetAllCompanyNames();
 
     CompanyResponse convertToCompanyResponse(Company company);
 }

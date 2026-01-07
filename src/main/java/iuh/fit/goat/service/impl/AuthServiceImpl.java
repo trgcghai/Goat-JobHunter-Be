@@ -3,15 +3,12 @@ package iuh.fit.goat.service.impl;
 
 import iuh.fit.goat.common.Role;
 import iuh.fit.goat.dto.request.auth.LoginRequest;
+import iuh.fit.goat.dto.request.auth.RegisterCompanyRequest;
 import iuh.fit.goat.dto.request.auth.RegisterUserRequest;
 import iuh.fit.goat.dto.request.auth.VerifyUserRequest;
-import iuh.fit.goat.dto.response.applicant.ApplicantResponse;
 import iuh.fit.goat.dto.response.auth.LoginResponse;
-import iuh.fit.goat.dto.response.recruiter.RecruiterResponse;
 import iuh.fit.goat.entity.*;
-import iuh.fit.goat.entity.embeddable.Contact;
 import iuh.fit.goat.exception.InvalidException;
-//import iuh.fit.goat.repository.RecruiterRepository;
 import iuh.fit.goat.repository.UserRepository;
 import iuh.fit.goat.service.*;
 import iuh.fit.goat.util.SecurityUtil;
@@ -332,6 +329,49 @@ public class AuthServiceImpl implements AuthService {
         } else {
             throw new InvalidException("Unsupported type: " + request.getType());
         }
+    }
+
+    @Override
+    public Object handleRegisterCompany(RegisterCompanyRequest request) throws InvalidException {
+        if (this.userService.handleExistsByEmail(request.getEmail())) {
+            throw new InvalidException("Email exists: " + request.getEmail());
+        }
+
+        if(this.companyService.handleGetCompanyByName(request.getName()) != null) {
+            throw new InvalidException("Company name exists: " + request.getName());
+        }
+
+        String hashPassword = this.passwordEncoder.encode(request.getPassword());
+
+        Company company = new Company();
+        company.setUsername(request.getUsername());
+        company.setEmail(request.getEmail());
+        company.setPassword(hashPassword);
+        company.setName(request.getName());
+        company.setDescription(request.getDescription());
+        company.setLogo(request.getLogo());
+        company.setCoverPhoto(request.getCoverPhoto());
+        company.setPhone(request.getPhone());
+        company.setSize(request.getSize());
+        company.setCountry(request.getCountry());
+        company.setIndustry(request.getIndustry());
+        company.setWorkingDays(request.getWorkingDays());
+        company.setOvertimePolicy(request.getOvertimePolicy());
+        if(request.getWebsite() != null) company.setWebsite(request.getWebsite());
+        request.getAddresses().forEach(company::addAddress);
+
+        Company newCompany = this.companyService.handleCreateCompany(company);
+
+        String verificationCode = SecurityUtil.generateVerificationCode();
+        this.redisService.saveWithTTL(
+                newCompany.getEmail(),
+                verificationCode,
+                validityInSeconds,
+                TimeUnit.SECONDS
+        );
+        this.emailNotificationService.handleSendVerificationEmail(newCompany.getEmail(), verificationCode);
+
+        return this.companyService.convertToCompanyResponse(newCompany);
     }
 
     @Override

@@ -1,13 +1,9 @@
 package iuh.fit.goat.controller;
 
 import iuh.fit.goat.dto.request.auth.LoginRequest;
+import iuh.fit.goat.dto.request.auth.RegisterCompanyRequest;
 import iuh.fit.goat.dto.request.auth.RegisterUserRequest;
 import iuh.fit.goat.dto.request.auth.VerifyUserRequest;
-import iuh.fit.goat.dto.response.applicant.ApplicantResponse;
-import iuh.fit.goat.dto.response.auth.LoginResponse;
-import iuh.fit.goat.dto.response.recruiter.RecruiterResponse;
-import iuh.fit.goat.entity.Applicant;
-import iuh.fit.goat.entity.Recruiter;
 import iuh.fit.goat.exception.InvalidException;
 import iuh.fit.goat.service.AuthService;
 import iuh.fit.goat.util.annotation.ApiMessage;
@@ -66,6 +62,12 @@ public class AuthController {
     @PostMapping("/register/users")
     public ResponseEntity<?> registerUsers(@Valid @RequestBody RegisterUserRequest request) throws InvalidException {
         Object result = this.authService.handleRegisterUser(request);
+        return ResponseEntity.status(HttpStatus.CREATED).body(result);
+    }
+
+    @PostMapping("/register/companies")
+    public ResponseEntity<?> registerCompanies(@Valid @RequestBody RegisterCompanyRequest request) throws InvalidException {
+        Object result = this.authService.handleRegisterCompany(request);
         return ResponseEntity.status(HttpStatus.CREATED).body(result);
     }
 
