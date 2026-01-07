@@ -277,8 +277,6 @@ public class AuthServiceImpl implements AuthService {
             applicant.setPassword(hashPassword);
             applicant.setPhone(request.getPhone());
 
-            request.getAddresses().forEach(applicant::addAddress);
-
             // create applicant to save to database
             Applicant newApplicant = this.applicantService.handleCreateApplicant(applicant);
 
@@ -306,8 +304,6 @@ public class AuthServiceImpl implements AuthService {
             recruiter.setEmail(request.getEmail());
             recruiter.setPassword(hashPassword);
             recruiter.setPhone(request.getPhone());
-
-            request.getAddresses().forEach(recruiter::addAddress);
 
             // create recruiter to save to database
             Recruiter newRecruiter = this.recruiterService.handleCreateRecruiter(recruiter);
