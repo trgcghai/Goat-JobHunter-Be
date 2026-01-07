@@ -31,8 +31,6 @@ import static jakarta.persistence.FetchType.LAZY;
         "followedCompanies",
         "blogs",
         "comments",
-        "actorNotifications",
-        "recipientNotifications",
         "memberships",
         "sentMessages",
         "readMessages",
