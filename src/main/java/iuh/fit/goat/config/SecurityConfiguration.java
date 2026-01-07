@@ -118,7 +118,6 @@ public class SecurityConfiguration {
 
                 "/storage/**",                        // Truy cập file tĩnh – public
                 "/api/v1/recruiters/**",              // Danh sách/chi tiết nhà tuyển dụng – public
-                "/api/v1/companies/**",               // Danh sách/chi tiết công ty – public
 
                 "/api/v1/email/**",                   // Gửi email / form liên hệ – public
                 "/api/v1/users/reset-password",       // Quên mật khẩu / đặt lại mật khẩu – public
