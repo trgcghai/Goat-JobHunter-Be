@@ -15,23 +15,25 @@ import iuh.fit.goat.entity.*;
 import iuh.fit.goat.repository.*;
 import iuh.fit.goat.util.*;
 
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
 public class ApplicantServiceImpl implements ApplicantService {
     private final ApplicantRepository applicantRepository;
-//    private final ApplicationRepository applicationRepository;
+    //    private final ApplicationRepository applicationRepository;
 //    private final CommentRepository commentRepository;
 //    private final NotificationRepository notificationRepository;
+    private final AddressRepository addressRepository;
     private final RoleService roleService;
     private final String APPLICANT = "APPLICANT";
 
     @Override
     public Applicant handleCreateApplicant(Applicant applicant) {
         Role role;
-        if(applicant.getRole() != null){
+        if (applicant.getRole() != null) {
             role = this.roleService.handleGetRoleById(applicant.getRole().getRoleId());
         } else {
             role = this.roleService.handleGetRoleByName(APPLICANT);
@@ -39,7 +41,7 @@ public class ApplicantServiceImpl implements ApplicantService {
         applicant.setRole(role);
         applicant.setEnabled(false);
 
-        if(applicant.getAvatar() == null) {
+        if (applicant.getAvatar() == null) {
             applicant.setAvatar(FileUploadUtil.AVATAR + applicant.getUsername());
         }
 
@@ -88,9 +90,55 @@ public class ApplicantServiceImpl implements ApplicantService {
         if (updateRequest.getPhone() != null) {
             currentApplicant.setPhone(updateRequest.getPhone());
         }
+
+        // Handle addresses
         if (updateRequest.getAddresses() != null) {
-            currentApplicant.setAddresses(updateRequest.getAddresses());
+            List<Address> currentAddresses = currentApplicant.getAddresses();
+            List<Address> requestAddresses = updateRequest.getAddresses();
+
+            // Map current address theo addressId
+            Map<Long, Address> currentMap = currentAddresses.stream()
+                    .collect(Collectors.toMap(Address::getAddressId, Function.identity()));
+
+            // Lấy danh sách addressId từ request
+            Set<Long> requestIds = requestAddresses.stream()
+                    .map(Address::getAddressId)
+                    .filter(id -> id > 0)
+                    .collect(Collectors.toSet());
+
+            /* ================= DELETE ================= */
+            Iterator<Address> iterator = currentAddresses.iterator();
+            while (iterator.hasNext()) {
+                Address addr = iterator.next();
+                if (!requestIds.contains(addr.getAddressId())) {
+                    iterator.remove(); // Remove từ collection trước
+                    this.addressRepository.delete(addr); // Sau đó delete từ DB
+                }
+            }
+
+            /* ================= UPDATE & CREATE ================= */
+            for (Address reqAddr : requestAddresses) {
+                // ===== UPDATE =====
+                if (reqAddr.getAddressId() > 0 && currentMap.containsKey(reqAddr.getAddressId())) {
+                    Address currentAddr = currentMap.get(reqAddr.getAddressId());
+
+                    if (!Objects.equals(currentAddr.getProvince(), reqAddr.getProvince()) ||
+                            !Objects.equals(currentAddr.getFullAddress(), reqAddr.getFullAddress())) {
+                        currentAddr.setProvince(reqAddr.getProvince());
+                        currentAddr.setFullAddress(reqAddr.getFullAddress());
+                    }
+                }
+                // ===== CREATE =====
+                else if (reqAddr.getProvince() != null && reqAddr.getFullAddress() != null) {
+                    Address newAddress = new Address();
+                    newAddress.setProvince(reqAddr.getProvince());
+                    newAddress.setFullAddress(reqAddr.getFullAddress());
+                    newAddress.setAccount(currentApplicant);
+                    currentAddresses.add(newAddress);
+                }
+            }
         }
+
         if (updateRequest.getDob() != null) {
             currentApplicant.setDob(updateRequest.getDob());
         }
@@ -118,7 +166,7 @@ public class ApplicantServiceImpl implements ApplicantService {
         return this.applicantRepository.findById(id).orElse(null);
     }
 
-//    @Override
+    //    @Override
 //    public Applicant handleGetCurrentApplicant() {
 //        String email = SecurityUtil.getCurrentUserLogin().orElse(null);
 //        if (email == null) {
@@ -168,7 +216,7 @@ public class ApplicantServiceImpl implements ApplicantService {
         applicantResponse.setLevel(applicant.getLevel());
         applicantResponse.setAvailableStatus(applicant.isAvailableStatus());
 
-        if(applicant.getRole() != null) {
+        if (applicant.getRole() != null) {
             UserResponse.RoleUser roleUser = new UserResponse.RoleUser();
             roleUser.setRoleId(applicant.getRole().getRoleId());
             roleUser.setName(applicant.getRole().getName());
