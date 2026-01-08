@@ -3,7 +3,7 @@ package iuh.fit.goat.controller;
 import iuh.fit.goat.dto.request.auth.LoginRequest;
 import iuh.fit.goat.dto.request.auth.RegisterCompanyRequest;
 import iuh.fit.goat.dto.request.auth.RegisterUserRequest;
-import iuh.fit.goat.dto.request.auth.VerifyUserRequest;
+import iuh.fit.goat.dto.request.auth.VerifyAccountRequest;
 import iuh.fit.goat.exception.InvalidException;
 import iuh.fit.goat.service.AuthService;
 import iuh.fit.goat.util.annotation.ApiMessage;
@@ -71,10 +71,10 @@ public class AuthController {
         return ResponseEntity.status(HttpStatus.CREATED).body(result);
     }
 
-    @PostMapping("/auth/verify")
-    public ResponseEntity<?> verifyUser(@RequestBody VerifyUserRequest verifyUser) {
+    @PostMapping("/verify")
+    public ResponseEntity<?> verifyAccount(@RequestBody VerifyAccountRequest verifyAccount) {
         try {
-            this.authService.handleVerifyUser(verifyUser);
+            this.authService.handleVerifyAccount(verifyAccount);
             return ResponseEntity.ok(Map.of("message", "Account verified successfully"));
         } catch (Exception e) {
             return ResponseEntity.badRequest().body(e.getMessage());
@@ -91,14 +91,14 @@ public class AuthController {
 //        }
 //    }
 //
-//    @PostMapping("/auth/resend")
-//    public ResponseEntity<?> resendVerificationCode(@RequestParam String email) {
-//        try {
-//            this.authService.handleResendCode(email);
-//            return ResponseEntity.ok(Map.of("message", "Verification code sent"));
-//        } catch (Exception e) {
-//            return ResponseEntity.badRequest().body(e.getMessage());
-//        }
-//    }
+    @PostMapping("/resend")
+    public ResponseEntity<?> resendVerificationCode(@RequestParam String email) {
+        try {
+            this.authService.handleResendCode(email);
+            return ResponseEntity.ok(Map.of("message", "Verification code sent"));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
+    }
 
 }

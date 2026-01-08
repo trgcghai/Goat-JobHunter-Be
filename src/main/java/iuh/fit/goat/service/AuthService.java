@@ -3,7 +3,7 @@ package iuh.fit.goat.service;
 import iuh.fit.goat.dto.request.auth.LoginRequest;
 import iuh.fit.goat.dto.request.auth.RegisterCompanyRequest;
 import iuh.fit.goat.dto.request.auth.RegisterUserRequest;
-import iuh.fit.goat.dto.request.auth.VerifyUserRequest;
+import iuh.fit.goat.dto.request.auth.VerifyAccountRequest;
 import iuh.fit.goat.exception.InvalidException;
 import jakarta.servlet.http.HttpServletResponse;
 
@@ -20,9 +20,9 @@ public interface AuthService {
 
     Object handleRegisterCompany(RegisterCompanyRequest request) throws InvalidException;
 
-    void handleVerifyUser(VerifyUserRequest verifyUser) throws InvalidException;
+    void handleVerifyAccount(VerifyAccountRequest verifyAccount) throws InvalidException;
 //
 //    void handleVerifyRecruiter(long id) throws InvalidException;
-//
-//    void handleResendCode(String email) throws InvalidException;
+
+    void handleResendCode(String email) throws InvalidException;
 }
