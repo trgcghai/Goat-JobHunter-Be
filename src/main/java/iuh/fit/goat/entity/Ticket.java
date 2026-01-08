@@ -17,6 +17,7 @@ import static jakarta.persistence.FetchType.LAZY;
 @AllArgsConstructor
 @ToString(exclude = {"reporter", "assignee", "blog", "comment"})
 @FilterDef(name = "activeTicketFilter")
+@Builder
 public class Ticket extends BaseEntity{
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
