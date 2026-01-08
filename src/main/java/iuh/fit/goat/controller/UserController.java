@@ -39,7 +39,7 @@ public class UserController {
 //    @Value("${minhdat.jwt.refresh-token-validity-in-seconds}")
 //    private long jwtRefreshToken;
 //
-    @GetMapping("/users")
+    @GetMapping
     public ResponseEntity<ResultPaginationResponse> getAllUsers(
             @Filter Specification<User> spec, Pageable pageable
     ) {
