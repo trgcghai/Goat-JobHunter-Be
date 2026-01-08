@@ -146,24 +146,24 @@ public class UserServiceImpl implements UserService {
 //
 //        return this.userRepository.save(newUser);
 //    }
-//
-//    @Override
-//    public ResultPaginationResponse handleGetAllUsers(Specification<User> spec, Pageable pageable) {
-//        Page<User> page = this.userRepository.findAll(spec, pageable);
-//
-//        ResultPaginationResponse.Meta meta = new ResultPaginationResponse.Meta();
-//        meta.setPage(pageable.getPageNumber() + 1);
-//        meta.setPageSize(pageable.getPageSize());
-//        meta.setPages(page.getTotalPages());
-//        meta.setTotal(page.getTotalElements());
-//
-//        List<UserResponse> userResponses = page.getContent().stream()
-//                .map(this::convertToUserResponse)
-//                .collect(Collectors.toList());
-//
-//        return new ResultPaginationResponse(meta, userResponses);
-//    }
-//
+
+    @Override
+    public ResultPaginationResponse handleGetAllUsers(Specification<User> spec, Pageable pageable) {
+        Page<User> page = this.userRepository.findAll(spec, pageable);
+
+        ResultPaginationResponse.Meta meta = new ResultPaginationResponse.Meta();
+        meta.setPage(pageable.getPageNumber() + 1);
+        meta.setPageSize(pageable.getPageSize());
+        meta.setPages(page.getTotalPages());
+        meta.setTotal(page.getTotalElements());
+
+        List<UserResponse> userResponses = page.getContent().stream()
+                .map(this::convertToUserResponse)
+                .collect(Collectors.toList());
+
+        return new ResultPaginationResponse(meta, userResponses);
+    }
+
 //    @Override
 //    public boolean handleCheckCurrentPassword(String currentPassword) {
 //        String currentEmail = SecurityUtil.getCurrentUserLogin().isPresent() ?

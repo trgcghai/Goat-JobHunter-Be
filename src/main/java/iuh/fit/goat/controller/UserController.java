@@ -39,13 +39,13 @@ public class UserController {
 //    @Value("${minhdat.jwt.refresh-token-validity-in-seconds}")
 //    private long jwtRefreshToken;
 //
-//    @GetMapping("/users")
-//    public ResponseEntity<ResultPaginationResponse> getAllUsers(
-//            @Filter Specification<User> spec, Pageable pageable
-//    ) {
-//        ResultPaginationResponse result = this.userService.handleGetAllUsers(spec, pageable);
-//        return ResponseEntity.status(HttpStatus.OK).body(result);
-//    }
+    @GetMapping("/users")
+    public ResponseEntity<ResultPaginationResponse> getAllUsers(
+            @Filter Specification<User> spec, Pageable pageable
+    ) {
+        ResultPaginationResponse result = this.userService.handleGetAllUsers(spec, pageable);
+        return ResponseEntity.status(HttpStatus.OK).body(result);
+    }
 //
 //    @GetMapping("/users/{id}")
 //    public ResponseEntity<UserResponse> getUserById(@PathVariable("id") long id) {
