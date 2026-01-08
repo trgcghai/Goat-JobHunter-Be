@@ -29,9 +29,11 @@ public class TicketServiceImpl implements TicketService {
 
 
     private User getCurrentUser() {
-        String email = SecurityUtil.getCurrentUserEmail();
+        String email = SecurityUtil.getCurrentUserLogin().isPresent()
+                ? SecurityUtil.getCurrentUserLogin().get()
+                : "";
 
-        if (email == null || email.isBlank()) {
+        if (email.isBlank()) {
             throw new RuntimeException("undefined user email");
         }
 
