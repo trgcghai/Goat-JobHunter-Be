@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Job Hunter</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f6f8fb;
+            padding: 20px;
+        }
+        .container {
+            max-width: 620px;
+            margin: auto;
+            background-color: #ffffff;
+            padding: 24px;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+        }
+        h2 {
+            color: #1a73e8;
+        }
+        .info-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 16px;
+        }
+        .info-table td {
+            padding: 8px 0;
+            vertical-align: top;
+        }
+        .info-table td:first-child {
+            font-weight: bold;
+            width: 180px;
+            color: #555;
+        }
+        .footer {
+            margin-top: 32px;
+            font-size: 13px;
+            color: #777;
+        }
+        .meeting-link {
+            color: #1a73e8;
+            text-decoration: none;
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+
+    <h2>📅 Thư mời phỏng vấn</h2>
+
+    <p>
+        Xin chào <strong th:text="${interview.application.fullName}">Ứng viên</strong>,
+    </p>
+
+    <p>
+        Chúng tôi xin thông báo bạn đã được mời tham gia một buổi phỏng vấn.
+        Dưới đây là thông tin chi tiết:
+    </p>
+
+    <table class="info-table">
+        <tr>
+            <td>Hình thức phỏng vấn</td>
+            <td th:text="${interview.type.getValue()}">ONLINE</td>
+        </tr>
+
+        <tr>
+            <td>Thời gian</td>
+            <td th:text="${interview.scheduledAt}">10:00 - 01/02/2026</td>
+        </tr>
+
+        <tr>
+            <td>Thời lượng</td>
+            <td>
+                <span th:text="${interview.durationMinutes}">30</span> phút
+            </td>
+        </tr>
+
+        <tr th:if="${interview.type.getValue() == 'Video' || interview.type.getValue() == 'Bài test online'}">
+            <td>Link tham gia</td>
+            <td>
+                <a th:href="${interview.meetingLink}"
+                   th:text="${interview.meetingLink}"
+                   class="meeting-link"
+                   target="_blank">
+                    Link phỏng vấn
+                </a>
+            </td>
+        </tr>
+
+        <tr th:if="${interview.type.name() == 'OFFLINE'}">
+            <td>Địa điểm</td>
+            <td th:text="${interview.location}">
+                Văn phòng công ty
+            </td>
+        </tr>
+
+        <tr>
+            <td>Người phỏng vấn</td>
+            <td>
+                <span th:text="${interview.interviewer.fullName}">Nguyễn Văn A</span>
+                (<span th:text="${interview.interviewer.email}">email@company.com</span>)
+            </td>
+        </tr>
+
+        <tr th:if="${interview.notes != null}">
+            <td>Ghi chú</td>
+            <td th:text="${interview.notes}">
+                Vui lòng đến sớm 10 phút
+            </td>
+        </tr>
+    </table>
+
+    <p style="margin-top: 24px;">
+        Nếu bạn có bất kỳ thắc mắc nào, vui lòng phản hồi email này để được hỗ trợ.
+    </p>
+
+    <div class="footer">
+        <p>
+            Trân trọng,<br>
+            <strong>Đội ngũ tuyển dụng</strong>
+        </p>
+        <p>
+            Email này được gửi tự động, vui lòng không trả lời nếu không cần thiết.
+        </p>
+    </div>
+
+</div>
+</body>
+</html>

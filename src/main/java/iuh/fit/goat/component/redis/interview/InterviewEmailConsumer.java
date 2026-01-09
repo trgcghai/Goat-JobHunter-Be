@@ -1,6 +1,7 @@
-package iuh.fit.goat.component.redis;
+package iuh.fit.goat.component.redis.interview;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import iuh.fit.goat.dto.response.interview.InterviewResponse;
 import iuh.fit.goat.service.EmailNotificationService;
 import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
@@ -20,13 +21,13 @@ import java.util.UUID;
 @Component
 @RequiredArgsConstructor
 @Slf4j
-public class ApplicationEmailConsumer {
+public class InterviewEmailConsumer {
     private final RedisTemplate<String, Object> redisTemplate;
     private final EmailNotificationService emailService;
     private final ObjectMapper objectMapper;
 
-    private static final String STREAM = "application.events";
-    private static final String DLQ_STREAM = "application.events.dlq";
+    private static final String STREAM = "interview.events";
+    private static final String DLQ_STREAM = "interview.events.dlq";
     private static final String GROUP = "email-service-group";
     private static final String CONSUMER =
             "email-service-" + System.getenv().getOrDefault("HOSTNAME", UUID.randomUUID().toString());
@@ -88,19 +89,9 @@ public class ApplicationEmailConsumer {
         int retry = Integer.parseInt(value.get("retry").toString());
 
         try {
-            this.emailService.handleSendApplicationEmailToApplicant(
-                    value.get("applicantEmail").toString(),
-                    value.get("applicantName").toString(),
-                    value.get("jobTitle").toString(),
-                    value.get("companyName").toString()
-            );
-
-            this.emailService.handleSendApplicationEmailToCompany(
-                    value.get("companyEmail").toString(),
-                    value.get("companyName").toString(),
-                    value.get("jobTitle").toString(),
-                    value.get("applicantName").toString(),
-                    value.get("applicantEmail").toString()
+            this.emailService.handleSendInterviewEmailToApplicant(
+                    value.get("email").toString(),
+                    this.objectMapper.readValue(value.get("interview").toString(), InterviewResponse.class)
             );
 
             this.redisTemplate.opsForStream().acknowledge(STREAM, GROUP, record.getId());
@@ -136,4 +127,3 @@ public class ApplicationEmailConsumer {
         this.redisTemplate.opsForStream().acknowledge(STREAM, GROUP, record.getId());
     }
 }
-

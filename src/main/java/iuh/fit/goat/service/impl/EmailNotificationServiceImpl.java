@@ -133,6 +133,17 @@ public class EmailNotificationServiceImpl implements EmailNotificationService {
         this.asyncEmailService.handleSendEmailSync(recipient, subject, content, false, true);
     }
 
+    @Override
+    public void handleSendInterviewEmailToApplicant(String recipient, Object object) {
+        String subject = "Thư mời phỏng vấn";
+
+        Context context = new Context();
+        context.setVariable("interview", object);
+
+        String content = this.templateEngine.process("interview", context);
+        this.asyncEmailService.handleSendEmailSync(recipient, subject, content, false, true);
+    }
+
 //    @Override
 //    public void handleSendJobActionNotice(String recipient, String username, Object object, String reason, ActionType mode) {
 //        String subject;

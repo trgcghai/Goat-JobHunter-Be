@@ -1,7 +1,6 @@
-package iuh.fit.goat.component.redis;
+package iuh.fit.goat.component.redis.application;
 
 import iuh.fit.goat.dto.result.application.ApplicationCreatedEvent;
-import iuh.fit.goat.entity.Application;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.scheduling.annotation.Async;

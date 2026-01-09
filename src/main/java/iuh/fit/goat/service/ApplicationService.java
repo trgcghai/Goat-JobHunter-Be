@@ -16,8 +16,8 @@ import java.util.List;
 public interface ApplicationService {
     Application handleCreateApplication(CreateApplicationRequest request);
 
-//    List<ApplicationStatusResponse> handleAcceptApplications(ApplicationIdsRequest request);
-//
+    List<Application> handleAcceptApplications(List<Long> applicationIds);
+
 //    List<ApplicationStatusResponse> handleRejectApplications(ApplicationIdsRequest request);
 //
 //    void handleDeleteApplication(long id);

@@ -42,4 +42,8 @@ public interface EmailNotificationService {
     void handleSendApplicationEmailToCompany(
             String recipient, String name, String jobTitle, String applicantName, String applicantEmail
     );
+
+    void handleSendInterviewEmailToApplicant(
+            String recipient, Object object
+    );
 }
