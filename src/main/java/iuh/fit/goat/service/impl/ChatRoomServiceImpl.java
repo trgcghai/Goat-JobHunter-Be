@@ -106,9 +106,6 @@ public class ChatRoomServiceImpl implements ChatRoomService {
                 .memberCount(memberCount)
                 .lastMessagePreview(lastMessage != null ? lastMessage.getContent() : null)
                 .lastMessageTime(lastMessage != null ? LocalDateTime.from(lastMessage.getCreatedAt()) : null)
-                .unreadCount(0) // TODO: Implement unread count logic
-                .createdAt(LocalDateTime.from(chatRoom.getCreatedAt()))
-                .status(chatRoom.getDeletedAt() == null ? "ACTIVE" : "DELETED")
                 .build();
     }
 }
