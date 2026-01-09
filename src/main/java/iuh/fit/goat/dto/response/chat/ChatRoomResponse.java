@@ -20,7 +20,4 @@ public class ChatRoomResponse {
     private Integer memberCount;
     private String lastMessagePreview;
     private LocalDateTime lastMessageTime;
-    private Integer unreadCount;
-    private LocalDateTime createdAt;
-    private String status;
 }
