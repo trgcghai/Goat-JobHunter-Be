@@ -24,7 +24,7 @@ import static jakarta.persistence.FetchType.LAZY;
 public class ChatRoom extends BaseEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private long roomId;
+    private Long roomId;
     private String name;
     private String avatar;
     @Enumerated(EnumType.STRING)

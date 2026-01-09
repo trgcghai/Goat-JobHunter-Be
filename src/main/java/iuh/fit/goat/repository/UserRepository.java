@@ -1,5 +1,6 @@
 package iuh.fit.goat.repository;
 
+import iuh.fit.goat.entity.Account;
 import iuh.fit.goat.entity.User;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
@@ -16,6 +17,8 @@ public interface UserRepository extends JpaRepository<User, Long>, JpaSpecificat
     User findByEmail(String email);
 
     boolean existsByEmail(String email);
+
+    List<User> findByAccountIdIn(List<Long> accountIds);
 
     @Query("SELECT u FROM User u LEFT JOIN FETCH u.role WHERE u.email = :email")
     Optional<User> findByEmailWithRole(@Param("email") String email);
