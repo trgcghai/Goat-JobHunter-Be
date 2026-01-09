@@ -1,5 +1,6 @@
 package iuh.fit.goat.component.redis.interview;
 
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import iuh.fit.goat.dto.response.interview.InterviewResponse;
 import iuh.fit.goat.service.EmailNotificationService;
@@ -91,7 +92,8 @@ public class InterviewEmailConsumer {
         try {
             this.emailService.handleSendInterviewEmailToApplicant(
                     value.get("email").toString(),
-                    this.objectMapper.readValue(value.get("interview").toString(), InterviewResponse.class)
+                    this.objectMapper.readValue(value.get("interviews").toString(), new TypeReference<List<InterviewResponse>>() {}),
+                    value.get("reason").toString()
             );
 
             this.redisTemplate.opsForStream().acknowledge(STREAM, GROUP, record.getId());

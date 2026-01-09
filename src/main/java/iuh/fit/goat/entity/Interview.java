@@ -27,7 +27,9 @@ public class Interview extends BaseEntity{
     @NotNull(message = "Interview date is required")
     private Instant scheduledAt;
     private Integer durationMinutes = 60;
+    @Enumerated(EnumType.STRING)
     private InterviewType type;
+    @Enumerated(EnumType.STRING)
     private InterviewStatus status;
     private String location;
     private String meetingLink;

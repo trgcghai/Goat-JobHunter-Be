@@ -2,7 +2,9 @@ package iuh.fit.goat.service.impl;
 
 import iuh.fit.goat.component.redis.interview.InterviewEventProducer;
 import iuh.fit.goat.dto.request.interview.CreateInterviewRequest;
+import iuh.fit.goat.dto.request.interview.InterviewIdsRequest;
 import iuh.fit.goat.dto.response.interview.InterviewResponse;
+import iuh.fit.goat.dto.response.interview.InterviewStatusResponse;
 import iuh.fit.goat.entity.Application;
 import iuh.fit.goat.entity.Interview;
 import iuh.fit.goat.entity.Recruiter;
@@ -17,6 +19,8 @@ import org.springframework.stereotype.Service;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -59,9 +63,107 @@ public class InterviewServiceImpl implements InterviewService {
                 .map(this::handleConvertToInterviewResponse)
                 .toList();
 
-        responses.forEach(this.eventProducer::publishInterviewCreated);
+        Map<String, List<InterviewResponse>> interviewsByEmail =
+                responses.stream().collect(Collectors.groupingBy(
+                        interview -> interview.getApplication().getEmail()
+                ));
+
+        interviewsByEmail.forEach((email, interviewResponses) -> {
+            if(interviewResponses.isEmpty()) return;
+            this.eventProducer.publishInterviewCreated(email, interviewResponses, "");
+        });
 
         return responses;
+    }
+
+    @Override
+    public List<InterviewStatusResponse> handleCompleteInterviews(InterviewIdsRequest request) {
+        List<Interview> interviews = this.interviewRepository.findAllById(request.getInterviewIds());
+        if(interviews.isEmpty()) return Collections.emptyList();
+
+        List<Interview> scheduledInterviews = interviews.stream()
+                .filter(interview -> interview.getStatus() == InterviewStatus.SCHEDULED)
+                .toList();
+        scheduledInterviews.forEach(interview -> interview.setStatus(InterviewStatus.COMPLETED));
+        this.interviewRepository.saveAll(scheduledInterviews);
+
+        List<InterviewResponse> responses = scheduledInterviews.stream()
+                .map(this::handleConvertToInterviewResponse)
+                .toList();
+        Map<String, List<InterviewResponse>> interviewsByEmail =
+                responses.stream().collect(Collectors.groupingBy(
+                        interview -> interview.getApplication().getEmail()
+                ));
+        interviewsByEmail.forEach((email, interviewResponses) -> {
+            if(interviewResponses.isEmpty()) return;
+            this.eventProducer.publishInterviewCreated(email, interviewResponses, "");
+        });
+
+        return scheduledInterviews.stream()
+                .map(interview -> new InterviewStatusResponse(
+                        interview.getInterviewId(),
+                        interview.getStatus().getValue()
+                )).toList();
+    }
+
+    @Override
+    public List<InterviewStatusResponse> handleCancelInterviews(InterviewIdsRequest request) {
+        List<Interview> interviews = this.interviewRepository.findAllById(request.getInterviewIds());
+        if(interviews.isEmpty()) return Collections.emptyList();
+
+        List<Interview> scheduledInterviews = interviews.stream()
+                .filter(interview -> interview.getStatus() == InterviewStatus.SCHEDULED)
+                .toList();
+        scheduledInterviews.forEach(interview -> interview.setStatus(InterviewStatus.CANCELLED));
+        this.interviewRepository.saveAll(scheduledInterviews);
+
+        List<InterviewResponse> responses = scheduledInterviews.stream()
+                .map(this::handleConvertToInterviewResponse)
+                .toList();
+        Map<String, List<InterviewResponse>> interviewsByEmail =
+                responses.stream().collect(Collectors.groupingBy(
+                        interview -> interview.getApplication().getEmail()
+                ));
+        interviewsByEmail.forEach((email, interviewResponses) -> {
+            if(interviewResponses.isEmpty()) return;
+            this.eventProducer.publishInterviewCreated(email, interviewResponses, request.getReason());
+        });
+
+        return scheduledInterviews.stream()
+                .map(interview -> new InterviewStatusResponse(
+                        interview.getInterviewId(),
+                        interview.getStatus().getValue()
+                )).toList();
+    }
+
+    @Override
+    public List<InterviewStatusResponse> handleRescheduleInterviews(InterviewIdsRequest request) {
+        List<Interview> interviews = this.interviewRepository.findAllById(request.getInterviewIds());
+        if(interviews.isEmpty()) return Collections.emptyList();
+
+        List<Interview> scheduledInterviews = interviews.stream()
+                .filter(interview -> interview.getStatus() == InterviewStatus.SCHEDULED)
+                .toList();
+        scheduledInterviews.forEach(interview -> interview.setStatus(InterviewStatus.RESCHEDULED));
+        this.interviewRepository.saveAll(scheduledInterviews);
+
+        List<InterviewResponse> responses = scheduledInterviews.stream()
+                .map(this::handleConvertToInterviewResponse)
+                .toList();
+        Map<String, List<InterviewResponse>> interviewsByEmail =
+                responses.stream().collect(Collectors.groupingBy(
+                        interview -> interview.getApplication().getEmail()
+                ));
+        interviewsByEmail.forEach((email, interviewResponses) -> {
+            if(interviewResponses.isEmpty()) return;
+            this.eventProducer.publishInterviewCreated(email, interviewResponses, request.getReason());
+        });
+
+        return scheduledInterviews.stream()
+                .map(interview -> new InterviewStatusResponse(
+                        interview.getInterviewId(),
+                        interview.getStatus().getValue()
+                )).toList();
     }
 
     @Override

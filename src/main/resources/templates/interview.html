@@ -10,7 +10,7 @@
             padding: 20px;
         }
         .container {
-            max-width: 620px;
+            max-width: 700px;
             margin: auto;
             background-color: #ffffff;
             padding: 24px;
@@ -19,14 +19,38 @@
         }
         h2 {
             color: #1a73e8;
+            margin-bottom: 12px;
+        }
+        .notice {
+            margin-top: 16px;
+            padding: 12px;
+            border-radius: 6px;
+            font-size: 14px;
+        }
+        .notice.cancelled {
+            background: #fff3f3;
+            border: 1px solid #f5c2c2;
+        }
+        .notice.rescheduled {
+            background: #fffbe6;
+            border: 1px solid #ffe58f;
+        }
+        .notice.completed {
+            background: #f0fdf4;
+            border: 1px solid #86efac;
+        }
+        .interview-box {
+            border: 1px solid #eee;
+            border-radius: 6px;
+            padding: 16px;
+            margin-top: 20px;
         }
         .info-table {
             width: 100%;
             border-collapse: collapse;
-            margin-top: 16px;
         }
         .info-table td {
-            padding: 8px 0;
+            padding: 6px 0;
             vertical-align: top;
         }
         .info-table td:first-child {
@@ -34,84 +58,172 @@
             width: 180px;
             color: #555;
         }
+        .meeting-link {
+            color: #1a73e8;
+            text-decoration: none;
+        }
+        .reason-box {
+            margin-top: 12px;
+            padding: 12px;
+            border-radius: 6px;
+            font-size: 14px;
+        }
+        .reason-cancelled {
+            background: #fff1f1;
+            border: 1px dashed #ef4444;
+            color: #991b1b;
+        }
+        .reason-rescheduled {
+            background: #fffbe6;
+            border: 1px dashed #f59e0b;
+            color: #92400e;
+        }
         .footer {
             margin-top: 32px;
             font-size: 13px;
             color: #777;
         }
-        .meeting-link {
-            color: #1a73e8;
-            text-decoration: none;
-        }
     </style>
 </head>
 <body>
+
 <div class="container">
 
-    <h2>📅 Thư mời phỏng vấn</h2>
+    <!-- ===== TITLE ===== -->
+    <h2 th:switch="${status}">
+        <span th:case="'SCHEDULED'">📅 Thư mời phỏng vấn</span>
+        <span th:case="'RESCHEDULED'">🔄 Thư mời phỏng vấn đã được lên lịch lại</span>
+        <span th:case="'CANCELLED'">❌ Buổi phỏng vấn đã bị hủy</span>
+        <span th:case="'COMPLETED'">✅ Hoàn thành phỏng vấn</span>
+        <span th:case="*">📢 Thông báo phỏng vấn</span>
+    </h2>
 
+    <!-- ===== GREETING ===== -->
     <p>
-        Xin chào <strong th:text="${interview.application.fullName}">Ứng viên</strong>,
+        Xin chào
+        <strong th:text="${applicantName != null ? applicantName : 'Ứng viên'}">
+            Ứng viên
+        </strong>,
     </p>
 
-    <p>
-        Chúng tôi xin thông báo bạn đã được mời tham gia một buổi phỏng vấn.
-        Dưới đây là thông tin chi tiết:
+    <!-- ===== INTRO ===== -->
+    <p th:switch="${status}">
+        <span th:case="'SCHEDULED'">
+            Chúng tôi xin thông báo bạn đã được mời tham gia buổi phỏng vấn với thông tin chi tiết bên dưới.
+        </span>
+        <span th:case="'RESCHEDULED'">
+            Lịch phỏng vấn của bạn đã được <strong>điều chỉnh</strong>. Vui lòng xem lại thông tin mới bên dưới.
+        </span>
+        <span th:case="'CANCELLED'">
+            Rất tiếc, buổi phỏng vấn của bạn đã bị <strong>hủy</strong>.
+        </span>
+        <span th:case="'COMPLETED'">
+            Cảm ơn bạn đã tham gia phỏng vấn. Dưới đây là thông tin buổi phỏng vấn bạn đã hoàn thành.
+        </span>
+        <span th:case="*">
+            Dưới đây là thông tin liên quan đến buổi phỏng vấn của bạn.
+        </span>
     </p>
 
-    <table class="info-table">
-        <tr>
-            <td>Hình thức phỏng vấn</td>
-            <td th:text="${interview.type.getValue()}">ONLINE</td>
-        </tr>
+    <!-- ===== STATUS NOTICE ===== -->
+    <div th:if="${status == 'CANCELLED'}" class="notice cancelled">
+        ⚠️ Buổi phỏng vấn này đã bị hủy. Email này chỉ mang tính chất thông báo.
+    </div>
 
-        <tr>
-            <td>Thời gian</td>
-            <td th:text="${interview.scheduledAt}">10:00 - 01/02/2026</td>
-        </tr>
+    <div th:if="${status == 'RESCHEDULED'}" class="notice rescheduled">
+        🔄 Đây là lịch phỏng vấn <strong>đã được cập nhật</strong>. Vui lòng lưu ý thời gian mới.
+    </div>
 
-        <tr>
-            <td>Thời lượng</td>
-            <td>
-                <span th:text="${interview.durationMinutes}">30</span> phút
-            </td>
-        </tr>
+    <div th:if="${status == 'COMPLETED'}" class="notice completed">
+        ✅ Buổi phỏng vấn đã diễn ra thành công. Cảm ơn bạn đã tham gia.
+    </div>
 
-        <tr th:if="${interview.type.getValue() == 'Video' || interview.type.getValue() == 'Bài test online'}">
-            <td>Link tham gia</td>
-            <td>
-                <a th:href="${interview.meetingLink}"
-                   th:text="${interview.meetingLink}"
-                   class="meeting-link"
-                   target="_blank">
-                    Link phỏng vấn
-                </a>
-            </td>
-        </tr>
+    <!-- ===== INTERVIEW LIST ===== -->
+    <div th:each="interview, iterStat : ${interviews}"
+         class="interview-box">
 
-        <tr th:if="${interview.type.name() == 'OFFLINE'}">
-            <td>Địa điểm</td>
-            <td th:text="${interview.location}">
-                Văn phòng công ty
-            </td>
-        </tr>
+        <h3>
+            🧑‍💼 Phỏng vấn
+            <span th:text="${iterStat.index + 1}">1</span>
+        </h3>
 
-        <tr>
-            <td>Người phỏng vấn</td>
-            <td>
-                <span th:text="${interview.interviewer.fullName}">Nguyễn Văn A</span>
-                (<span th:text="${interview.interviewer.email}">email@company.com</span>)
-            </td>
-        </tr>
+        <table class="info-table">
+            <tr>
+                <td>Hình thức</td>
+                <td th:text="${interview.type.getValue()}">ONLINE</td>
+            </tr>
 
-        <tr th:if="${interview.notes != null}">
-            <td>Ghi chú</td>
-            <td th:text="${interview.notes}">
-                Vui lòng đến sớm 10 phút
-            </td>
-        </tr>
-    </table>
+            <tr>
+                <td>Thời gian</td>
+                <td th:text="${interview.scheduledAt}">
+                    10:00 - 01/02/2026
+                </td>
+            </tr>
 
+            <tr>
+                <td>Thời lượng</td>
+                <td>
+                    <span th:text="${interview.durationMinutes}">30</span> phút
+                </td>
+            </tr>
+
+            <!-- ONLINE -->
+            <tr th:if="${status != 'CANCELLED'
+                        and (interview.type.value == 'Video'
+                        or interview.type.value == 'Bài test online')}">
+                <td>Link tham gia</td>
+                <td>
+                    <a th:href="${interview.meetingLink}"
+                       th:text="${interview.meetingLink}"
+                       class="meeting-link"
+                       target="_blank">
+                        Link phỏng vấn
+                    </a>
+                </td>
+            </tr>
+
+            <!-- OFFLINE -->
+            <tr th:if="${status != 'CANCELLED'}">
+                <td>Địa điểm</td>
+                <td th:text="${interview.location}">
+                    Văn phòng công ty
+                </td>
+            </tr>
+
+            <tr>
+                <td>Người phỏng vấn</td>
+                <td>
+                    <span th:text="${interview.interviewer.fullName}">Nguyễn Văn A</span>
+                    (<span th:text="${interview.interviewer.email}">email@company.com</span>)
+                </td>
+            </tr>
+
+            <tr th:if="${interview.notes != null}">
+                <td>Ghi chú</td>
+                <td th:text="${interview.notes}">
+                    Vui lòng đến sớm 10 phút
+                </td>
+            </tr>
+        </table>
+    </div>
+
+    <div th:if="${reason != null and status == 'CANCELLED'}"
+         class="reason-box reason-cancelled">
+        <strong>Lý do hủy phỏng vấn:</strong><br/>
+        <span th:text="${reason}">
+        Lý do hủy
+    </span>
+    </div>
+
+    <div th:if="${reason != null and status == 'RESCHEDULED'}"
+         class="reason-box reason-rescheduled">
+        <strong>Lý do thay đổi lịch phỏng vấn:</strong><br/>
+        <span th:text="${reason}">
+        Lý do thay đổi
+    </span>
+    </div>
+
+    <!-- ===== FOOTER ===== -->
     <p style="margin-top: 24px;">
         Nếu bạn có bất kỳ thắc mắc nào, vui lòng phản hồi email này để được hỗ trợ.
     </p>
@@ -127,5 +239,6 @@
     </div>
 
 </div>
+
 </body>
 </html>

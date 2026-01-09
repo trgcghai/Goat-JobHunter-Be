@@ -1,7 +1,9 @@
 package iuh.fit.goat.service.impl;
 
 import iuh.fit.goat.common.ActionType;
+import iuh.fit.goat.dto.response.interview.InterviewResponse;
 import iuh.fit.goat.entity.Application;
+import iuh.fit.goat.enumeration.InterviewStatus;
 import iuh.fit.goat.enumeration.Status;
 import iuh.fit.goat.entity.Applicant;
 import iuh.fit.goat.entity.Job;
@@ -134,11 +136,25 @@ public class EmailNotificationServiceImpl implements EmailNotificationService {
     }
 
     @Override
-    public void handleSendInterviewEmailToApplicant(String recipient, Object object) {
-        String subject = "Thư mời phỏng vấn";
+    public void handleSendInterviewEmailToApplicant(String recipient, Object object, String reason) {
+        List<InterviewResponse> interviews = (List<InterviewResponse>) object;
+        String applicantName = interviews.getFirst().getApplication().getFullName();
+        InterviewStatus status = interviews.getFirst().getStatus();
+
+        String subject;
+        switch (status) {
+            case SCHEDULED -> subject = "Thư mời phỏng vấn";
+            case COMPLETED -> subject = "Chúc mừng bạn đã hoàn thành phỏng vấn";
+            case CANCELLED -> subject = "Buổi phỏng vấn đã bị hủy";
+            case RESCHEDULED -> subject = "Thư mời phỏng vấn đã được lên lịch lại";
+            default -> subject = "Thông báo về phỏng vấn của bạn";
+        }
 
         Context context = new Context();
-        context.setVariable("interview", object);
+        context.setVariable("applicantName", applicantName);
+        context.setVariable("interviews", object);
+        context.setVariable("status", status.getStatus());
+        context.setVariable("reason", reason.isEmpty() ? null : reason);
 
         String content = this.templateEngine.process("interview", context);
         this.asyncEmailService.handleSendEmailSync(recipient, subject, content, false, true);

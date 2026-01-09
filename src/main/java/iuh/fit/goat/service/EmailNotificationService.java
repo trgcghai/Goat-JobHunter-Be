@@ -44,6 +44,6 @@ public interface EmailNotificationService {
     );
 
     void handleSendInterviewEmailToApplicant(
-            String recipient, Object object
+            String recipient, Object object, String reason
     );
 }

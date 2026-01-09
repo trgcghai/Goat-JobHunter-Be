@@ -9,6 +9,7 @@ import org.springframework.stereotype.Component;
 
 import java.time.Instant;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 @Component
@@ -18,13 +19,14 @@ public class InterviewEventProducer {
     private final ObjectMapper objectMapper;
 
     @Async
-    public void publishInterviewCreated(InterviewResponse interview) {
+    public void publishInterviewCreated(String email, List<InterviewResponse> interviews, String reason) {
         try {
             Map<String, Object> message = new HashMap<>();
 
             message.put("eventType", "INTERVIEW_CREATED");
-            message.put("email", interview.getApplication().getEmail());
-            message.put("interview", this.objectMapper.writeValueAsString(interview));
+            message.put("email", email);
+            message.put("interviews", this.objectMapper.writeValueAsString(interviews));
+            message.put("reason", reason);
             message.put("retry", "0");
             message.put("createdAt", Instant.now().toString());
 

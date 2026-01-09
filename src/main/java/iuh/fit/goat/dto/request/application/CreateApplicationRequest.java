@@ -1,6 +1,5 @@
 package iuh.fit.goat.dto.request.application;
 
-import iuh.fit.goat.util.annotation.ValidApplicationRequest;
 import jakarta.validation.constraints.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
