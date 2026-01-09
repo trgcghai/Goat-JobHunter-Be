@@ -1,16 +1,13 @@
 package iuh.fit.goat.service.impl;
 
-import iuh.fit.goat.dto.request.chat.CreateGroupChatRequest;
 import iuh.fit.goat.dto.response.chat.ChatRoomResponse;
 import iuh.fit.goat.dto.response.ResultPaginationResponse;
 import iuh.fit.goat.entity.ChatMember;
 import iuh.fit.goat.entity.ChatRoom;
 import iuh.fit.goat.entity.Message;
 import iuh.fit.goat.entity.User;
-import iuh.fit.goat.enumeration.ChatRole;
 import iuh.fit.goat.enumeration.ChatRoomType;
 import iuh.fit.goat.repository.ChatRoomRepository;
-import iuh.fit.goat.repository.UserRepository;
 import iuh.fit.goat.service.ChatRoomService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -27,59 +24,6 @@ import java.util.stream.Collectors;
 public class ChatRoomServiceImpl implements ChatRoomService {
 
     private final ChatRoomRepository chatRoomRepository;
-    private final UserRepository userRepository;
-
-    @Override
-    @Transactional
-    public ChatRoomResponse createGroupChatRoom(CreateGroupChatRequest request, Long ownerAccountId) {
-        // Remove duplicates and owner from member list
-        Set<Long> uniqueMemberIds = new LinkedHashSet<>(request.getMemberAccountIds());
-        uniqueMemberIds.remove(ownerAccountId);
-
-        if (uniqueMemberIds.size() < 2) {
-            throw new IllegalArgumentException("Group chat requires at least 2 members besides owner");
-        }
-
-        // Fetch owner
-        User ownerAccount = userRepository.findById(ownerAccountId)
-                .orElseThrow(() -> new IllegalArgumentException("Owner account not found"));
-
-        // Fetch members
-        List<User> memberAccounts = userRepository.findByAccountIdIn(new ArrayList<>(uniqueMemberIds));
-
-        if (memberAccounts.size() != uniqueMemberIds.size()) {
-            throw new IllegalArgumentException("Some member accounts not found");
-        }
-
-        // Create ChatRoom
-        ChatRoom chatRoom = new ChatRoom();
-        chatRoom.setType(ChatRoomType.GROUP);
-        chatRoom.setAvatar(null); // Always null for group chats
-
-        // Create owner member
-        ChatMember ownerMember = new ChatMember();
-        ownerMember.setUser(ownerAccount);
-        ownerMember.setRoom(chatRoom);
-        ownerMember.setRole(ChatRole.OWNER);
-        chatRoom.getMembers().add(ownerMember);
-
-        // Create regular members (preserve insertion order)
-        for (User memberAccount : memberAccounts) {
-            ChatMember chatMember = new ChatMember();
-            chatMember.setUser(memberAccount);
-            chatMember.setRoom(chatRoom);
-            chatMember.setRole(ChatRole.MEMBER);
-            chatRoom.getMembers().add(chatMember);
-        }
-
-        // Generate and set group name
-        String groupName = generateGroupName(chatRoom.getMembers());
-        chatRoom.setName(groupName);
-
-        ChatRoom savedRoom = chatRoomRepository.save(chatRoom);
-
-        return mapToChatRoomResponse(savedRoom);
-    }
 
     @Override
     @Transactional(readOnly = true)
@@ -108,7 +52,6 @@ public class ChatRoomServiceImpl implements ChatRoomService {
     private String generateGroupName(List<ChatMember> members) {
         List<String> displayNames = members.stream()
                 .filter(m -> m.getDeletedAt() == null)
-                .sorted(Comparator.comparing(ChatMember::getCreatedAt))
                 .map(m -> getDisplayName(m.getUser()))
                 .collect(Collectors.toList());
 
@@ -127,7 +70,6 @@ public class ChatRoomServiceImpl implements ChatRoomService {
                     otherCount);
         }
 
-        // Fallback for less than 3 members (shouldn't happen in group chat)
         return String.join(", ", displayNames);
     }
 
