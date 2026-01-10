@@ -1,6 +1,7 @@
 package iuh.fit.goat.controller;
 
 import iuh.fit.goat.dto.request.interview.CreateInterviewRequest;
+import iuh.fit.goat.dto.request.interview.FeedbackInterviewRequest;
 import iuh.fit.goat.dto.request.interview.InterviewIdsRequest;
 import iuh.fit.goat.dto.response.interview.InterviewResponse;
 import iuh.fit.goat.dto.response.interview.InterviewStatusResponse;
@@ -67,6 +68,18 @@ public class InterviewController {
 
         List<InterviewStatusResponse> result = this.interviewService.handleRescheduleInterviews(request);
         return ResponseEntity.status(HttpStatus.OK).body(result);
+    }
+
+    @PutMapping("/feedback")
+    public ResponseEntity<InterviewResponse> feedBackInterview(
+            @Valid @RequestBody FeedbackInterviewRequest request
+    ) throws InvalidException
+    {
+        Interview interview = this.interviewService.handleFeedbackInterview(request);
+        if(interview == null) throw new InvalidException("Interview not found or status is not completed");
+
+        InterviewResponse response = this.interviewService.handleConvertToInterviewResponse(interview);
+        return ResponseEntity.status(HttpStatus.OK).body(response);
     }
 
     @GetMapping("/{id}")

@@ -2,7 +2,9 @@ package iuh.fit.goat.component.redis.interview;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import iuh.fit.goat.common.Role;
 import iuh.fit.goat.dto.response.interview.InterviewResponse;
+import iuh.fit.goat.dto.result.interview.InterviewFeedbackEvent;
 import iuh.fit.goat.service.EmailNotificationService;
 import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
@@ -88,13 +90,29 @@ public class InterviewEmailConsumer {
     private void handleEmail(MapRecord<String, Object, Object> record) {
         Map<Object, Object> value = record.getValue();
         int retry = Integer.parseInt(value.get("retry").toString());
+        String eventType = value.get("eventType").toString();
 
         try {
-            this.emailService.handleSendInterviewEmailToApplicant(
-                    value.get("email").toString(),
-                    this.objectMapper.readValue(value.get("interviews").toString(), new TypeReference<List<InterviewResponse>>() {}),
-                    value.get("reason").toString()
-            );
+
+            if(eventType.equals("INTERVIEW_CREATED")) {
+                this.emailService.handleSendInterviewEmailToApplicant(
+                        value.get("email").toString(),
+                        this.objectMapper.readValue(value.get("interviews").toString(), new TypeReference<List<InterviewResponse>>() {}),
+                        value.get("reason").toString()
+                );
+            } else {
+                this.emailService.handleSendFeedbackInterviewEmailToApplicantOrCompany(
+                        value.get("applicantEmail").toString(),
+                        this.objectMapper.readValue(value.get("interview").toString(), InterviewFeedbackEvent.class),
+                        Role.APPLICANT
+                );
+
+                this.emailService.handleSendFeedbackInterviewEmailToApplicantOrCompany(
+                        value.get("companyEmail").toString(),
+                        this.objectMapper.readValue(value.get("interview").toString(), InterviewFeedbackEvent.class),
+                        Role.COMPANY
+                );
+            }
 
             this.redisTemplate.opsForStream().acknowledge(STREAM, GROUP, record.getId());
 

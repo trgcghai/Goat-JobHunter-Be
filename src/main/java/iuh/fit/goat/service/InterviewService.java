@@ -1,6 +1,7 @@
 package iuh.fit.goat.service;
 
 import iuh.fit.goat.dto.request.interview.CreateInterviewRequest;
+import iuh.fit.goat.dto.request.interview.FeedbackInterviewRequest;
 import iuh.fit.goat.dto.request.interview.InterviewIdsRequest;
 import iuh.fit.goat.dto.response.interview.InterviewResponse;
 import iuh.fit.goat.dto.response.interview.InterviewStatusResponse;
@@ -19,6 +20,8 @@ public interface InterviewService {
     List<InterviewStatusResponse> handleRescheduleInterviews(InterviewIdsRequest request);
 
     Interview handleGetInterviewById(Long interviewId);
+
+    Interview handleFeedbackInterview(FeedbackInterviewRequest request);
 
     InterviewResponse handleConvertToInterviewResponse(Interview interview);
 }

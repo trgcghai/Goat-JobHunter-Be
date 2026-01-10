@@ -1,6 +1,7 @@
 package iuh.fit.goat.service.impl;
 
 import iuh.fit.goat.common.ActionType;
+import iuh.fit.goat.common.Role;
 import iuh.fit.goat.dto.response.interview.InterviewResponse;
 import iuh.fit.goat.entity.Application;
 import iuh.fit.goat.enumeration.InterviewStatus;
@@ -156,7 +157,24 @@ public class EmailNotificationServiceImpl implements EmailNotificationService {
         context.setVariable("status", status.getStatus());
         context.setVariable("reason", reason.isEmpty() ? null : reason);
 
-        String content = this.templateEngine.process("interview", context);
+        String content = this.templateEngine.process("interview/interview", context);
+        this.asyncEmailService.handleSendEmailSync(recipient, subject, content, false, true);
+    }
+
+    @Override
+    public void handleSendFeedbackInterviewEmailToApplicantOrCompany(String recipient, Object object, Role type) {
+        String subject;
+        switch (type) {
+            case APPLICANT -> subject = "Cảm ơn bạn đã gửi đánh giá về buổi phỏng vấn";
+            case COMPANY -> subject = "Ứng viên đã gửi đánh giá về buổi phỏng vấn";
+            default -> subject = "Thông báo về đánh giá buổi phỏng vấn";
+        }
+
+        Context context = new Context();
+        context.setVariable("type", type.getValue());
+        context.setVariable("interview", object);
+
+        String content = this.templateEngine.process("interview/interview-feedback", context);
         this.asyncEmailService.handleSendEmailSync(recipient, subject, content, false, true);
     }
 

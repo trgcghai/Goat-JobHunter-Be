@@ -1,6 +1,7 @@
 package iuh.fit.goat.service;
 
 import iuh.fit.goat.common.ActionType;
+import iuh.fit.goat.common.Role;
 
 import java.util.List;
 
@@ -43,5 +44,9 @@ public interface EmailNotificationService {
 
     void handleSendInterviewEmailToApplicant(
             String recipient, Object object, String reason
+    );
+
+    void handleSendFeedbackInterviewEmailToApplicantOrCompany(
+            String recipient, Object object, Role type
     );
 }

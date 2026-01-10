@@ -2,9 +2,11 @@ package iuh.fit.goat.service.impl;
 
 import iuh.fit.goat.component.redis.interview.InterviewEventProducer;
 import iuh.fit.goat.dto.request.interview.CreateInterviewRequest;
+import iuh.fit.goat.dto.request.interview.FeedbackInterviewRequest;
 import iuh.fit.goat.dto.request.interview.InterviewIdsRequest;
 import iuh.fit.goat.dto.response.interview.InterviewResponse;
 import iuh.fit.goat.dto.response.interview.InterviewStatusResponse;
+import iuh.fit.goat.dto.result.interview.InterviewFeedbackEvent;
 import iuh.fit.goat.entity.Application;
 import iuh.fit.goat.entity.Interview;
 import iuh.fit.goat.entity.Recruiter;
@@ -169,6 +171,29 @@ public class InterviewServiceImpl implements InterviewService {
     @Override
     public Interview handleGetInterviewById(Long interviewId) {
         return this.interviewRepository.findById(interviewId).orElse(null);
+    }
+
+    @Override
+    public Interview handleFeedbackInterview(FeedbackInterviewRequest request) {
+        Interview interview = this.handleGetInterviewById(request.getInterviewId());
+        if(interview == null) return null;
+
+        if(interview.getStatus() != InterviewStatus.COMPLETED) return null;
+
+        interview.setFeedback(request.getFeedback());
+        interview.setRating(request.getRating());
+
+        InterviewFeedbackEvent event = new InterviewFeedbackEvent(
+                interview.getApplication().getEmail(),
+                interview.getInterviewer().getCompany().getEmail(),
+                interview.getApplication().getApplicant().getFullName(),
+                interview.getInterviewer().getCompany().getName(),
+                interview.getFeedback(),
+                interview.getRating()
+        );
+        this.eventProducer.publishInterviewFeedback(event);
+
+        return this.interviewRepository.save(interview);
     }
 
     @Override
