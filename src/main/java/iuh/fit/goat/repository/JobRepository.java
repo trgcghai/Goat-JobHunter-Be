@@ -7,10 +7,13 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
+import java.util.Optional;
 
 @Repository
 public interface JobRepository extends JpaRepository<Job, Long>, JpaSpecificationExecutor<Job> {
 //    List<Job> findByRecruiter(Recruiter recruiter);
+
+    Optional<Job> findByJobIdAndDeletedAtIsNull(long id);
 
     List<Job> findByCareer(Career career);
 
@@ -20,6 +23,13 @@ public interface JobRepository extends JpaRepository<Job, Long>, JpaSpecificatio
 
 //    Long countByActive(boolean active);
 
-    @Query("SELECT j.company.accountId, COUNT(j) FROM Job j WHERE j.active = true AND j.enabled = true GROUP BY j.company.accountId")
+    @Query(
+        """
+        SELECT j.company.accountId, COUNT(j)
+        FROM Job j
+        WHERE j.active = true AND j.enabled = true AND j.deletedAt IS NULL
+        GROUP BY j.company.accountId
+        """
+    )
     List<Object[]> countAvailableJobs();
 }

@@ -36,7 +36,7 @@ public class PermissionInterceptor implements HandlerInterceptor {
                 if(role != null) {
                     List<Permission> permissions = user.getRole().getPermissions();
                     boolean hasPermission = permissions.stream().anyMatch(
-                            p -> p.getApiPath().equals(path) && p.getMethod().equals(method)
+                            p -> p.getApiPath().equals(path) && p.getMethod().equals(method) && !p.getMethod().equals("GET")
                     );
                     if(!hasPermission) {
                         throw new PermissionException("You don't have permission to access");

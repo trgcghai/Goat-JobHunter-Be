@@ -6,7 +6,6 @@ import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import iuh.fit.goat.enumeration.Gender;
 import jakarta.persistence.*;
 import lombok.*;
-import iuh.fit.goat.util.annotation.RequireAddressIfRecruiter;
 import org.hibernate.annotations.Filter;
 
 import java.time.LocalDate;
@@ -40,7 +39,6 @@ import static jakarta.persistence.FetchType.LAZY;
         "assignedTickets",
         "reviews"}
 )
-@RequireAddressIfRecruiter
 @JsonTypeInfo(
         use = JsonTypeInfo.Id.NAME,
         include = JsonTypeInfo.As.PROPERTY,
