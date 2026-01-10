@@ -8,6 +8,7 @@ import iuh.fit.goat.entity.Ticket;
 import iuh.fit.goat.entity.User;
 import iuh.fit.goat.enumeration.Status;
 import iuh.fit.goat.enumeration.TicketType;
+import iuh.fit.goat.exception.PermissionException;
 import iuh.fit.goat.repository.BlogRepository;
 import iuh.fit.goat.repository.CommentRepository;
 import iuh.fit.goat.repository.TicketRepository;
@@ -18,6 +19,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.concurrent.atomic.AtomicLong;
 
 @Service
 @RequiredArgsConstructor
@@ -47,41 +49,49 @@ public class TicketServiceImpl implements TicketService {
     }
 
     @Override
-    public TicketResponse createBlogTicket(CreateTicketRequest request) {
+    public TicketResponse createBlogTicket(CreateTicketRequest request) throws PermissionException {
         User reporter = getCurrentUser();
         Blog blog = blogRepository.findById(request.getTargetId())
                 .orElseThrow(() -> new RuntimeException("Blog is not exist"));
 
-        Ticket ticket = Ticket.builder()
-                .type(TicketType.BLOG_REPORT)
-                .reason(request.getReason())
-                .description(request.getDescription())
-                .status(Status.PENDING)
-                .reporter(reporter)
-                .blog(blog)
-                .build();
+        if(blog.getAuthor().getAccountId() == (reporter.getAccountId())) {
+            throw new PermissionException("You cannot report your own blog");
+        }
 
-        return mapToResponse(ticketRepository.save(ticket));
+        Ticket ticket = new Ticket();
+        ticket.setType(TicketType.BLOG_REPORT);
+        ticket.setReason(request.getReason());
+        ticket.setDescription(request.getDescription());
+        ticket.setStatus(Status.PENDING);
+        ticket.setReporter(reporter);
+        ticket.setBlog(blog);
+
+        Ticket savedTicket = ticketRepository.save(ticket);
+        return mapToResponse(savedTicket);
 
     }
 
     @Override
-    public TicketResponse createCommentTicket(CreateTicketRequest request) {
+    public TicketResponse createCommentTicket(CreateTicketRequest request) throws PermissionException {
         User reporter = getCurrentUser();
 
         Comment comment = commentRepository.findById(request.getTargetId())
                 .orElseThrow(() -> new RuntimeException("Comment is not exist"));
 
-        Ticket ticket = Ticket.builder()
-                .type(TicketType.COMMENT_REPORT)
-                .reason(request.getReason())
-                .description(request.getDescription())
-                .status(Status.PENDING)
-                .reporter(reporter)
-                .comment(comment)
-                .build();
+        if(comment.getCommentedBy().getAccountId() == reporter.getAccountId()) {
+            throw new PermissionException("You cannot report your own blog");
+        }
 
-        return mapToResponse(ticketRepository.save(ticket));
+        Ticket ticket = new Ticket();
+        ticket.setType(TicketType.COMMENT_REPORT);
+        ticket.setReason(request.getReason());
+        ticket.setDescription(request.getDescription());
+        ticket.setStatus(Status.PENDING);
+        ticket.setReporter(reporter);
+        ticket.setComment(comment);
+
+        Ticket savedTicket = ticketRepository.save(ticket);
+        return mapToResponse(savedTicket);
     }
 
     @Override
@@ -106,17 +116,17 @@ public class TicketServiceImpl implements TicketService {
 
     private TicketResponse mapToResponse(Ticket ticket) {
         User reporter = ticket.getReporter();
-        return TicketResponse.builder()
-                .ticketId(ticket.getTicketId())
-                .type(ticket.getType())
-                .reason(ticket.getReason())
-                .description(ticket.getDescription())
-                .status(ticket.getStatus())
-                .reporterId( reporter != null ? reporter.getAccountId() : null)
-                .reporterName(reporter != null ? reporter.getFullName() : null)
-                .blogId(ticket.getBlog() != null ? ticket.getBlog().getBlogId() : null)
-                .commentId(ticket.getComment() != null ? ticket.getComment().getCommentId() : null)
-                .build();
+        TicketResponse response = new TicketResponse();
+        response.setTicketId(ticket.getTicketId());
+        response.setType(ticket.getType());
+        response.setReason(ticket.getReason());
+        response.setDescription(ticket.getDescription());
+        response.setStatus(ticket.getStatus());
+        response.setReporterId(reporter != null ? reporter.getAccountId() : null);
+        response.setReporterName(reporter != null ? reporter.getFullName() : null);
+        response.setBlogId(ticket.getBlog() != null ? ticket.getBlog().getBlogId() : null);
+        response.setCommentId(ticket.getComment() != null ? ticket.getComment().getCommentId() : null);
+        return response;
     }
 
 

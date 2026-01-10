@@ -57,7 +57,10 @@ public class PermissionInterceptorConfiguration implements WebMvcConfigurer {
                 "/api/v1/reviews/latest",            // Danh sách đánh giá gần nhất - public
                 "/api/v1/reviews/count",             // Tổng số lượng đánh giá - public
 
+                "/api/v1/tickets/**",               // báo cáo bài viết hoặc comment - public
+
                 "/api/v1/resumes/**",                // Resume endpoints - public
+
         };
 
         registry.addInterceptor(getPermissionInterceptor())
