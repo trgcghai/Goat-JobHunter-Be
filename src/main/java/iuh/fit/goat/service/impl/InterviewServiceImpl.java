@@ -167,6 +167,11 @@ public class InterviewServiceImpl implements InterviewService {
     }
 
     @Override
+    public Interview handleGetInterviewById(Long interviewId) {
+        return this.interviewRepository.findById(interviewId).orElse(null);
+    }
+
+    @Override
     public InterviewResponse handleConvertToInterviewResponse(Interview interview) {
         InterviewResponse response = new InterviewResponse();
         InterviewResponse.InterviewUser interviewer = new InterviewResponse.InterviewUser(

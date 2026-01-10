@@ -312,6 +312,17 @@ public class UserController {
     }
     /*     ========================= ========================= =========================  */
 
+
+    /*     ========================= Interview Related Endpoints =========================  */
+    @GetMapping("/me/interviews")
+    public ResponseEntity<ResultPaginationResponse> getCurrentUserInterviews(
+            @Filter Specification<Interview> spec, Pageable pageable
+    ) {
+        ResultPaginationResponse result = this.userService.handleGetCurrentUserInterviews(spec, pageable);
+        return ResponseEntity.status(HttpStatus.OK).body(result);
+    }
+    /*     ========================= ========================= =========================  */
+
 //
 //    @PutMapping("/users/activate")
 //    public ResponseEntity<List<UserEnabledResponse>> activateUsers(@RequestBody UserEnabledRequest request)

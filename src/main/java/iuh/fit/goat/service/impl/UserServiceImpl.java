@@ -2,8 +2,8 @@ package iuh.fit.goat.service.impl;
 
 import iuh.fit.goat.dto.request.user.CreateUserRequest;
 import iuh.fit.goat.dto.response.blog.BlogResponse;
+import iuh.fit.goat.dto.response.interview.InterviewResponse;
 import iuh.fit.goat.entity.embeddable.Contact;
-import iuh.fit.goat.common.Role;
 import iuh.fit.goat.dto.request.user.ResetPasswordRequest;
 import iuh.fit.goat.dto.response.auth.LoginResponse;
 import iuh.fit.goat.dto.response.ResultPaginationResponse;
@@ -14,6 +14,7 @@ import iuh.fit.goat.exception.InvalidException;
 import iuh.fit.goat.repository.*;
 import iuh.fit.goat.service.*;
 import iuh.fit.goat.util.SecurityUtil;
+import jakarta.persistence.criteria.Join;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -39,17 +40,20 @@ public class UserServiceImpl implements UserService {
     @Lazy
     @Autowired
     private final BlogService blogService;
+    private final InterviewService interviewService;
 
 //    private final RedisService redisService;
     private final NotificationService notificationService;
 //    private final EmailNotificationService emailNotificationService;
-//
+
+    private final AccountRepository accountRepository;
     private final UserRepository userRepository;
     private final JobRepository jobRepository;
     private final CompanyRepository companyRepository;
     private final ReviewRepository reviewRepository;
     private final NotificationRepository notificationRepository;
     private final BlogRepository blogRepository;
+    private final InterviewRepository interviewRepository;
 //
 //    private final PasswordEncoder passwordEncoder;
 //    private final SecurityUtil securityUtil;
@@ -684,6 +688,68 @@ public class UserServiceImpl implements UserService {
                     return result;
                 })
                 .collect(Collectors.toList());
+    }
+    /*     ========================= ========================= =========================  */
+
+    /*     ========================= Interview Related Endpoints =========================  */
+    @Override
+    public ResultPaginationResponse handleGetCurrentUserInterviews(Specification<Interview> spec, Pageable pageable) {
+        String currentEmail = SecurityUtil.getCurrentUserEmail();
+
+        if (currentEmail.isEmpty()) {
+            return new ResultPaginationResponse(
+                    new ResultPaginationResponse.Meta(0, 0, 0, 0L),
+                    new ArrayList<>()
+            );
+        }
+
+        Account currentAccount = this.accountRepository.findByEmail(currentEmail).orElse(null);
+        if (currentAccount == null) {
+            return new ResultPaginationResponse(
+                    new ResultPaginationResponse.Meta(0, 0, 0, 0L),
+                    new ArrayList<>()
+            );
+        }
+
+        Role role = currentAccount.getRole();
+        Specification<Interview> userInterviewSpec;
+        switch (role.getName()) {
+            case "APPLICANT" -> userInterviewSpec = (root, query, cb) ->
+                    cb.and(
+                        cb.equal(root.get("application").get("applicant").get("accountId"), currentAccount.getAccountId()),
+                        cb.isNull(root.get("deletedAt"))
+                    );
+            case "RECRUITER" -> userInterviewSpec = (root, query, cb) ->
+                    cb.and(
+                        cb.equal(root.get("interviewer").get("accountId"), currentAccount.getAccountId()),
+                        cb.isNull(root.get("deletedAt"))
+                    );
+            case "COMPANY" -> userInterviewSpec = (root, query, cb) -> {
+                    Join<Object, Object> recruiterJoin = root.join("interviewer");
+                    Join<Object, Object> companyJoin = recruiterJoin.join("company");
+                    return cb.and(
+                        cb.equal(companyJoin.get("accountId"), currentAccount.getAccountId()),
+                        cb.isNull(root.get("deletedAt"))
+                    );
+            };
+            default -> userInterviewSpec = (root, query, cb) ->
+                    cb.isNull(root.get("deletedAt"));
+        }
+
+        Specification<Interview> finalSpec = spec == null ? userInterviewSpec : spec.and(userInterviewSpec);
+        Page<Interview> page = this.interviewRepository.findAll(finalSpec, pageable);
+
+        ResultPaginationResponse.Meta meta = new ResultPaginationResponse.Meta();
+        meta.setPage(pageable.getPageNumber() + 1);
+        meta.setPageSize(pageable.getPageSize());
+        meta.setPages(page.getTotalPages());
+        meta.setTotal(page.getTotalElements());
+
+        List<InterviewResponse> interviewResponses = page.getContent().stream()
+                .map(interviewService::handleConvertToInterviewResponse)
+                .toList();
+
+        return new ResultPaginationResponse(meta, interviewResponses);
     }
     /*     ========================= ========================= =========================  */
 

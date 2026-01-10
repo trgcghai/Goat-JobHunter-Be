@@ -77,6 +77,10 @@ public interface UserService {
     List<Map<String, Object>> handleCheckReviewedCompanies(List<Long> companyIds);
     /*     ========================= ========================= =========================  */
 
+    /*     ========================= Interview Related Endpoints =========================  */
+    ResultPaginationResponse handleGetCurrentUserInterviews(Specification<Interview> spec, Pageable pageable);
+    /*     ========================= ========================= =========================  */
+
 //
 //    // Admin related methods
 //    List<UserEnabledResponse> handleActivateUsers(List<Long> userIds);

@@ -18,5 +18,7 @@ public interface InterviewService {
 
     List<InterviewStatusResponse> handleRescheduleInterviews(InterviewIdsRequest request);
 
+    Interview handleGetInterviewById(Long interviewId);
+
     InterviewResponse handleConvertToInterviewResponse(Interview interview);
 }

@@ -4,6 +4,7 @@ import iuh.fit.goat.dto.request.interview.CreateInterviewRequest;
 import iuh.fit.goat.dto.request.interview.InterviewIdsRequest;
 import iuh.fit.goat.dto.response.interview.InterviewResponse;
 import iuh.fit.goat.dto.response.interview.InterviewStatusResponse;
+import iuh.fit.goat.entity.Interview;
 import iuh.fit.goat.entity.Recruiter;
 import iuh.fit.goat.exception.InvalidException;
 import iuh.fit.goat.service.InterviewService;
@@ -15,6 +16,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.regex.Pattern;
 
 @RestController
 @RequiredArgsConstructor
@@ -65,5 +67,20 @@ public class InterviewController {
 
         List<InterviewStatusResponse> result = this.interviewService.handleRescheduleInterviews(request);
         return ResponseEntity.status(HttpStatus.OK).body(result);
+    }
+
+    @GetMapping("/{id}")
+    public ResponseEntity<InterviewResponse> getInterviewById(
+            @PathVariable("id") String id
+    ) throws InvalidException
+    {
+        Pattern pattern = Pattern.compile("^[0-9]+$");
+        if(!pattern.matcher(id).matches()) throw new InvalidException("Id is number");
+
+        Interview interview = this.interviewService.handleGetInterviewById(Long.parseLong(id));
+        if(interview == null) throw new InvalidException("Interview not found");
+
+        InterviewResponse response = this.interviewService.handleConvertToInterviewResponse(interview);
+        return ResponseEntity.status(HttpStatus.OK).body(response);
     }
 }
