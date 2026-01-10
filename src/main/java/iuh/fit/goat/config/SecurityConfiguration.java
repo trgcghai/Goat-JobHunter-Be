@@ -153,6 +153,7 @@ public class SecurityConfiguration {
                                 .requestMatchers(HttpMethod.GET, "/api/v1/blogs/**").permitAll()
                                 .requestMatchers(HttpMethod.GET, "/api/v1/comments/**").permitAll()
                                 .requestMatchers(HttpMethod.GET, "/api/v1/tickets/**").permitAll()
+                                .requestMatchers(HttpMethod.POST, "/api/v1/tickets/**").permitAll()
                                 .anyRequest().authenticated()
                 )
                 .oauth2ResourceServer(oauth2 ->
