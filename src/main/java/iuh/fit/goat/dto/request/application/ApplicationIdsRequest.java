@@ -18,9 +18,5 @@ import java.util.List;
 public class ApplicationIdsRequest {
     @NotEmpty(message = "applicationIds is required")
     private List<Long> applicationIds;
-    private LocalDate interviewDate;
-    private String interviewType;
-    private String location;
-    private String note;
     private String reason;
 }

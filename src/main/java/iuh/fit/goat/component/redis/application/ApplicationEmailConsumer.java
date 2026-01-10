@@ -1,6 +1,11 @@
 package iuh.fit.goat.component.redis.application;
 
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import iuh.fit.goat.dto.response.interview.InterviewResponse;
+import iuh.fit.goat.dto.result.application.ApplicationStatusEvent;
+import iuh.fit.goat.entity.Application;
+import iuh.fit.goat.enumeration.Status;
 import iuh.fit.goat.service.EmailNotificationService;
 import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
@@ -86,22 +91,31 @@ public class ApplicationEmailConsumer {
     private void handleEmail(MapRecord<String, Object, Object> record) {
         Map<Object, Object> value = record.getValue();
         int retry = Integer.parseInt(value.get("retry").toString());
+        String eventType = value.get("eventType").toString();
 
         try {
-            this.emailService.handleSendApplicationEmailToApplicant(
-                    value.get("applicantEmail").toString(),
-                    value.get("applicantName").toString(),
-                    value.get("jobTitle").toString(),
-                    value.get("companyName").toString()
-            );
+            if(eventType.equals("APPLICATION_CREATED")) {
+                this.emailService.handleSendApplicationEmailToApplicant(
+                        value.get("applicantEmail").toString(),
+                        value.get("applicantName").toString(),
+                        value.get("jobTitle").toString(),
+                        value.get("companyName").toString()
+                );
 
-            this.emailService.handleSendApplicationEmailToCompany(
-                    value.get("companyEmail").toString(),
-                    value.get("companyName").toString(),
-                    value.get("jobTitle").toString(),
-                    value.get("applicantName").toString(),
-                    value.get("applicantEmail").toString()
-            );
+                this.emailService.handleSendApplicationEmailToCompany(
+                        value.get("companyEmail").toString(),
+                        value.get("companyName").toString(),
+                        value.get("jobTitle").toString(),
+                        value.get("applicantName").toString(),
+                        value.get("applicantEmail").toString()
+                );
+            } else {
+                this.emailService.handleSendApplicationStatusEmail(
+                        value.get("email").toString(), value.get("username").toString(),
+                        this.objectMapper.readValue(value.get("applications").toString(), new TypeReference<List<ApplicationStatusEvent>>() {}),
+                        value.get("status").toString(), value.get("reason").toString()
+                );
+            }
 
             this.redisTemplate.opsForStream().acknowledge(STREAM, GROUP, record.getId());
 

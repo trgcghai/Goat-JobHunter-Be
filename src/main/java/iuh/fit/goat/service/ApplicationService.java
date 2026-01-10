@@ -18,7 +18,7 @@ public interface ApplicationService {
 
     List<Application> handleAcceptApplications(List<Long> applicationIds);
 
-//    List<ApplicationStatusResponse> handleRejectApplications(ApplicationIdsRequest request);
+    List<ApplicationStatusResponse> handleRejectApplications(ApplicationIdsRequest request);
 //
 //    void handleDeleteApplication(long id);
 //

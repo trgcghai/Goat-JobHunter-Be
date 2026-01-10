@@ -18,13 +18,11 @@ public interface EmailNotificationService {
 //    void handleSendJobActionNotice(
 //            String recipient, String username, Object object, String reason, ActionType mode
 //    );
-//
-//    void handleSendApplicationStatusEmail(
-//            String recipient, String username, Object object, String status,
-//            String interviewType, String interviewDate, String location, String note,
-//            String reason
-//    );
-//
+
+    void handleSendApplicationStatusEmail(
+            String recipient, String username, Object object, String status, String reason
+    );
+
 //    void handleSendJobInvitationEmail(List<Long> applicantIds, Long jobId);
 //
 //    void handleSendUserEnabledEmail(

@@ -185,35 +185,26 @@ public class EmailNotificationServiceImpl implements EmailNotificationService {
 //        String content = this.templateEngine.process("job_status", context);
 //        this.asyncEmailService.handleSendEmailSync(recipient, subject, content, false, true);
 //    }
-//
-//    @Override
-//    public void handleSendApplicationStatusEmail(
-//            String recipient, String username, Object object, String status,
-//            String interviewType, String interviewDate, String location, String note,
-//            String reason
-//    ) {
-//        String subject = "Thông báo đơn ứng tuyển";
-//        Context context = new Context();
-//
-//        context.setVariable("username", username);
-//        context.setVariable("applications", object);
-//        context.setVariable("status", status);
-//
-//        if (Status.ACCEPTED.getValue().equalsIgnoreCase(status)) {
-//            context.setVariable("interviewDate", interviewDate);
-//            context.setVariable("interviewType", interviewType);
-//            context.setVariable("location", location);
-//            context.setVariable("note", note);
-//        }
-//
-//        if (Status.REJECTED.getValue().equalsIgnoreCase(status)) {
-//            context.setVariable("reason", reason);
-//        }
-//
-//        String content = this.templateEngine.process("applicationStatus", context);
-//        this.asyncEmailService.handleSendEmailSync(recipient, subject, content, false, true);
-//    }
-//
+
+    @Override
+    public void handleSendApplicationStatusEmail(
+            String recipient, String username, Object object, String status, String reason
+    ) {
+        String subject = "Thông báo đơn ứng tuyển";
+        Context context = new Context();
+
+        context.setVariable("username", username);
+        context.setVariable("applications", object);
+        context.setVariable("status", status);
+
+        if (Status.REJECTED.getValue().equalsIgnoreCase(status)) {
+            context.setVariable("reason", reason);
+        }
+
+        String content = this.templateEngine.process("application/application-status", context);
+        this.asyncEmailService.handleSendEmailSync(recipient, subject, content, false, true);
+    }
+
 //    @Override
 //    public void handleSendJobInvitationEmail(List<Long> applicantIds, Long jobId) {
 //        List<Applicant> applicants = this.applicantRepository.findAllById(applicantIds);
