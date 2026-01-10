@@ -1,6 +1,6 @@
 package iuh.fit.goat.dto.request.application;
 
-import iuh.fit.goat.util.annotation.ValidApplicationRequest;
+import iuh.fit.goat.util.annotation.ValidReasonRequest;
 import jakarta.validation.constraints.NotEmpty;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -14,13 +14,9 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-@ValidApplicationRequest
+@ValidReasonRequest
 public class ApplicationIdsRequest {
     @NotEmpty(message = "applicationIds is required")
     private List<Long> applicationIds;
-    private LocalDate interviewDate;
-    private String interviewType;
-    private String location;
-    private String note;
     private String reason;
 }

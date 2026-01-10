@@ -1,36 +1,134 @@
 package iuh.fit.goat.service.impl;
 
+import iuh.fit.goat.dto.request.company.CompanyUpdateRequest;
 import iuh.fit.goat.dto.response.ResultPaginationResponse;
 import iuh.fit.goat.dto.response.company.CompanyResponse;
-import iuh.fit.goat.entity.Address;
-import iuh.fit.goat.entity.Company;
-import iuh.fit.goat.entity.CompanyAward;
+import iuh.fit.goat.entity.*;
+import iuh.fit.goat.repository.AddressRepository;
 import iuh.fit.goat.repository.CompanyRepository;
 import iuh.fit.goat.service.CompanyService;
+import iuh.fit.goat.service.RoleService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
-import java.util.Comparator;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
 public class CompanyServiceImpl implements CompanyService {
+    private final RoleService roleService;
+
     private final CompanyRepository companyRepository;
+    private final AddressRepository addressRepository;
+    private final String COMPANY = "COMPANY";
+
+    @Override
+    public Company handleCreateCompany(Company company) {
+        Role role;
+        if(company.getRole() != null) {
+            role = this.roleService.handleGetRoleById(company.getRole().getRoleId());
+        } else {
+            role = this.roleService.handleGetRoleByName(COMPANY);
+        }
+        company.setRole(role);
+        company.setEnabled(false);
+
+        return this.companyRepository.save(company);
+    }
+
+    @Override
+    public Company handleUpdateCompany(CompanyUpdateRequest request) {
+        Company company = this.handleGetCompanyById(request.getAccountId());
+        if(company == null) return null;
+
+        if(request.getUsername() != null) company.setUsername(request.getUsername());
+        if(request.getName() != null) company.setName(request.getName());
+        if(request.getDescription() != null) company.setDescription(request.getDescription());
+        if(request.getLogo() != null) company.setLogo(request.getLogo());
+        if(request.getCoverPhoto() != null) company.setCoverPhoto(request.getCoverPhoto());
+        if(request.getWebsite() != null) company.setWebsite(request.getWebsite());
+        if(request.getPhone() != null) company.setPhone(request.getPhone());
+        if(request.getSize() != null) company.setSize(request.getSize());
+        if(request.getCountry() != null) company.setCountry(request.getCountry());
+        if(request.getIndustry() != null) company.setIndustry(request.getIndustry());
+        if(request.getWorkingDays() != null) company.setWorkingDays(request.getWorkingDays());
+        if(request.getOvertimePolicy() != null) company.setOvertimePolicy(request.getOvertimePolicy());
+
+        if(request.getAddresses() != null) {
+            List<Address> addresses = company.getAddresses();
+            List<Address> requestedAddresses = request.getAddresses();
+
+            Map<Long, Address> currentMap = addresses.stream()
+                    .collect(Collectors.toMap(Address::getAddressId, Function.identity()));
+
+            Set<Long> requestIds = requestedAddresses.stream()
+                    .map(Address::getAddressId)
+                    .filter(id -> id > 0)
+                    .collect(Collectors.toSet());
+
+            /* ================= DELETE ================= */
+            Iterator<Address> iterator = addresses.iterator();
+            while (iterator.hasNext()) {
+                Address addr = iterator.next();
+                if (!requestIds.contains(addr.getAddressId())) {
+                    iterator.remove();
+                    this.addressRepository.delete(addr);
+                }
+            }
+
+            /* ================= UPDATE & CREATE ================= */
+            for (Address reqAddr : requestedAddresses) {
+                // ===== UPDATE =====
+                if (reqAddr.getAddressId() > 0 && currentMap.containsKey(reqAddr.getAddressId())) {
+                    Address currentAddr = currentMap.get(reqAddr.getAddressId());
+
+                    if (!Objects.equals(currentAddr.getProvince(), reqAddr.getProvince()) ||
+                            !Objects.equals(currentAddr.getFullAddress(), reqAddr.getFullAddress())) {
+                        currentAddr.setProvince(reqAddr.getProvince());
+                        currentAddr.setFullAddress(reqAddr.getFullAddress());
+                    }
+                }
+
+                // ===== CREATE =====
+                else if (reqAddr.getProvince() != null && reqAddr.getFullAddress() != null) {
+                    Address newAddress = new Address();
+                    newAddress.setProvince(reqAddr.getProvince());
+                    newAddress.setFullAddress(reqAddr.getFullAddress());
+                    newAddress.setAccount(company);
+                    addresses.add(newAddress);
+                }
+            }
+        }
+
+        return this.companyRepository.save(company);
+    }
+
+    @Transactional
+    @Override
+    public void handleDeleteCompany(long id) {
+        Company company = this.handleGetCompanyById(id);
+        if(company == null) return;
+
+        softDeleteCompanyRelations(id);
+        company.onDelete();
+
+        this.companyRepository.save(company);
+    }
 
     @Override
     public Company handleGetCompanyById(long id) {
-        return this.companyRepository.findById(id).orElse(null);
+        return this.companyRepository.findByAccountIdAndDeletedAtIsNull(id).orElse(null);
     }
 
     @Override
     public Company handleGetCompanyByName(String name) {
-        return this.companyRepository.findByNameIgnoreCase(name).orElse(null);
+        return this.companyRepository.findByNameIgnoreCaseAndDeletedAtIsNull(name).orElse(null);
     }
 
     @Override
@@ -79,6 +177,11 @@ public class CompanyServiceImpl implements CompanyService {
                                 row -> (String) row[1]
                         )
                 );
+    }
+
+    @Override
+    public List<String> handleGetAllCompanyNames() {
+        return this.companyRepository.getAllCompanyNames();
     }
 
     @Override
@@ -132,5 +235,14 @@ public class CompanyServiceImpl implements CompanyService {
         }
 
         return companyResponse;
+    }
+
+    private void softDeleteCompanyRelations(long id) {
+        this.companyRepository.softDeleteAddresses(id);
+        this.companyRepository.softDeleteRecipientNotifications(id);
+        this.companyRepository.softDeleteJobs(id);
+        this.companyRepository.softDeleteRecruiters(id);
+        this.companyRepository.softDeleteReviews(id);
+        this.companyRepository.softDeleteAwards(id);
     }
 }

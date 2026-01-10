@@ -58,6 +58,8 @@
     <include file="db.changelog/schema/2025-01-03/modify-resumeId-resumes.xml"/>
     <include file="db.changelog/schema/2025-01-03/modify-applicationId-applications.xml"/>
     <include file="db.changelog/schema/2025-01-03/add-index-email-accounts.xml"/>
+    <include file="/db.changelog/schema/2025-01-09/remove-relation-interviews-applicants.xml"/>
+    <include file="db.changelog/schema/2025-01-09/change-type-status-type-interviews.xml"/>
     <!--      History      -->
 
 </databaseChangeLog>

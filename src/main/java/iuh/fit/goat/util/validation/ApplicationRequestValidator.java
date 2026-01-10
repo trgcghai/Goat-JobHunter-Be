@@ -1,11 +1,11 @@
 package iuh.fit.goat.util.validation;
 
 import iuh.fit.goat.dto.request.application.ApplicationIdsRequest;
-import iuh.fit.goat.util.annotation.ValidApplicationRequest;
+import iuh.fit.goat.util.annotation.ValidReasonRequest;
 import jakarta.validation.ConstraintValidator;
 import jakarta.validation.ConstraintValidatorContext;
 
-public class ApplicationRequestValidator implements ConstraintValidator<ValidApplicationRequest, ApplicationIdsRequest> {
+public class ApplicationRequestValidator implements ConstraintValidator<ValidReasonRequest, ApplicationIdsRequest> {
 
     @Override
     public boolean isValid(ApplicationIdsRequest req, ConstraintValidatorContext context) {

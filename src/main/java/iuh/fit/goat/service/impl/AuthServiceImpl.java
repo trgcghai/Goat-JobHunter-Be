@@ -3,15 +3,13 @@ package iuh.fit.goat.service.impl;
 
 import iuh.fit.goat.common.Role;
 import iuh.fit.goat.dto.request.auth.LoginRequest;
+import iuh.fit.goat.dto.request.auth.RegisterCompanyRequest;
 import iuh.fit.goat.dto.request.auth.RegisterUserRequest;
-import iuh.fit.goat.dto.request.auth.VerifyUserRequest;
-import iuh.fit.goat.dto.response.applicant.ApplicantResponse;
+import iuh.fit.goat.dto.request.auth.VerifyAccountRequest;
 import iuh.fit.goat.dto.response.auth.LoginResponse;
-import iuh.fit.goat.dto.response.recruiter.RecruiterResponse;
 import iuh.fit.goat.entity.*;
-import iuh.fit.goat.entity.embeddable.Contact;
 import iuh.fit.goat.exception.InvalidException;
-//import iuh.fit.goat.repository.RecruiterRepository;
+import iuh.fit.goat.repository.AccountRepository;
 import iuh.fit.goat.repository.UserRepository;
 import iuh.fit.goat.service.*;
 import iuh.fit.goat.util.SecurityUtil;
@@ -40,16 +38,20 @@ import java.util.concurrent.TimeUnit;
 @RequiredArgsConstructor
 public class AuthServiceImpl implements AuthService {
     private final AuthenticationManagerBuilder authenticationManagerBuilder;
+    private final PasswordEncoder passwordEncoder;
+    private final SecurityUtil securityUtil;
+
+    private final AccountService accountService;
     private final UserService userService;
     private final RedisService redisService;
     private final EmailNotificationService emailNotificationService;
     private final ApplicantService applicantService;
     private final RecruiterService recruiterService;
     private final CompanyService companyService;
-    private final SecurityUtil securityUtil;
+
     private final UserRepository userRepository;
+    private final AccountRepository accountRepository;
 //    private final RecruiterRepository recruiterRepository;
-    private final PasswordEncoder passwordEncoder;
 
     @Value("${minhdat.jwt.access-token-validity-in-seconds}")
     private long jwtAccessToken;
@@ -298,12 +300,16 @@ public class AuthServiceImpl implements AuthService {
             return this.applicantService.convertToApplicantResponse(newApplicant);
 
         } else if ("recruiter".equals(type)) {
+            Company company = this.companyService.handleGetCompanyByName(request.getCompanyName());
+            if(company == null) throw new InvalidException("Company not found");
+
             Recruiter recruiter = new Recruiter();
             recruiter.setUsername(request.getUsername());
             recruiter.setFullName(request.getFullName());
             recruiter.setEmail(request.getEmail());
             recruiter.setPassword(hashPassword);
             recruiter.setPhone(request.getPhone());
+            recruiter.setCompany(company);
 
             // create recruiter to save to database
             Recruiter newRecruiter = this.recruiterService.handleCreateRecruiter(recruiter);
@@ -331,22 +337,65 @@ public class AuthServiceImpl implements AuthService {
     }
 
     @Override
-    public void handleVerifyUser(VerifyUserRequest verifyUser) throws InvalidException {
-        User user = this.userService.handleGetUserByEmail(verifyUser.getEmail());
-        if(user == null) {
-            throw new InvalidException("User not found");
+    public Object handleRegisterCompany(RegisterCompanyRequest request) throws InvalidException {
+        if (this.accountService.handleGetAccountByEmail(request.getEmail()) != null) {
+            throw new InvalidException("Email exists: " + request.getEmail());
         }
 
-        String key = user.getEmail();
+        if(this.companyService.handleGetCompanyByName(request.getName()) != null) {
+            throw new InvalidException("Company name exists: " + request.getName());
+        }
+
+        String hashPassword = this.passwordEncoder.encode(request.getPassword());
+
+        Company company = new Company();
+        company.setUsername(request.getUsername());
+        company.setEmail(request.getEmail());
+        company.setPassword(hashPassword);
+        company.setName(request.getName());
+        company.setDescription(request.getDescription());
+        company.setLogo(request.getLogo());
+        company.setCoverPhoto(request.getCoverPhoto());
+        company.setPhone(request.getPhone());
+        company.setSize(request.getSize());
+        company.setCountry(request.getCountry());
+        company.setIndustry(request.getIndustry());
+        company.setWorkingDays(request.getWorkingDays());
+        company.setOvertimePolicy(request.getOvertimePolicy());
+        if(request.getWebsite() != null) company.setWebsite(request.getWebsite());
+        request.getAddresses().forEach(company::addAddress);
+
+        Company newCompany = this.companyService.handleCreateCompany(company);
+
+        String verificationCode = SecurityUtil.generateVerificationCode();
+        this.redisService.saveWithTTL(
+                newCompany.getEmail(),
+                verificationCode,
+                validityInSeconds,
+                TimeUnit.SECONDS
+        );
+        this.emailNotificationService.handleSendVerificationEmail(newCompany.getEmail(), verificationCode);
+
+        return this.companyService.convertToCompanyResponse(newCompany);
+    }
+
+    @Override
+    public void handleVerifyAccount(VerifyAccountRequest verifyAccount) throws InvalidException {
+        Account account = this.accountService.handleGetAccountByEmail(verifyAccount.getEmail());
+        if(account == null) {
+            throw new InvalidException("Account not found");
+        }
+
+        String key = account.getEmail();
         if(!this.redisService.hasKey(key)) {
             throw new InvalidException("Verification code has expired");
         }
-        if(!this.redisService.getValue(key).equalsIgnoreCase(verifyUser.getVerificationCode())) {
+        if(!this.redisService.getValue(key).equalsIgnoreCase(verifyAccount.getVerificationCode())) {
             throw new InvalidException("Invalid verification code");
         }
 
-        user.setEnabled(true);
-        this.userRepository.save(user);
+        account.setEnabled(true);
+        this.accountRepository.save(account);
 
         this.redisService.deleteKey(key);
     }
@@ -361,26 +410,25 @@ public class AuthServiceImpl implements AuthService {
 //            throw new InvalidException("Recruiter not found");
 //        }
 //    }
-//
-//    @Override
-//    public void handleResendCode(String email) throws InvalidException {
-//        User user = this.userService.handleGetUserByEmail(email);
-//        if(user == null) {
-//            throw new InvalidException("User not found");
-//        }
-//
-//        String key = user.getContact().getEmail();
-//        String verificationCode = SecurityUtil.generateVerificationCode();
-//        this.redisService.replaceKey(
-//                key,
-//                key,
-//                verificationCode,
-//                validityInSeconds,
-//                TimeUnit.SECONDS
-//        );
-//        this.emailNotificationService.handleSendVerificationEmail(key, verificationCode);
-//    }
-//
+
+    @Override
+    public void handleResendCode(String email) throws InvalidException {
+        Account account = this.accountService.handleGetAccountByEmail(email);
+        if(account == null) {
+            throw new InvalidException("Account not found");
+        }
+
+        String key = account.getEmail();
+        String verificationCode = SecurityUtil.generateVerificationCode();
+        this.redisService.replaceKey(
+                key,
+                key,
+                verificationCode,
+                validityInSeconds,
+                TimeUnit.SECONDS
+        );
+        this.emailNotificationService.handleSendVerificationEmail(key, verificationCode);
+    }
 
     private LoginResponse createLoginResponse(Account account) {
         LoginResponse loginResponse = new LoginResponse();

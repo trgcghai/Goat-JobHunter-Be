@@ -1,13 +1,9 @@
 package iuh.fit.goat.controller;
 
 import iuh.fit.goat.dto.request.auth.LoginRequest;
+import iuh.fit.goat.dto.request.auth.RegisterCompanyRequest;
 import iuh.fit.goat.dto.request.auth.RegisterUserRequest;
-import iuh.fit.goat.dto.request.auth.VerifyUserRequest;
-import iuh.fit.goat.dto.response.applicant.ApplicantResponse;
-import iuh.fit.goat.dto.response.auth.LoginResponse;
-import iuh.fit.goat.dto.response.recruiter.RecruiterResponse;
-import iuh.fit.goat.entity.Applicant;
-import iuh.fit.goat.entity.Recruiter;
+import iuh.fit.goat.dto.request.auth.VerifyAccountRequest;
 import iuh.fit.goat.exception.InvalidException;
 import iuh.fit.goat.service.AuthService;
 import iuh.fit.goat.util.annotation.ApiMessage;
@@ -21,18 +17,18 @@ import org.springframework.web.bind.annotation.*;
 import java.util.Map;
 
 @RestController
-@RequestMapping("/api/v1")
+@RequestMapping("/api/v1/auth")
 @RequiredArgsConstructor
 public class AuthController {
     private final AuthService authService;
 
-    @PostMapping("/auth/login")
+    @PostMapping("/login")
     public ResponseEntity<?> login(@Valid @RequestBody LoginRequest loginRequest, HttpServletResponse response
     ) throws InvalidException {
         return ResponseEntity.ok(this.authService.handleLogin(loginRequest, response));
     }
 
-    @GetMapping("/auth/refresh")
+    @GetMapping("/refresh")
     @ApiMessage("Refresh account")
     public ResponseEntity<?> refresh(
             @CookieValue(name = "refreshToken", defaultValue = "missingValue") String refreshToken,
@@ -41,7 +37,7 @@ public class AuthController {
         return ResponseEntity.ok(this.authService.handleRefreshToken(refreshToken, response));
     }
 
-    @PostMapping("/auth/logout")
+    @PostMapping("/logout")
     @ApiMessage("Logout account")
     public ResponseEntity<Void> logout(
             @CookieValue("accessToken") String accessToken,
@@ -52,7 +48,7 @@ public class AuthController {
         return ResponseEntity.status(HttpStatus.OK).body(null);
     }
 
-    @GetMapping("/auth/account/users")
+    @GetMapping("/account/users")
     @ApiMessage("Get information account")
     public ResponseEntity<?> getCurrentAccount() {
         try {
@@ -63,16 +59,22 @@ public class AuthController {
         }
     }
 
-    @PostMapping("/auth/register/users")
+    @PostMapping("/register/users")
     public ResponseEntity<?> registerUsers(@Valid @RequestBody RegisterUserRequest request) throws InvalidException {
         Object result = this.authService.handleRegisterUser(request);
         return ResponseEntity.status(HttpStatus.CREATED).body(result);
     }
 
-    @PostMapping("/auth/verify")
-    public ResponseEntity<?> verifyUser(@RequestBody VerifyUserRequest verifyUser) {
+    @PostMapping("/register/companies")
+    public ResponseEntity<?> registerCompanies(@Valid @RequestBody RegisterCompanyRequest request) throws InvalidException {
+        Object result = this.authService.handleRegisterCompany(request);
+        return ResponseEntity.status(HttpStatus.CREATED).body(result);
+    }
+
+    @PostMapping("/verify")
+    public ResponseEntity<?> verifyAccount(@RequestBody VerifyAccountRequest verifyAccount) {
         try {
-            this.authService.handleVerifyUser(verifyUser);
+            this.authService.handleVerifyAccount(verifyAccount);
             return ResponseEntity.ok(Map.of("message", "Account verified successfully"));
         } catch (Exception e) {
             return ResponseEntity.badRequest().body(e.getMessage());
@@ -89,14 +91,14 @@ public class AuthController {
 //        }
 //    }
 //
-//    @PostMapping("/auth/resend")
-//    public ResponseEntity<?> resendVerificationCode(@RequestParam String email) {
-//        try {
-//            this.authService.handleResendCode(email);
-//            return ResponseEntity.ok(Map.of("message", "Verification code sent"));
-//        } catch (Exception e) {
-//            return ResponseEntity.badRequest().body(e.getMessage());
-//        }
-//    }
+    @PostMapping("/resend")
+    public ResponseEntity<?> resendVerificationCode(@RequestParam String email) {
+        try {
+            this.authService.handleResendCode(email);
+            return ResponseEntity.ok(Map.of("message", "Verification code sent"));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
+    }
 
 }

@@ -17,16 +17,19 @@ import static jakarta.persistence.FetchType.LAZY;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-@ToString(exclude = {"applicant", "interviewer", "application"})
+@Builder
+@ToString(exclude = {"interviewer", "application"})
 @FilterDef(name = "activeInterviewFilter")
 public class Interview extends BaseEntity{
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @GeneratedValue(strategy = GenerationType.AUTO)
     private long interviewId;
     @NotNull(message = "Interview date is required")
     private Instant scheduledAt;
     private Integer durationMinutes = 60;
+    @Enumerated(EnumType.STRING)
     private InterviewType type;
+    @Enumerated(EnumType.STRING)
     private InterviewStatus status;
     private String location;
     private String meetingLink;
@@ -35,10 +38,6 @@ public class Interview extends BaseEntity{
     @Column(columnDefinition = "TEXT")
     private String feedback;
     private Integer rating;
-
-    @ManyToOne(fetch = LAZY)
-    @JoinColumn(name = "applicant_id")
-    private Applicant applicant;
 
     @ManyToOne(fetch = LAZY)
     @JoinColumn(name = "interviewer_id")

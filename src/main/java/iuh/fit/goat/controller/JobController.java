@@ -11,6 +11,7 @@ import iuh.fit.goat.dto.response.job.JobEnabledResponse;
 import iuh.fit.goat.dto.response.job.JobResponse;
 import iuh.fit.goat.dto.response.ResultPaginationResponse;
 import iuh.fit.goat.entity.Applicant;
+import iuh.fit.goat.entity.Company;
 import iuh.fit.goat.entity.Job;
 import iuh.fit.goat.exception.InvalidException;
 import iuh.fit.goat.service.JobService;
@@ -89,6 +90,22 @@ public class JobController {
             @Filter Specification<Job> spec, Pageable pageable
     ) {
         ResultPaginationResponse result = this.jobService.handleGetAllJobs(spec, pageable);
+        return ResponseEntity.status(HttpStatus.OK).body(result);
+    }
+
+    @GetMapping("/available")
+    public ResponseEntity<ResultPaginationResponse> getAllAvailableJobs(
+            @Filter Specification<Job> spec, Pageable pageable
+    ) {
+        Specification<Job> baseSpec = (spec != null) ? spec : Specification.unrestricted();
+        Specification<Job> finalSpec = baseSpec
+                .and((root, query, criteriaBuilder)
+                        -> criteriaBuilder.and(
+                                criteriaBuilder.isNull(root.get("deletedAt"))
+                        )
+                );
+
+        ResultPaginationResponse result = this.jobService.handleGetAllJobs(finalSpec, pageable);
         return ResponseEntity.status(HttpStatus.OK).body(result);
     }
 

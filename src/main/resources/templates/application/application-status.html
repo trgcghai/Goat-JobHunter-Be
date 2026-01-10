@@ -54,10 +54,6 @@
 <div class="container">
 
     <!-- HEADER STATUS -->
-    <h2 th:if="${status.equalsIgnoreCase('accepted')}" class="accepted">
-        🎉 Chúc mừng! Ứng tuyển của bạn đã được chấp nhận
-    </h2>
-
     <h2 th:if="${status.equalsIgnoreCase('rejected')}" class="rejected">
         Rất tiếc, ứng tuyển của bạn không được chấp nhận
     </h2>
@@ -70,34 +66,10 @@
         <ul>
             <li th:each="app : ${applications}">
                 Công việc:
-                <strong th:text="${app.job.title}"></strong>
-                (<span th:text="${app.job.recruiter.fullName}"></span>)
+                <strong th:text="${app.jobTitle}"></strong>
+                (<span th:text="${app.companyName}"></span>)
             </li>
         </ul>
-    </div>
-
-    <!-- ACCEPTED SECTION -->
-    <div class="section" th:if="${status.equalsIgnoreCase('accepted')}">
-        <p class="label">Thông tin buổi phỏng vấn:</p>
-
-        <p><span class="label">Ngày phỏng vấn:</span>
-            <span th:text="${interviewDate}"></span>
-        </p>
-
-        <p><span class="label">Hình thức:</span>
-            <span th:text="${interviewType}"></span>
-        </p>
-
-        <p><span class="label">Địa điểm:</span>
-            <span th:text="${location}"></span>
-        </p>
-
-        <p th:if="${note != null}">
-            <span class="label">Ghi chú:</span>
-            <span th:text="${note}"></span>
-        </p>
-
-        <p>Vui lòng kiểm tra kỹ thông tin và phản hồi nếu bạn có bất kỳ thắc mắc nào.</p>
     </div>
 
     <!-- REJECTED SECTION -->

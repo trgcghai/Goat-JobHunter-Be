@@ -39,13 +39,13 @@ public class UserController {
 //    @Value("${minhdat.jwt.refresh-token-validity-in-seconds}")
 //    private long jwtRefreshToken;
 //
-//    @GetMapping("/users")
-//    public ResponseEntity<ResultPaginationResponse> getAllUsers(
-//            @Filter Specification<User> spec, Pageable pageable
-//    ) {
-//        ResultPaginationResponse result = this.userService.handleGetAllUsers(spec, pageable);
-//        return ResponseEntity.status(HttpStatus.OK).body(result);
-//    }
+    @GetMapping
+    public ResponseEntity<ResultPaginationResponse> getAllUsers(
+            @Filter Specification<User> spec, Pageable pageable
+    ) {
+        ResultPaginationResponse result = this.userService.handleGetAllUsers(spec, pageable);
+        return ResponseEntity.status(HttpStatus.OK).body(result);
+    }
 //
 //    @GetMapping("/users/{id}")
 //    public ResponseEntity<UserResponse> getUserById(@PathVariable("id") long id) {
@@ -308,6 +308,17 @@ public class UserController {
     @GetMapping("/me/reviewed-companies/contains")
     public ResponseEntity<List<Map<String, Object>>> checkReviewedCompanies(@RequestParam List<Long> companyIds) {
         List<Map<String, Object>> result = this.userService.handleCheckReviewedCompanies(companyIds);
+        return ResponseEntity.status(HttpStatus.OK).body(result);
+    }
+    /*     ========================= ========================= =========================  */
+
+
+    /*     ========================= Interview Related Endpoints =========================  */
+    @GetMapping("/me/interviews")
+    public ResponseEntity<ResultPaginationResponse> getCurrentUserInterviews(
+            @Filter Specification<Interview> spec, Pageable pageable
+    ) {
+        ResultPaginationResponse result = this.userService.handleGetCurrentUserInterviews(spec, pageable);
         return ResponseEntity.status(HttpStatus.OK).body(result);
     }
     /*     ========================= ========================= =========================  */

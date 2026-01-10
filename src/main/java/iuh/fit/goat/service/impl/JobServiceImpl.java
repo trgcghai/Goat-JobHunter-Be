@@ -158,7 +158,7 @@ public class JobServiceImpl implements JobService {
 //
     @Override
     public Job handleGetJobById(long id) {
-        return this.jobRepository.findById(id).orElse(null);
+        return this.jobRepository.findByJobIdAndDeletedAtIsNull(id).orElse(null);
     }
 
     @Override
@@ -228,7 +228,11 @@ public class JobServiceImpl implements JobService {
     @Override
     public List<JobResponse> handleGetAllAvailableJobsByCompanyId(Long companyId, Specification<Job> spec) {
         Specification<Job> companySpec = ((root, query, cb) ->
-                cb.equal(root.get("company").get("accountId"), companyId));
+                cb.and(
+                    cb.equal(root.get("company").get("accountId"), companyId),
+                    cb.isNull(root.get("deletedAt"))
+                )
+        );
 
         Specification<Job> finalSpec = (spec != null) ? spec.and(companySpec) : companySpec;
 

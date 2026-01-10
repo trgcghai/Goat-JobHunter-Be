@@ -19,7 +19,7 @@ import static jakarta.persistence.FetchType.LAZY;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-@ToString(callSuper = true, exclude = {"applications", "resumes", "interviews"})
+@ToString(callSuper = true, exclude = {"applications", "resumes"})
 public class Applicant extends User{
     private boolean availableStatus = true;
     @Enumerated(EnumType.STRING)
@@ -42,12 +42,4 @@ public class Applicant extends User{
             condition = "deleted_at IS NULL"
     )
     private List<Resume> resumes = new ArrayList<>();
-
-    @OneToMany(mappedBy = "applicant", fetch = LAZY)
-    @JsonIgnore
-    @Filter(
-            name = "activeInterviewFilter",
-            condition = "deleted_at IS NULL"
-    )
-    private List<Interview> interviews = new ArrayList<>();
 }

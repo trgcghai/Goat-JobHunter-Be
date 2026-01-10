@@ -1,27 +1,21 @@
 package iuh.fit.goat.service.impl;
 
-import iuh.fit.goat.component.redis.ApplicationEventProducer;
-import iuh.fit.goat.dto.request.application.CreateApplicationRequest;
-import iuh.fit.goat.dto.result.application.ApplicationCreatedEvent;
-import iuh.fit.goat.enumeration.Status;
+import iuh.fit.goat.component.redis.application.ApplicationEventProducer;
 import iuh.fit.goat.dto.request.application.ApplicationIdsRequest;
-import iuh.fit.goat.dto.response.application.ApplicationResponse;
+import iuh.fit.goat.dto.request.application.CreateApplicationRequest;
 import iuh.fit.goat.dto.response.application.ApplicationStatusResponse;
-import iuh.fit.goat.dto.response.ResultPaginationResponse;
+import iuh.fit.goat.dto.result.application.ApplicationCreatedEvent;
+import iuh.fit.goat.dto.result.application.ApplicationStatusEvent;
+import iuh.fit.goat.enumeration.Status;
+import iuh.fit.goat.dto.response.application.ApplicationResponse;
 import iuh.fit.goat.service.ApplicationService;
-import iuh.fit.goat.service.EmailNotificationService;
 import iuh.fit.goat.util.SecurityUtil;
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import iuh.fit.goat.entity.*;
 import iuh.fit.goat.repository.*;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -62,87 +56,69 @@ public class ApplicationServiceImp implements ApplicationService {
         return saved;
     }
 
-//    @Override
-//    @Transactional
-//    public List<ApplicationStatusResponse> handleAcceptApplications(ApplicationIdsRequest request) {
-//        List<Application> applications = this.applicationRepository.findAllById(request.getApplicationIds());
-//        if (applications.isEmpty()) return Collections.emptyList();
-//
-//        List<Application> pendingApplications = applications.stream()
-//                .filter(app -> app.getStatus().getValue().equalsIgnoreCase(Status.PENDING.getValue()))
-//                .toList();
-//
-//        pendingApplications.forEach(app -> app.setStatus(Status.ACCEPTED));
-//        this.applicationRepository.saveAll(pendingApplications);
-//
-//        Map<String, List<Application>> applicationsByEmail =
-//                pendingApplications.stream().collect(Collectors.groupingBy(Application::getEmail));
-//
-//        applicationsByEmail.forEach((email, apps) -> {
-//            if(apps.isEmpty()) return;
-//
-//            String username = apps.getFirst().getApplicant().getUsername();
-//            String formattedDate = request.getInterviewDate() != null
-//                    ? request.getInterviewDate().format(DateTimeFormatter.ofPattern("dd/MM/yyyy"))
-//                    : "";
-//            String note = request.getNote() != null ? request.getNote() : null;
-//
-//            this.emailNotificationService.handleSendApplicationStatusEmail(
-//                    email, username, apps, Status.ACCEPTED.getValue(),
-//                    request.getInterviewType(), formattedDate, request.getLocation(), note,
-//                    null
-//            );
-//        });
-//
-//        return pendingApplications.stream()
-//                .map(app -> new ApplicationStatusResponse(
-//                        app.getApplicationId(),
-//                        app.getStatus().getValue()
-//                ))
-//                .collect(Collectors.toList());
-//    }
-//
-//    @Override
-//    @Transactional
-//    public List<ApplicationStatusResponse> handleRejectApplications(ApplicationIdsRequest request) {
-//        List<Application> applications = this.applicationRepository.findAllById(request.getApplicationIds());
-//        if (applications.isEmpty()) return Collections.emptyList();
-//
-//        List<Application> pendingApplications = applications.stream()
-//                .filter(app -> app.getStatus().getValue().equalsIgnoreCase(Status.PENDING.getValue()))
-//                .toList();
-//
-//        pendingApplications.forEach(app -> app.setStatus(Status.REJECTED));
-//        this.applicationRepository.saveAll(pendingApplications);
-//
-//        Map<String, List<Application>> applicationsByEmail =
-//                pendingApplications.stream().collect(Collectors.groupingBy(Application::getEmail));
-//
-//        applicationsByEmail.forEach((email, apps) -> {
-//            if(apps.isEmpty()) return;
-//
-//            String username = apps.getFirst().getApplicant().getUsername();
-//
-//            this.emailNotificationService.handleSendApplicationStatusEmail(
-//                    email, username, apps, Status.REJECTED.getValue(),
-//                    null, null, null, null,
-//                    request.getReason()
-//            );
-//        });
-//
-//        return pendingApplications.stream()
-//                .map(app -> new ApplicationStatusResponse(
-//                        app.getApplicationId(),
-//                        app.getStatus().getValue()
-//                ))
-//                .collect(Collectors.toList());
-//    }
-//
+    @Override
+    @Transactional
+    public List<Application> handleAcceptApplications(List<Long> applicationIds) {
+        List<Application> applications = this.applicationRepository.findAllById(applicationIds);
+        if (applications.isEmpty()) return Collections.emptyList();
+
+        List<Application> pendingApplications = applications.stream()
+                .filter(app -> app.getStatus().getValue().equalsIgnoreCase(Status.PENDING.getValue()))
+                .toList();
+
+        pendingApplications.forEach(app -> app.setStatus(Status.ACCEPTED));
+        return this.applicationRepository.saveAll(pendingApplications);
+    }
+
+    @Override
+    @Transactional
+    public List<ApplicationStatusResponse> handleRejectApplications(ApplicationIdsRequest request) {
+        List<Application> applications = this.applicationRepository.findAllById(request.getApplicationIds());
+        if (applications.isEmpty()) return Collections.emptyList();
+
+        List<Application> pendingApplications = applications.stream()
+                .filter(app -> app.getStatus().getValue().equalsIgnoreCase(Status.PENDING.getValue()))
+                .toList();
+
+        pendingApplications.forEach(app -> app.setStatus(Status.REJECTED));
+        this.applicationRepository.saveAll(pendingApplications);
+
+        Map<String, List<Application>> applicationsByEmail =
+                pendingApplications.stream().collect(Collectors.groupingBy(Application::getEmail));
+
+        applicationsByEmail.forEach((email, apps) -> {
+            if(apps.isEmpty()) return;
+
+            String username = apps.getFirst().getApplicant().getUsername();
+            List<ApplicationStatusEvent> applicationEvents = apps.stream()
+                    .map(app -> new ApplicationStatusEvent(
+                            app.getJob().getTitle(),
+                            app.getJob().getCompany().getName()
+                    ))
+                    .toList();
+
+            this.eventProducer.publishApplicationStatus(
+                    email,
+                    username,
+                    applicationEvents,
+                    request.getReason(),
+                    Status.REJECTED.getValue()
+            );
+        });
+
+        return pendingApplications.stream()
+                .map(app -> new ApplicationStatusResponse(
+                        app.getApplicationId(),
+                        app.getStatus().getValue()
+                ))
+                .collect(Collectors.toList());
+    }
+
 //    @Override
 //    public void handleDeleteApplication(long id) {
 //        this.applicationRepository.deleteById(id);
 //    }
-//
+
 //    @Override
 //    public Application handleGetApplicationById(long id) {
 //        Optional<Application> application = this.applicationRepository.findById(id);

@@ -21,9 +21,9 @@ public interface UserService {
 //    User handleGetUserById(long id);
 //
 //    User handleCreateUser(CreateUserRequest request) throws InvalidException;
-//
-//    ResultPaginationResponse handleGetAllUsers(Specification<User> spec, Pageable pageable);
-//
+
+    ResultPaginationResponse handleGetAllUsers(Specification<User> spec, Pageable pageable);
+
 //    boolean handleCheckCurrentPassword(String currentPassword);
 //
 //    Map<String, Object> handleUpdatePassword(String newPassword, String refreshToken);
@@ -75,6 +75,10 @@ public interface UserService {
 
     /*     ========================= Reviewed Companies Related Endpoints =========================  */
     List<Map<String, Object>> handleCheckReviewedCompanies(List<Long> companyIds);
+    /*     ========================= ========================= =========================  */
+
+    /*     ========================= Interview Related Endpoints =========================  */
+    ResultPaginationResponse handleGetCurrentUserInterviews(Specification<Interview> spec, Pageable pageable);
     /*     ========================= ========================= =========================  */
 
 //

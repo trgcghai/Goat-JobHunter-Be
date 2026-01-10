@@ -107,6 +107,7 @@ public class SecurityConfiguration {
                 "/api/v1/ping",                       // Endpoint kiểm tra trạng thái server
                 "/api/v1/clear-cookies",              // Xóa toàn bộ cookies trên FE – không cần phân quyền
                 "/api/v1/uuid",                       // Tạo UUID cho user chưa đăng nhập – không cần phân quyền
+                "/api/v1/files",                      // Upload/Download file
 
                 "/",                                  // Trang gốc
 
@@ -118,7 +119,6 @@ public class SecurityConfiguration {
 
                 "/storage/**",                        // Truy cập file tĩnh – public
                 "/api/v1/recruiters/**",              // Danh sách/chi tiết nhà tuyển dụng – public
-                "/api/v1/companies/**",               // Danh sách/chi tiết công ty – public
 
                 "/api/v1/email/**",                   // Gửi email / form liên hệ – public
                 "/api/v1/users/reset-password",       // Quên mật khẩu / đặt lại mật khẩu – public
@@ -152,6 +152,8 @@ public class SecurityConfiguration {
                                 .requestMatchers(HttpMethod.PUT, "/api/v1/users/**").permitAll()
                                 .requestMatchers(HttpMethod.GET, "/api/v1/blogs/**").permitAll()
                                 .requestMatchers(HttpMethod.GET, "/api/v1/comments/**").permitAll()
+                                .requestMatchers(HttpMethod.GET, "/api/v1/tickets/**").permitAll()
+                                .requestMatchers(HttpMethod.POST, "/api/v1/tickets/**").permitAll()
                                 .anyRequest().authenticated()
                 )
                 .oauth2ResourceServer(oauth2 ->

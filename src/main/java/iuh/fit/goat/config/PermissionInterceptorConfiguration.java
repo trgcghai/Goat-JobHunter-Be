@@ -24,7 +24,6 @@ public class PermissionInterceptorConfiguration implements WebMvcConfigurer {
                 "/api/v1/auth/**",                   // Các endpoint xác thực (login, refresh token, logout) – phải public
                 "/storage/**",                       // Tải/hiển thị file tĩnh – public
                 "/api/v1/recruiters/**",             // Danh sách/Nội dung nhà tuyển dụng – public
-                "/api/v1/companies/**",              // Danh sách/Nội dung công ty – public
                 "/api/v1/jobs/**",                   // Danh sách/Nội dung công việc – public
                 "/api/v1/skills/**",                 // Dữ liệu kỹ năng tham chiếu – public
                 "/api/v1/files",                     // Upload/Download file – không yêu cầu phân quyền
@@ -57,7 +56,10 @@ public class PermissionInterceptorConfiguration implements WebMvcConfigurer {
                 "/api/v1/reviews/latest",            // Danh sách đánh giá gần nhất - public
                 "/api/v1/reviews/count",             // Tổng số lượng đánh giá - public
 
+                "/api/v1/tickets/**",               // báo cáo bài viết hoặc comment - public
+
                 "/api/v1/resumes/**",                // Resume endpoints - public
+
         };
 
         registry.addInterceptor(getPermissionInterceptor())
