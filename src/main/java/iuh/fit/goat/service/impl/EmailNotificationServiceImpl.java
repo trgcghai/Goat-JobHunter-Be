@@ -1,7 +1,10 @@
 package iuh.fit.goat.service.impl;
 
 import iuh.fit.goat.common.ActionType;
+import iuh.fit.goat.common.Role;
+import iuh.fit.goat.dto.response.interview.InterviewResponse;
 import iuh.fit.goat.entity.Application;
+import iuh.fit.goat.enumeration.InterviewStatus;
 import iuh.fit.goat.enumeration.Status;
 import iuh.fit.goat.entity.Applicant;
 import iuh.fit.goat.entity.Job;
@@ -133,6 +136,48 @@ public class EmailNotificationServiceImpl implements EmailNotificationService {
         this.asyncEmailService.handleSendEmailSync(recipient, subject, content, false, true);
     }
 
+    @Override
+    public void handleSendInterviewEmailToApplicant(String recipient, Object object, String reason) {
+        List<InterviewResponse> interviews = (List<InterviewResponse>) object;
+        String applicantName = interviews.getFirst().getApplication().getFullName();
+        InterviewStatus status = interviews.getFirst().getStatus();
+
+        String subject;
+        switch (status) {
+            case SCHEDULED -> subject = "Thư mời phỏng vấn";
+            case COMPLETED -> subject = "Chúc mừng bạn đã hoàn thành phỏng vấn";
+            case CANCELLED -> subject = "Buổi phỏng vấn đã bị hủy";
+            case RESCHEDULED -> subject = "Thư mời phỏng vấn đã được lên lịch lại";
+            default -> subject = "Thông báo về phỏng vấn của bạn";
+        }
+
+        Context context = new Context();
+        context.setVariable("applicantName", applicantName);
+        context.setVariable("interviews", object);
+        context.setVariable("status", status.getStatus());
+        context.setVariable("reason", reason.isEmpty() ? null : reason);
+
+        String content = this.templateEngine.process("interview/interview", context);
+        this.asyncEmailService.handleSendEmailSync(recipient, subject, content, false, true);
+    }
+
+    @Override
+    public void handleSendFeedbackInterviewEmailToApplicantOrCompany(String recipient, Object object, Role type) {
+        String subject;
+        switch (type) {
+            case APPLICANT -> subject = "Cảm ơn bạn đã gửi đánh giá về buổi phỏng vấn";
+            case COMPANY -> subject = "Ứng viên đã gửi đánh giá về buổi phỏng vấn";
+            default -> subject = "Thông báo về đánh giá buổi phỏng vấn";
+        }
+
+        Context context = new Context();
+        context.setVariable("type", type.getValue());
+        context.setVariable("interview", object);
+
+        String content = this.templateEngine.process("interview/interview-feedback", context);
+        this.asyncEmailService.handleSendEmailSync(recipient, subject, content, false, true);
+    }
+
 //    @Override
 //    public void handleSendJobActionNotice(String recipient, String username, Object object, String reason, ActionType mode) {
 //        String subject;
@@ -158,35 +203,26 @@ public class EmailNotificationServiceImpl implements EmailNotificationService {
 //        String content = this.templateEngine.process("job_status", context);
 //        this.asyncEmailService.handleSendEmailSync(recipient, subject, content, false, true);
 //    }
-//
-//    @Override
-//    public void handleSendApplicationStatusEmail(
-//            String recipient, String username, Object object, String status,
-//            String interviewType, String interviewDate, String location, String note,
-//            String reason
-//    ) {
-//        String subject = "Thông báo đơn ứng tuyển";
-//        Context context = new Context();
-//
-//        context.setVariable("username", username);
-//        context.setVariable("applications", object);
-//        context.setVariable("status", status);
-//
-//        if (Status.ACCEPTED.getValue().equalsIgnoreCase(status)) {
-//            context.setVariable("interviewDate", interviewDate);
-//            context.setVariable("interviewType", interviewType);
-//            context.setVariable("location", location);
-//            context.setVariable("note", note);
-//        }
-//
-//        if (Status.REJECTED.getValue().equalsIgnoreCase(status)) {
-//            context.setVariable("reason", reason);
-//        }
-//
-//        String content = this.templateEngine.process("applicationStatus", context);
-//        this.asyncEmailService.handleSendEmailSync(recipient, subject, content, false, true);
-//    }
-//
+
+    @Override
+    public void handleSendApplicationStatusEmail(
+            String recipient, String username, Object object, String status, String reason
+    ) {
+        String subject = "Thông báo đơn ứng tuyển";
+        Context context = new Context();
+
+        context.setVariable("username", username);
+        context.setVariable("applications", object);
+        context.setVariable("status", status);
+
+        if (Status.REJECTED.getValue().equalsIgnoreCase(status)) {
+            context.setVariable("reason", reason);
+        }
+
+        String content = this.templateEngine.process("application/application-status", context);
+        this.asyncEmailService.handleSendEmailSync(recipient, subject, content, false, true);
+    }
+
 //    @Override
 //    public void handleSendJobInvitationEmail(List<Long> applicantIds, Long jobId) {
 //        List<Applicant> applicants = this.applicantRepository.findAllById(applicantIds);

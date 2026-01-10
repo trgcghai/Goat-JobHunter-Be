@@ -61,22 +61,18 @@ public class ApplicationController {
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
-//    @PutMapping("/applications/accepted")
-//    public ResponseEntity<List<ApplicationStatusResponse>> acceptApplications(
-//            @Valid @RequestBody ApplicationIdsRequest request
-//    ) {
-//        List<ApplicationStatusResponse> result = this.applicationService.handleAcceptApplications(request);
-//        return ResponseEntity.status(HttpStatus.OK).body(result);
-//    }
+    @PutMapping("/rejected")
+    public ResponseEntity<List<ApplicationStatusResponse>> rejectApplications(
+            @Valid @RequestBody ApplicationIdsRequest request
+    ) throws InvalidException
+    {
+        if(request.getReason() == null || request.getReason().isEmpty()){
+            throw new InvalidException("Rejection reason is required");
+        }
+        List<ApplicationStatusResponse> result = this.applicationService.handleRejectApplications(request);
+        return ResponseEntity.status(HttpStatus.OK).body(result);
+    }
 
-//    @PutMapping("/applications/rejected")
-//    public ResponseEntity<List<ApplicationStatusResponse>> rejectApplications(
-//            @Valid @RequestBody ApplicationIdsRequest request
-//    ) {
-//        List<ApplicationStatusResponse> result = this.applicationService.handleRejectApplications(request);
-//        return ResponseEntity.status(HttpStatus.OK).body(result);
-//    }
-//
 //    @DeleteMapping("/applications/{id}")
 //    @ApiMessage("Delete a application")
 //    public ResponseEntity<Void> deleteApplication(@PathVariable("id") long id) {

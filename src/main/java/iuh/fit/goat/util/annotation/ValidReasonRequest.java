@@ -11,9 +11,9 @@ import java.lang.annotation.Target;
 
 @Target({ElementType.TYPE})
 @Retention(RetentionPolicy.RUNTIME)
-@Constraint(validatedBy = ApplicationRequestValidator.class)
-public @interface ValidApplicationRequest {
-    String message() default "Invalid application request";
+@Constraint(validatedBy = { ApplicationRequestValidator.class })
+public @interface ValidReasonRequest {
+    String message() default "Invalid reason request";
     Class<?>[] groups() default {};
     Class<? extends Payload>[] payload() default {};
 }

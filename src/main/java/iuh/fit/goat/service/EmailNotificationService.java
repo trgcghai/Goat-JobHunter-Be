@@ -1,6 +1,7 @@
 package iuh.fit.goat.service;
 
 import iuh.fit.goat.common.ActionType;
+import iuh.fit.goat.common.Role;
 
 import java.util.List;
 
@@ -18,13 +19,11 @@ public interface EmailNotificationService {
 //    void handleSendJobActionNotice(
 //            String recipient, String username, Object object, String reason, ActionType mode
 //    );
-//
-//    void handleSendApplicationStatusEmail(
-//            String recipient, String username, Object object, String status,
-//            String interviewType, String interviewDate, String location, String note,
-//            String reason
-//    );
-//
+
+    void handleSendApplicationStatusEmail(
+            String recipient, String username, Object object, String status, String reason
+    );
+
 //    void handleSendJobInvitationEmail(List<Long> applicantIds, Long jobId);
 //
 //    void handleSendUserEnabledEmail(
@@ -41,5 +40,13 @@ public interface EmailNotificationService {
 
     void handleSendApplicationEmailToCompany(
             String recipient, String name, String jobTitle, String applicantName, String applicantEmail
+    );
+
+    void handleSendInterviewEmailToApplicant(
+            String recipient, Object object, String reason
+    );
+
+    void handleSendFeedbackInterviewEmailToApplicantOrCompany(
+            String recipient, Object object, Role type
     );
 }
