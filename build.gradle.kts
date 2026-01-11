@@ -46,6 +46,7 @@ dependencies {
 	implementation("org.postgresql:postgresql:42.7.8")
 	implementation("org.liquibase:liquibase-core:5.0.1")
 	implementation("io.awspring.cloud:spring-cloud-starter-aws-secrets-manager-config:2.4.4")
+	implementation("org.springframework.cloud:spring-cloud-starter-aws:2.2.6.RELEASE")
 
 
 	implementation("commons-io:commons-io:2.19.0")
