@@ -26,7 +26,7 @@ public class PermissionInterceptorConfiguration implements WebMvcConfigurer {
                 "/api/v1/recruiters/**",             // Danh sách/Nội dung nhà tuyển dụng – public
                 "/api/v1/jobs/**",                   // Danh sách/Nội dung công việc – public
                 "/api/v1/skills/**",                 // Dữ liệu kỹ năng tham chiếu – public
-                "/api/v1/files",                     // Upload/Download file – không yêu cầu phân quyền
+                "/api/v1/files/**",                  // Upload/Download file – không yêu cầu phân quyền
                 "/api/v1/applications/**",           // Ứng tuyển công việc – cho ứng viên sử dụng trực tiếp
                 "/api/v1/careers/**",                // Dữ liệu ngành nghề – public
                 "/api/v1/roles/**",                  // Lấy danh sách role – không cần kiểm tra permission

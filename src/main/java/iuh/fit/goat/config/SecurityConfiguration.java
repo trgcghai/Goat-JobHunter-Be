@@ -107,7 +107,7 @@ public class SecurityConfiguration {
                 "/api/v1/ping",                       // Endpoint kiểm tra trạng thái server
                 "/api/v1/clear-cookies",              // Xóa toàn bộ cookies trên FE – không cần phân quyền
                 "/api/v1/uuid",                       // Tạo UUID cho user chưa đăng nhập – không cần phân quyền
-                "/api/v1/files",                      // Upload/Download file
+                "/api/v1/files/**",                   // Upload/Download file
 
                 "/",                                  // Trang gốc
 

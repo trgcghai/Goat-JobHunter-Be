@@ -6,7 +6,7 @@ import iuh.fit.goat.dto.request.blog.BlogCreateRequest;
 import iuh.fit.goat.dto.request.blog.BlogIdsRequest;
 import iuh.fit.goat.dto.request.blog.BlogUpdateRequest;
 import iuh.fit.goat.dto.request.user.LikeBlogRequest;
-import iuh.fit.goat.dto.response.CloudinaryResponse;
+import iuh.fit.goat.dto.response.StorageResponse;
 import iuh.fit.goat.dto.response.blog.BlogResponse;
 import iuh.fit.goat.dto.response.blog.BlogStatusResponse;
 import iuh.fit.goat.dto.response.ResultPaginationResponse;
@@ -21,7 +21,6 @@ import iuh.fit.goat.util.FileUploadUtil;
 import iuh.fit.goat.util.SecurityUtil;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.io.FilenameUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.data.domain.Page;
@@ -58,7 +57,7 @@ public class BlogServiceImpl implements BlogService {
     private final NotificationService notificationService;
     private final BlogRepository blogRepository;
     private final UserRepository userRepository;
-    private final CloudinaryService cloudinaryService;
+    private final StorageService storageService;
 
 
     @Override
@@ -73,8 +72,7 @@ public class BlogServiceImpl implements BlogService {
                 if (file.isEmpty()) continue;
 
                 FileUploadUtil.assertAllowed(file, FileUploadUtil.FILE_PATTERN);
-                String fileName = FileUploadUtil.getFileName(FilenameUtils.getBaseName(file.getOriginalFilename()));
-                CloudinaryResponse response = this.cloudinaryService.handleUploadFile(file, "blogs", fileName);
+                StorageResponse response = this.storageService.handleUploadFile(file, "blogs");
                 imageUrls.add(response.getUrl());
             }
         }
