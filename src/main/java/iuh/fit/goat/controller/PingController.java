@@ -14,14 +14,21 @@ import org.springframework.web.bind.annotation.RestController;
 
 @Slf4j
 @RestController
-@RequestMapping("/api/v1")
 @RequiredArgsConstructor
 public class PingController {
+
+    @PermitAll
+    @GetMapping("/")
+    public ResponseEntity<String> root() {
+        return ResponseEntity.ok("OK");
+    }
+
     @PermitAll
     @GetMapping("/ping")
     public ResponseEntity<String> ping() {
         return ResponseEntity.ok("Server is running");
     }
+
 //
 //    @PermitAll
 //    @GetMapping("/clear-cookies")
