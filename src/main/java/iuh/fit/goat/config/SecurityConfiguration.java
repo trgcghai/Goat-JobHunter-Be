@@ -7,6 +7,7 @@ import iuh.fit.goat.config.component.AuthenticationEntryPointCustom;
 import iuh.fit.goat.config.component.RedisTokenBlacklistFilter;
 import iuh.fit.goat.util.SecurityUtil;
 import jakarta.servlet.http.Cookie;
+import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -36,6 +37,7 @@ import java.util.List;
 
 @Configuration
 @EnableMethodSecurity(securedEnabled = true)
+@RequiredArgsConstructor
 public class SecurityConfiguration {
     @Value("${minhdat.jwt.base64-secret}")
     private String jwtKey;
@@ -63,6 +65,8 @@ public class SecurityConfiguration {
             }
         };
     }
+
+    private final CorzConfiguration corzConfiguration;
 
     private SecretKey getSecretKey() {
         byte[] keyBytes = Base64.from(jwtKey).decode();
@@ -137,9 +141,11 @@ public class SecurityConfiguration {
 
         http
                 .csrf(c -> c.disable())
-                .cors(Customizer.withDefaults())
+                .cors(cors -> cors.configurationSource(this.corzConfiguration.corsConfigurationSource()))
                 .authorizeHttpRequests( request ->
-                        request.requestMatchers(whiteList).permitAll()
+                        request
+                                .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
+                                .requestMatchers(whiteList).permitAll()
                                 .requestMatchers(HttpMethod.GET, "/api/v1/reviews").hasRole("SUPER_ADMIN")
                                 .requestMatchers(HttpMethod.GET, "/api/v1/recruiters/**").permitAll()
                                 .requestMatchers(HttpMethod.GET, "/api/v1/companies/**").permitAll()
