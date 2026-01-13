@@ -1,14 +1,15 @@
 package iuh.fit.goat.repository;
 
 import iuh.fit.goat.entity.Blog;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
-import org.springframework.data.jpa.repository.NativeQuery;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
-import java.util.Collection;
 import java.util.List;
 
 @Repository
@@ -25,4 +26,7 @@ public interface BlogRepository extends JpaRepository<Blog, Long>, JpaSpecificat
     List<Object[]> findAllTags(@Param("keyword") String keyword);
 
     List<Blog> findByBlogIdIn(List<Long> blogIds);
+
+    @Query("SELECT b FROM Blog b LEFT JOIN FETCH b.author WHERE b.enabled = true")
+    Page<Blog> findAllAvailableWithAuthor(Specification<Blog> spec, Pageable pageable);
 }

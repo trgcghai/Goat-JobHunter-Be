@@ -66,6 +66,10 @@ public class BlogServiceImpl implements BlogService {
         String email = SecurityUtil.getCurrentUserLogin().isPresent() ? SecurityUtil.getCurrentUserLogin().get() : "";
         User currentUser = this.userRepository.findByEmail(email);
 
+        if (currentUser == null) {
+            throw new InvalidException("User not found");
+        }
+
         // Handle file uploads
         List<String> imageUrls = new ArrayList<>();
         if (request.getFiles() != null) {
@@ -149,7 +153,7 @@ public class BlogServiceImpl implements BlogService {
 
     @Override
     public ResultPaginationResponse handleGetAllBlogs(Specification<Blog> spec, Pageable pageable) {
-        Page<Blog> page = this.blogRepository.findAll(spec, pageable);
+        Page<Blog> page = this.blogRepository.findAllAvailableWithAuthor(spec, pageable);
 
         ResultPaginationResponse.Meta meta = new ResultPaginationResponse.Meta();
         meta.setPage(page.getNumber() + 1);
@@ -319,16 +323,20 @@ public class BlogServiceImpl implements BlogService {
         response.setUpdatedAt(blog.getUpdatedAt());
         response.setUpdatedBy(blog.getUpdatedBy());
 
-        BlogResponse.BlogAuthor author = new BlogResponse.BlogAuthor(
-                blog.getAuthor().getAccountId(),
-                blog.getAuthor().getFullName(),
-                blog.getAuthor().getUsername(),
-                blog.getAuthor().getAvatar(),
-                blog.getAuthor().getBio(),
-                blog.getAuthor().getHeadline(),
-                blog.getAuthor().getCoverPhoto()
-        );
-        response.setAuthor(author);
+        if (blog.getAuthor() != null) {
+            BlogResponse.BlogAuthor author = new BlogResponse.BlogAuthor(
+                    blog.getAuthor().getAccountId(),
+                    blog.getAuthor().getFullName(),
+                    blog.getAuthor().getUsername(),
+                    blog.getAuthor().getAvatar(),
+                    blog.getAuthor().getBio(),
+                    blog.getAuthor().getHeadline(),
+                    blog.getAuthor().getCoverPhoto()
+            );
+            response.setAuthor(author);
+        } else {
+            response.setAuthor(null);
+        }
 
         return response;
     }
