@@ -15,7 +15,12 @@ public class CorzConfiguration {
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
         configuration.setAllowedOrigins(Arrays.asList(
-                "http://localhost:3000", "http://localhost:4173", "http://localhost:5173"
+                "http://localhost:3000", "http://localhost:4173", "http://localhost:5173",
+
+                "https://goat-job-hunter-9js0nhbcm-trgcghais-projects.vercel.app",
+                "https://goat-job-hunter-fe.vercel.app",
+                "https://goat-job-hunter-fe-git-main-trgcghais-projects.vercel.app",
+                "https://goat-job-hunter-fe-trgcghais-projects.vercel.app"
         ));
         configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"));
         configuration.setAllowedHeaders(Arrays.asList("Authorization", "Content-Type", "Accept", "x-no-retry"));
