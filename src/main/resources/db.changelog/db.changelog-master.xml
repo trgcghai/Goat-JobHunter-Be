@@ -60,6 +60,7 @@
     <include file="db.changelog/schema/2025-01-03/add-index-email-accounts.xml"/>
     <include file="/db.changelog/schema/2025-01-09/remove-relation-interviews-applicants.xml"/>
     <include file="db.changelog/schema/2025-01-09/change-type-status-type-interviews.xml"/>
+    <include file="db.changelog/schema/2026-1-14/drop-old-message-tables.xml"/>
     <!--      History      -->
 
 </databaseChangeLog>
