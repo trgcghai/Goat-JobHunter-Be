@@ -6,104 +6,91 @@
     <title>Job Hunter</title>
 </head>
 <body style="margin:0;padding:0;background:#f3f4f6;font-family:Arial,Helvetica,sans-serif">
+    <table width="600" cellpadding="0" cellspacing="0" style="background:#ffffff;border-radius:8px;overflow:hidden">
+        <!-- HEADER -->
+        <tr>
+            <th style="background:#2563eb;color:#ffffff;padding:20px 30px">
+                <h2 style="margin:0"
+                    th:text="${type == 'APPLICANT'
+                    ? 'Cảm ơn bạn đã đánh giá buổi phỏng vấn'
+                    : 'Bạn có đánh giá mới về buổi phỏng vấn từ ứng viên'}">
+                    Thông báo phỏng vấn
+                </h2>
+            </th>
+        </tr>
 
-<table width="100%" cellpadding="0" cellspacing="0">
-    <tr>
-        <td align="center" style="padding:40px 0">
-            <table width="600" cellpadding="0" cellspacing="0"
-                   style="background:#ffffff;border-radius:8px;overflow:hidden">
+        <!-- CONTENT -->
+        <tr>
+            <td style="padding:30px;color:#111827">
 
-                ```
-                <!-- HEADER -->
-                <tr>
-                    <td style="background:#2563eb;color:#ffffff;padding:20px 30px">
-                        <h2 style="margin:0"
-                            th:text="${type == 'APPLICANT'
-                            ? 'Cảm ơn bạn đã đánh giá buổi phỏng vấn'
-                            : 'Bạn có đánh giá mới về buổi phỏng vấn từ ứng viên'}">
-                            Thông báo phỏng vấn
-                        </h2>
-                    </td>
-                </tr>
+                <!-- APPLICANT VIEW -->
+                <div th:if="${type == 'APPLICANT'}">
+                    <p>
+                        Chào <b th:text="${interview.applicantName}">Ứng viên</b>,
+                    </p>
 
-                <!-- CONTENT -->
-                <tr>
-                    <td style="padding:30px;color:#111827">
+                    <p>
+                        Buổi phỏng vấn của bạn với
+                        <b th:text="${interview.companyName}">Công ty</b>
+                        đã hoàn tất.
+                    </p>
 
-                        <!-- APPLICANT VIEW -->
-                        <div th:if="${type == 'APPLICANT'}">
-                            <p>
-                                Chào <b th:text="${interview.applicantName}">Ứng viên</b>,
-                            </p>
+                    <p th:if="${interview.feedback != null}">
+                        Đánh giá bạn đã gửi:
+                    </p>
+                </div>
 
-                            <p>
-                                Buổi phỏng vấn của bạn với
-                                <b th:text="${interview.companyName}">Công ty</b>
-                                đã hoàn tất.
-                            </p>
+                <!-- COMPANY VIEW -->
+                <div th:if="${type == 'COMPANY'}">
+                    <p>
+                        Xin chào <b th:text="${interview.companyName}">Công ty</b>,
+                    </p>
 
-                            <p th:if="${interview.feedback != null}">
-                                Đánh giá bạn đã gửi:
-                            </p>
-                        </div>
+                    <p>
+                        Ứng viên
+                        <b th:text="${interview.applicantName}">Applicant</b>
+                        đã gửi đánh giá cho buổi phỏng vấn.
+                    </p>
+                </div>
 
-                        <!-- COMPANY VIEW -->
-                        <div th:if="${type == 'COMPANY'}">
-                            <p>
-                                Xin chào <b th:text="${interview.companyName}">Công ty</b>,
-                            </p>
+                <!-- FEEDBACK BLOCK -->
+                <div th:if="${interview.feedback != null}"
+                     style="margin-top:20px;padding:16px;
+                        background:#f9fafb;border-radius:6px">
 
-                            <p>
-                                Ứng viên
-                                <b th:text="${interview.applicantName}">Applicant</b>
-                                đã gửi đánh giá cho buổi phỏng vấn.
-                            </p>
-                        </div>
+                    <p style="margin:0 0 8px 0">
+                        <b>Đánh giá:</b>
+                        <span th:each="i : ${#numbers.sequence(1,5)}"
+                              th:text="${i <= interview.rating ? '★' : '☆'}">
+                        ★
+                    </span>
+                        (<span th:text="${interview.rating}">4</span>/5)
+                    </p>
 
-                        <!-- FEEDBACK BLOCK -->
-                        <div th:if="${interview.feedback != null}"
-                             style="margin-top:20px;padding:16px;
-                                background:#f9fafb;border-radius:6px">
+                    <p th:if="${interview.feedback != null}"
+                       style="margin:8px 0 0 0">
+                        <b>Nhận xét:</b><br/>
+                        <i th:text="${interview.feedback}"></i>
+                    </p>
+                </div>
 
-                            <p style="margin:0 0 8px 0">
-                                <b>Đánh giá:</b>
-                                <span th:each="i : ${#numbers.sequence(1,5)}"
-                                      th:text="${i <= interview.rating ? '★' : '☆'}">
-                                ★
-                            </span>
-                                (<span th:text="${interview.rating}">4</span>/5)
-                            </p>
+                <!-- NO FEEDBACK -->
+                <p th:if="${interview.feedback == null}" style="font-style:italic">
+                    Chưa có đánh giá cho buổi phỏng vấn này.
+                </p>
 
-                            <p th:if="${interview.feedback != null}"
-                               style="margin:8px 0 0 0">
-                                <b>Nhận xét:</b><br/>
-                                <i th:text="${interview.feedback}"></i>
-                            </p>
-                        </div>
+            </td>
+        </tr>
 
-                        <!-- NO FEEDBACK -->
-                        <p th:if="${interview.feedback == null}" style="font-style:italic">
-                            Chưa có đánh giá cho buổi phỏng vấn này.
-                        </p>
+        <!-- FOOTER -->
+        <tr>
+            <td style="background:#f9fafb;padding:15px 30px;
+                   color:#6b7280;font-size:12px;text-align:center">
+                Email này được gửi tự động từ hệ thống.<br/>
+                Vui lòng không trả lời email này.
+            </td>
+        </tr>
 
-                    </td>
-                </tr>
-
-                <!-- FOOTER -->
-                <tr>
-                    <td style="background:#f9fafb;padding:15px 30px;
-                           color:#6b7280;font-size:12px;text-align:center">
-                        Email này được gửi tự động từ hệ thống.<br/>
-                        Vui lòng không trả lời email này.
-                    </td>
-                </tr>
-
-            </table>
-        </td>
-    </tr>
-    ```
-
-</table>
-
+    </table>
 </body>
 </html>
