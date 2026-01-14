@@ -1,12 +1,15 @@
 package iuh.fit.goat.service;
 
-import iuh.fit.goat.dto.request.message.MessageCreateRequest;
-import iuh.fit.goat.dto.response.message.MessageResponse;
 import iuh.fit.goat.entity.Message;
+import iuh.fit.goat.exception.InvalidException;
+import org.springframework.data.domain.Pageable;
 
-public interface MessageService {
+import java.util.List;
 
-//    void handleCreateMessage(MessageCreateRequest request);
-//
-//    MessageResponse convertMessageResponse(Message messages);
+public interface  MessageService {
+
+    Message getLastMessageByChatRoom(Long chatRoomId) throws InvalidException;
+
+    List<Message> getMessagesByChatRoom(Long chatRoomId, Pageable pageable);
+
 }
