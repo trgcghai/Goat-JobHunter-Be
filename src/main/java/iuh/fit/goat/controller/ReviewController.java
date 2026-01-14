@@ -167,7 +167,7 @@ public class ReviewController {
     public ResponseEntity<Double> calculateRecommendedPercentageByCompany(@PathVariable("companyId") String companyId)
             throws InvalidException
     {
-        if (!SecurityUtil.checkValidNumber("companyId")) throw new InvalidException("Id is number");
+        if (!SecurityUtil.checkValidNumber(companyId)) throw new InvalidException("Id is number");
 
         Company company = this.companyService.handleGetCompanyById(Long.parseLong(companyId));
         if (company == null) throw new InvalidException("Company not found");
