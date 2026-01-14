@@ -3,8 +3,7 @@ package iuh.fit.goat.component.redis.application;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import iuh.fit.goat.dto.result.application.ApplicationCreatedEvent;
 import iuh.fit.goat.dto.result.application.ApplicationStatusEvent;
-import iuh.fit.goat.entity.Application;
-import iuh.fit.goat.enumeration.Status;
+import iuh.fit.goat.exception.InvalidException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.scheduling.annotation.Async;
@@ -23,7 +22,7 @@ public class ApplicationEventProducer {
     private final ObjectMapper objectMapper;
 
     @Async
-    public void publishApplicationCreated(ApplicationCreatedEvent application) {
+    public void publishApplicationCreated(ApplicationCreatedEvent application) throws InvalidException {
         try {
             Map<String, Object> message = new HashMap<>();
 
@@ -39,12 +38,15 @@ public class ApplicationEventProducer {
 
             this.redisTemplate.opsForStream().add("application.events", message);
         } catch (Exception  e) {
-            throw new RuntimeException("Cannot publish application event", e);
+            throw new InvalidException("Cannot publish application event");
         }
     }
 
     @Async
-    public void publishApplicationStatus(String email, String username, List<ApplicationStatusEvent> applications, String reason, String status) {
+    public void publishApplicationStatus(
+            String email, String username, List<ApplicationStatusEvent> applications, String reason, String status
+    ) throws InvalidException
+    {
         try {
             Map<String, Object> message = new HashMap<>();
 
@@ -59,7 +61,7 @@ public class ApplicationEventProducer {
 
             this.redisTemplate.opsForStream().add("application.events", message);
         } catch (Exception  e) {
-            throw new RuntimeException("Cannot publish application event", e);
+            throw new InvalidException("Cannot publish application event");
         }
     }
 }

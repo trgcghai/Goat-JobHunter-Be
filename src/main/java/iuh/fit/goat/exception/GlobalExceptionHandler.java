@@ -1,6 +1,7 @@
 package iuh.fit.goat.exception;
 
 import iuh.fit.goat.dto.response.RestResponse;
+import org.springframework.context.support.DefaultMessageSourceResolvable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.BadCredentialsException;
@@ -55,8 +56,7 @@ public class GlobalExceptionHandler {
             return ResponseEntity.badRequest().body(res);
         }
 
-        List<String> messages = list.stream().map(l -> l.getDefaultMessage())
-                .collect(Collectors.toList());
+        List<String> messages = list.stream().map(DefaultMessageSourceResolvable::getDefaultMessage).toList();
         res.setError(e.getBody().getDetail());
         res.setMessage(messages.size() > 1 ? messages : messages.getFirst());
 

@@ -53,7 +53,7 @@ public class ChatRoomServiceImpl implements ChatRoomService {
         List<String> displayNames = members.stream()
                 .filter(m -> m.getDeletedAt() == null)
                 .map(m -> getDisplayName(m.getUser()))
-                .collect(Collectors.toList());
+                .toList();
 
         int totalMembers = displayNames.size();
 

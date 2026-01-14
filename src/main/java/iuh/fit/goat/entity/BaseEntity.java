@@ -40,10 +40,8 @@ public abstract class BaseEntity {
                 ? SecurityUtil.getCurrentUserLogin().get()
                 : "System";
 
-        if (this instanceof Job job) {
-            if (job.getEndDate() != null && job.getEndDate().isBefore(LocalDate.now())) {
-                job.setActive(false);
-            }
+        if (this instanceof Job job && job.getEndDate() != null && job.getEndDate().isBefore(LocalDate.now())) {
+            job.setActive(false);
         }
     }
 

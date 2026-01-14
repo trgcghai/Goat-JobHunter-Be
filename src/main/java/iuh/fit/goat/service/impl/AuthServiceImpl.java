@@ -49,9 +49,7 @@ public class AuthServiceImpl implements AuthService {
     private final RecruiterService recruiterService;
     private final CompanyService companyService;
 
-    private final UserRepository userRepository;
     private final AccountRepository accountRepository;
-//    private final RecruiterRepository recruiterRepository;
 
     @Value("${minhdat.jwt.access-token-validity-in-seconds}")
     private long jwtAccessToken;
@@ -61,7 +59,7 @@ public class AuthServiceImpl implements AuthService {
     private long validityInSeconds;
 
     @Override
-    public Object handleLogin(LoginRequest loginRequest, HttpServletResponse response) throws InvalidException {
+    public LoginResponse handleLogin(LoginRequest loginRequest, HttpServletResponse response) throws InvalidException {
 
         log.info("User: {}", this.userService.handleGetUserByEmail(loginRequest.getEmail()));
         log.info("loginRequest: {}", loginRequest);
@@ -101,7 +99,7 @@ public class AuthServiceImpl implements AuthService {
         String accessToken = this.securityUtil.createAccessToken(account.getEmail(), loginResponse);
         String refreshToken = this.securityUtil.createRefreshToken(account.getEmail(), loginResponse);
 
-        System.out.println("Refresh Token Created in Login: " + refreshToken);
+        log.info("Refresh Token Created in Login: {}", refreshToken);
 
         // Lưu refresh token vào Redis
         this.redisService.saveWithTTL(
@@ -136,11 +134,11 @@ public class AuthServiceImpl implements AuthService {
     }
 
     @Override
-    public Object handleRefreshToken(String refreshToken, HttpServletResponse response) throws InvalidException {
+    public LoginResponse handleRefreshToken(String refreshToken, HttpServletResponse response) throws InvalidException {
         if(refreshToken.equalsIgnoreCase("missingValue")) {
             throw new InvalidException("You don't have a refresh token at cookie");
         }
-        System.out.println("Refresh Token in Redis: " + refreshToken);
+        log.info("Refresh Token in Redis: " + refreshToken);
         if (!this.redisService.hasKey("refresh:" + refreshToken)) {
             throw new InvalidException("Invalid or expired refresh token");
         }
@@ -246,11 +244,9 @@ public class AuthServiceImpl implements AuthService {
         }
 
         // Kiểm tra loại user và trả về response tương ứng
-        if (user instanceof Applicant) {
-            Applicant applicant = (Applicant) user;
+        if (user instanceof Applicant applicant) {
             return this.applicantService.convertToApplicantResponse(applicant);
-        } else if (user instanceof Recruiter) {
-            Recruiter recruiter = (Recruiter) user;
+        } else if (user instanceof Recruiter recruiter) {
             return this.recruiterService.convertToRecruiterResponse(recruiter);
         }
 
@@ -399,17 +395,6 @@ public class AuthServiceImpl implements AuthService {
 
         this.redisService.deleteKey(key);
     }
-//
-//    @Override
-//    public void handleVerifyRecruiter(long id) throws InvalidException {
-//        Recruiter recruiter = this.recruiterService.handleGetRecruiterById(id);
-//        if (recruiter != null) {
-//            recruiter.setEnabled(true);
-//            this.recruiterRepository.save(recruiter);
-//        } else {
-//            throw new InvalidException("Recruiter not found");
-//        }
-//    }
 
     @Override
     public void handleResendCode(String email) throws InvalidException {
@@ -449,9 +434,7 @@ public class AuthServiceImpl implements AuthService {
         }
 
         // Thông tin riêng của User
-        if (account instanceof User) {
-            User user = (User) account;
-
+        if (account instanceof User user) {
             loginResponse.setPhone(user.getPhone());
             loginResponse.setDob(user.getDob());
             loginResponse.setAddresses(user.getAddresses());

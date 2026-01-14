@@ -12,25 +12,25 @@ import org.springframework.data.jpa.domain.Specification;
 import java.time.Instant;
 
 public interface SubscriberService {
-//    Subscriber handleCreateSubscriber(SubscriberCreateDto subscriber);
-//
-//    Subscriber handleUpdateSubscriber(SubscriberUpdateDto subscriber);
-//
-//    void handleDeleteSubscriber(long id);
-//
-//    Subscriber handleGetSubscriberById(long id);
-//
-//    ResultPaginationResponse handleGetAllSubscribers(Specification<Subscriber> spec, Pageable pageable);
-//
-//    Subscriber handleGetSubscribersSkill(String email);
-//
-//    Subscriber handleGetSubscriberByEmail(String email);
-//
-//    void handleSendSubscribersEmailJobs();
-//
-//    void handleSendFollowersEmailJobs();
-//
-//    boolean isRecentJob(Job job, Instant sevenDaysAgo);
-//
-//    EmailJobResponse convertJobToSendEmail(Job job);
+    Subscriber handleCreateSubscriber(SubscriberCreateDto subscriber);
+
+    Subscriber handleUpdateSubscriber(SubscriberUpdateDto subscriber);
+
+    void handleDeleteSubscriber(long id);
+
+    Subscriber handleGetSubscriberById(long id);
+
+    ResultPaginationResponse handleGetAllSubscribers(Specification<Subscriber> spec, Pageable pageable);
+
+    Subscriber handleGetSubscribersSkill(String email);
+
+    Subscriber handleGetSubscriberByEmail(String email);
+
+    void handleSendSubscribersEmailJobs();
+
+    void handleSendFollowersEmailJobs();
+
+    boolean isRecentJob(Job job, Instant sevenDaysAgo);
+
+    EmailJobResponse convertJobToSendEmail(Job job);
 }

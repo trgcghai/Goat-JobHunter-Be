@@ -3,6 +3,7 @@ package iuh.fit.goat.component.redis.interview;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import iuh.fit.goat.dto.response.interview.InterviewResponse;
 import iuh.fit.goat.dto.result.interview.InterviewFeedbackEvent;
+import iuh.fit.goat.exception.InvalidException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.scheduling.annotation.Async;
@@ -20,7 +21,7 @@ public class InterviewEventProducer {
     private final ObjectMapper objectMapper;
 
     @Async
-    public void publishInterviewCreated(String email, List<InterviewResponse> interviews, String reason) {
+    public void publishInterviewCreated(String email, List<InterviewResponse> interviews, String reason) throws InvalidException {
         try {
             Map<String, Object> message = new HashMap<>();
 
@@ -33,12 +34,12 @@ public class InterviewEventProducer {
 
             this.redisTemplate.opsForStream().add("interview.events", message);
         } catch (Exception  e) {
-            throw new RuntimeException("Cannot publish interview event", e);
+            throw new InvalidException("Cannot publish interview event");
         }
     }
 
     @Async
-    public void publishInterviewFeedback(InterviewFeedbackEvent interview) {
+    public void publishInterviewFeedback(InterviewFeedbackEvent interview) throws InvalidException {
         try {
             Map<String, Object> message = new HashMap<>();
 
@@ -51,7 +52,7 @@ public class InterviewEventProducer {
 
             this.redisTemplate.opsForStream().add("interview.events", message);
         } catch (Exception  e) {
-            throw new RuntimeException("Cannot publish interview event", e);
+            throw new InvalidException("Cannot publish interview event");
         }
     }
 }

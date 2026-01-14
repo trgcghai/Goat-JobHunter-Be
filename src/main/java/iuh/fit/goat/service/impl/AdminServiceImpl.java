@@ -18,41 +18,41 @@ import java.nio.file.Files;
 @RequiredArgsConstructor
 public class AdminServiceImpl implements AdminService {
 
-//    @Value("${spring.datasource.username}")
-//    private String dbUsername;
-//    @Value("${spring.datasource.password}")
-//    private String dbPassword;
-//    @Value("${database-name}")
-//    private String dbDatabase;
-//
-//    @Override
-//    public ResponseEntity<Resource> handleBackupDatabase() {
-//        try {
-//            File tempFile = File.createTempFile("backup_", ".bak");
-//
-//            ProcessBuilder pb = new ProcessBuilder(
-//                    "mysqldump",
-//                    "-u", dbUsername,
-//                    "-p" + dbPassword,
-//                    dbDatabase
-//            );
-//            pb.redirectOutput(tempFile);
-//            Process process = pb.start();
-//            int exitCode = process.waitFor();
-//            if (exitCode != 0) {
-//                throw new InvalidException("Backup failed. Exit code: " + exitCode);
-//            }
-//
-//            ByteArrayResource resource = new ByteArrayResource(Files.readAllBytes(tempFile.toPath()));
-//
-//            return ResponseEntity
-//                    .ok()
-//                    .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=backup.bak")
-//                    .contentType(MediaType.APPLICATION_OCTET_STREAM)
-//                    .body(resource);
-//
-//        } catch (Exception e) {
-//            throw new RuntimeException(e.getMessage());
-//        }
-//    }
+    @Value("${spring.datasource.username}")
+    private String dbUsername;
+    @Value("${spring.datasource.password}")
+    private String dbPassword;
+    @Value("${database-name}")
+    private String dbDatabase;
+
+    @Override
+    public ResponseEntity<Resource> handleBackupDatabase() {
+        try {
+            File tempFile = File.createTempFile("backup_", ".bak");
+
+            ProcessBuilder pb = new ProcessBuilder(
+                    "mysqldump",
+                    "-u", dbUsername,
+                    "-p" + dbPassword,
+                    dbDatabase
+            );
+            pb.redirectOutput(tempFile);
+            Process process = pb.start();
+            int exitCode = process.waitFor();
+            if (exitCode != 0) {
+                throw new InvalidException("Backup failed. Exit code: " + exitCode);
+            }
+
+            ByteArrayResource resource = new ByteArrayResource(Files.readAllBytes(tempFile.toPath()));
+
+            return ResponseEntity
+                    .ok()
+                    .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=backup.bak")
+                    .contentType(MediaType.APPLICATION_OCTET_STREAM)
+                    .body(resource);
+
+        } catch (Exception e) {
+            throw new RuntimeException(e.getMessage());
+        }
+    }
 }

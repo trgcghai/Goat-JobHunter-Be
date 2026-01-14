@@ -17,37 +17,39 @@ import java.util.List;
 import java.util.Map;
 
 public interface JobService {
-//    JobResponse handleCreateJob(CreateJobRequest job);
-//
-//    JobResponse handleUpdateJob(UpdateJobRequest job);
-//
-//    void handleDeleteJob(JobIdsActionRequest request);
-//
+    JobResponse handleCreateJob(CreateJobRequest job);
+
+    JobResponse handleUpdateJob(UpdateJobRequest job);
+
+    void handleDeleteJob(JobIdsActionRequest request);
+
     Job handleGetJobById(long id);
-//
+
     ResultPaginationResponse handleGetAllJobs(Specification<Job> spec, Pageable pageable);
-//
+
     Map<Long, Long> handleCountAvailableJobByCompany();
-//
-//    List<Long> handleGetAllJobIdsByRecruiter();
-//
-//    ResultPaginationResponse handleGetCurrentRecruiterJobs(Specification<Job> spec, Pageable pageable);
-//
+
+    List<Long> handleGetAllJobIdsByCompany();
+
+    ResultPaginationResponse handleGetCurrentCompanyJobs(Specification<Job> spec, Pageable pageable);
+
     List<JobResponse> handleGetAllAvailableJobsByCompanyId(Long companyId, Specification<Job> spec);
 
+    ResultPaginationResponse handleGetJobsByCompanyId(Long companyId, Specification<Job> spec, Pageable pageable);
+
     JobResponse convertToJobResponse(Job job);
-//
-//    List<JobActivateResponse> handleActivateJobs(List<Long> jobIds);
-//
-//    List<JobActivateResponse> handleDeactivateJobs(List<Long> jobIds);
-//
-//    List<JobApplicationCountResponse> handleCountApplicationsByJobIds(List<Long> jobIds);
-//
-//    ResultPaginationResponse handleGetApplicantsForJob(Specification<Applicant> spec, Pageable pageable, Long jobId);
-//
-//    ResultPaginationResponse handleGetApplicants(Specification<Applicant> spec, Pageable pageable);
-//
-//    List<JobEnabledResponse> handleEnabledJobs(JobIdsActionRequest request);
-//
-//    List<JobEnabledResponse> handleDisabledJobs(JobIdsActionRequest request);
+
+    List<JobActivateResponse> handleActivateJobs(List<Long> jobIds);
+
+    List<JobActivateResponse> handleDeactivateJobs(List<Long> jobIds);
+
+    List<JobApplicationCountResponse> handleCountApplicationsByJobIds(List<Long> jobIds);
+
+    ResultPaginationResponse handleGetApplicantsForJob(Specification<Applicant> spec, Pageable pageable, Long jobId);
+
+    ResultPaginationResponse handleGetApplicants(Specification<Applicant> spec, Pageable pageable);
+
+    List<JobEnabledResponse> handleEnabledJobs(JobIdsActionRequest request);
+
+    List<JobEnabledResponse> handleDisabledJobs(JobIdsActionRequest request);
 }

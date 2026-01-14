@@ -2,6 +2,7 @@ package iuh.fit.goat.util;
 
 import com.nimbusds.jose.util.Base64;
 import iuh.fit.goat.dto.response.auth.LoginResponse;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -17,8 +18,10 @@ import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.Optional;
 import java.util.Random;
+import java.util.regex.Pattern;
 
 @Service
+@Slf4j
 public class SecurityUtil {
 
     public static final MacAlgorithm JWT_ALGORITHM = MacAlgorithm.HS512;
@@ -28,6 +31,8 @@ public class SecurityUtil {
     private long jwtAccessToken;
     @Value("${minhdat.jwt.refresh-token-validity-in-seconds}")
     private long jwtRefreshToken;
+
+    private static final Random random = new Random();
     private final JwtEncoder jwtEncoder;
 
     public SecurityUtil(JwtEncoder jwtEncoder) {
@@ -83,7 +88,7 @@ public class SecurityUtil {
         try{
             return decoder.decode(refreshToken);
         } catch (Exception e) {
-            System.out.println(">>> JWT error: " + e.getMessage());
+            log.error(">>> JWT error: " + e.getMessage());
             throw e;
         }
     }
@@ -131,9 +136,13 @@ public class SecurityUtil {
     }
 
     public static String generateVerificationCode() {
-        Random random = new Random();
         int code = random.nextInt(900000) + 100000;
         return String.valueOf(code);
+    }
+
+    public static boolean checkValidNumber(String str) {
+        Pattern pattern = Pattern.compile("^\\d+$");
+        return pattern.matcher(str).matches();
     }
 
 }

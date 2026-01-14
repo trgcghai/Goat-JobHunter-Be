@@ -59,7 +59,6 @@ public class BlogServiceImpl implements BlogService {
     private final UserRepository userRepository;
     private final StorageService storageService;
 
-
     @Override
     public Blog handleCreateBlog(BlogCreateRequest request) throws InvalidException {
         String email = SecurityUtil.getCurrentUserLogin().isPresent() ? SecurityUtil.getCurrentUserLogin().get() : "";
@@ -238,7 +237,7 @@ public class BlogServiceImpl implements BlogService {
                         blog.getBlogId(),
                         blog.isEnabled()
                 )
-        ).collect(Collectors.toList());
+        ).toList();
     }
 
     @Override
@@ -267,7 +266,7 @@ public class BlogServiceImpl implements BlogService {
                         blog.getBlogId(),
                         blog.isEnabled()
                 )
-        ).collect(Collectors.toList());
+        ).toList();
     }
 
     @Override

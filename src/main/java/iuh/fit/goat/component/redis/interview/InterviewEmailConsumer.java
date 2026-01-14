@@ -31,7 +31,7 @@ public class InterviewEmailConsumer {
 
     private static final String STREAM = "interview.events";
     private static final String DLQ_STREAM = "interview.events.dlq";
-    private static final String GROUP = "email-service-group";
+    private static final String GROUP = "interview-service-group";
     private static final String CONSUMER =
             "email-service-" + System.getenv().getOrDefault("HOSTNAME", UUID.randomUUID().toString());
     private static final int MAX_RETRY = 5;
@@ -39,8 +39,19 @@ public class InterviewEmailConsumer {
     @PostConstruct
     public void init() {
         try {
-            this.redisTemplate.opsForStream().createGroup(STREAM, ReadOffset.from("0-0"), GROUP);
-        } catch (Exception ignored) {}
+            boolean groupExists = this.redisTemplate
+                    .opsForStream()
+                    .groups(STREAM)
+                    .stream()
+                    .anyMatch(g -> GROUP.equals(g.groupName()));
+
+            if (!groupExists) {
+                this.redisTemplate.opsForStream()
+                        .createGroup(STREAM, ReadOffset.from("0-0"), GROUP);
+            }
+        } catch (Exception ignored) {
+            throw new RuntimeException(ignored);
+        }
     }
 
     @Scheduled(fixedDelay = 3000)
@@ -82,68 +93,73 @@ public class InterviewEmailConsumer {
 
         if (records == null || records.isEmpty()) return;
 
-        for (MapRecord<String, Object, Object> record : records) {
-            handleEmail(record);
+        for (MapRecord<String, Object, Object> myRecord : records) {
+            handleEmail(myRecord);
         }
     }
 
-    private void handleEmail(MapRecord<String, Object, Object> record) {
-        Map<Object, Object> value = record.getValue();
+    private void handleEmail(MapRecord<String, Object, Object> myRecord) {
+        Map<Object, Object> value = myRecord.getValue();
         int retry = Integer.parseInt(value.get("retry").toString());
         String eventType = value.get("eventType").toString();
 
         try {
-
             if(eventType.equals("INTERVIEW_CREATED")) {
-                this.emailService.handleSendInterviewEmailToApplicant(
-                        value.get("email").toString(),
-                        this.objectMapper.readValue(value.get("interviews").toString(), new TypeReference<List<InterviewResponse>>() {}),
-                        value.get("reason").toString()
-                );
+                Object interviews = value.get("interviews");
+                if(interviews != null) {
+                    this.emailService.handleSendInterviewEmailToApplicant(
+                            value.get("email").toString(),
+                            this.objectMapper.readValue(interviews.toString(), new TypeReference<List<InterviewResponse>>() {}),
+                            value.get("reason").toString()
+                    );
+                }
             } else {
-                this.emailService.handleSendFeedbackInterviewEmailToApplicantOrCompany(
-                        value.get("applicantEmail").toString(),
-                        this.objectMapper.readValue(value.get("interview").toString(), InterviewFeedbackEvent.class),
-                        Role.APPLICANT
-                );
+                Object interview = value.get("interview");
+                if(interview != null) {
+                    this.emailService.handleSendFeedbackInterviewEmailToApplicantOrCompany(
+                            value.get("applicantEmail").toString(),
+                            this.objectMapper.readValue(value.get("interview").toString(), InterviewFeedbackEvent.class),
+                            Role.APPLICANT
+                    );
 
-                this.emailService.handleSendFeedbackInterviewEmailToApplicantOrCompany(
-                        value.get("companyEmail").toString(),
-                        this.objectMapper.readValue(value.get("interview").toString(), InterviewFeedbackEvent.class),
-                        Role.COMPANY
-                );
+                    this.emailService.handleSendFeedbackInterviewEmailToApplicantOrCompany(
+                            value.get("companyEmail").toString(),
+                            this.objectMapper.readValue(value.get("interview").toString(), InterviewFeedbackEvent.class),
+                            Role.COMPANY
+                    );
+                }
             }
 
-            this.redisTemplate.opsForStream().acknowledge(STREAM, GROUP, record.getId());
+            this.redisTemplate.opsForStream().acknowledge(STREAM, GROUP, myRecord.getId());
 
         } catch (Exception e) {
             log.error("Send mail failed", e);
 
             if (retry >= MAX_RETRY) {
-                sendToDLQ(record); // đưa vào Dead Letter Queue
+                sendToDLQ(myRecord); // đưa vào Dead Letter Queue
             } else {
-                retryMessage(record, retry);
+                retryMessage(myRecord, retry);
             }
         }
     }
 
-    private void sendToDLQ(MapRecord<String, Object, Object> record) {
-        this.redisTemplate.opsForStream().add(DLQ_STREAM, record.getValue());
+    private void sendToDLQ(MapRecord<String, Object, Object> myRecord) {
+        this.redisTemplate.opsForStream().add(DLQ_STREAM, myRecord.getValue());
 
-        this.redisTemplate.opsForStream().acknowledge(STREAM, GROUP, record.getId());
+        this.redisTemplate.opsForStream().acknowledge(STREAM, GROUP, myRecord.getId());
 
-        log.warn("Message moved to DLQ: {}", record.getId());
+        log.warn("Message moved to DLQ: {}", myRecord.getId());
     }
 
-    private void retryMessage(MapRecord<String, Object, Object> record, int retry) {
+    private void retryMessage(MapRecord<String, Object, Object> myRecord, int retry) {
         Map<String, String> newData = new HashMap<>();
-        record.getValue().forEach((k, v) ->
+        myRecord.getValue().forEach((k, v) ->
                 newData.put(k.toString(), v.toString())
         );
         newData.put("retry", String.valueOf(retry + 1));
 
         this.redisTemplate.opsForStream().add(STREAM, newData);
 
-        this.redisTemplate.opsForStream().acknowledge(STREAM, GROUP, record.getId());
+        this.redisTemplate.opsForStream().acknowledge(STREAM, GROUP, myRecord.getId());
     }
 }

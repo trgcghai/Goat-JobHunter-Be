@@ -8,8 +8,6 @@ import jakarta.validation.ConstraintValidatorContext;
 
 public class RequireMeetingLinkIfTypeOnlineValidator implements ConstraintValidator<RequireMeetingLinkIfTypeOnline, CreateInterviewRequest> {
 
-    public RequireMeetingLinkIfTypeOnlineValidator() {}
-
     @Override
     public boolean isValid(CreateInterviewRequest createInterviewRequest, ConstraintValidatorContext constraintValidatorContext) {
         if (createInterviewRequest == null || createInterviewRequest.getType() == null) return true;

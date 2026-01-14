@@ -6,6 +6,7 @@ import iuh.fit.goat.dto.request.interview.InterviewIdsRequest;
 import iuh.fit.goat.dto.response.interview.InterviewResponse;
 import iuh.fit.goat.dto.response.interview.InterviewStatusResponse;
 import iuh.fit.goat.entity.Interview;
+import iuh.fit.goat.exception.InvalidException;
 
 import java.util.List;
 
@@ -21,7 +22,7 @@ public interface InterviewService {
 
     Interview handleGetInterviewById(Long interviewId);
 
-    Interview handleFeedbackInterview(FeedbackInterviewRequest request);
+    Interview handleFeedbackInterview(FeedbackInterviewRequest request) throws InvalidException;
 
     InterviewResponse handleConvertToInterviewResponse(Interview interview);
 }

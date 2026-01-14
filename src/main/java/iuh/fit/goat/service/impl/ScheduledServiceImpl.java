@@ -7,6 +7,7 @@ import iuh.fit.goat.service.CompanyAwardService;
 import iuh.fit.goat.service.ScheduledService;
 import iuh.fit.goat.service.SubscriberService;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -17,53 +18,54 @@ import java.util.List;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class ScheduledServiceImpl implements ScheduledService {
-//    private final AiService aiService;
-//    private final SubscriberService subscriberService;
+    private final AiService aiService;
+    private final SubscriberService subscriberService;
     private final CompanyAwardService companyAwardService;
-//    private final JobRepository jobRepository;
-//
-//    @Override
+    private final JobRepository jobRepository;
+
+    @Override
 //    @Scheduled(cron = "0 0 0 * * *")
-//    @Transactional
-//    public void handleDeactivateExpiredJobs() {
-//        LocalDate today = LocalDate.now();
-//        List<Job> jobs = this.jobRepository.findAll();
-//
-//        jobs.forEach(job -> {
-//            if(job.getEndDate() != null && job.getEndDate().isBefore(today)){
-//                job.setActive(false);
-//            }
-//        });
-//
-//        this.jobRepository.saveAll(jobs);
-//
-//    }
-//
-//    @Override
+    @Transactional
+    public void handleDeactivateExpiredJobs() {
+        LocalDate today = LocalDate.now();
+        List<Job> jobs = this.jobRepository.findAll();
+
+        jobs.forEach(job -> {
+            if(job.getEndDate() != null && job.getEndDate().isBefore(today)){
+                job.setActive(false);
+            }
+        });
+
+        this.jobRepository.saveAll(jobs);
+
+    }
+
+    @Override
 //    @Scheduled(cron = "0 0 */12 * * *")
-//    @Transactional
-//    public void handleSendSuitableJobs(){
-//        this.subscriberService.handleSendSubscribersEmailJobs();
-//        this.subscriberService.handleSendFollowersEmailJobs();
-//    }
-//
-//    @Override
+    @Transactional
+    public void handleSendSuitableJobs(){
+        this.subscriberService.handleSendSubscribersEmailJobs();
+        this.subscriberService.handleSendFollowersEmailJobs();
+    }
+
+    @Override
 //    @Scheduled(cron = "0 */15 * * * *")
-//    @Transactional
-//    public void handleRefreshAiCache() {
-//        this.aiService.getTopJobsContext();
-//        this.aiService.getTopApplicantsContext();
-//        this.aiService.getTopRecruitersContext();
-//        this.aiService.getRecentApplicationsContext();
-//        this.aiService.getTopSkillsContext();
-//        this.aiService.getRecentBlogsContext();
-//        this.aiService.getAllCareersContext();
-//        this.aiService.getSystemStatsContext();
-//        this.aiService.getJobMarketOverview();
-//
-//        System.out.println("AI cache refreshed!");
-//    }
+    @Transactional
+    public void handleRefreshAiCache() {
+        this.aiService.getTopJobsContext();
+        this.aiService.getTopApplicantsContext();
+        this.aiService.getTopCompaniesContext();
+        this.aiService.getRecentApplicationsContext();
+        this.aiService.getTopSkillsContext();
+        this.aiService.getRecentBlogsContext();
+        this.aiService.getAllCareersContext();
+        this.aiService.getSystemStatsContext();
+        this.aiService.getJobMarketOverview();
+
+        log.info("AI cache refreshed!");
+    }
 
     @Override
     @Scheduled(cron = "0 0 1 1 * *")
@@ -72,6 +74,6 @@ public class ScheduledServiceImpl implements ScheduledService {
         int year = Year.now().minusYears(1).getValue();
         this.companyAwardService.calculateAwardsForYear(year);
 
-        System.out.println("Calculated company awards for year: " + year);
+        log.info("Calculated company awards for year: " + year);
     }
 }
