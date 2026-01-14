@@ -13,6 +13,7 @@ import org.springframework.stereotype.Service;
 
 import javax.crypto.SecretKey;
 import javax.crypto.spec.SecretKeySpec;
+import java.security.SecureRandom;
 import java.time.Duration;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
@@ -32,7 +33,7 @@ public class SecurityUtil {
     @Value("${minhdat.jwt.refresh-token-validity-in-seconds}")
     private long jwtRefreshToken;
 
-    private static final Random random = new Random();
+    private static final SecureRandom secureRandom = new SecureRandom();
     private final JwtEncoder jwtEncoder;
 
     public SecurityUtil(JwtEncoder jwtEncoder) {
@@ -136,7 +137,7 @@ public class SecurityUtil {
     }
 
     public static String generateVerificationCode() {
-        int code = random.nextInt(900000) + 100000;
+        int code = secureRandom.nextInt(900_000) + 100_000;
         return String.valueOf(code);
     }
 
