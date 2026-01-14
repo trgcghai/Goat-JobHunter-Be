@@ -5,6 +5,7 @@ import iuh.fit.goat.dto.request.ticket.CreateTicketRequest;
 import iuh.fit.goat.dto.response.ticket.TicketResponse;
 import iuh.fit.goat.enumeration.Status;
 import iuh.fit.goat.enumeration.TicketType;
+import iuh.fit.goat.exception.InvalidException;
 import iuh.fit.goat.exception.PermissionException;
 import iuh.fit.goat.service.TicketService;
 import jakarta.validation.Valid;
@@ -21,21 +22,20 @@ public class TicketController {
     private final TicketService ticketService;
 
     @PostMapping("/blog")
-    public TicketResponse reportBlog(@Valid @RequestBody CreateTicketRequest request) throws PermissionException {
-        return ticketService.createBlogTicket(request);
+    public TicketResponse reportBlog(@Valid @RequestBody CreateTicketRequest request) throws InvalidException {
+        return this.ticketService.createBlogTicket(request);
     }
 
     @PostMapping("/comment")
-    public TicketResponse reportComment(@Valid @RequestBody CreateTicketRequest request) throws PermissionException {
-        return ticketService.createCommentTicket(request);
+    public TicketResponse reportComment(@Valid @RequestBody CreateTicketRequest request) throws InvalidException {
+        return this.ticketService.createCommentTicket(request);
     }
 
     @GetMapping
-//    @PreAuthorize("hasRole('ADMIN')")
     public List<TicketResponse> getTickets(
             @RequestParam(required = false) Status status,
             @RequestParam(required = false) TicketType type
     ) {
-        return ticketService.getTickets(status, type);
+        return this.ticketService.getTickets(status, type);
     }
 }

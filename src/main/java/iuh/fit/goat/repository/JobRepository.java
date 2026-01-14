@@ -11,17 +11,17 @@ import java.util.Optional;
 
 @Repository
 public interface JobRepository extends JpaRepository<Job, Long>, JpaSpecificationExecutor<Job> {
-//    List<Job> findByRecruiter(Recruiter recruiter);
+    List<Job> findByCompany(Company company);
 
     Optional<Job> findByJobIdAndDeletedAtIsNull(long id);
 
     List<Job> findByCareer(Career career);
 
-//    List<Job> findBySkillsIn(List<Skill> skills);
+    List<Job> findBySkillsIn(List<Skill> skills);
 
     List<Job> findByJobIdIn(List<Long> jobIds);
 
-//    Long countByActive(boolean active);
+    Long countByActive(boolean active);
 
     @Query(
         """

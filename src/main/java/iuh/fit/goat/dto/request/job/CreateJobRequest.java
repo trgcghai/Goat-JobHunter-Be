@@ -57,7 +57,7 @@ public class CreateJobRequest {
     @Size(min = 1, max = 10, message = "Chỉ được chọn từ 1 đến 10 kỹ năng")
     private List<@NotNull(message = "skillId không được để trống") Long> skillIds;
 
-    @NotNull(message = "recruiterId không được để trống")
-    @Positive(message = "recruiterId phải là số dương")
-    private Long recruiterId;
+    @NotNull(message = "companyId không được để trống")
+    @Positive(message = "companyId phải là số dương")
+    private Long companyId;
 }

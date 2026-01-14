@@ -54,16 +54,10 @@ public class SecurityConfiguration {
 
     @Bean
     public JwtDecoder jwtDecoder() {
-        NimbusJwtDecoder jwtDecoder = NimbusJwtDecoder.withSecretKey(getSecretKey())
-                .macAlgorithm(SecurityUtil.JWT_ALGORITHM).build();
-        return token -> {
-            try {
-                return jwtDecoder.decode(token);
-            } catch (Exception e) {
-                System.out.println(">>> JWT error: " + e.getMessage());
-                throw e;
-            }
-        };
+        return NimbusJwtDecoder
+                .withSecretKey(getSecretKey())
+                .macAlgorithm(SecurityUtil.JWT_ALGORITHM)
+                .build();
     }
 
     private final CorzConfiguration corzConfiguration;
@@ -108,9 +102,9 @@ public class SecurityConfiguration {
             RedisTokenBlacklistFilter redisTokenBlacklistFilter
     ) throws Exception {
         String[] whiteList = {
-                "/api/v1/ping",                       // Endpoint kiểm tra trạng thái server
-                "/api/v1/clear-cookies",              // Xóa toàn bộ cookies trên FE – không cần phân quyền
-                "/api/v1/uuid",                       // Tạo UUID cho user chưa đăng nhập – không cần phân quyền
+                "/ping",                       // Endpoint kiểm tra trạng thái server
+                "/clear-cookies",              // Xóa toàn bộ cookies trên FE – không cần phân quyền
+                "/uuid",                       // Tạo UUID cho user chưa đăng nhập – không cần phân quyền
                 "/api/v1/files/**",                   // Upload/Download file
 
                 "/",                                  // Trang gốc

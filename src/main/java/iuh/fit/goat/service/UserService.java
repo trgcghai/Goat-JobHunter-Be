@@ -18,17 +18,15 @@ public interface UserService {
 
     boolean handleExistsByEmail(String email);
 
-//    User handleGetUserById(long id);
-//
-//    User handleCreateUser(CreateUserRequest request) throws InvalidException;
+    User handleGetUserById(long id);
 
     ResultPaginationResponse handleGetAllUsers(Specification<User> spec, Pageable pageable);
 
-//    boolean handleCheckCurrentPassword(String currentPassword);
-//
-//    Map<String, Object> handleUpdatePassword(String newPassword, String refreshToken);
-//
-//    void handleResetPassword(ResetPasswordRequest resetPasswordRequest) throws InvalidException;
+    boolean handleCheckCurrentPassword(String currentPassword);
+
+    Map<String, Object> handleUpdatePassword(String newPassword, String refreshToken);
+
+    void handleResetPassword(ResetPasswordRequest resetPasswordRequest) throws InvalidException;
 
     UserResponse convertToUserResponse(User user);
 
@@ -56,13 +54,13 @@ public interface UserService {
 
     /*     ========================= ========================= =========================  */
 
-//    // Notification related methods
-//    ResultPaginationResponse handleGetCurrentUserNotifications(Pageable pageable);
-//
-//    List<Notification> handleGetLatestNotifications();
-//
-//    void handleMarkNotificationsAsSeen(List<Long> notificationIds);
-//
+    // Notification related methods
+    ResultPaginationResponse handleGetCurrentUserNotifications(Pageable pageable);
+
+    List<Notification> handleGetLatestNotifications();
+
+    void handleMarkNotificationsAsSeen(List<Long> notificationIds);
+
     /*     ========================= Followed Companies Related Endpoints =========================  */
     List<Company> handleGetCurrentUserFollowedCompanies();
 
@@ -81,10 +79,10 @@ public interface UserService {
     ResultPaginationResponse handleGetCurrentUserInterviews(Specification<Interview> spec, Pageable pageable);
     /*     ========================= ========================= =========================  */
 
-//
-//    // Admin related methods
-//    List<UserEnabledResponse> handleActivateUsers(List<Long> userIds);
-//
-//    List<UserEnabledResponse> handleDeactivateUsers(List<Long> userIds);
+
+    // Admin related methods
+    List<UserEnabledResponse> handleActivateUsers(List<Long> userIds);
+
+    List<UserEnabledResponse> handleDeactivateUsers(List<Long> userIds);
 
 }

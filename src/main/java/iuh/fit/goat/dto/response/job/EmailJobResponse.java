@@ -11,13 +11,13 @@ import java.util.List;
 public class EmailJobResponse {
     private String title;
     private double salary;
-    private RecruiterEmail recruiter;
+    private CompanyEmail company;
     private List<SkillEmail> skills;
 
     @Getter
     @Setter
     @AllArgsConstructor
-    public static class RecruiterEmail {
+    public static class CompanyEmail {
         private String name;
     }
 

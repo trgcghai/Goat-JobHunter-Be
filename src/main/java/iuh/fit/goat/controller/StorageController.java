@@ -24,7 +24,7 @@ public class StorageController {
     private final StorageService storageService;
 
     @PostMapping
-    public ResponseEntity<?> uploadFile(
+    public ResponseEntity<Object> uploadFile(
             @RequestParam(name = "file", required = false) MultipartFile file,
             @RequestParam(name = "folder") String folder
     ) throws InvalidException
@@ -41,7 +41,7 @@ public class StorageController {
     }
 
     @PostMapping("/multiple")
-    public ResponseEntity<?> uploadMultipleFiles(
+    public ResponseEntity<Object> uploadMultipleFiles(
             @RequestParam(name = "files", required = false) MultipartFile[] files,
             @RequestParam(name = "folder") String folder
     ) throws InvalidException {

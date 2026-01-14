@@ -163,7 +163,7 @@ public class ReviewServiceImpl implements ReviewService {
                         review.getReviewId(),
                         review.isVerified()
                 )
-        ).collect(Collectors.toList());
+        ).toList();
     }
 
     @Override
@@ -191,7 +191,7 @@ public class ReviewServiceImpl implements ReviewService {
                         review.getReviewId(),
                         review.isVerified()
                 )
-        ).collect(Collectors.toList());
+        ).toList();
     }
 
     @Override
@@ -219,7 +219,7 @@ public class ReviewServiceImpl implements ReviewService {
                         review.getReviewId(),
                         review.isEnabled()
                 )
-        ).collect(Collectors.toList());
+        ).toList();
     }
 
     @Override
@@ -247,7 +247,7 @@ public class ReviewServiceImpl implements ReviewService {
                         review.getReviewId(),
                         review.isVerified()
                 )
-        ).collect(Collectors.toList());
+        ).toList();
     }
 
     @Override

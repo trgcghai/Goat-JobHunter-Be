@@ -8,6 +8,7 @@ import iuh.fit.goat.dto.result.application.ApplicationCreatedEvent;
 import iuh.fit.goat.dto.result.application.ApplicationStatusEvent;
 import iuh.fit.goat.enumeration.Status;
 import iuh.fit.goat.dto.response.application.ApplicationResponse;
+import iuh.fit.goat.exception.InvalidException;
 import iuh.fit.goat.service.ApplicationService;
 import iuh.fit.goat.util.SecurityUtil;
 import lombok.RequiredArgsConstructor;
@@ -30,7 +31,7 @@ public class ApplicationServiceImp implements ApplicationService {
     private final ApplicationEventProducer eventProducer;
 
     @Override
-    public Application handleCreateApplication(CreateApplicationRequest request) {
+    public Application handleCreateApplication(CreateApplicationRequest request) throws InvalidException {
         String currentEmail = SecurityUtil.getCurrentUserEmail();
 
         Job job = this.jobRepository.findById(request.getJobId()).orElse(null);
@@ -97,13 +98,17 @@ public class ApplicationServiceImp implements ApplicationService {
                     ))
                     .toList();
 
-            this.eventProducer.publishApplicationStatus(
-                    email,
-                    username,
-                    applicationEvents,
-                    request.getReason(),
-                    Status.REJECTED.getValue()
-            );
+            try {
+                this.eventProducer.publishApplicationStatus(
+                        email,
+                        username,
+                        applicationEvents,
+                        request.getReason(),
+                        Status.REJECTED.getValue()
+                );
+            } catch (InvalidException e) {
+                throw new RuntimeException(e);
+            }
         });
 
         return pendingApplications.stream()
@@ -111,7 +116,7 @@ public class ApplicationServiceImp implements ApplicationService {
                         app.getApplicationId(),
                         app.getStatus().getValue()
                 ))
-                .collect(Collectors.toList());
+                .toList();
     }
 
 //    @Override

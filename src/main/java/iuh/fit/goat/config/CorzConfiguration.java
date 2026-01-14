@@ -18,10 +18,7 @@ public class CorzConfiguration {
         configuration.setAllowedOrigins(Arrays.asList(
                 "http://localhost:3000", "http://localhost:4173", "http://localhost:5173",
 
-                "https://goat-job-hunter-9js0nhbcm-trgcghais-projects.vercel.app",
-                "https://goat-job-hunter-fe.vercel.app",
-                "https://goat-job-hunter-fe-git-main-trgcghais-projects.vercel.app",
-                "https://goat-job-hunter-fe-trgcghais-projects.vercel.app"
+                "https://www.goat-jobhunter.click"
         ));
         configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"));
         configuration.setAllowedHeaders(List.of("*"));

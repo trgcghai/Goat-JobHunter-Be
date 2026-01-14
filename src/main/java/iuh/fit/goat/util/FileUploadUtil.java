@@ -17,7 +17,7 @@ import java.util.stream.Collectors;
 
 @UtilityClass
 public class FileUploadUtil {
-    public static final long MAX_FILE_SIZE = 1024 * 1024 * 2;
+    public static final long MAX_FILE_SIZE = 1024 * 1024 * 2L;
     public static final String FILE_PATTERN = "([^\\s]+(\\.(?i)(jpg|jpeg|png|gif|bmp|pdf|doc|docx))$)";
     public static final String DATE_FORMAT = "ddMMyyyyHHmmss";
     public static final String FILE_NAME_FORMAT = "%s_%s";
@@ -59,7 +59,7 @@ public class FileUploadUtil {
             return br.lines()
                     .map(String::trim)
                     .filter(line -> !line.isEmpty())
-                    .collect(Collectors.toList());
+                    .toList();
         }
 
     }
@@ -71,7 +71,7 @@ public class FileUploadUtil {
             return br.lines()
                     .map(String::trim)
                     .filter(line -> !line.isEmpty())
-                    .collect(Collectors.toList());
+                    .toList();
         }
 
     }

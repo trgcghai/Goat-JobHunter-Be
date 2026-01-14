@@ -49,7 +49,7 @@ public class CommentController {
 
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteComment(@PathVariable("id") String id) throws InvalidException {
-        Pattern pattern = Pattern.compile("^[0-9]+$");
+        Pattern pattern = Pattern.compile("^\\d+$");
         if(!pattern.matcher(id).matches()) throw new InvalidException("Id is number");
 
         Comment res = this.commentService.handleGetCommentById(Long.parseLong(id));
@@ -61,7 +61,7 @@ public class CommentController {
 
     @GetMapping("/{id}")
     public ResponseEntity<CommentResponse> getCommentById(@PathVariable("id") String id) throws InvalidException {
-        Pattern pattern = Pattern.compile("^[0-9]+$");
+        Pattern pattern = Pattern.compile("^\\d+$");
         if(!pattern.matcher(id).matches()) throw new InvalidException("Id is number");
 
         Comment res = this.commentService.handleGetCommentById(Long.parseLong(id));

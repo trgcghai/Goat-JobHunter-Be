@@ -11,6 +11,7 @@ import iuh.fit.goat.exception.InvalidException;
 import iuh.fit.goat.service.CompanyService;
 import iuh.fit.goat.service.JobService;
 import iuh.fit.goat.service.UserService;
+import iuh.fit.goat.util.SecurityUtil;
 import iuh.fit.goat.util.annotation.ApiMessage;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -78,8 +79,7 @@ public class CompanyController {
 
     @GetMapping("/{id}")
     public ResponseEntity<CompanyResponse> getCompanyById(@PathVariable("id") String id) throws InvalidException {
-        Pattern pattern = Pattern.compile("^[0-9]+$");
-        if(!pattern.matcher(id).matches()) {
+        if(!SecurityUtil.checkValidNumber(id)) {
             throw new InvalidException("Id is number");
         }
 
@@ -116,8 +116,7 @@ public class CompanyController {
     public ResponseEntity<Map<String, List<String>>> groupAddressesCityByCompany(
             @PathVariable("id") String id
     ) throws InvalidException {
-        Pattern pattern = Pattern.compile("^[0-9]+$");
-        if(!pattern.matcher(id).matches()) {
+        if(!SecurityUtil.checkValidNumber(id)) {
             throw new InvalidException("Id is number");
         }
 
@@ -152,8 +151,7 @@ public class CompanyController {
     public ResponseEntity<Map<Long, String>> findDistinctSkillsByCompany(
             @PathVariable("companyId") String companyId
     ) throws InvalidException {
-        Pattern pattern = Pattern.compile("^[0-9]+$");
-        if(!pattern.matcher(companyId).matches()) {
+        if(!SecurityUtil.checkValidNumber(companyId)) {
             throw new InvalidException("Id is number");
         }
 
@@ -169,8 +167,7 @@ public class CompanyController {
     public ResponseEntity<List<JobResponse>> getAllAvailableJobsByCompanyId(
             @PathVariable("companyId") String companyId, @Filter Specification<Job> spec
     ) throws InvalidException {
-        Pattern pattern = Pattern.compile("^[0-9]+$");
-        if (!pattern.matcher(companyId).matches()) {
+        if (!SecurityUtil.checkValidNumber(companyId)) {
             throw new InvalidException("Id is number");
         }
 
@@ -183,6 +180,5 @@ public class CompanyController {
         List<String> result = this.companyService.handleGetAllCompanyNames();
         return ResponseEntity.status(HttpStatus.OK).body(result);
     }
-
 
 }

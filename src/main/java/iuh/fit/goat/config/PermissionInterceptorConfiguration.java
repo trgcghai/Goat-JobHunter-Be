@@ -16,9 +16,9 @@ public class PermissionInterceptorConfiguration implements WebMvcConfigurer {
     @Override
     public void addInterceptors(InterceptorRegistry registry) {
         String[] whiteList = {
-                "/api/v1/ping",                      // Endpoint kiểm tra trạng thái server
-                "/api/v1/clear-cookies",             // Xóa toàn bộ cookies trên FE – không cần phân quyền
-                "/api/v1/uuid",                      // Tạo UUID cho user chưa đăng nhập – không cần phân quyền
+                "/ping",                      // Endpoint kiểm tra trạng thái server
+                "/clear-cookies",             // Xóa toàn bộ cookies trên FE – không cần phân quyền
+                "/uuid",                      // Tạo UUID cho user chưa đăng nhập – không cần phân quyền
 
                 "/",                                 // Trang gốc – public
                 "/api/v1/auth/**",                   // Các endpoint xác thực (login, refresh token, logout) – phải public

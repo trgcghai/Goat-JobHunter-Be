@@ -2,6 +2,7 @@ package iuh.fit.goat.controller;
 
 import com.turkraft.springfilter.boot.Filter;
 import iuh.fit.goat.dto.response.ResultPaginationResponse;
+import iuh.fit.goat.util.SecurityUtil;
 import iuh.fit.goat.util.annotation.ApiMessage;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -49,9 +50,7 @@ public class SkillController {
     @DeleteMapping("/{id}")
     @ApiMessage("Delete skill by id")
     public ResponseEntity<Void> deleteSkill(@PathVariable("id") String id) throws InvalidException {
-        Pattern pattern = Pattern.compile("^[0-9]+$");
-
-        if(pattern.matcher(id).matches()) {
+        if(SecurityUtil.checkValidNumber("id")) {
             Skill skill = this.skillService.handGetSkillById(Long.parseLong(id));
             if(skill != null) {
                 this.skillService.handleDeleteSkill(Long.parseLong(id));
@@ -66,9 +65,7 @@ public class SkillController {
 
     @GetMapping("/{id}")
     public ResponseEntity<Skill> getSkillById(@PathVariable("id") String id) throws InvalidException {
-        Pattern pattern = Pattern.compile("^[0-9]+$");
-
-        if(pattern.matcher(id).matches()) {
+        if(SecurityUtil.checkValidNumber("id")) {
             Skill skill = this.skillService.handGetSkillById(Long.parseLong(id));
             if(skill != null) {
                 return ResponseEntity.status(HttpStatus.OK).body(skill);

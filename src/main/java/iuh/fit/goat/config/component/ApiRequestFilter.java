@@ -61,7 +61,8 @@ public class ApiRequestFilter extends OncePerRequestFilter {
         for (SoftDeleteFilter filter : SoftDeleteFilter.values()) {
             try {
                 session.disableFilter(filter.getValue());
-            } catch (IllegalArgumentException ignored) {
+            } catch (IllegalArgumentException ex) {
+                // Filter was not enabled; ignore
             }
         }
     }

@@ -17,12 +17,12 @@ import org.springframework.web.bind.annotation.*;
 import java.util.regex.Pattern;
 
 @RestController
-@RequestMapping("/api/v1")
+@RequestMapping("/api/v1/careers")
 @RequiredArgsConstructor
 public class CareerController {
     private final CareerService careerService;
 
-    @PostMapping("/careers")
+    @PostMapping
     public ResponseEntity<Career> createCareer(@Valid @RequestBody Career career) throws InvalidException {
         if(career.getName() != null && this.careerService.handleExistCareer(career.getName())) {
             throw new InvalidException("Career exists");
@@ -32,7 +32,7 @@ public class CareerController {
         return ResponseEntity.status(HttpStatus.CREATED).body(newCareer);
     }
 
-    @PutMapping("/careers")
+    @PutMapping
     public ResponseEntity<Career> updateCareer(@Valid @RequestBody Career career) throws InvalidException {
         if(career.getName() != null && this.careerService.handleExistCareer(career.getName())) {
             throw new InvalidException("Career exists");
@@ -46,10 +46,10 @@ public class CareerController {
         return ResponseEntity.status(HttpStatus.OK).body(updateCareer);
     }
 
-    @DeleteMapping("/careers/{id}")
+    @DeleteMapping("/{id}")
     @ApiMessage("Delete career by id")
     public ResponseEntity<Void> deleteCareer(@PathVariable("id") String id) throws InvalidException {
-        Pattern pattern = Pattern.compile("^[0-9]+$");
+        Pattern pattern = Pattern.compile("^\\d+$");
 
         if(pattern.matcher(id).matches()){
             Career career = this.careerService.handleGetCareerById(Long.parseLong(id));
@@ -64,9 +64,9 @@ public class CareerController {
         }
     }
 
-    @GetMapping("/careers/{id}")
+    @GetMapping("/{id}")
     public ResponseEntity<Career> getCareerById(@PathVariable("id") String id) throws InvalidException {
-        Pattern pattern = Pattern.compile("^[0-9]+$");
+        Pattern pattern = Pattern.compile("^\\d+$");
 
         if(pattern.matcher(id).matches()){
             Career career = this.careerService.handleGetCareerById(Long.parseLong(id));
@@ -80,7 +80,7 @@ public class CareerController {
         }
     }
 
-    @GetMapping("/careers")
+    @GetMapping
     public ResponseEntity<ResultPaginationResponse> getAllCareers(
             @Filter Specification<Career> spec, Pageable pageable
     ) {

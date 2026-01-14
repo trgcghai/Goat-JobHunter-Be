@@ -71,8 +71,8 @@ jobs:
         with:
           aws_access_key: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws_secret_key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          application_name: goat-app
-          environment_name: goat-env
+          application_name: goat
+          environment_name: goat-jobhunter-env
           version_label: v-${{ github.run_number }}
           region: ap-southeast-2
           deployment_package: goat-deploy.zip

@@ -6,6 +6,7 @@ import iuh.fit.goat.dto.response.ResultPaginationResponse;
 import iuh.fit.goat.entity.Role;
 import iuh.fit.goat.exception.InvalidException;
 import iuh.fit.goat.service.RoleService;
+import iuh.fit.goat.util.SecurityUtil;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Pageable;
@@ -17,18 +18,18 @@ import org.springframework.web.bind.annotation.*;
 import java.util.regex.Pattern;
 
 @RestController
-@RequestMapping("/api/v1")
+@RequestMapping("/api/v1/roles")
 @RequiredArgsConstructor
 public class RoleController {
     private final RoleService roleService;
 
-    @PostMapping("/roles")
+    @PostMapping
     public ResponseEntity<Role> createRole(@Valid @RequestBody RoleCreateRequest role) {
         Role res = this.roleService.handleCreateRole(role);
         return ResponseEntity.status(HttpStatus.CREATED).body(res);
     }
 
-    @PutMapping("/roles")
+    @PutMapping
     public ResponseEntity<Role> updateRole(@Valid @RequestBody Role role) throws InvalidException {
         if(this.roleService.handleGetRoleById(role.getRoleId()) == null){
             throw new InvalidException("Role doesn't exist");
@@ -37,27 +38,25 @@ public class RoleController {
         return ResponseEntity.status(HttpStatus.OK).body(res);
     }
 
-    @PutMapping("/roles/{id}/activate")
+    @PutMapping("/{id}/activate")
     public ResponseEntity<Role> activateRole(@PathVariable("id") String id) throws InvalidException {
-        Pattern pattern = Pattern.compile("^[0-9]+$");
-        if(!pattern.matcher(id).matches()){
+        if(!SecurityUtil.checkValidNumber("id")){
             throw new InvalidException("Id is number");
         }
         Role res = this.roleService.handleActivateRole(Long.parseLong(id));
         return ResponseEntity.status(HttpStatus.OK).body(res);
     }
 
-    @PutMapping("/roles/{id}/deactivate")
+    @PutMapping("/{id}/deactivate")
     public ResponseEntity<Role> deactivateRole(@PathVariable("id") String id) throws InvalidException {
-        Pattern pattern = Pattern.compile("^[0-9]+$");
-        if(!pattern.matcher(id).matches()){
+        if(!SecurityUtil.checkValidNumber("id")){
             throw new InvalidException("Id is number");
         }
         Role res = this.roleService.handleDeactivateRole(Long.parseLong(id));
         return ResponseEntity.status(HttpStatus.OK).body(res);
     }
 
-    @GetMapping("/roles/{id}")
+    @GetMapping("/{id}")
     public ResponseEntity<Role> getRoleById(@PathVariable("id") long id) throws InvalidException {
         Role role = this.roleService.handleGetRoleById(id);
         if(role == null){
@@ -66,7 +65,7 @@ public class RoleController {
         return ResponseEntity.status(HttpStatus.OK).body(role);
     }
 
-    @GetMapping("/roles")
+    @GetMapping
     public ResponseEntity<ResultPaginationResponse> getAllRoles(
             @Filter Specification<Role> spec, Pageable pageable
     ) {

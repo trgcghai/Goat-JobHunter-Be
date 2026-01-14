@@ -33,7 +33,7 @@ public class NotificationResponse {
     @AllArgsConstructor
     public static class BlogNotification {
         private long blogId;
-        private String title;
+        private String content;
     }
 
     @Getter

@@ -8,6 +8,7 @@ import iuh.fit.goat.entity.Ticket;
 import iuh.fit.goat.entity.User;
 import iuh.fit.goat.enumeration.Status;
 import iuh.fit.goat.enumeration.TicketType;
+import iuh.fit.goat.exception.InvalidException;
 import iuh.fit.goat.exception.PermissionException;
 import iuh.fit.goat.repository.BlogRepository;
 import iuh.fit.goat.repository.CommentRepository;
@@ -29,33 +30,14 @@ public class TicketServiceImpl implements TicketService {
     private final CommentRepository commentRepository;
     private final UserRepository userRepository;
 
-
-    private User getCurrentUser() {
-        String email = SecurityUtil.getCurrentUserLogin().isPresent()
-                ? SecurityUtil.getCurrentUserLogin().get()
-                : "";
-
-        if (email.isBlank()) {
-            throw new RuntimeException("undefined user email");
-        }
-
-        User user = userRepository.findByEmail(email);
-
-        if (user == null) {
-            throw new RuntimeException("User is not exist");
-        }
-
-        return user;
-    }
-
     @Override
-    public TicketResponse createBlogTicket(CreateTicketRequest request) throws PermissionException {
+    public TicketResponse createBlogTicket(CreateTicketRequest request) throws InvalidException {
         User reporter = getCurrentUser();
         Blog blog = blogRepository.findById(request.getTargetId())
                 .orElseThrow(() -> new RuntimeException("Blog is not exist"));
 
         if(blog.getAuthor().getAccountId() == (reporter.getAccountId())) {
-            throw new PermissionException("You cannot report your own blog");
+            throw new InvalidException("You cannot report your own blog");
         }
 
         Ticket ticket = new Ticket();
@@ -72,14 +54,14 @@ public class TicketServiceImpl implements TicketService {
     }
 
     @Override
-    public TicketResponse createCommentTicket(CreateTicketRequest request) throws PermissionException {
+    public TicketResponse createCommentTicket(CreateTicketRequest request) throws InvalidException {
         User reporter = getCurrentUser();
 
         Comment comment = commentRepository.findById(request.getTargetId())
-                .orElseThrow(() -> new RuntimeException("Comment is not exist"));
+                .orElseThrow(() -> new InvalidException("Comment is not exist"));
 
         if(comment.getCommentedBy().getAccountId() == reporter.getAccountId()) {
-            throw new PermissionException("You cannot report your own blog");
+            throw new InvalidException("You cannot report your own blog");
         }
 
         Ticket ticket = new Ticket();
@@ -111,6 +93,24 @@ public class TicketServiceImpl implements TicketService {
         return tickets.stream()
                 .map(this::mapToResponse)
                 .toList();
+    }
+
+    private User getCurrentUser() throws InvalidException {
+        String email = SecurityUtil.getCurrentUserLogin().isPresent()
+                ? SecurityUtil.getCurrentUserLogin().get()
+                : "";
+
+        if (email.isBlank()) {
+            throw new InvalidException("undefined user email");
+        }
+
+        User user = userRepository.findByEmail(email);
+
+        if (user == null) {
+            throw new InvalidException("User is not exist");
+        }
+
+        return user;
     }
 
 
