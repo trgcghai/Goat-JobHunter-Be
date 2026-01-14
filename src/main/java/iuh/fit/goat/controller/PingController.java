@@ -40,7 +40,7 @@ public class PingController {
                 deleteCookie.setPath("/");
                 deleteCookie.setMaxAge(0);       // XÓA cookie
                 deleteCookie.setHttpOnly(true);  // Tùy chọn
-                deleteCookie.setSecure(false);   // Để dev thì false
+                deleteCookie.setSecure(true);   // Để dev thì false
                 response.addCookie(deleteCookie);
             }
         }
