@@ -1,7 +1,10 @@
 package iuh.fit.goat.service.impl;
 
+import iuh.fit.goat.dto.request.message.MessageCreateRequest;
 import iuh.fit.goat.entity.ChatRoom;
 import iuh.fit.goat.entity.Message;
+import iuh.fit.goat.entity.User;
+import iuh.fit.goat.enumeration.MessageType;
 import iuh.fit.goat.exception.InvalidException;
 import iuh.fit.goat.repository.ChatRoomRepository;
 import iuh.fit.goat.repository.MessageRepository;
@@ -11,10 +14,12 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
+import java.time.Instant;
 import java.time.LocalDate;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
+import java.util.UUID;
 
 @Service
 @Slf4j
@@ -25,7 +30,6 @@ public class MessageServiceImpl implements MessageService {
 
     private final MessageRepository messageRepository;
     private final ChatRoomRepository chatRoomRepository;
-//    private final UserService userService;
 
     // ========== Message Operations ==========
 
@@ -58,53 +62,52 @@ public class MessageServiceImpl implements MessageService {
                 conversationId, currentBucket, false);
     }
 
-//    @Override
-//    public Message createNewMessage(MessageCreateRequest request) throws InvalidException {
-//
-//        String email = SecurityUtil.getCurrentUserEmail();
-//        User user = this.userService.handleGetUserByEmail(email);
-//
-//        if (user == null) {
-//            throw new InvalidException("User not found");
-//        }
-//
-//        // Validation
-//        validateMessageRequest(request);
-//
-//        // Generate IDs and timestamps
-//        String messageId = generateMessageId();
-//        Instant now = Instant.now();
-//        long timestamp = now.toEpochMilli();
-//        String bucket = getBucketFromInstant(now);
-//
-//        String chatRoomId = request.getChatRoom().toString();
-//        String conversationBucket = Message.buildChatRoomBucket(chatRoomId, bucket);
-//        String messageSk = Message.buildMessageSk(timestamp, messageId);
-//
-//        // Build message entity
-//        Message message = Message.builder()
-//                .chatRoomBucket(conversationBucket)
-//                .messageSk(messageSk)
-//                .chatRoomId(chatRoomId)
-//                .bucket(bucket)
-//                .messageId(messageId)
-//                .senderId(String.valueOf(user.getAccountId()))
-//                .content(request.getContent())
-//                .messageType(String.valueOf(MessageType.TEXT))
-//                .isHidden(false)
-//                .createdAt(now)
-//                .updatedAt(now)
-//                .build();
-//
-//        // Save message
-//        Message savedMessage = messageRepository.saveMessage(message);
-//
-//        log.info("Message created: messageId={}, conversationId={}, senderId={}",
-//                messageId, chatRoomId, user.getAccountId());
-//
-//        return savedMessage;
-//    }
-//
+    @Override
+    public Message sendMessage(Long chatRoomId, MessageCreateRequest request, User currentUser) throws InvalidException {
+
+        // Validate and check chat room exist
+        ChatRoom chatRoom = this.chatRoomRepository.findById(chatRoomId).orElse(null);
+
+        if (chatRoom == null) {
+            throw new InvalidException("Chat Room not found");
+        }
+
+        // Generate IDs and timestamps
+        String messageId = generateMessageId();
+        Instant now = Instant.now();
+        long timestamp = now.toEpochMilli();
+        String bucket = getBucketFromInstant(now);
+
+        String chatRoomBucket = Message.buildChatRoomBucket(chatRoomId.toString(), bucket);
+        String messageSk = Message.buildMessageSk(timestamp, messageId);
+
+        // Build message entity
+        Message message = Message.builder()
+                .chatRoomBucket(chatRoomBucket)
+                .messageSk(messageSk)
+                .chatRoomId(chatRoomId.toString())
+                .bucket(bucket)
+                .messageId(messageId)
+                .senderId(String.valueOf(currentUser.getAccountId()))
+                .content(request.getContent())
+                .messageType(String.valueOf(MessageType.TEXT))
+                .isHidden(false)
+                .createdAt(now)
+                .updatedAt(now)
+                .build();
+
+        log.info("Saving message - PK: {}, SK: {}",
+                message.getChatRoomBucket(), message.getMessageSk());
+
+        // Save message
+        Message savedMessage = messageRepository.saveMessage(message);
+
+        log.info("Message created: messageId={}, conversationId={}, senderId={}",
+                messageId, chatRoomId, currentUser.getAccountId());
+
+        return savedMessage;
+    }
+
 //    @Override
 //    public Message hideMessage(String messageId, String chatRoomId, String hiddenByAccountId) {
 //        // Validation
@@ -256,39 +259,19 @@ public class MessageServiceImpl implements MessageService {
 //    }
 
     // ========== Helper Methods ==========
-//    private void validateMessageRequest(MessageCreateRequest request) throws InvalidException {
-//
-//        String email = SecurityUtil.getCurrentUserEmail();
-//        User user = this.userService.handleGetUserByEmail(email);
-//
-//        if (user == null) {
-//            throw new InvalidException("User not found");
-//        }
-//
-//        if (request == null) {
-//            throw new IllegalArgumentException("Message request cannot be null");
-//        }
-//        if (request.getChatRoomId() == null) {
-//            throw new IllegalArgumentException("Conversation ID is required");
-//        }
-//        if (request.getContent() == null || request.getContent().isBlank()) {
-//            throw new IllegalArgumentException("Message content is required");
-//        }
-//    }
-//
-//    private String generateMessageId() {
-//        return "msg_" + UUID.randomUUID().toString().replace("-", "");
-//    }
+    private String generateMessageId() {
+        return "msg_" + UUID.randomUUID().toString().replace("-", "");
+    }
 
     private String getCurrentBucket() {
         LocalDate now = LocalDate.now(ZoneId.systemDefault());
         return now.format(BUCKET_FORMATTER);
     }
 
-//    private String getBucketFromInstant(Instant instant) {
-//        LocalDate date = instant.atZone(ZoneId.systemDefault()).toLocalDate();
-//        return date.format(BUCKET_FORMATTER);
-//    }
+    private String getBucketFromInstant(Instant instant) {
+        LocalDate date = instant.atZone(ZoneId.systemDefault()).toLocalDate();
+        return date.format(BUCKET_FORMATTER);
+    }
 //
 //    private String getPreviousBucket(String bucket) {
 //        try {

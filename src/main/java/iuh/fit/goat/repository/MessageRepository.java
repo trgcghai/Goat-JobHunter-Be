@@ -28,21 +28,8 @@ public class MessageRepository {
     private static final int BUCKET_SEARCH_LIMIT = 7; // Search up to 7 days back
     private static final int DEFAULT_LIMIT = 100; // Search 100 message once
 
-    @Value("${dynamodb.table.messages}")
-    private String messagesTableName;
-
-    @Value("${dynamodb.table.pinned_messages}")
-    private String pinnedMessagesTableName;
-
-    private final DynamoDbEnhancedClient enhancedClient;
-
-    private DynamoDbTable<Message> getMessagesTable() {
-        return enhancedClient.table(messagesTableName, TableSchema.fromBean(Message.class));
-    }
-
-    private DynamoDbTable<PinnedMessage> getPinnedMessagesTable() {
-        return enhancedClient.table(pinnedMessagesTableName, TableSchema.fromBean(PinnedMessage.class));
-    }
+    private final DynamoDbTable<Message> messageTable;
+    private final DynamoDbTable<PinnedMessage> pinnedMessageTable;
 
     // ========== Message Operations ==========
 
@@ -80,12 +67,10 @@ public class MessageRepository {
         }
     }
 
-    private Optional<Message> queryLastMessageInBucket(String conversationBucket) {
-        DynamoDbTable<Message> table = getMessagesTable();
-
+    private Optional<Message> queryLastMessageInBucket(String chatRoomBucket) {
         QueryConditional queryConditional = QueryConditional
                 .keyEqualTo(Key.builder()
-                        .partitionValue(conversationBucket)
+                        .partitionValue(chatRoomBucket)
                         .build());
 
         QueryEnhancedRequest queryRequest = QueryEnhancedRequest.builder()
@@ -94,7 +79,7 @@ public class MessageRepository {
                 .limit(1)
                 .build();
 
-        Iterator<Message> results = table.query(queryRequest).items().iterator();
+        Iterator<Message> results = messageTable.query(queryRequest).items().iterator();
 
         if (results.hasNext()) {
             Message message = results.next();
@@ -112,23 +97,22 @@ public class MessageRepository {
         return Optional.empty();
     }
 
-//    /**
-//     * Save a new message
-//     * @param message the message to save
-//     * @return the saved message
-//     */
-//    public Message saveMessage(Message message) {
-//        try {
-//            DynamoDbTable<Message> table = getMessagesTable();
-//            table.putItem(message);
-//            log.debug("Message saved: messageId={}", message.getMessageId());
-//            return message;
-//        } catch (Exception e) {
-//            log.error("Error saving message: {}", message.getMessageId(), e);
-//            throw new RuntimeException("Failed to save message", e);
-//        }
-//    }
-//
+    /**
+     * Save a new message
+     * @param message the message to save
+     * @return the saved message
+     */
+    public Message saveMessage(Message message) {
+        try {
+            messageTable.putItem(message);
+            log.debug("Message saved: messageId={}", message.getMessageId());
+            return message;
+        } catch (Exception e) {
+            log.error("Error saving message: {}", message.getMessageId(), e);
+            throw new RuntimeException("Failed to save message", e);
+        }
+    }
+
 //    /**
 //     * Update an existing message
 //     * @param message the message to update
@@ -181,8 +165,6 @@ public class MessageRepository {
     public List<Message> findMessagesByBucket(String chatRoomId, String bucket, boolean scanIndexForward) {
         try {
             String conversationBucket = Message.buildChatRoomBucket(chatRoomId, bucket);
-            DynamoDbTable<Message> table = getMessagesTable();
-
             QueryConditional queryConditional = QueryConditional
                     .keyEqualTo(Key.builder()
                             .partitionValue(conversationBucket)
@@ -194,7 +176,7 @@ public class MessageRepository {
                     .limit(DEFAULT_LIMIT)
                     .build();
 
-            return table.query(queryRequest)
+            return messageTable.query(queryRequest)
                     .items()
                     .stream()
                     .filter(msg -> !Boolean.TRUE.equals(msg.getIsHidden()))
