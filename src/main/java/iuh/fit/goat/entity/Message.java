@@ -6,9 +6,9 @@ import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.*;
 import java.time.Instant;
 
 @DynamoDbBean
-@Getter
-@Setter
+@Data
 @AllArgsConstructor
+@NoArgsConstructor
 @Builder
 public class Message {
 
@@ -26,14 +26,10 @@ public class Message {
     private Instant createdAt;
     private Instant updatedAt;
 
-    public Message() {
-        this.createdAt = Instant.now();
-    }
-
     // Partition Key
     @DynamoDbPartitionKey
     @DynamoDbAttribute("chatRoomBucket")
-    public String getConversationBucket() {
+    public String getChatRoomBucket() {
         return chatRoomBucket;
     }
 
