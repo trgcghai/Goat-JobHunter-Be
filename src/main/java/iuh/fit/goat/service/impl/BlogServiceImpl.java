@@ -315,18 +315,22 @@ public class BlogServiceImpl implements BlogService {
         response.setCreatedBy(blog.getCreatedBy());
         response.setUpdatedAt(blog.getUpdatedAt());
         response.setUpdatedBy(blog.getUpdatedBy());
-
-        BlogResponse.BlogAuthor author = new BlogResponse.BlogAuthor(
-                blog.getAuthor().getAccountId(),
-                blog.getAuthor().getFullName(),
-                blog.getAuthor().getUsername(),
-                blog.getAuthor().getAvatar(),
-                blog.getAuthor().getBio(),
-                blog.getAuthor().getHeadline(),
-                blog.getAuthor().getCoverPhoto()
-        );
-        response.setAuthor(author);
-
+        if (blog.getAuthor() != null) {
+            BlogResponse.BlogAuthor author = new BlogResponse.BlogAuthor(
+                    blog.getAuthor().getAccountId(),
+                    blog.getAuthor().getFullName(),
+                    blog.getAuthor().getUsername(),
+                    blog.getAuthor().getAvatar(),
+                    blog.getAuthor().getBio(),
+                    blog.getAuthor().getHeadline(),
+                    blog.getAuthor().getCoverPhoto()
+            );
+            response.setAuthor(author);
+        } else {
+            BlogResponse.BlogAuthor anonymous = new BlogResponse.BlogAuthor();
+            anonymous.setFullName("Tác giả ẩn danh");
+            response.setAuthor(anonymous);
+        }
         return response;
     }
 }
