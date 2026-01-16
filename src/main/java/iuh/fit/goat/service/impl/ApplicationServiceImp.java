@@ -3,6 +3,7 @@ package iuh.fit.goat.service.impl;
 import iuh.fit.goat.component.redis.application.ApplicationEventProducer;
 import iuh.fit.goat.dto.request.application.ApplicationIdsRequest;
 import iuh.fit.goat.dto.request.application.CreateApplicationRequest;
+import iuh.fit.goat.dto.response.ResultPaginationResponse;
 import iuh.fit.goat.dto.response.application.ApplicationStatusResponse;
 import iuh.fit.goat.dto.result.application.ApplicationCreatedEvent;
 import iuh.fit.goat.dto.result.application.ApplicationStatusEvent;
@@ -12,6 +13,9 @@ import iuh.fit.goat.exception.InvalidException;
 import iuh.fit.goat.service.ApplicationService;
 import iuh.fit.goat.util.SecurityUtil;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import iuh.fit.goat.entity.*;
 import iuh.fit.goat.repository.*;
@@ -107,7 +111,7 @@ public class ApplicationServiceImp implements ApplicationService {
                         Status.REJECTED.getValue()
                 );
             } catch (InvalidException e) {
-                throw new RuntimeException(e);
+                throw new IllegalArgumentException(e);
             }
         });
 
@@ -119,35 +123,35 @@ public class ApplicationServiceImp implements ApplicationService {
                 .toList();
     }
 
-//    @Override
-//    public void handleDeleteApplication(long id) {
-//        this.applicationRepository.deleteById(id);
-//    }
+    @Override
+    public void handleDeleteApplication(long id) {
+        this.applicationRepository.deleteById(id);
+    }
 
-//    @Override
-//    public Application handleGetApplicationById(long id) {
-//        Optional<Application> application = this.applicationRepository.findById(id);
-//        return application.orElse(null);
-//    }
-//
-//    @Override
-//    public ResultPaginationResponse handleGetAllApplications(
-//            Specification<Application> spec, Pageable pageable
-//    ) {
-//        Page<Application> page = this.applicationRepository.findAll(spec, pageable);
-//
-//        ResultPaginationResponse.Meta meta = new ResultPaginationResponse.Meta();
-//        meta.setPage(pageable.getPageNumber() + 1);
-//        meta.setPageSize(pageable.getPageSize());
-//        meta.setPages(page.getTotalPages());
-//        meta.setTotal(page.getTotalElements());
-//
-//        List<ApplicationResponse> applications = page.getContent().stream()
-//                .map(this :: convertToApplicationResponse)
-//                .toList();
-//
-//        return new ResultPaginationResponse(meta, applications);
-//    }
+    @Override
+    public Application handleGetApplicationById(long id) {
+        Optional<Application> application = this.applicationRepository.findById(id);
+        return application.orElse(null);
+    }
+
+    @Override
+    public ResultPaginationResponse handleGetAllApplications(
+            Specification<Application> spec, Pageable pageable
+    ) {
+        Page<Application> page = this.applicationRepository.findAll(spec, pageable);
+
+        ResultPaginationResponse.Meta meta = new ResultPaginationResponse.Meta();
+        meta.setPage(pageable.getPageNumber() + 1);
+        meta.setPageSize(pageable.getPageSize());
+        meta.setPages(page.getTotalPages());
+        meta.setTotal(page.getTotalElements());
+
+        List<ApplicationResponse> applications = page.getContent().stream()
+                .map(this :: handleConvertToApplicationResponse)
+                .toList();
+
+        return new ResultPaginationResponse(meta, applications);
+    }
 
     @Override
     public boolean checkApplicantAndJobAndResumeExist(Long jobId, Long resumeId) {
@@ -177,17 +181,17 @@ public class ApplicationServiceImp implements ApplicationService {
         return this.applicationRepository.countApplicationsByApplicantAndJob(currentEmail, jobId);
     }
 
-//    @Override
-//    public Applicant handleGetApplicant(Application application) {
-//        Optional<Applicant> applicant = this.applicantRepository.findById(application.getApplicant().getUserId());
-//        return applicant.orElse(null);
-//    }
-//
-//    @Override
-//    public Job handleGetJob(Application application) {
-//        Optional<Job> job = this.jobRepository.findById(application.getJob().getJobId());
-//        return job.orElse(null);
-//    }
+    @Override
+    public Applicant handleGetApplicant(Application application) {
+        Optional<Applicant> applicant = this.applicantRepository.findById(application.getApplicant().getAccountId());
+        return applicant.orElse(null);
+    }
+
+    @Override
+    public Job handleGetJob(Application application) {
+        Optional<Job> job = this.jobRepository.findById(application.getJob().getJobId());
+        return job.orElse(null);
+    }
 
     @Override
     public ApplicationResponse handleConvertToApplicationResponse(Application application) {

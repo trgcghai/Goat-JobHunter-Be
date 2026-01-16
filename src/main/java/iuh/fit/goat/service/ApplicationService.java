@@ -20,24 +20,24 @@ public interface ApplicationService {
     List<Application> handleAcceptApplications(List<Long> applicationIds);
 
     List<ApplicationStatusResponse> handleRejectApplications(ApplicationIdsRequest request);
-//
-//    void handleDeleteApplication(long id);
-//
-//    Application handleGetApplicationById(long id);
-//
-//    ResultPaginationResponse handleGetAllApplications(
-//            Specification<Application> spec, Pageable pageable
-//    );
-//
+
+    void handleDeleteApplication(long id);
+
+    Application handleGetApplicationById(long id);
+
+    ResultPaginationResponse handleGetAllApplications(
+            Specification<Application> spec, Pageable pageable
+    );
+
     boolean checkApplicantAndJobAndResumeExist(Long jobId, Long resumeId);
 
     boolean handleCanApplyToJob(Long jobId);
 
     Long handleCountApplicationsByApplicantForJob(Long jobId);
 
-//    Applicant handleGetApplicant(Application application);
-//
-//    Job handleGetJob(Application application);
+    Applicant handleGetApplicant(Application application);
+
+    Job handleGetJob(Application application);
 
     ApplicationResponse handleConvertToApplicationResponse(Application application);
 }

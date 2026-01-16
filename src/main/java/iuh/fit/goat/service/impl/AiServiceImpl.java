@@ -37,12 +37,12 @@ public class AiServiceImpl implements AiService {
     private final CompanyRepository companyRepository;
 
     @Value("${google.api.model}")
-    private String MODEL;
+    private String model;
     @Value("${goat.fe.url}")
-    private String FE;
+    private String fe;
 
-    private final String CACHE_NAME = "aiChat";
-    private final Long TTL = 900L;
+    private static String cacheName = "aiChat";
+    private static Long ttl = 900L;
 
     @Override
     @Transactional
@@ -61,9 +61,7 @@ public class AiServiceImpl implements AiService {
         String systemPrompt = buildSystemPrompt(currentAccount, currentUserRole);
         String contextData = buildSmartContext(currentAccount, currentUserRole, request.getMessage());
 
-        String aiResponse = callAiApi(systemPrompt, contextData, "", request.getMessage());
-
-        return aiResponse;
+        return callAiApi(systemPrompt, contextData, "", request.getMessage());
     }
 
     // Lấy vai trò của current user
@@ -93,30 +91,24 @@ public class AiServiceImpl implements AiService {
                 9. Khi đề cập career/ngành nghề, liệt kê số lượng job liên quan.
             """.formatted(new Date());
 
-        if (currentUserRole == Role.ADMIN) {
-            return basePrompt + "\nQuyền: ADMIN - toàn bộ dữ liệu.";
-        } else if (currentUserRole == Role.COMPANY) {
-            return basePrompt + String.format("\nQuyền: Company %s - chỉ dữ liệu liên quan đến job (có thể là job của company khác).",
+        return switch (currentUserRole) {
+            case ADMIN -> basePrompt + "\nQuyền: ADMIN - toàn bộ dữ liệu.";
+            case COMPANY -> basePrompt + String.format("\nQuyền: Company %s - chỉ dữ liệu liên quan đến job (có thể là job của company khác).",
                     ((Company)currentAccount).getName());
-        } else if (currentUserRole == Role.APPLICANT) {
-            return basePrompt + String.format("\nQuyền: Applicant %s - tư vấn job và application.",
+            case APPLICANT -> basePrompt + String.format("\nQuyền: Applicant %s - tư vấn job và application.",
                     ((Applicant)currentAccount).getFullName());
-        } else {
-            return basePrompt + "\nQuyền: GUEST - chỉ job công khai.";
-        }
+            default -> basePrompt + "\nQuyền: GUEST - chỉ job công khai.";
+        };
     }
 
     private String buildSmartContext(Account currentAccount, Role currentUserRole, String message) {
         StringBuilder context = new StringBuilder("\n--- DỮ LIỆU NGỮ CẢNH ---\n");
 
-        if (currentUserRole == Role.ADMIN) {
-            context.append(buildAdminContext(message));
-        } else if (currentUserRole == Role.COMPANY) {
-            context.append(buildCompanyContext((Company) currentAccount, message));
-        } else if (currentUserRole == Role.APPLICANT) {
-            context.append(buildApplicantContext((Applicant) currentAccount, message));
-        } else {
-            context.append(buildGuestContext(message));
+        switch (currentUserRole) {
+            case ADMIN -> context.append(buildAdminContext(message));
+            case COMPANY -> context.append(buildCompanyContext((Company) currentAccount, message));
+            case APPLICANT -> context.append(buildApplicantContext((Applicant) currentAccount, message));
+            default -> context.append(buildGuestContext(message));
         }
 
         return context.toString();
@@ -421,7 +413,7 @@ public class AiServiceImpl implements AiService {
 
         try {
             GenerateContentResponse response = this.client.models
-                    .generateContent(MODEL, prompt, null);
+                    .generateContent(model, prompt, null);
             String tagsText = response.text().trim();
 
             return List.of(tagsText.split(","))
@@ -444,7 +436,7 @@ public class AiServiceImpl implements AiService {
         return String.format(
                 "- [%s](%s/jobs/%d) | %.0fK VNĐ | %s | %s | Skills: %s | Recruiter: %s | Qty: %d | Type: %s | Career: %s | Deadline: %s | Active: %s",
                 job.getTitle(),
-                FE,
+                fe,
                 job.getJobId(),
                 job.getSalary() / 1000,
                 job.getLevel().getValue(),
@@ -524,7 +516,7 @@ public class AiServiceImpl implements AiService {
         return String.format(
                 "- [%s](%s/blogs/%d) | Tác giả: %s | Tags: %s | Lượt xem: %d | Likes: %d | Comments: %d | Enabled: %s | Ngày tạo: %s",
                 blog.getContent(),
-                FE,
+                fe,
                 blog.getBlogId(),
                 blog.getAuthor() != null ? blog.getAuthor().getFullName() : "N/A",
                 blog.getTags() != null && !blog.getTags().isEmpty()
@@ -733,7 +725,7 @@ public class AiServiceImpl implements AiService {
                             .map(match -> String.format(
                                     "- [%s](%s/jobs/%d) | %.0fK VNĐ | %s | Match: %.0f%% (%d/%d) | Skills: %s",
                                     match.job.getTitle(),
-                                    FE,
+                                    fe,
                                     match.job.getJobId(),
                                     match.job.getSalary() / 1000,
                                     match.job.getLevel().getValue(),
@@ -778,7 +770,7 @@ public class AiServiceImpl implements AiService {
                     "\n\nHãy trả lời câu hỏi sau dựa trên dữ liệu context(nếu có):\n\nUser: " + userMessage;
 
             GenerateContentResponse response = this.client.models
-                    .generateContent(MODEL, fullPrompt, null);
+                    .generateContent(model, fullPrompt, null);
 
             return response.text();
         } catch (Exception e) {
@@ -790,11 +782,11 @@ public class AiServiceImpl implements AiService {
 
     private String getOrSet(String key, Supplier<String> supplier ) {
         return this.cacheService.getOrSet(
-                CACHE_NAME,
+                cacheName,
                 key,
                 String.class,
                 supplier,
-                TTL
+                ttl
         );
     }
 

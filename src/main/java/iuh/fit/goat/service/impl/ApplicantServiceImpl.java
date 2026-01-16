@@ -25,7 +25,7 @@ public class ApplicantServiceImpl implements ApplicantService {
     private final ApplicantRepository applicantRepository;
     private final AddressRepository addressRepository;
     private final RoleService roleService;
-    private final String APPLICANT = "APPLICANT";
+    private final String applicantRole = "APPLICANT";
 
     @Override
     public Applicant handleCreateApplicant(Applicant applicant) {
@@ -33,7 +33,7 @@ public class ApplicantServiceImpl implements ApplicantService {
         if (applicant.getRole() != null) {
             role = this.roleService.handleGetRoleById(applicant.getRole().getRoleId());
         } else {
-            role = this.roleService.handleGetRoleByName(APPLICANT);
+            role = this.roleService.handleGetRoleByName(applicantRole);
         }
         applicant.setRole(role);
         applicant.setEnabled(false);

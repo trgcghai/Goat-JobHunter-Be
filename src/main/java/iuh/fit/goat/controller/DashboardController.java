@@ -44,7 +44,7 @@ public class DashboardController {
     }
 
     @GetMapping("/applications-year")
-    public ResponseEntity<?> statisticsApplicationByYear(int year, @Filter Specification<Application> spec) {
+    public ResponseEntity<Object> statisticsApplicationByYear(int year, @Filter Specification<Application> spec) {
         Map<Integer, Long> result = this.dashboardService.handleStatisticsApplicationByYear(year, spec);
         return ResponseEntity.status(HttpStatus.OK).body(result);
     }

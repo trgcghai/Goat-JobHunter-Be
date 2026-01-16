@@ -3,6 +3,7 @@ package iuh.fit.goat.component.redis.application;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import iuh.fit.goat.dto.result.application.ApplicationStatusEvent;
+import iuh.fit.goat.exception.InvalidException;
 import iuh.fit.goat.service.EmailNotificationService;
 import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
@@ -35,7 +36,7 @@ public class ApplicationEmailConsumer {
     private static final int MAX_RETRY = 5;
 
     @PostConstruct
-    public void init() {
+    public void init() throws InvalidException {
         try {
             boolean groupExists = this.redisTemplate
                     .opsForStream()
@@ -48,7 +49,7 @@ public class ApplicationEmailConsumer {
                         .createGroup(STREAM, ReadOffset.from("0-0"), GROUP);
             }
         } catch (Exception ignored) {
-            throw new RuntimeException(ignored);
+            throw new InvalidException("Cannot create Redis Stream group");
         }
     }
 

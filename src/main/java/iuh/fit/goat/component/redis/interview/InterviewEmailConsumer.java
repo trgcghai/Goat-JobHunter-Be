@@ -5,6 +5,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import iuh.fit.goat.common.Role;
 import iuh.fit.goat.dto.response.interview.InterviewResponse;
 import iuh.fit.goat.dto.result.interview.InterviewFeedbackEvent;
+import iuh.fit.goat.exception.InvalidException;
 import iuh.fit.goat.service.EmailNotificationService;
 import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
@@ -37,7 +38,7 @@ public class InterviewEmailConsumer {
     private static final int MAX_RETRY = 5;
 
     @PostConstruct
-    public void init() {
+    public void init() throws InvalidException {
         try {
             boolean groupExists = this.redisTemplate
                     .opsForStream()
@@ -50,7 +51,7 @@ public class InterviewEmailConsumer {
                         .createGroup(STREAM, ReadOffset.from("0-0"), GROUP);
             }
         } catch (Exception ignored) {
-            throw new RuntimeException(ignored);
+            throw new InvalidException("Failed to create Redis Stream group");
         }
     }
 
