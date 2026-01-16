@@ -3,14 +3,7 @@ plugins {
 	id("org.springframework.boot") version "3.5.6"
 	id("io.spring.dependency-management") version "1.1.7"
 	id("io.freefair.lombok") version "8.6"
-//	id("com.google.cloud.tools.jib") version "3.5.2"
 }
-
-//jib {
-//	to {
-//		image = "gcr.io/minhdat131203/goat-backend"
-//	}
-//}
 
 group = "fit.se"
 version = "0.0.1-SNAPSHOT"
@@ -31,6 +24,7 @@ tasks.bootJar {
 }
 
 dependencies {
+    implementation(platform("software.amazon.awssdk:bom:2.25.62"))
 	implementation("org.springframework.boot:spring-boot-starter")
 	implementation("org.springframework.boot:spring-boot-starter-oauth2-resource-server") {
 		exclude(group = "com.google.code.gson", module = "gson")
@@ -53,7 +47,8 @@ dependencies {
 	implementation("org.postgresql:postgresql:42.7.8")
 	implementation("org.liquibase:liquibase-core:5.0.1")
 	implementation("io.awspring.cloud:spring-cloud-starter-aws-secrets-manager-config:2.4.4")
-	implementation("org.springframework.cloud:spring-cloud-starter-aws:2.2.6.RELEASE")
+    implementation("software.amazon.awssdk:dynamodb")
+    implementation("software.amazon.awssdk:dynamodb-enhanced")
 
 
 	implementation("commons-io:commons-io:2.19.0")
