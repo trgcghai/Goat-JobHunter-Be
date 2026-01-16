@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+                      http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-5.0.xsd"
+        objectQuotingStrategy="QUOTE_ONLY_RESERVED_WORDS">
+
+    <!-- Drop table: message_read_by -->
+    <changeSet id="drop-message-read-by-001" author="HP">
+        <preConditions onFail="MARK_RAN">
+            <tableExists tableName="message_read_by"/>
+        </preConditions>
+
+        <dropTable tableName="message_read_by"/>
+    </changeSet>
+
+    <!-- Drop table: chat_messages -->
+    <changeSet id="drop-chat-messages-001" author="HP">
+        <preConditions onFail="MARK_RAN">
+            <tableExists tableName="chat_messages"/>
+        </preConditions>
+
+        <dropTable tableName="chat_messages"/>
+    </changeSet>
+
+</databaseChangeLog>

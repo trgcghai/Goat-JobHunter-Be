@@ -9,7 +9,10 @@ import lombok.NoArgsConstructor;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class MessageCreateRequest {
-    @NotBlank(message = "message is not empty")
+public class MessageToNewChatRoom {
+    @NotBlank(message = "Content is not empty")
     private String content;
+
+    @NotNull(message = "AccountId is not null")
+    private Long accountId;
 }

@@ -19,7 +19,7 @@ import static jakarta.persistence.FetchType.LAZY;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-@ToString(exclude = {"members", "messages"})
+@ToString(exclude = {"members"})
 @FilterDef(name = "activeChatRoomFilter")
 public class ChatRoom extends BaseEntity {
     @Id
@@ -38,12 +38,4 @@ public class ChatRoom extends BaseEntity {
             condition = "deleted_at IS NULL"
     )
     private List<ChatMember> members = new ArrayList<>();
-
-    @OneToMany(mappedBy = "chatRoom", fetch = LAZY, cascade = {PERSIST, MERGE})
-    @JsonIgnore
-    @Filter(
-            name = "activeMessageFilter",
-            condition = "deleted_at IS NULL"
-    )
-    private List<Message> messages = new ArrayList<>();
 }

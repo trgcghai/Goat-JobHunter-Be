@@ -31,8 +31,6 @@ import static jakarta.persistence.FetchType.LAZY;
         "blogs",
         "comments",
         "memberships",
-        "sentMessages",
-        "readMessages",
         "blogReactions",
         "commentReactions",
         "reportedTickets",
@@ -137,22 +135,6 @@ public class User extends Account {
             condition = "deleted_at IS NULL"
     )
     private List<ChatMember> memberships = new ArrayList<>();
-
-    @OneToMany(mappedBy = "sender", fetch = LAZY, cascade = {PERSIST, MERGE})
-    @JsonIgnore
-    @Filter(
-            name = "activeMessageFilter",
-            condition = "deleted_at IS NULL"
-    )
-    private List<Message> sentMessages = new ArrayList<>();
-
-    @ManyToMany(mappedBy = "readBy", fetch = LAZY)
-    @JsonIgnore
-    @Filter(
-            name = "activeMessageFilter",
-            condition = "deleted_at IS NULL"
-    )
-    private List<Message> readMessages = new ArrayList<>();
 
     @OneToMany(mappedBy = "user", fetch = LAZY, cascade = {PERSIST, MERGE}, orphanRemoval = true)
     @JsonIgnore

@@ -20,7 +20,6 @@ public enum SoftDeleteFilter {
     NOTIFICATION("activeNotificationFilter"),
     CHATROOM("activeChatRoomFilter"),
     CHATMEMBER("activeChatMemberFilter"),
-    MESSAGE("activeMessageFilter"),
     TICKET("activeTicketFilter"),
     REVIEW("activeReviewFilter");
 

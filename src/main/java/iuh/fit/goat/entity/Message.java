@@ -1,56 +1,122 @@
 package iuh.fit.goat.entity;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
-import iuh.fit.goat.enumeration.MessageType;
-import jakarta.persistence.*;
-import jakarta.validation.constraints.NotBlank;
 import lombok.*;
-import org.hibernate.annotations.Filter;
-import org.hibernate.annotations.FilterDef;
+import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.*;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.time.Instant;
 
-import static jakarta.persistence.FetchType.LAZY;
-
-@Entity
-@Table(name = "chat_messages")
-@Getter
-@Setter
-@NoArgsConstructor
+@DynamoDbBean
+@Data
 @AllArgsConstructor
-@ToString(exclude = {"chatRoom", "sender", "readBy"})
-@FilterDef(name = "activeMessageFilter")
-public class Message extends BaseEntity {
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private long messageId;
-    @Column(columnDefinition = "TEXT")
-    @NotBlank(message = "Content is required")
+@NoArgsConstructor
+@Builder
+public class Message {
+
+    private String chatRoomBucket; // PK: <chatRoomId>#<bucket>
+    private String messageSk;          // SK: MSG#<timestamp>#<messageId>
+
+    private String chatRoomId;
+    private String bucket;
+    private String messageId;
+    private String senderId;
     private String content;
-    @Enumerated(EnumType.STRING)
-    private MessageType type;
-    private String fileUrl;
-    private String fileName;
+    private String messageType;        // TEXT | FILES | CARD
+    private String replyTo;            // nullable
+    private Boolean isHidden;
+    private Instant createdAt;
+    private Instant updatedAt;
 
-    @ManyToOne(fetch = LAZY)
-    @JoinColumn(name = "room_id")
-    private ChatRoom chatRoom;
+    // Partition Key
+    @DynamoDbPartitionKey
+    @DynamoDbAttribute("chatRoomBucket")
+    public String getChatRoomBucket() {
+        return chatRoomBucket;
+    }
 
-    @ManyToOne(fetch = LAZY)
-    @JoinColumn(name = "sender_id")
-    private User sender;
+    // Sort Key
+    @DynamoDbSortKey
+    @DynamoDbAttribute("messageSk")
+    public String getMessageSk() {
+        return messageSk;
+    }
 
-    @ManyToMany(fetch = LAZY)
-    @JoinTable(
-            name = "message_read_by",
-            joinColumns = @JoinColumn(name = "message_id"),
-            inverseJoinColumns = @JoinColumn(name = "user_id")
-    )
-    @JsonIgnore
-    @Filter(
-            name = "activeAccountFilter",
-            condition = "deleted_at IS NULL"
-    )
-    private List<User> readBy = new ArrayList<>();
+    @DynamoDbAttribute("chatRoomId")
+    public String getChatRoomId() {
+        return chatRoomId;
+    }
+
+    @DynamoDbAttribute("bucket")
+    public String getBucket() {
+        return bucket;
+    }
+
+    @DynamoDbAttribute("messageId")
+    public String getMessageId() {
+        return messageId;
+    }
+
+    @DynamoDbAttribute("senderId")
+    public String getSenderId() {
+        return senderId;
+    }
+
+    @DynamoDbAttribute("content")
+    public String getContent() {
+        return content;
+    }
+
+    @DynamoDbAttribute("messageType")
+    public String getMessageType() {
+        return messageType;
+    }
+
+    @DynamoDbAttribute("replyTo")
+    public String getReplyTo() {
+        return replyTo;
+    }
+
+    @DynamoDbAttribute("isHidden")
+    public Boolean getIsHidden() {
+        return isHidden;
+    }
+
+    @DynamoDbAttribute("createdAt")
+    public Instant getCreatedAt() {
+        return createdAt;
+    }
+
+    @DynamoDbAttribute("updatedAt")
+    public Instant getUpdatedAt() {
+        return updatedAt;
+    }
+
+    // Helper method: Generate chatRoomBucket from chatRoomId and bucket
+    // Format: <chatRoomId>#<bucket>
+    // Example: conv_123#20240129
+    public static String buildChatRoomBucket(String chatRoomId, String bucket) {
+        return chatRoomId + "#" + bucket;
+    }
+
+    // Helper method: Generate messageSk from timestamp and messageId
+    // Format: MSG#<timestamp>#<messageId>
+    // Example: MSG#1706500000123#msg_abc123
+    public static String buildMessageSk(Long timestamp, String messageId) {
+        return "MSG#" + timestamp + "#" + messageId;
+    }
+
+    // Helper method: Extract timestamp from messageSk
+    public Long extractTimestamp() {
+        if (messageSk == null || !messageSk.startsWith("MSG#")) {
+            return null;
+        }
+        String[] parts = messageSk.split("#");
+        if (parts.length >= 2) {
+            try {
+                return Long.parseLong(parts[1]);
+            } catch (NumberFormatException e) {
+                return null;
+            }
+        }
+        return null;
+    }
 }
