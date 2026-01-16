@@ -4,9 +4,8 @@
         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
         xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
                       http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-5.0.xsd"
->
-
-    <changeSet id="seed-role-admin" author="goat">
+        objectQuotingStrategy="QUOTE_ONLY_RESERVED_WORDS">
+    <changeSet id="seed-role-admin" author="minhdat">
         <preConditions onFail="MARK_RAN">
             <sqlCheck expectedResult="0">
                 SELECT COUNT(*) FROM roles WHERE name = 'SUPER_ADMIN';
@@ -21,7 +20,7 @@
         </insert>
     </changeSet>
 
-    <changeSet id="seed-role-admin-permissions" author="goat">
+    <changeSet id="seed-role-admin-permissions" author="minhdat">
         <preConditions onFail="MARK_RAN">
             <sqlCheck expectedResult="0">
                 SELECT COUNT(*) FROM role_permission;

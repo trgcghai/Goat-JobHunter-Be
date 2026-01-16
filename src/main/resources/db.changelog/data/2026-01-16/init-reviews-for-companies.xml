@@ -1,0 +1,278 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+                      http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-5.0.xsd">
+
+    <changeSet id="insert-review-company-2" author="minhdat">
+        <sql><![CDATA[
+            INSERT INTO reviews (
+                review_id,
+                created_at,
+                created_by,
+                summary,
+                experience,
+                suggestion,
+                recommended,
+                verified,
+                user_id,
+                company_id,
+                enabled
+            ) VALUES
+                  (
+                      1,
+                      '2025-12-22',
+                      'conghai.tpma@gmail.com',
+                      'Công ty tốt, chế độ lương thưởng hấp dẫn',
+                      'Công ty ngân hàng hàng đầu Việt Nam và tôi tin rằng mình có cơ hội khi làm việc ở nơi đây\n' ||
+                      'Chính sách tốt, phúc lợi xã hội khá tốt. Đây là điều tôi cảm thấy hài lòng.',
+                      'Cần hỗ trợ phúc lợi, lương hưu cho nhân viên. Tăng lương nhân viên',
+                      true,
+                      true,
+                      1,
+                      2,
+                      true
+                  )
+            ]]>
+        </sql>
+    </changeSet>
+
+    <changeSet id="insert-review-company-3" author="minhdat">
+        <sql><![CDATA[
+            INSERT INTO reviews (
+                review_id,
+                created_at,
+                created_by,
+                summary,
+                experience,
+                suggestion,
+                recommended,
+                verified,
+                user_id,
+                company_id,
+                enabled
+            ) VALUES
+                  (
+                      2,
+                      '2025-12-22',
+                      'conghai.tpma@gmail.com',
+                      'Công ty tốt, chế độ lương thưởng hấp dẫn',
+                      'Công ty ngân hàng hàng đầu Việt Nam và tôi tin rằng mình có cơ hội khi làm việc ở nơi đây\n' ||
+                      'Chính sách tốt, phúc lợi xã hội khá tốt. Đây là điều tôi cảm thấy hài lòng.',
+                      'Cần hỗ trợ phúc lợi, lương hưu cho nhân viên. Tăng lương nhân viên',
+                      true,
+                      true,
+                      1,
+                      3,
+                      true
+                  )
+            ]]>
+        </sql>
+    </changeSet>
+
+    <changeSet id="insert-review-company-4" author="minhdat">
+        <sql><![CDATA[
+            INSERT INTO reviews (
+                review_id,
+                created_at,
+                created_by,
+                summary,
+                experience,
+                suggestion,
+                recommended,
+                verified,
+                user_id,
+                company_id,
+                enabled
+            ) VALUES
+                  (
+                      3,
+                      '2025-12-22',
+                      'conghai.tpma@gmail.com',
+                      'Công ty tốt, chế độ lương thưởng hấp dẫn',
+                      'Công ty ngân hàng hàng đầu Việt Nam và tôi tin rằng mình có cơ hội khi làm việc ở nơi đây\n' ||
+                      'Chính sách tốt, phúc lợi xã hội khá tốt. Đây là điều tôi cảm thấy hài lòng.',
+                      'Cần hỗ trợ phúc lợi, lương hưu cho nhân viên. Tăng lương nhân viên',
+                      true,
+                      true,
+                      1,
+                      4,
+                      true
+                  )
+            ]]>
+        </sql>
+    </changeSet>
+
+    <changeSet id="insert-review-company-5" author="minhdat">
+        <sql><![CDATA[
+            INSERT INTO reviews (
+                review_id,
+                created_at,
+                created_by,
+                summary,
+                experience,
+                suggestion,
+                recommended,
+                verified,
+                user_id,
+                company_id,
+                enabled
+            ) VALUES
+                  (
+                      4,
+                      '2025-12-22',
+                      'conghai.tpma@gmail.com',
+                      'Công ty tốt, chế độ lương thưởng hấp dẫn',
+                      'Công ty ngân hàng hàng đầu Việt Nam và tôi tin rằng mình có cơ hội khi làm việc ở nơi đây\n' ||
+                      'Chính sách tốt, phúc lợi xã hội khá tốt. Đây là điều tôi cảm thấy hài lòng.',
+                      'Cần hỗ trợ phúc lợi, lương hưu cho nhân viên. Tăng lương nhân viên',
+                      true,
+                      true,
+                      1,
+                      5,
+                      true
+                  )
+            ]]>
+        </sql>
+    </changeSet>
+
+    <changeSet id="insert-review-company-6" author="minhdat">
+        <sql><![CDATA[
+            INSERT INTO reviews (
+                review_id,
+                created_at,
+                created_by,
+                summary,
+                experience,
+                suggestion,
+                recommended,
+                verified,
+                user_id,
+                company_id,
+                enabled
+            ) VALUES
+                  (
+                      5,
+                      '2025-12-22',
+                      'conghai.tpma@gmail.com',
+                      'Công ty tốt, chế độ lương thưởng hấp dẫn',
+                      'Công ty ngân hàng hàng đầu Việt Nam và tôi tin rằng mình có cơ hội khi làm việc ở nơi đây\n' ||
+                      'Chính sách tốt, phúc lợi xã hội khá tốt. Đây là điều tôi cảm thấy hài lòng.',
+                      'Cần hỗ trợ phúc lợi, lương hưu cho nhân viên. Tăng lương nhân viên',
+                      true,
+                      true,
+                      1,
+                      6,
+                      true
+                  )
+            ]]>
+        </sql>
+    </changeSet>
+
+    <changeSet id="insert-review-company-7" author="minhdat">
+        <sql><![CDATA[
+            INSERT INTO reviews (
+                review_id,
+                created_at,
+                created_by,
+                summary,
+                experience,
+                suggestion,
+                recommended,
+                verified,
+                user_id,
+                company_id,
+                enabled
+            ) VALUES
+                  (
+                      6,
+                      '2025-12-22',
+                      'conghai.tpma@gmail.com',
+                      'Công ty tốt, chế độ lương thưởng hấp dẫn',
+                      'Công ty ngân hàng hàng đầu Việt Nam và tôi tin rằng mình có cơ hội khi làm việc ở nơi đây\n' ||
+                      'Chính sách tốt, phúc lợi xã hội khá tốt. Đây là điều tôi cảm thấy hài lòng.',
+                      'Cần hỗ trợ phúc lợi, lương hưu cho nhân viên. Tăng lương nhân viên',
+                      true,
+                      true,
+                      1,
+                      7,
+                      true
+                  )
+            ]]>
+        </sql>
+    </changeSet>
+
+    <changeSet id="update-rating-review-1" author="minhdat">
+        <update tableName="reviews">
+            <column name="culture_fun" valueNumeric="1"/>
+            <column name="management_cares_about_me" valueNumeric="2"/>
+            <column name="office_workspace" valueNumeric="3"/>
+            <column name="salary_benefits" valueNumeric="4"/>
+            <column name="training_learning" valueNumeric="5"/>
+            <column name="overall" valueNumeric="4"/>
+            <where>review_id = 1</where>
+        </update>
+    </changeSet>
+
+    <changeSet id="update-rating-review-2" author="minhdat">
+        <update tableName="reviews">
+            <column name="culture_fun" valueNumeric="1"/>
+            <column name="management_cares_about_me" valueNumeric="2"/>
+            <column name="office_workspace" valueNumeric="3"/>
+            <column name="salary_benefits" valueNumeric="4"/>
+            <column name="training_learning" valueNumeric="5"/>
+            <column name="overall" valueNumeric="4"/>
+            <where>review_id = 2</where>
+        </update>
+    </changeSet>
+
+    <changeSet id="update-rating-review-3" author="minhdat">
+        <update tableName="reviews">
+            <column name="culture_fun" valueNumeric="1"/>
+            <column name="management_cares_about_me" valueNumeric="2"/>
+            <column name="office_workspace" valueNumeric="3"/>
+            <column name="salary_benefits" valueNumeric="4"/>
+            <column name="training_learning" valueNumeric="5"/>
+            <column name="overall" valueNumeric="4"/>
+            <where>review_id = 3</where>
+        </update>
+    </changeSet>
+
+    <changeSet id="update-rating-review-4" author="minhdat">
+        <update tableName="reviews">
+            <column name="culture_fun" valueNumeric="1"/>
+            <column name="management_cares_about_me" valueNumeric="2"/>
+            <column name="office_workspace" valueNumeric="3"/>
+            <column name="salary_benefits" valueNumeric="4"/>
+            <column name="training_learning" valueNumeric="5"/>
+            <column name="overall" valueNumeric="4"/>
+            <where>review_id = 4</where>
+        </update>
+    </changeSet>
+
+    <changeSet id="update-rating-review-5" author="minhdat">
+        <update tableName="reviews">
+            <column name="culture_fun" valueNumeric="1"/>
+            <column name="management_cares_about_me" valueNumeric="2"/>
+            <column name="office_workspace" valueNumeric="3"/>
+            <column name="salary_benefits" valueNumeric="4"/>
+            <column name="training_learning" valueNumeric="5"/>
+            <column name="overall" valueNumeric="4"/>
+            <where>review_id = 5</where>
+        </update>
+    </changeSet>
+
+    <changeSet id="update-rating-review-6" author="minhdat">
+        <update tableName="reviews">
+            <column name="culture_fun" valueNumeric="1"/>
+            <column name="management_cares_about_me" valueNumeric="2"/>
+            <column name="office_workspace" valueNumeric="3"/>
+            <column name="salary_benefits" valueNumeric="4"/>
+            <column name="training_learning" valueNumeric="5"/>
+            <column name="overall" valueNumeric="4"/>
+            <where>review_id = 6</where>
+        </update>
+    </changeSet>
+
+</databaseChangeLog>

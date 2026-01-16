@@ -4,8 +4,25 @@
         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
         xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
                       http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-5.0.xsd"
->
-    <changeSet id="seed-user-for-admin" author="goat">
+        objectQuotingStrategy="QUOTE_ONLY_RESERVED_WORDS">
+    <changeSet id="seed-account" author="minhdat">
+        <preConditions onFail="MARK_RAN">
+            <sqlCheck expectedResult="0">
+                SELECT COUNT(*) FROM accounts;
+            </sqlCheck>
+        </preConditions>
+
+        <insert tableName="accounts">
+            <column name="account_id" valueNumeric="1"/>
+            <column name="username" value="admin"/>
+            <column name="email" value="admin@gmail.com"/>
+            <column name="password" value="$2a$10$cNkKjLeLzT/fqEBYRNc3yuUbEc3rH6ZVH9hIIqzDnR3mbIBs4tuDO"/>
+            <column name="enabled" valueBoolean="true"/>
+            <column name="role_id" valueNumeric="1"/>
+        </insert>
+    </changeSet>
+
+    <changeSet id="seed-user-for-admin" author="minhdat">
         <preConditions onFail="MARK_RAN">
             <sqlCheck expectedResult="0">
                 SELECT COUNT(*) FROM users WHERE account_id = 1;
@@ -16,8 +33,7 @@
             <column name="account_id" valueNumeric="1"/>
             <column name="full_name" value="Admin User"/>
             <column name="phone" value="0123456789"/>
-            <column name="address" value="Ho Chi Minh City"/>
-            <column name="dob" valueDate="1990-01-01"/>
+            <column name="dob" valueDate="2004-12-13"/>
             <column name="gender" value="MALE"/>
             <column name="headline" value="System Administrator"/>
             <column name="bio" value="System administrator account"/>

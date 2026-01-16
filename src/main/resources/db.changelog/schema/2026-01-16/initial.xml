@@ -1,0 +1,1723 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+                      http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-5.0.xsd"
+        objectQuotingStrategy="QUOTE_ONLY_RESERVED_WORDS">
+    <changeSet id="1768561727576-1"
+               author="minhdat">
+        <createSequence incrementBy="50"
+                        sequenceName="accounts_seq"
+                        startValue="1"/>
+    </changeSet>
+    <changeSet id="1768561727576-2"
+               author="minhdat">
+        <createSequence incrementBy="50"
+                        sequenceName="addresses_seq"
+                        startValue="1"/>
+    </changeSet>
+    <changeSet id="1768561727576-3"
+               author="minhdat">
+        <createSequence incrementBy="50"
+                        sequenceName="applicants_seq"
+                        startValue="1"/>
+    </changeSet>
+    <changeSet id="1768561727576-4"
+               author="minhdat">
+        <createSequence incrementBy="50"
+                        sequenceName="applications_seq"
+                        startValue="1"/>
+    </changeSet>
+    <changeSet id="1768561727576-5"
+               author="minhdat">
+        <createSequence incrementBy="1"
+                        sequenceName="blog_reactions_reaction_id_seq"
+                        startValue="1"/>
+    </changeSet>
+    <changeSet id="1768561727576-6"
+               author="minhdat">
+        <createSequence incrementBy="50"
+                        sequenceName="blogs_seq"
+                        startValue="1"/>
+    </changeSet>
+    <changeSet id="1768561727576-7"
+               author="minhdat">
+        <createSequence incrementBy="50"
+                        sequenceName="careers_seq"
+                        startValue="1"/>
+    </changeSet>
+    <changeSet id="1768561727576-8"
+               author="minhdat">
+        <createSequence incrementBy="50"
+                        sequenceName="comment_reactions_seq"
+                        startValue="1"/>
+    </changeSet>
+    <changeSet id="1768561727576-9"
+               author="minhdat">
+        <createSequence incrementBy="50"
+                        sequenceName="comments_seq"
+                        startValue="1"/>
+    </changeSet>
+    <changeSet id="1768561727576-10"
+               author="minhdat">
+        <createSequence incrementBy="50"
+                        sequenceName="companies_seq"
+                        startValue="1"/>
+    </changeSet>
+    <changeSet id="1768561727576-11"
+               author="minhdat">
+        <createSequence incrementBy="50"
+                        sequenceName="company_awards_seq"
+                        startValue="1"/>
+    </changeSet>
+    <changeSet id="1768561727576-12"
+               author="minhdat">
+        <createSequence incrementBy="50"
+                        sequenceName="interviews_seq"
+                        startValue="1"/>
+    </changeSet>
+    <changeSet id="1768561727576-13"
+               author="minhdat">
+        <createSequence incrementBy="50"
+                        sequenceName="jobs_seq"
+                        startValue="1"/>
+    </changeSet>
+    <changeSet id="1768561727576-14"
+               author="minhdat">
+        <createSequence incrementBy="50"
+                        sequenceName="notifications_seq"
+                        startValue="1"/>
+    </changeSet>
+    <changeSet id="1768561727576-15"
+               author="minhdat">
+        <createSequence incrementBy="50"
+                        sequenceName="permissions_seq"
+                        startValue="1"/>
+    </changeSet>
+    <changeSet id="1768561727576-16"
+               author="minhdat">
+        <createSequence incrementBy="50"
+                        sequenceName="recruiters_seq"
+                        startValue="1"/>
+    </changeSet>
+    <changeSet id="1768561727576-17"
+               author="minhdat">
+        <createSequence incrementBy="50"
+                        sequenceName="resumes_seq"
+                        startValue="1"/>
+    </changeSet>
+    <changeSet id="1768561727576-18"
+               author="minhdat">
+        <createSequence incrementBy="50"
+                        sequenceName="reviews_seq"
+                        startValue="1"/>
+    </changeSet>
+    <changeSet id="1768561727576-19"
+               author="minhdat">
+        <createSequence incrementBy="50"
+                        sequenceName="roles_seq"
+                        startValue="1"/>
+    </changeSet>
+    <changeSet id="1768561727576-20"
+               author="minhdat">
+        <createSequence incrementBy="50"
+                        sequenceName="skills_seq"
+                        startValue="1"/>
+    </changeSet>
+    <changeSet id="1768561727576-21"
+               author="minhdat">
+        <createSequence incrementBy="50"
+                        sequenceName="users_seq"
+                        startValue="1"/>
+    </changeSet>
+    <changeSet id="1768561727576-22"
+               author="minhdat">
+        <createTable tableName="accounts">
+            <column name="account_id"
+                    type="BIGINT">
+                <constraints nullable="false"
+                             primaryKey="true"
+                             primaryKeyName="pk_accounts"/>
+            </column>
+            <column name="created_at"
+                    type="DATETIME"/>
+            <column name="created_by"
+                    type="VARCHAR(255)"/>
+            <column name="updated_at"
+                    type="DATETIME"/>
+            <column name="updated_by"
+                    type="VARCHAR(255)"/>
+            <column name="deleted_at"
+                    type="DATETIME"/>
+            <column name="deleted_by"
+                    type="VARCHAR(255)"/>
+            <column name="username"
+                    type="VARCHAR(255)"/>
+            <column name="email"
+                    type="VARCHAR(255)"/>
+            <column name="password"
+                    type="VARCHAR(255)"/>
+            <column name="avatar"
+                    type="VARCHAR(255)"/>
+            <column name="enabled"
+                    type="BOOLEAN">
+                <constraints nullable="false"/>
+            </column>
+            <column name="role_id"
+                    type="BIGINT"/>
+        </createTable>
+    </changeSet>
+    <changeSet id="1768561727576-23"
+               author="minhdat">
+        <createTable tableName="addresses">
+            <column name="address_id"
+                    type="BIGINT">
+                <constraints nullable="false"
+                             primaryKey="true"
+                             primaryKeyName="pk_addresses"/>
+            </column>
+            <column name="created_at"
+                    type="DATETIME"/>
+            <column name="created_by"
+                    type="VARCHAR(255)"/>
+            <column name="updated_at"
+                    type="DATETIME"/>
+            <column name="updated_by"
+                    type="VARCHAR(255)"/>
+            <column name="deleted_at"
+                    type="DATETIME"/>
+            <column name="deleted_by"
+                    type="VARCHAR(255)"/>
+            <column name="province"
+                    type="VARCHAR(255)"/>
+            <column name="full_address"
+                    type="VARCHAR(255)"/>
+            <column name="account_id"
+                    type="BIGINT"/>
+            <column name="job_id"
+                    type="BIGINT"/>
+        </createTable>
+    </changeSet>
+    <changeSet id="1768561727576-24"
+               author="minhdat">
+        <createTable tableName="applicants">
+            <column name="account_id"
+                    type="BIGINT">
+                <constraints nullable="false"
+                             primaryKey="true"
+                             primaryKeyName="pk_applicants"/>
+            </column>
+            <column name="available_status"
+                    type="BOOLEAN">
+                <constraints nullable="false"/>
+            </column>
+            <column name="education"
+                    type="VARCHAR(255)"/>
+            <column name="level"
+                    type="VARCHAR(255)"/>
+        </createTable>
+    </changeSet>
+    <changeSet id="1768561727576-25"
+               author="minhdat">
+        <createTable tableName="applications">
+            <column name="application_id"
+                    type="BIGINT">
+                <constraints nullable="false"
+                             primaryKey="true"
+                             primaryKeyName="pk_applications"/>
+            </column>
+            <column name="created_at"
+                    type="DATETIME"/>
+            <column name="created_by"
+                    type="VARCHAR(255)"/>
+            <column name="updated_at"
+                    type="DATETIME"/>
+            <column name="updated_by"
+                    type="VARCHAR(255)"/>
+            <column name="deleted_at"
+                    type="DATETIME"/>
+            <column name="deleted_by"
+                    type="VARCHAR(255)"/>
+            <column name="email"
+                    type="VARCHAR(255)"/>
+            <column name="cover_letter"
+                    type="TEXT"/>
+            <column name="status"
+                    type="VARCHAR(255)"/>
+            <column name="job_id"
+                    type="BIGINT"/>
+            <column name="applicant_id"
+                    type="BIGINT"/>
+            <column name="resume_id"
+                    type="BIGINT"/>
+        </createTable>
+    </changeSet>
+    <changeSet id="1768561727576-26"
+               author="minhdat">
+        <createTable tableName="blog_images">
+            <column name="blog_blog_id"
+                    type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="images"
+                    type="VARCHAR(255)"/>
+        </createTable>
+    </changeSet>
+    <changeSet id="1768561727576-27"
+               author="minhdat">
+        <createTable tableName="blog_reactions">
+            <column name="reaction_id"
+                    type="BIGINT">
+                <constraints nullable="false"
+                             primaryKey="true"
+                             primaryKeyName="pk_blog_reactions"/>
+            </column>
+            <column name="created_at"
+                    type="DATETIME"/>
+            <column name="created_by"
+                    type="VARCHAR(255)"/>
+            <column name="updated_at"
+                    type="DATETIME"/>
+            <column name="updated_by"
+                    type="VARCHAR(255)"/>
+            <column name="deleted_at"
+                    type="DATETIME"/>
+            <column name="deleted_by"
+                    type="VARCHAR(255)"/>
+            <column name="type"
+                    type="VARCHAR(255)"/>
+            <column name="user_id"
+                    type="BIGINT"/>
+            <column name="blog_id"
+                    type="BIGINT"/>
+        </createTable>
+    </changeSet>
+    <changeSet id="1768561727576-28"
+               author="minhdat">
+        <createTable tableName="blog_tags">
+            <column name="blog_blog_id"
+                    type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="tags"
+                    type="TEXT"/>
+        </createTable>
+    </changeSet>
+    <changeSet id="1768561727576-29"
+               author="minhdat">
+        <createTable tableName="blogs">
+            <column name="blog_id"
+                    type="BIGINT">
+                <constraints nullable="false"
+                             primaryKey="true"
+                             primaryKeyName="pk_blogs"/>
+            </column>
+            <column name="created_at"
+                    type="DATETIME"/>
+            <column name="created_by"
+                    type="VARCHAR(255)"/>
+            <column name="updated_at"
+                    type="DATETIME"/>
+            <column name="updated_by"
+                    type="VARCHAR(255)"/>
+            <column name="deleted_at"
+                    type="DATETIME"/>
+            <column name="deleted_by"
+                    type="VARCHAR(255)"/>
+            <column name="content"
+                    type="TEXT"/>
+            <column name="enabled"
+                    type="BOOLEAN">
+                <constraints nullable="false"/>
+            </column>
+            <column name="user_id"
+                    type="BIGINT"/>
+            <column name="total_likes"
+                    type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="total_comments"
+                    type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="total_reads"
+                    type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="total_parent_comments"
+                    type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+    </changeSet>
+    <changeSet id="1768561727576-30"
+               author="minhdat">
+        <createTable tableName="careers">
+            <column name="career_id"
+                    type="BIGINT">
+                <constraints nullable="false"
+                             primaryKey="true"
+                             primaryKeyName="pk_careers"/>
+            </column>
+            <column name="created_at"
+                    type="DATETIME"/>
+            <column name="created_by"
+                    type="VARCHAR(255)"/>
+            <column name="updated_at"
+                    type="DATETIME"/>
+            <column name="updated_by"
+                    type="VARCHAR(255)"/>
+            <column name="deleted_at"
+                    type="DATETIME"/>
+            <column name="deleted_by"
+                    type="VARCHAR(255)"/>
+            <column name="name"
+                    type="VARCHAR(255)"/>
+        </createTable>
+    </changeSet>
+    <changeSet id="1768561727576-31"
+               author="minhdat">
+        <createTable tableName="chat_members">
+            <column name="member_id"
+                    type="BIGINT">
+                <constraints nullable="false"
+                             primaryKey="true"
+                             primaryKeyName="pk_chat_members"/>
+            </column>
+            <column name="created_at"
+                    type="DATETIME"/>
+            <column name="created_by"
+                    type="VARCHAR(255)"/>
+            <column name="updated_at"
+                    type="DATETIME"/>
+            <column name="updated_by"
+                    type="VARCHAR(255)"/>
+            <column name="deleted_at"
+                    type="DATETIME"/>
+            <column name="deleted_by"
+                    type="VARCHAR(255)"/>
+            <column name="role"
+                    type="VARCHAR(255)"/>
+            <column name="room_id"
+                    type="BIGINT"/>
+            <column name="user_id"
+                    type="BIGINT"/>
+        </createTable>
+    </changeSet>
+    <changeSet id="1768561727576-32"
+               author="minhdat">
+        <createTable tableName="chat_messages">
+            <column name="message_id"
+                    type="BIGINT">
+                <constraints nullable="false"
+                             primaryKey="true"
+                             primaryKeyName="pk_chat_messages"/>
+            </column>
+            <column name="created_at"
+                    type="DATETIME"/>
+            <column name="created_by"
+                    type="VARCHAR(255)"/>
+            <column name="updated_at"
+                    type="DATETIME"/>
+            <column name="updated_by"
+                    type="VARCHAR(255)"/>
+            <column name="deleted_at"
+                    type="DATETIME"/>
+            <column name="deleted_by"
+                    type="VARCHAR(255)"/>
+            <column name="content"
+                    type="TEXT"/>
+            <column name="type"
+                    type="VARCHAR(255)"/>
+            <column name="file_url"
+                    type="VARCHAR(255)"/>
+            <column name="file_name"
+                    type="VARCHAR(255)"/>
+            <column name="room_id"
+                    type="BIGINT"/>
+            <column name="sender_id"
+                    type="BIGINT"/>
+        </createTable>
+    </changeSet>
+    <changeSet id="1768561727576-33"
+               author="minhdat">
+        <createTable tableName="chat_rooms">
+            <column name="room_id"
+                    type="BIGINT">
+                <constraints primaryKey="true"
+                             primaryKeyName="pk_chat_rooms"/>
+            </column>
+            <column name="created_at"
+                    type="DATETIME"/>
+            <column name="created_by"
+                    type="VARCHAR(255)"/>
+            <column name="updated_at"
+                    type="DATETIME"/>
+            <column name="updated_by"
+                    type="VARCHAR(255)"/>
+            <column name="deleted_at"
+                    type="DATETIME"/>
+            <column name="deleted_by"
+                    type="VARCHAR(255)"/>
+            <column name="name"
+                    type="VARCHAR(255)"/>
+            <column name="avatar"
+                    type="VARCHAR(255)"/>
+            <column name="type"
+                    type="VARCHAR(255)"/>
+            <column name="ai_model"
+                    type="VARCHAR(255)"/>
+        </createTable>
+    </changeSet>
+    <changeSet id="1768561727576-34"
+               author="minhdat">
+        <createTable tableName="comment_reactions">
+            <column name="reaction_id"
+                    type="BIGINT">
+                <constraints nullable="false"
+                             primaryKey="true"
+                             primaryKeyName="pk_comment_reactions"/>
+            </column>
+            <column name="created_at"
+                    type="DATETIME"/>
+            <column name="created_by"
+                    type="VARCHAR(255)"/>
+            <column name="updated_at"
+                    type="DATETIME"/>
+            <column name="updated_by"
+                    type="VARCHAR(255)"/>
+            <column name="deleted_at"
+                    type="DATETIME"/>
+            <column name="deleted_by"
+                    type="VARCHAR(255)"/>
+            <column name="type"
+                    type="VARCHAR(255)"/>
+            <column name="user_id"
+                    type="BIGINT"/>
+            <column name="comment_id"
+                    type="BIGINT"/>
+        </createTable>
+    </changeSet>
+    <changeSet id="1768561727576-35"
+               author="minhdat">
+        <createTable tableName="comments">
+            <column name="comment_id"
+                    type="BIGINT">
+                <constraints nullable="false"
+                             primaryKey="true"
+                             primaryKeyName="pk_comments"/>
+            </column>
+            <column name="created_at"
+                    type="DATETIME"/>
+            <column name="created_by"
+                    type="VARCHAR(255)"/>
+            <column name="updated_at"
+                    type="DATETIME"/>
+            <column name="updated_by"
+                    type="VARCHAR(255)"/>
+            <column name="deleted_at"
+                    type="DATETIME"/>
+            <column name="deleted_by"
+                    type="VARCHAR(255)"/>
+            <column name="comment"
+                    type="TEXT"/>
+            <column name="reply"
+                    type="BOOLEAN">
+                <constraints nullable="false"/>
+            </column>
+            <column name="pinned"
+                    type="BOOLEAN">
+                <constraints nullable="false"/>
+            </column>
+            <column name="blog_id"
+                    type="BIGINT"/>
+            <column name="commented_by_id"
+                    type="BIGINT"/>
+            <column name="parent_id"
+                    type="BIGINT"/>
+        </createTable>
+    </changeSet>
+    <changeSet id="1768561727576-36"
+               author="minhdat">
+        <createTable tableName="companies">
+            <column name="account_id"
+                    type="BIGINT">
+                <constraints nullable="false"
+                             primaryKey="true"
+                             primaryKeyName="pk_companies"/>
+            </column>
+            <column name="name"
+                    type="citext"/>
+            <column name="description"
+                    type="TEXT"/>
+            <column name="logo"
+                    type="VARCHAR(255)"/>
+            <column name="cover_photo"
+                    type="VARCHAR(255)"/>
+            <column name="website"
+                    type="VARCHAR(255)"/>
+            <column name="phone"
+                    type="VARCHAR(255)"/>
+            <column name="size"
+                    type="VARCHAR(255)"/>
+            <column name="verified"
+                    type="BOOLEAN">
+                <constraints nullable="false"/>
+            </column>
+            <column name="country"
+                    type="VARCHAR(255)"/>
+            <column name="industry"
+                    type="VARCHAR(255)"/>
+            <column name="working_days"
+                    type="VARCHAR(255)"/>
+            <column name="overtime_policy"
+                    type="VARCHAR(255)"/>
+        </createTable>
+    </changeSet>
+    <changeSet id="1768561727576-37"
+               author="minhdat">
+        <createTable tableName="company_awards">
+            <column name="company_award_id"
+                    type="BIGINT">
+                <constraints primaryKey="true"
+                             primaryKeyName="pk_company_awards"/>
+            </column>
+            <column name="created_at"
+                    type="DATETIME"/>
+            <column name="created_by"
+                    type="VARCHAR(255)"/>
+            <column name="updated_at"
+                    type="DATETIME"/>
+            <column name="updated_by"
+                    type="VARCHAR(255)"/>
+            <column name="deleted_at"
+                    type="DATETIME"/>
+            <column name="deleted_by"
+                    type="VARCHAR(255)"/>
+            <column name="award_type"
+                    type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="year"
+                    type="INT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="average"
+                    type="DOUBLE">
+                <constraints nullable="false"/>
+            </column>
+            <column name="total_reviews"
+                    type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="company_id"
+                    type="BIGINT"/>
+        </createTable>
+    </changeSet>
+    <changeSet id="1768561727576-38"
+               author="minhdat">
+        <createTable tableName="friendships">
+            <column name="request_id"
+                    type="BIGINT">
+                <constraints nullable="false"
+                             primaryKey="true"
+                             primaryKeyName="pk_friendships"/>
+            </column>
+            <column name="created_at"
+                    type="DATETIME"/>
+            <column name="created_by"
+                    type="VARCHAR(255)"/>
+            <column name="updated_at"
+                    type="DATETIME"/>
+            <column name="updated_by"
+                    type="VARCHAR(255)"/>
+            <column name="deleted_at"
+                    type="DATETIME"/>
+            <column name="deleted_by"
+                    type="VARCHAR(255)"/>
+            <column name="status"
+                    type="VARCHAR(255)"/>
+            <column name="responded_at"
+                    type="DATETIME"/>
+            <column name="sender_id"
+                    type="BIGINT"/>
+            <column name="receiver_id"
+                    type="BIGINT"/>
+        </createTable>
+    </changeSet>
+    <changeSet id="1768561727576-39"
+               author="minhdat">
+        <createTable tableName="interviews">
+            <column name="interview_id"
+                    type="BIGINT">
+                <constraints nullable="false"
+                             primaryKey="true"
+                             primaryKeyName="pk_interviews"/>
+            </column>
+            <column name="created_at"
+                    type="DATETIME"/>
+            <column name="created_by"
+                    type="VARCHAR(255)"/>
+            <column name="updated_at"
+                    type="DATETIME"/>
+            <column name="updated_by"
+                    type="VARCHAR(255)"/>
+            <column name="deleted_at"
+                    type="DATETIME"/>
+            <column name="deleted_by"
+                    type="VARCHAR(255)"/>
+            <column name="scheduled_at"
+                    type="DATETIME">
+                <constraints nullable="false"/>
+            </column>
+            <column name="duration_minutes"
+                    type="INT"/>
+            <column name="type"
+                    type="VARCHAR(255)"/>
+            <column name="status"
+                    type="VARCHAR(255)"/>
+            <column name="location"
+                    type="VARCHAR(255)"/>
+            <column name="meeting_link"
+                    type="VARCHAR(255)"/>
+            <column name="notes"
+                    type="TEXT"/>
+            <column name="feedback"
+                    type="TEXT"/>
+            <column name="rating"
+                    type="INT"/>
+            <column name="interviewer_id"
+                    type="BIGINT"/>
+            <column name="application_id"
+                    type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+    </changeSet>
+    <changeSet id="1768561727576-40"
+               author="minhdat">
+        <createTable tableName="job_skill">
+            <column name="job_id"
+                    type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="skill_id"
+                    type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+    </changeSet>
+    <changeSet id="1768561727576-41"
+               author="minhdat">
+        <createTable tableName="jobs">
+            <column name="job_id"
+                    type="BIGINT">
+                <constraints nullable="false"
+                             primaryKey="true"
+                             primaryKeyName="pk_jobs"/>
+            </column>
+            <column name="created_at"
+                    type="DATETIME"/>
+            <column name="created_by"
+                    type="VARCHAR(255)"/>
+            <column name="updated_at"
+                    type="DATETIME"/>
+            <column name="updated_by"
+                    type="VARCHAR(255)"/>
+            <column name="deleted_at"
+                    type="DATETIME"/>
+            <column name="deleted_by"
+                    type="VARCHAR(255)"/>
+            <column name="description"
+                    type="TEXT"/>
+            <column name="start_date"
+                    type="DATE"/>
+            <column name="end_date"
+                    type="DATE"/>
+            <column name="active"
+                    type="BOOLEAN">
+                <constraints nullable="false"/>
+            </column>
+            <column name="level"
+                    type="VARCHAR(255)"/>
+            <column name="quantity"
+                    type="INT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="salary"
+                    type="DOUBLE">
+                <constraints nullable="false"/>
+            </column>
+            <column name="title"
+                    type="VARCHAR(255)"/>
+            <column name="working_type"
+                    type="VARCHAR(255)"/>
+            <column name="enabled"
+                    type="BOOLEAN">
+                <constraints nullable="false"/>
+            </column>
+            <column name="company_id"
+                    type="BIGINT"/>
+            <column name="career_id"
+                    type="BIGINT"/>
+        </createTable>
+    </changeSet>
+    <changeSet id="1768561727576-42"
+               author="minhdat">
+        <createTable tableName="message_read_by">
+            <column name="message_id"
+                    type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="user_id"
+                    type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+    </changeSet>
+    <changeSet id="1768561727576-43"
+               author="minhdat">
+        <createTable tableName="notification_actors">
+            <column name="actor_id"
+                    type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="notification_id"
+                    type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+    </changeSet>
+    <changeSet id="1768561727576-44"
+               author="minhdat">
+        <createTable tableName="notifications">
+            <column name="notification_id"
+                    type="BIGINT">
+                <constraints nullable="false"
+                             primaryKey="true"
+                             primaryKeyName="pk_notifications"/>
+            </column>
+            <column name="created_at"
+                    type="DATETIME"/>
+            <column name="created_by"
+                    type="VARCHAR(255)"/>
+            <column name="updated_at"
+                    type="DATETIME"/>
+            <column name="updated_by"
+                    type="VARCHAR(255)"/>
+            <column name="deleted_at"
+                    type="DATETIME"/>
+            <column name="deleted_by"
+                    type="VARCHAR(255)"/>
+            <column name="type"
+                    type="VARCHAR(255)"/>
+            <column name="seen"
+                    type="BOOLEAN">
+                <constraints nullable="false"/>
+            </column>
+            <column name="blog_id"
+                    type="BIGINT"/>
+            <column name="recipient_id"
+                    type="BIGINT"/>
+            <column name="comment_id"
+                    type="BIGINT"/>
+        </createTable>
+    </changeSet>
+    <changeSet id="1768561727576-45"
+               author="minhdat">
+        <createTable tableName="permissions">
+            <column name="permission_id"
+                    type="BIGINT">
+                <constraints nullable="false"
+                             primaryKey="true"
+                             primaryKeyName="pk_permissions"/>
+            </column>
+            <column name="created_at"
+                    type="DATETIME"/>
+            <column name="created_by"
+                    type="VARCHAR(255)"/>
+            <column name="updated_at"
+                    type="DATETIME"/>
+            <column name="updated_by"
+                    type="VARCHAR(255)"/>
+            <column name="deleted_at"
+                    type="DATETIME"/>
+            <column name="deleted_by"
+                    type="VARCHAR(255)"/>
+            <column name="api_path"
+                    type="VARCHAR(255)"/>
+            <column name="method"
+                    type="VARCHAR(255)"/>
+            <column name="module"
+                    type="VARCHAR(255)"/>
+            <column name="name"
+                    type="VARCHAR(255)"/>
+        </createTable>
+    </changeSet>
+    <changeSet id="1768561727576-46"
+               author="minhdat">
+        <createTable tableName="recruiters">
+            <column name="account_id"
+                    type="BIGINT">
+                <constraints nullable="false"
+                             primaryKey="true"
+                             primaryKeyName="pk_recruiters"/>
+            </column>
+            <column name="position"
+                    type="VARCHAR(255)"/>
+            <column name="company_id"
+                    type="BIGINT"/>
+        </createTable>
+    </changeSet>
+    <changeSet id="1768561727576-47"
+               author="minhdat">
+        <createTable tableName="resumes">
+            <column name="resume_id"
+                    type="BIGINT">
+                <constraints nullable="false"
+                             primaryKey="true"
+                             primaryKeyName="pk_resumes"/>
+            </column>
+            <column name="created_at"
+                    type="DATETIME"/>
+            <column name="created_by"
+                    type="VARCHAR(255)"/>
+            <column name="updated_at"
+                    type="DATETIME"/>
+            <column name="updated_by"
+                    type="VARCHAR(255)"/>
+            <column name="deleted_at"
+                    type="DATETIME"/>
+            <column name="deleted_by"
+                    type="VARCHAR(255)"/>
+            <column name="title"
+                    type="VARCHAR(255)"/>
+            <column name="file_url"
+                    type="VARCHAR(255)"/>
+            <column name="file_name"
+                    type="VARCHAR(255)"/>
+            <column name="file_size"
+                    type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="summary"
+                    type="TEXT"/>
+            <column name="is_default"
+                    type="BOOLEAN">
+                <constraints nullable="false"/>
+            </column>
+            <column name="is_public"
+                    type="BOOLEAN">
+                <constraints nullable="false"/>
+            </column>
+            <column name="ai_score"
+                    type="DOUBLE"/>
+            <column name="ai_analysis"
+                    type="TEXT"/>
+            <column name="ai_suggestions"
+                    type="TEXT"/>
+            <column name="analyzed_at"
+                    type="DATETIME"/>
+            <column name="applicant_id"
+                    type="BIGINT"/>
+        </createTable>
+    </changeSet>
+    <changeSet id="1768561727576-48"
+               author="minhdat">
+        <createTable tableName="reviews">
+            <column name="review_id"
+                    type="BIGINT">
+                <constraints nullable="false"
+                             primaryKey="true"
+                             primaryKeyName="pk_reviews"/>
+            </column>
+            <column name="created_at"
+                    type="DATETIME"/>
+            <column name="created_by"
+                    type="VARCHAR(255)"/>
+            <column name="updated_at"
+                    type="DATETIME"/>
+            <column name="updated_by"
+                    type="VARCHAR(255)"/>
+            <column name="deleted_at"
+                    type="DATETIME"/>
+            <column name="deleted_by"
+                    type="VARCHAR(255)"/>
+            <column name="summary"
+                    type="TEXT"/>
+            <column name="experience"
+                    type="TEXT"/>
+            <column name="suggestion"
+                    type="TEXT"/>
+            <column name="recommended"
+                    type="BOOLEAN">
+                <constraints nullable="false"/>
+            </column>
+            <column name="verified"
+                    type="BOOLEAN">
+                <constraints nullable="false"/>
+            </column>
+            <column name="enabled"
+                    type="BOOLEAN">
+                <constraints nullable="false"/>
+            </column>
+            <column name="user_id"
+                    type="BIGINT"/>
+            <column name="company_id"
+                    type="BIGINT"/>
+            <column name="overall"
+                    type="INT"/>
+            <column name="salary_benefits"
+                    type="INT"/>
+            <column name="training_learning"
+                    type="INT"/>
+            <column name="management_cares_about_me"
+                    type="INT"/>
+            <column name="culture_fun"
+                    type="INT"/>
+            <column name="office_workspace"
+                    type="INT"/>
+        </createTable>
+    </changeSet>
+    <changeSet id="1768561727576-49"
+               author="minhdat">
+        <createTable tableName="role_permission">
+            <column name="permission_id"
+                    type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="role_id"
+                    type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+    </changeSet>
+    <changeSet id="1768561727576-50"
+               author="minhdat">
+        <createTable tableName="roles">
+            <column name="role_id"
+                    type="BIGINT">
+                <constraints nullable="false"
+                             primaryKey="true"
+                             primaryKeyName="pk_roles"/>
+            </column>
+            <column name="created_at"
+                    type="DATETIME"/>
+            <column name="created_by"
+                    type="VARCHAR(255)"/>
+            <column name="updated_at"
+                    type="DATETIME"/>
+            <column name="updated_by"
+                    type="VARCHAR(255)"/>
+            <column name="deleted_at"
+                    type="DATETIME"/>
+            <column name="deleted_by"
+                    type="VARCHAR(255)"/>
+            <column name="description"
+                    type="TEXT"/>
+            <column name="active"
+                    type="BOOLEAN">
+                <constraints nullable="false"/>
+            </column>
+            <column name="name"
+                    type="VARCHAR(255)"/>
+        </createTable>
+    </changeSet>
+    <changeSet id="1768561727576-51"
+               author="minhdat">
+        <createTable tableName="skills">
+            <column name="skill_id"
+                    type="BIGINT">
+                <constraints nullable="false"
+                             primaryKey="true"
+                             primaryKeyName="pk_skills"/>
+            </column>
+            <column name="created_at"
+                    type="DATETIME"/>
+            <column name="created_by"
+                    type="VARCHAR(255)"/>
+            <column name="updated_at"
+                    type="DATETIME"/>
+            <column name="updated_by"
+                    type="VARCHAR(255)"/>
+            <column name="deleted_at"
+                    type="DATETIME"/>
+            <column name="deleted_by"
+                    type="VARCHAR(255)"/>
+            <column name="name"
+                    type="citext"/>
+        </createTable>
+    </changeSet>
+    <changeSet id="1768561727576-52"
+               author="minhdat">
+        <createTable tableName="subscriber_skill">
+            <column name="skill_id"
+                    type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="subscriber_id"
+                    type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+    </changeSet>
+    <changeSet id="1768561727576-53"
+               author="minhdat">
+        <createTable tableName="subscribers">
+            <column name="subscriber_id"
+                    type="BIGINT">
+                <constraints nullable="false"
+                             primaryKey="true"
+                             primaryKeyName="pk_subscribers"/>
+            </column>
+            <column name="created_at"
+                    type="DATETIME"/>
+            <column name="created_by"
+                    type="VARCHAR(255)"/>
+            <column name="updated_at"
+                    type="DATETIME"/>
+            <column name="updated_by"
+                    type="VARCHAR(255)"/>
+            <column name="deleted_at"
+                    type="DATETIME"/>
+            <column name="deleted_by"
+                    type="VARCHAR(255)"/>
+            <column name="name"
+                    type="VARCHAR(255)"/>
+            <column name="email"
+                    type="VARCHAR(255)"/>
+        </createTable>
+    </changeSet>
+    <changeSet id="1768561727576-54"
+               author="minhdat">
+        <createTable tableName="tickets">
+            <column name="ticket_id"
+                    type="BIGINT">
+                <constraints nullable="false"
+                             primaryKey="true"
+                             primaryKeyName="pk_tickets"/>
+            </column>
+            <column name="created_at"
+                    type="DATETIME"/>
+            <column name="created_by"
+                    type="VARCHAR(255)"/>
+            <column name="updated_at"
+                    type="DATETIME"/>
+            <column name="updated_by"
+                    type="VARCHAR(255)"/>
+            <column name="deleted_at"
+                    type="DATETIME"/>
+            <column name="deleted_by"
+                    type="VARCHAR(255)"/>
+            <column name="type"
+                    type="VARCHAR(255)"/>
+            <column name="reason"
+                    type="VARCHAR(255)"/>
+            <column name="description"
+                    type="TEXT"/>
+            <column name="status"
+                    type="VARCHAR(255)"/>
+            <column name="admin_notes"
+                    type="TEXT"/>
+            <column name="reporter_id"
+                    type="BIGINT"/>
+            <column name="assignee_id"
+                    type="BIGINT"/>
+            <column name="blog_id"
+                    type="BIGINT"/>
+            <column name="comment_id"
+                    type="BIGINT"/>
+        </createTable>
+    </changeSet>
+    <changeSet id="1768561727576-55"
+               author="minhdat">
+        <createTable tableName="user_followed_company">
+            <column name="company_id"
+                    type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="user_id"
+                    type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+    </changeSet>
+    <changeSet id="1768561727576-56"
+               author="minhdat">
+        <createTable tableName="user_saved_blog">
+            <column name="blog_id"
+                    type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="user_id"
+                    type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+    </changeSet>
+    <changeSet id="1768561727576-57"
+               author="minhdat">
+        <createTable tableName="user_saved_job">
+            <column name="job_id"
+                    type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="user_id"
+                    type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+    </changeSet>
+    <changeSet id="1768561727576-58"
+               author="minhdat">
+        <createTable tableName="users">
+            <column name="account_id"
+                    type="BIGINT">
+                <constraints nullable="false"
+                             primaryKey="true"
+                             primaryKeyName="pk_users"/>
+            </column>
+            <column name="phone"
+                    type="VARCHAR(255)"/>
+            <column name="dob"
+                    type="DATE"/>
+            <column name="full_name"
+                    type="VARCHAR(255)"/>
+            <column name="gender"
+                    type="VARCHAR(255)"/>
+            <column name="cover_photo"
+                    type="VARCHAR(255)"/>
+            <column name="headline"
+                    type="VARCHAR(255)"/>
+            <column name="bio"
+                    type="TEXT"/>
+        </createTable>
+    </changeSet>
+    <changeSet id="1768561727576-59"
+               author="minhdat">
+        <addUniqueConstraint columnNames="sender_id, receiver_id"
+                             constraintName="uc_53693805900ebd6aff9bef543"
+                             tableName="friendships"/>
+    </changeSet>
+    <changeSet id="1768561727576-60"
+               author="minhdat">
+        <addUniqueConstraint columnNames="user_id, company_id"
+                             constraintName="uc_86fc50325a5c91f3e584884ee"
+                             tableName="reviews"/>
+    </changeSet>
+    <changeSet id="1768561727576-61"
+               author="minhdat">
+        <addUniqueConstraint columnNames="job_id"
+                             constraintName="uc_addresses_job"
+                             tableName="addresses"/>
+    </changeSet>
+    <changeSet id="1768561727576-62"
+               author="minhdat">
+        <addUniqueConstraint columnNames="email"
+                             constraintName="uc_b058cb21366b3eace6546643e"
+                             tableName="subscribers"/>
+    </changeSet>
+    <changeSet id="1768561727576-63"
+               author="minhdat">
+        <addUniqueConstraint columnNames="comment_id, user_id"
+                             constraintName="uc_c190b95092acc64167a1e2ae0"
+                             tableName="comment_reactions"/>
+    </changeSet>
+    <changeSet id="1768561727576-64"
+               author="minhdat">
+        <addUniqueConstraint columnNames="blog_id, user_id"
+                             constraintName="uc_ce10431fbd36dfb69da3f23c2"
+                             tableName="blog_reactions"/>
+    </changeSet>
+    <changeSet id="1768561727576-65"
+               author="minhdat">
+        <addUniqueConstraint columnNames="name"
+                             constraintName="uc_f0f0ec37a1fc75f9c06ee6912"
+                             tableName="companies"/>
+    </changeSet>
+    <changeSet id="1768561727576-66"
+               author="minhdat">
+        <addUniqueConstraint columnNames="company_id, award_type, year"
+                             constraintName="uc_ff393d8f83def2b0198553ce3"
+                             tableName="company_awards"/>
+    </changeSet>
+    <changeSet id="1768561727576-67"
+               author="minhdat">
+        <addUniqueConstraint columnNames="application_id"
+                             constraintName="uc_interviews_application"
+                             tableName="interviews"/>
+    </changeSet>
+    <changeSet id="1768561727576-68"
+               author="minhdat">
+        <createIndex indexName="idx_account_email"
+                     tableName="accounts">
+            <column name="email"/>
+        </createIndex>
+    </changeSet>
+    <changeSet id="1768561727576-69"
+               author="minhdat">
+        <addForeignKeyConstraint baseColumnNames="role_id"
+                                 baseTableName="accounts"
+                                 constraintName="FK_ACCOUNTS_ON_ROLE"
+                                 referencedColumnNames="role_id"
+                                 referencedTableName="roles"/>
+    </changeSet>
+    <changeSet id="1768561727576-70"
+               author="minhdat">
+        <addForeignKeyConstraint baseColumnNames="account_id"
+                                 baseTableName="addresses"
+                                 constraintName="FK_ADDRESSES_ON_ACCOUNT"
+                                 referencedColumnNames="account_id"
+                                 referencedTableName="accounts"/>
+    </changeSet>
+    <changeSet id="1768561727576-71"
+               author="minhdat">
+        <addForeignKeyConstraint baseColumnNames="job_id"
+                                 baseTableName="addresses"
+                                 constraintName="FK_ADDRESSES_ON_JOB"
+                                 referencedColumnNames="job_id"
+                                 referencedTableName="jobs"/>
+    </changeSet>
+    <changeSet id="1768561727576-72"
+               author="minhdat">
+        <addForeignKeyConstraint baseColumnNames="account_id"
+                                 baseTableName="applicants"
+                                 constraintName="FK_APPLICANTS_ON_ACCOUNTID"
+                                 referencedColumnNames="account_id"
+                                 referencedTableName="users"/>
+    </changeSet>
+    <changeSet id="1768561727576-73"
+               author="minhdat">
+        <addForeignKeyConstraint baseColumnNames="applicant_id"
+                                 baseTableName="applications"
+                                 constraintName="FK_APPLICATIONS_ON_APPLICANT"
+                                 referencedColumnNames="account_id"
+                                 referencedTableName="applicants"/>
+    </changeSet>
+    <changeSet id="1768561727576-74"
+               author="minhdat">
+        <addForeignKeyConstraint baseColumnNames="job_id"
+                                 baseTableName="applications"
+                                 constraintName="FK_APPLICATIONS_ON_JOB"
+                                 referencedColumnNames="job_id"
+                                 referencedTableName="jobs"/>
+    </changeSet>
+    <changeSet id="1768561727576-75"
+               author="minhdat">
+        <addForeignKeyConstraint baseColumnNames="resume_id"
+                                 baseTableName="applications"
+                                 constraintName="FK_APPLICATIONS_ON_RESUME"
+                                 referencedColumnNames="resume_id"
+                                 referencedTableName="resumes"/>
+    </changeSet>
+    <changeSet id="1768561727576-76"
+               author="minhdat">
+        <addForeignKeyConstraint baseColumnNames="user_id"
+                                 baseTableName="blogs"
+                                 constraintName="FK_BLOGS_ON_USER"
+                                 referencedColumnNames="account_id"
+                                 referencedTableName="users"/>
+    </changeSet>
+    <changeSet id="1768561727576-77"
+               author="minhdat">
+        <addForeignKeyConstraint baseColumnNames="blog_id"
+                                 baseTableName="blog_reactions"
+                                 constraintName="FK_BLOG_REACTIONS_ON_BLOG"
+                                 referencedColumnNames="blog_id"
+                                 referencedTableName="blogs"/>
+    </changeSet>
+    <changeSet id="1768561727576-78"
+               author="minhdat">
+        <addForeignKeyConstraint baseColumnNames="user_id"
+                                 baseTableName="blog_reactions"
+                                 constraintName="FK_BLOG_REACTIONS_ON_USER"
+                                 referencedColumnNames="account_id"
+                                 referencedTableName="users"/>
+    </changeSet>
+    <changeSet id="1768561727576-79"
+               author="minhdat">
+        <addForeignKeyConstraint baseColumnNames="room_id"
+                                 baseTableName="chat_members"
+                                 constraintName="FK_CHAT_MEMBERS_ON_ROOM"
+                                 referencedColumnNames="room_id"
+                                 referencedTableName="chat_rooms"/>
+    </changeSet>
+    <changeSet id="1768561727576-80"
+               author="minhdat">
+        <addForeignKeyConstraint baseColumnNames="user_id"
+                                 baseTableName="chat_members"
+                                 constraintName="FK_CHAT_MEMBERS_ON_USER"
+                                 referencedColumnNames="account_id"
+                                 referencedTableName="users"/>
+    </changeSet>
+    <changeSet id="1768561727576-81"
+               author="minhdat">
+        <addForeignKeyConstraint baseColumnNames="room_id"
+                                 baseTableName="chat_messages"
+                                 constraintName="FK_CHAT_MESSAGES_ON_ROOM"
+                                 referencedColumnNames="room_id"
+                                 referencedTableName="chat_rooms"/>
+    </changeSet>
+    <changeSet id="1768561727576-82"
+               author="minhdat">
+        <addForeignKeyConstraint baseColumnNames="sender_id"
+                                 baseTableName="chat_messages"
+                                 constraintName="FK_CHAT_MESSAGES_ON_SENDER"
+                                 referencedColumnNames="account_id"
+                                 referencedTableName="users"/>
+    </changeSet>
+    <changeSet id="1768561727576-83"
+               author="minhdat">
+        <addForeignKeyConstraint baseColumnNames="blog_id"
+                                 baseTableName="comments"
+                                 constraintName="FK_COMMENTS_ON_BLOG"
+                                 referencedColumnNames="blog_id"
+                                 referencedTableName="blogs"/>
+    </changeSet>
+    <changeSet id="1768561727576-84"
+               author="minhdat">
+        <addForeignKeyConstraint baseColumnNames="commented_by_id"
+                                 baseTableName="comments"
+                                 constraintName="FK_COMMENTS_ON_COMMENTED_BY"
+                                 referencedColumnNames="account_id"
+                                 referencedTableName="users"/>
+    </changeSet>
+    <changeSet id="1768561727576-85"
+               author="minhdat">
+        <addForeignKeyConstraint baseColumnNames="parent_id"
+                                 baseTableName="comments"
+                                 constraintName="FK_COMMENTS_ON_PARENT"
+                                 referencedColumnNames="comment_id"
+                                 referencedTableName="comments"/>
+    </changeSet>
+    <changeSet id="1768561727576-86"
+               author="minhdat">
+        <addForeignKeyConstraint baseColumnNames="comment_id"
+                                 baseTableName="comment_reactions"
+                                 constraintName="FK_COMMENT_REACTIONS_ON_COMMENT"
+                                 referencedColumnNames="comment_id"
+                                 referencedTableName="comments"/>
+    </changeSet>
+    <changeSet id="1768561727576-87"
+               author="minhdat">
+        <addForeignKeyConstraint baseColumnNames="user_id"
+                                 baseTableName="comment_reactions"
+                                 constraintName="FK_COMMENT_REACTIONS_ON_USER"
+                                 referencedColumnNames="account_id"
+                                 referencedTableName="users"/>
+    </changeSet>
+    <changeSet id="1768561727576-88"
+               author="minhdat">
+        <addForeignKeyConstraint baseColumnNames="account_id"
+                                 baseTableName="companies"
+                                 constraintName="FK_COMPANIES_ON_ACCOUNTID"
+                                 referencedColumnNames="account_id"
+                                 referencedTableName="accounts"/>
+    </changeSet>
+    <changeSet id="1768561727576-89"
+               author="minhdat">
+        <addForeignKeyConstraint baseColumnNames="company_id"
+                                 baseTableName="company_awards"
+                                 constraintName="FK_COMPANY_AWARDS_ON_COMPANY"
+                                 referencedColumnNames="account_id"
+                                 referencedTableName="companies"/>
+    </changeSet>
+    <changeSet id="1768561727576-90"
+               author="minhdat">
+        <addForeignKeyConstraint baseColumnNames="receiver_id"
+                                 baseTableName="friendships"
+                                 constraintName="FK_FRIENDSHIPS_ON_RECEIVER"
+                                 referencedColumnNames="account_id"
+                                 referencedTableName="users"/>
+    </changeSet>
+    <changeSet id="1768561727576-91"
+               author="minhdat">
+        <addForeignKeyConstraint baseColumnNames="sender_id"
+                                 baseTableName="friendships"
+                                 constraintName="FK_FRIENDSHIPS_ON_SENDER"
+                                 referencedColumnNames="account_id"
+                                 referencedTableName="users"/>
+    </changeSet>
+    <changeSet id="1768561727576-92"
+               author="minhdat">
+        <addForeignKeyConstraint baseColumnNames="application_id"
+                                 baseTableName="interviews"
+                                 constraintName="FK_INTERVIEWS_ON_APPLICATION"
+                                 referencedColumnNames="application_id"
+                                 referencedTableName="applications"/>
+    </changeSet>
+    <changeSet id="1768561727576-93"
+               author="minhdat">
+        <addForeignKeyConstraint baseColumnNames="interviewer_id"
+                                 baseTableName="interviews"
+                                 constraintName="FK_INTERVIEWS_ON_INTERVIEWER"
+                                 referencedColumnNames="account_id"
+                                 referencedTableName="recruiters"/>
+    </changeSet>
+    <changeSet id="1768561727576-94"
+               author="minhdat">
+        <addForeignKeyConstraint baseColumnNames="career_id"
+                                 baseTableName="jobs"
+                                 constraintName="FK_JOBS_ON_CAREER"
+                                 referencedColumnNames="career_id"
+                                 referencedTableName="careers"/>
+    </changeSet>
+    <changeSet id="1768561727576-95"
+               author="minhdat">
+        <addForeignKeyConstraint baseColumnNames="company_id"
+                                 baseTableName="jobs"
+                                 constraintName="FK_JOBS_ON_COMPANY"
+                                 referencedColumnNames="account_id"
+                                 referencedTableName="companies"/>
+    </changeSet>
+    <changeSet id="1768561727576-96"
+               author="minhdat">
+        <addForeignKeyConstraint baseColumnNames="blog_id"
+                                 baseTableName="notifications"
+                                 constraintName="FK_NOTIFICATIONS_ON_BLOG"
+                                 referencedColumnNames="blog_id"
+                                 referencedTableName="blogs"/>
+    </changeSet>
+    <changeSet id="1768561727576-97"
+               author="minhdat">
+        <addForeignKeyConstraint baseColumnNames="comment_id"
+                                 baseTableName="notifications"
+                                 constraintName="FK_NOTIFICATIONS_ON_COMMENT"
+                                 referencedColumnNames="comment_id"
+                                 referencedTableName="comments"/>
+    </changeSet>
+    <changeSet id="1768561727576-98"
+               author="minhdat">
+        <addForeignKeyConstraint baseColumnNames="recipient_id"
+                                 baseTableName="notifications"
+                                 constraintName="FK_NOTIFICATIONS_ON_RECIPIENT"
+                                 referencedColumnNames="account_id"
+                                 referencedTableName="accounts"/>
+    </changeSet>
+    <changeSet id="1768561727576-99"
+               author="minhdat">
+        <addForeignKeyConstraint baseColumnNames="account_id"
+                                 baseTableName="recruiters"
+                                 constraintName="FK_RECRUITERS_ON_ACCOUNTID"
+                                 referencedColumnNames="account_id"
+                                 referencedTableName="users"/>
+    </changeSet>
+    <changeSet id="1768561727576-100"
+               author="minhdat">
+        <addForeignKeyConstraint baseColumnNames="company_id"
+                                 baseTableName="recruiters"
+                                 constraintName="FK_RECRUITERS_ON_COMPANY"
+                                 referencedColumnNames="account_id"
+                                 referencedTableName="companies"/>
+    </changeSet>
+    <changeSet id="1768561727576-101"
+               author="minhdat">
+        <addForeignKeyConstraint baseColumnNames="applicant_id"
+                                 baseTableName="resumes"
+                                 constraintName="FK_RESUMES_ON_APPLICANT"
+                                 referencedColumnNames="account_id"
+                                 referencedTableName="applicants"/>
+    </changeSet>
+    <changeSet id="1768561727576-102"
+               author="minhdat">
+        <addForeignKeyConstraint baseColumnNames="company_id"
+                                 baseTableName="reviews"
+                                 constraintName="FK_REVIEWS_ON_COMPANY"
+                                 referencedColumnNames="account_id"
+                                 referencedTableName="companies"/>
+    </changeSet>
+    <changeSet id="1768561727576-103"
+               author="minhdat">
+        <addForeignKeyConstraint baseColumnNames="user_id"
+                                 baseTableName="reviews"
+                                 constraintName="FK_REVIEWS_ON_USER"
+                                 referencedColumnNames="account_id"
+                                 referencedTableName="users"/>
+    </changeSet>
+    <changeSet id="1768561727576-104"
+               author="minhdat">
+        <addForeignKeyConstraint baseColumnNames="assignee_id"
+                                 baseTableName="tickets"
+                                 constraintName="FK_TICKETS_ON_ASSIGNEE"
+                                 referencedColumnNames="account_id"
+                                 referencedTableName="users"/>
+    </changeSet>
+    <changeSet id="1768561727576-105"
+               author="minhdat">
+        <addForeignKeyConstraint baseColumnNames="blog_id"
+                                 baseTableName="tickets"
+                                 constraintName="FK_TICKETS_ON_BLOG"
+                                 referencedColumnNames="blog_id"
+                                 referencedTableName="blogs"/>
+    </changeSet>
+    <changeSet id="1768561727576-106"
+               author="minhdat">
+        <addForeignKeyConstraint baseColumnNames="comment_id"
+                                 baseTableName="tickets"
+                                 constraintName="FK_TICKETS_ON_COMMENT"
+                                 referencedColumnNames="comment_id"
+                                 referencedTableName="comments"/>
+    </changeSet>
+    <changeSet id="1768561727576-107"
+               author="minhdat">
+        <addForeignKeyConstraint baseColumnNames="reporter_id"
+                                 baseTableName="tickets"
+                                 constraintName="FK_TICKETS_ON_REPORTER"
+                                 referencedColumnNames="account_id"
+                                 referencedTableName="users"/>
+    </changeSet>
+    <changeSet id="1768561727576-108"
+               author="minhdat">
+        <addForeignKeyConstraint baseColumnNames="account_id"
+                                 baseTableName="users"
+                                 constraintName="FK_USERS_ON_ACCOUNTID"
+                                 referencedColumnNames="account_id"
+                                 referencedTableName="accounts"/>
+    </changeSet>
+    <changeSet id="1768561727576-109"
+               author="minhdat">
+        <addForeignKeyConstraint baseColumnNames="blog_blog_id"
+                                 baseTableName="blog_images"
+                                 constraintName="fk_blog_images_on_blog"
+                                 referencedColumnNames="blog_id"
+                                 referencedTableName="blogs"/>
+    </changeSet>
+    <changeSet id="1768561727576-110"
+               author="minhdat">
+        <addForeignKeyConstraint baseColumnNames="blog_blog_id"
+                                 baseTableName="blog_tags"
+                                 constraintName="fk_blog_tags_on_blog"
+                                 referencedColumnNames="blog_id"
+                                 referencedTableName="blogs"/>
+    </changeSet>
+    <changeSet id="1768561727576-111"
+               author="minhdat">
+        <addForeignKeyConstraint baseColumnNames="job_id"
+                                 baseTableName="job_skill"
+                                 constraintName="fk_job_skill_on_job"
+                                 referencedColumnNames="job_id"
+                                 referencedTableName="jobs"/>
+    </changeSet>
+    <changeSet id="1768561727576-112"
+               author="minhdat">
+        <addForeignKeyConstraint baseColumnNames="skill_id"
+                                 baseTableName="job_skill"
+                                 constraintName="fk_job_skill_on_skill"
+                                 referencedColumnNames="skill_id"
+                                 referencedTableName="skills"/>
+    </changeSet>
+    <changeSet id="1768561727576-113"
+               author="minhdat">
+        <addForeignKeyConstraint baseColumnNames="message_id"
+                                 baseTableName="message_read_by"
+                                 constraintName="fk_mesreaby_on_message"
+                                 referencedColumnNames="message_id"
+                                 referencedTableName="chat_messages"/>
+    </changeSet>
+    <changeSet id="1768561727576-114"
+               author="minhdat">
+        <addForeignKeyConstraint baseColumnNames="user_id"
+                                 baseTableName="message_read_by"
+                                 constraintName="fk_mesreaby_on_user"
+                                 referencedColumnNames="account_id"
+                                 referencedTableName="users"/>
+    </changeSet>
+    <changeSet id="1768561727576-115"
+               author="minhdat">
+        <addForeignKeyConstraint baseColumnNames="actor_id"
+                                 baseTableName="notification_actors"
+                                 constraintName="fk_notact_on_account"
+                                 referencedColumnNames="account_id"
+                                 referencedTableName="accounts"/>
+    </changeSet>
+    <changeSet id="1768561727576-116"
+               author="minhdat">
+        <addForeignKeyConstraint baseColumnNames="notification_id"
+                                 baseTableName="notification_actors"
+                                 constraintName="fk_notact_on_notification"
+                                 referencedColumnNames="notification_id"
+                                 referencedTableName="notifications"/>
+    </changeSet>
+    <changeSet id="1768561727576-117"
+               author="minhdat">
+        <addForeignKeyConstraint baseColumnNames="permission_id"
+                                 baseTableName="role_permission"
+                                 constraintName="fk_rolper_on_permission"
+                                 referencedColumnNames="permission_id"
+                                 referencedTableName="permissions"/>
+    </changeSet>
+    <changeSet id="1768561727576-118"
+               author="minhdat">
+        <addForeignKeyConstraint baseColumnNames="role_id"
+                                 baseTableName="role_permission"
+                                 constraintName="fk_rolper_on_role"
+                                 referencedColumnNames="role_id"
+                                 referencedTableName="roles"/>
+    </changeSet>
+    <changeSet id="1768561727576-119"
+               author="minhdat">
+        <addForeignKeyConstraint baseColumnNames="skill_id"
+                                 baseTableName="subscriber_skill"
+                                 constraintName="fk_subski_on_skill"
+                                 referencedColumnNames="skill_id"
+                                 referencedTableName="skills"/>
+    </changeSet>
+    <changeSet id="1768561727576-120"
+               author="minhdat">
+        <addForeignKeyConstraint baseColumnNames="subscriber_id"
+                                 baseTableName="subscriber_skill"
+                                 constraintName="fk_subski_on_subscriber"
+                                 referencedColumnNames="subscriber_id"
+                                 referencedTableName="subscribers"/>
+    </changeSet>
+    <changeSet id="1768561727576-121"
+               author="minhdat">
+        <addForeignKeyConstraint baseColumnNames="company_id"
+                                 baseTableName="user_followed_company"
+                                 constraintName="fk_usefolcom_on_company"
+                                 referencedColumnNames="account_id"
+                                 referencedTableName="companies"/>
+    </changeSet>
+    <changeSet id="1768561727576-122"
+               author="minhdat">
+        <addForeignKeyConstraint baseColumnNames="user_id"
+                                 baseTableName="user_followed_company"
+                                 constraintName="fk_usefolcom_on_user"
+                                 referencedColumnNames="account_id"
+                                 referencedTableName="users"/>
+    </changeSet>
+    <changeSet id="1768561727576-123"
+               author="minhdat">
+        <addForeignKeyConstraint baseColumnNames="blog_id"
+                                 baseTableName="user_saved_blog"
+                                 constraintName="fk_usesavblo_on_blog"
+                                 referencedColumnNames="blog_id"
+                                 referencedTableName="blogs"/>
+    </changeSet>
+    <changeSet id="1768561727576-124"
+               author="minhdat">
+        <addForeignKeyConstraint baseColumnNames="user_id"
+                                 baseTableName="user_saved_blog"
+                                 constraintName="fk_usesavblo_on_user"
+                                 referencedColumnNames="account_id"
+                                 referencedTableName="users"/>
+    </changeSet>
+    <changeSet id="1768561727576-125"
+               author="minhdat">
+        <addForeignKeyConstraint baseColumnNames="job_id"
+                                 baseTableName="user_saved_job"
+                                 constraintName="fk_usesavjob_on_job"
+                                 referencedColumnNames="job_id"
+                                 referencedTableName="jobs"/>
+    </changeSet>
+    <changeSet id="1768561727576-126"
+               author="minhdat">
+        <addForeignKeyConstraint baseColumnNames="user_id"
+                                 baseTableName="user_saved_job"
+                                 constraintName="fk_usesavjob_on_user"
+                                 referencedColumnNames="account_id"
+                                 referencedTableName="users"/>
+    </changeSet>
+
+</databaseChangeLog>

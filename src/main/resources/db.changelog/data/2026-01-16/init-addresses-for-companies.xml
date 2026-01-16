@@ -19,13 +19,13 @@
             <column name="address_id" valueNumeric="2"/>
             <column name="province" value="Hồ Chí Minh"/>
             <column name="full_address" value="Level 6-7, East Tower, Lumiere Riverside, 277 Vo Nguyen Giap, An Khanh Ward, Thu Duc City, Ho Chi Minh"/>
-            <column name="account_id" valueNumeric="4"/>
+            <column name="account_id" valueNumeric="3"/>
         </insert>
         <insert tableName="addresses">
             <column name="address_id" valueNumeric="3"/>
             <column name="province" value="Hà Nội"/>
             <column name="full_address" value="Capital Place, 29 Lieu Giai, Ngoc Khanh Ward, Ba Dinh, Ha Noi"/>
-            <column name="account_id" valueNumeric="4"/>
+            <column name="account_id" valueNumeric="3"/>
         </insert>
     </changeSet>
 
@@ -34,13 +34,13 @@
             <column name="address_id" valueNumeric="4"/>
             <column name="province" value="Hà Nội"/>
             <column name="full_address" value="The Capital Place, 29 Lieu Giai Street, Ngoc Ha Ward, Hanoi City, Vietnam, Ba Dinh, Ha Noi"/>
-            <column name="account_id" valueNumeric="5"/>
+            <column name="account_id" valueNumeric="4"/>
         </insert>
         <insert tableName="addresses">
             <column name="address_id" valueNumeric="5"/>
             <column name="province" value="Hồ Chí Minh"/>
             <column name="full_address" value="The Hallmark, 15 Tran Bach Dang, Thu Thiem Ward, Thu Duc City, Ho Chi Minh"/>
-            <column name="account_id" valueNumeric="5"/>
+            <column name="account_id" valueNumeric="4"/>
         </insert>
     </changeSet>
 
@@ -49,19 +49,19 @@
             <column name="address_id" valueNumeric="6"/>
             <column name="province" value="Hà Nội"/>
             <column name="full_address" value="1 Tran Huu Duc, Hanoi, Nam Tu Liem, Ha Noi"/>
-            <column name="account_id" valueNumeric="6"/>
+            <column name="account_id" valueNumeric="5"/>
         </insert>
         <insert tableName="addresses">
             <column name="address_id" valueNumeric="7"/>
             <column name="province" value="Hà Nội"/>
             <column name="full_address" value="Tầng 3&amp;4, Trung Tâm đổi mới sáng tạo Quốc gia, Lô D25, KĐT Mới Cầu giấy, Hà Nội, Cau Giay, Ha Noi"/>
-            <column name="account_id" valueNumeric="6"/>
+            <column name="account_id" valueNumeric="5"/>
         </insert>
         <insert tableName="addresses">
             <column name="address_id" valueNumeric="8"/>
             <column name="province" value="Hà Nội"/>
             <column name="full_address" value="Tổng Công ty Công nghiệp Công nghệ cao Viettel - Tòa nhà Viettel, Số 380 Lạc Long Quân, Tây Hồ, Hà Nội và Tòa nhà Viettel, Khu CNC Hòa Lạc, Other, Ha Noi"/>
-            <column name="account_id" valueNumeric="6"/>
+            <column name="account_id" valueNumeric="5"/>
         </insert>
     </changeSet>
 
@@ -70,7 +70,7 @@
             <column name="address_id" valueNumeric="9"/>
             <column name="province" value="Hồ Chí Minh"/>
             <column name="full_address" value="106 Nguyen Van Troi, Phu Nhuan, Ho Chi Minh"/>
-            <column name="account_id" valueNumeric="7"/>
+            <column name="account_id" valueNumeric="6"/>
         </insert>
     </changeSet>
 
@@ -79,25 +79,25 @@
             <column name="address_id" valueNumeric="10"/>
             <column name="province" value="Hồ Chí Minh"/>
             <column name="full_address" value="364 Cong Hoa street, ward 13, Tan Binh, Ho Chi Minh"/>
-            <column name="account_id" valueNumeric="8"/>
+            <column name="account_id" valueNumeric="7"/>
         </insert>
         <insert tableName="addresses">
             <column name="address_id" valueNumeric="11"/>
             <column name="province" value="Hồ Chí Minh"/>
             <column name="full_address" value="OfficeHaus Building, 32 Tan Thang street, Son Ky ward, Tan Phu, Ho Chi Minh"/>
-            <column name="account_id" valueNumeric="8"/>
+            <column name="account_id" valueNumeric="7"/>
         </insert>
         <insert tableName="addresses">
             <column name="address_id" valueNumeric="12"/>
             <column name="province" value="Hồ Chí Minh"/>
             <column name="full_address" value="15 Tran Bach Dang Street, Thu Thiem New Urban Area, An Phu , District 2, Thu Duc City, Ho Chi Minh"/>
-            <column name="account_id" valueNumeric="8"/>
+            <column name="account_id" valueNumeric="7"/>
         </insert>
         <insert tableName="addresses">
             <column name="address_id" valueNumeric="13"/>
             <column name="province" value="Hà Nội"/>
             <column name="full_address" value="Capital Place, 29 Lieu Giai Street, Ba Dinh, Ha Noi"/>
-            <column name="account_id" valueNumeric="8"/>
+            <column name="account_id" valueNumeric="7"/>
         </insert>
     </changeSet>
 
