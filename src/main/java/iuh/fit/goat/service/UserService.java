@@ -1,6 +1,5 @@
 package iuh.fit.goat.service;
 
-import iuh.fit.goat.dto.request.user.CreateUserRequest;
 import iuh.fit.goat.dto.request.user.ResetPasswordRequest;
 import iuh.fit.goat.dto.response.ResultPaginationResponse;
 import iuh.fit.goat.dto.response.user.UserEnabledResponse;

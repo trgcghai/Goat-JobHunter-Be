@@ -33,12 +33,12 @@ import java.util.Map;
 @RequiredArgsConstructor
 public class UserController {
     private final UserService userService;
-//
-//    @Value("${minhdat.jwt.access-token-validity-in-seconds}")
-//    private long jwtAccessToken;
-//    @Value("${minhdat.jwt.refresh-token-validity-in-seconds}")
-//    private long jwtRefreshToken;
-//
+
+    @Value("${minhdat.jwt.access-token-validity-in-seconds}")
+    private long jwtAccessToken;
+    @Value("${minhdat.jwt.refresh-token-validity-in-seconds}")
+    private long jwtRefreshToken;
+
     @GetMapping
     public ResponseEntity<ResultPaginationResponse> getAllUsers(
             @Filter Specification<User> spec, Pageable pageable
@@ -46,85 +46,74 @@ public class UserController {
         ResultPaginationResponse result = this.userService.handleGetAllUsers(spec, pageable);
         return ResponseEntity.status(HttpStatus.OK).body(result);
     }
-//
-//    @GetMapping("/users/{id}")
-//    public ResponseEntity<UserResponse> getUserById(@PathVariable("id") long id) {
-//        User user = this.userService.handleGetUserById(id);
-//        if (user == null) {
-//            return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
-//        }
-//        UserResponse userResponse = this.userService.convertToUserResponse(user);
-//        return ResponseEntity.status(HttpStatus.OK).body(userResponse);
-//    }
-//
+
+    @GetMapping("/{id}")
+    public ResponseEntity<UserResponse> getUserById(@PathVariable("id") long id) {
+        User user = this.userService.handleGetUserById(id);
+        if (user == null) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
+        }
+        UserResponse userResponse = this.userService.convertToUserResponse(user);
+        return ResponseEntity.status(HttpStatus.OK).body(userResponse);
+    }
+
     @GetMapping("/me")
     public <T extends User> ResponseEntity<T> getCurrentUserByEmail() {
         String email = SecurityUtil.getCurrentUserLogin().isPresent() ? SecurityUtil.getCurrentUserLogin().get() : null;
         User user = this.userService.handleGetUserByEmail(email);
         return ResponseEntity.status(HttpStatus.OK).body((T) user);
     }
-//
-//    @PostMapping("/users")
-//    public ResponseEntity<UserResponse> createUser(@Valid @RequestBody CreateUserRequest request) {
-//        try {
-//            User newUser = this.userService.handleCreateUser(request);
-//            UserResponse userResponse = this.userService.convertToUserResponse(newUser);
-//            return ResponseEntity.status(HttpStatus.CREATED).body(userResponse);
-//        } catch (InvalidException e) {
-//            throw new RuntimeException(e.getMessage());
-//        }
-//    }
-//
-//    @PutMapping("/users/update-password")
-//    public ResponseEntity<LoginResponse> updatePassword(
-//            @CookieValue(name = "refreshToken", defaultValue = "missingValue") String refreshToken,
-//            @Valid @RequestBody UpdatePasswordRequest updatePasswordRequest
-//    ) throws InvalidException {
-//        boolean checked = this.userService.handleCheckCurrentPassword(updatePasswordRequest.getCurrentPassword());
-//        if (!checked) {
-//            throw new InvalidException("Current password is error");
-//        }
-//
-//        Map<String, Object> result = this.userService
-//                .handleUpdatePassword(updatePasswordRequest.getNewPassword(), refreshToken);
-//        if (result == null) {
-//            throw new InvalidException("Updated password is failed");
-//        }
-//
-//        ResponseCookie accessTokenCookie = ResponseCookie
-//                .from("accessToken", result.get("accessToken").toString())
-//                .httpOnly(true)
-//                .secure(false) // for dev
-//                .sameSite("Lax") // for dev
-//                .path("/")
-//                .maxAge(jwtAccessToken)
-//                .build();
-//        ResponseCookie refreshTokenCookie = ResponseCookie
-//                .from("refreshToken", result.get("refreshToken").toString())
-//                .httpOnly(true)
-//                .secure(false) // for dev
-//                .sameSite("Lax") // for dev
-//                .path("/")
-//                .maxAge(jwtRefreshToken)
-//                .build();
-//
-//        return ResponseEntity.ok()
-//                .header(HttpHeaders.SET_COOKIE, accessTokenCookie.toString())
-//                .header(HttpHeaders.SET_COOKIE, refreshTokenCookie.toString())
-//                .body((LoginResponse) result.get("loginResponse"));
-//    }
-//
-//    @PutMapping("/users/reset-password")
-//    public ResponseEntity<?> resetPassword(@Valid @RequestBody ResetPasswordRequest resetPasswordRequest) {
-//        try {
-//            this.userService.handleResetPassword(resetPasswordRequest);
-//            return ResponseEntity.status(HttpStatus.OK).body(
-//                    Map.of("message", "Password reset successful. Please check your email to verify your account.")
-//            );
-//        } catch (Exception e) {
-//            return ResponseEntity.badRequest().body(e.getMessage());
-//        }
-//    }
+
+    @PutMapping("/update-password")
+    public ResponseEntity<LoginResponse> updatePassword(
+            @CookieValue(name = "refreshToken", defaultValue = "missingValue") String refreshToken,
+            @Valid @RequestBody UpdatePasswordRequest updatePasswordRequest
+    ) throws InvalidException {
+        boolean checked = this.userService.handleCheckCurrentPassword(updatePasswordRequest.getCurrentPassword());
+        if (!checked) {
+            throw new InvalidException("Current password is error");
+        }
+
+        Map<String, Object> result = this.userService
+                .handleUpdatePassword(updatePasswordRequest.getNewPassword(), refreshToken);
+        if (result == null) {
+            throw new InvalidException("Updated password is failed");
+        }
+
+        ResponseCookie accessTokenCookie = ResponseCookie
+                .from("accessToken", result.get("accessToken").toString())
+                .httpOnly(true)
+                .secure(false) // for dev
+                .sameSite("Lax") // for dev
+                .path("/")
+                .maxAge(jwtAccessToken)
+                .build();
+        ResponseCookie refreshTokenCookie = ResponseCookie
+                .from("refreshToken", result.get("refreshToken").toString())
+                .httpOnly(true)
+                .secure(false) // for dev
+                .sameSite("Lax") // for dev
+                .path("/")
+                .maxAge(jwtRefreshToken)
+                .build();
+
+        return ResponseEntity.ok()
+                .header(HttpHeaders.SET_COOKIE, accessTokenCookie.toString())
+                .header(HttpHeaders.SET_COOKIE, refreshTokenCookie.toString())
+                .body((LoginResponse) result.get("loginResponse"));
+    }
+
+    @PutMapping("/reset-password")
+    public ResponseEntity<?> resetPassword(@Valid @RequestBody ResetPasswordRequest resetPasswordRequest) {
+        try {
+            this.userService.handleResetPassword(resetPasswordRequest);
+            return ResponseEntity.status(HttpStatus.OK).body(
+                    Map.of("message", "Password reset successful. Please check your email to verify your account.")
+            );
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
+    }
 
     /*     ========================= Saved Job Related Endpoints =========================  */
 
@@ -224,39 +213,38 @@ public class UserController {
     }
     /*     ========================= ========================= =========================  */
 
+    @GetMapping("/me/notifications")
+    public ResponseEntity<ResultPaginationResponse> getCurrentUserNotifications(Pageable pageable) {
+        ResultPaginationResponse result = this.userService.handleGetCurrentUserNotifications(pageable);
+        return ResponseEntity.status(HttpStatus.OK).body(result);
+    }
 
-//    @GetMapping("/users/me/notifications")
-//    public ResponseEntity<ResultPaginationResponse> getCurrentUserNotifications(Pageable pageable) {
-//        ResultPaginationResponse result = this.userService.handleGetCurrentUserNotifications(pageable);
-//        return ResponseEntity.status(HttpStatus.OK).body(result);
-//    }
-//
-//    @GetMapping("/users/me/notifications/latest")
-//    public ResponseEntity<List<Notification>> getLatestNotifications() {
-//        List<Notification> notifications = this.userService.handleGetLatestNotifications();
-//        return ResponseEntity.status(HttpStatus.OK).body(notifications);
-//    }
-//
-//    @PutMapping("/users/me/notifications")
-//    public ResponseEntity<Map<String, String>> markNotificationsAsSeen(
-//            @RequestBody List<Long> notificationIds
-//    ) throws InvalidException {
-//        if (notificationIds == null) {
-//            throw new InvalidException("Notification IDs list cannot be null");
-//        }
-//
-//        if (notificationIds.isEmpty()) {
-//            return ResponseEntity.status(HttpStatus.OK).body(
-//                    Map.of("message", "No notifications to mark as seen")
-//            );
-//        }
-//
-//        this.userService.handleMarkNotificationsAsSeen(notificationIds);
-//
-//        return ResponseEntity.status(HttpStatus.OK).body(
-//                Map.of("message", "Notifications marked as seen successfully")
-//        );
-//    }
+    @GetMapping("/me/notifications/latest")
+    public ResponseEntity<List<Notification>> getLatestNotifications() {
+        List<Notification> notifications = this.userService.handleGetLatestNotifications();
+        return ResponseEntity.status(HttpStatus.OK).body(notifications);
+    }
+
+    @PutMapping("/me/notifications")
+    public ResponseEntity<Map<String, String>> markNotificationsAsSeen(
+            @RequestBody List<Long> notificationIds
+    ) throws InvalidException {
+        if (notificationIds == null) {
+            throw new InvalidException("Notification IDs list cannot be null");
+        }
+
+        if (notificationIds.isEmpty()) {
+            return ResponseEntity.status(HttpStatus.OK).body(
+                    Map.of("message", "No notifications to mark as seen")
+            );
+        }
+
+        this.userService.handleMarkNotificationsAsSeen(notificationIds);
+
+        return ResponseEntity.status(HttpStatus.OK).body(
+                Map.of("message", "Notifications marked as seen successfully")
+        );
+    }
 
     /*     ========================= Followed Companies Related Endpoints =========================  */
     @GetMapping("/me/followed-companies")
@@ -323,26 +311,26 @@ public class UserController {
     }
     /*     ========================= ========================= =========================  */
 
-//
-//    @PutMapping("/users/activate")
-//    public ResponseEntity<List<UserEnabledResponse>> activateUsers(@RequestBody UserEnabledRequest request)
-//            throws InvalidException {
-//        List<Long> userIds = request.getUserIds();
-//        if (userIds == null || userIds.isEmpty()) {
-//            throw new InvalidException("User IDs list cannot be empty");
-//        }
-//        List<UserEnabledResponse> res = this.userService.handleActivateUsers(userIds);
-//        return ResponseEntity.status(HttpStatus.OK).body(res);
-//    }
-//
-//    @PutMapping("/users/deactivate")
-//    public ResponseEntity<List<UserEnabledResponse>> deactivateUsers(@RequestBody UserEnabledRequest request)
-//            throws InvalidException {
-//        List<Long> userIds = request.getUserIds();
-//        if (userIds == null || userIds.isEmpty()) {
-//            throw new InvalidException("User IDs list cannot be empty");
-//        }
-//        List<UserEnabledResponse> res = this.userService.handleDeactivateUsers(userIds);
-//        return ResponseEntity.status(HttpStatus.OK).body(res);
-//    }
+
+    @PutMapping("/activate")
+    public ResponseEntity<List<UserEnabledResponse>> activateUsers(@RequestBody UserEnabledRequest request)
+            throws InvalidException {
+        List<Long> userIds = request.getUserIds();
+        if (userIds == null || userIds.isEmpty()) {
+            throw new InvalidException("User IDs list cannot be empty");
+        }
+        List<UserEnabledResponse> res = this.userService.handleActivateUsers(userIds);
+        return ResponseEntity.status(HttpStatus.OK).body(res);
+    }
+
+    @PutMapping("/deactivate")
+    public ResponseEntity<List<UserEnabledResponse>> deactivateUsers(@RequestBody UserEnabledRequest request)
+            throws InvalidException {
+        List<Long> userIds = request.getUserIds();
+        if (userIds == null || userIds.isEmpty()) {
+            throw new InvalidException("User IDs list cannot be empty");
+        }
+        List<UserEnabledResponse> res = this.userService.handleDeactivateUsers(userIds);
+        return ResponseEntity.status(HttpStatus.OK).body(res);
+    }
 }
