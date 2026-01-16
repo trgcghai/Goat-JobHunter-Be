@@ -6,63 +6,16 @@
                       http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-5.0.xsd"
 >
 
-    <!--      Initial database setup      -->
-    <include file="/db.changelog/schema/2025-12-16/2025-12-16-create-sequences.xml"/>
-    <include file="/db.changelog/schema/2025-12-16/2025-12-16-create-tables.xml"/>
-    <include file="/db.changelog/schema/2025-12-16/2025-12-16-create-constraints.xml"/>
-    <include file="/db.changelog/schema/2025-12-16/2025-12-16-create-foreign-keys.xml"/>
-    <!--      Initial database setup      -->
-
-    <!--      Seed data      -->
-    <include file="/db.changelog/data/2025-12-16/2025-12-16-init-permissions.xml"/>
-    <include file="/db.changelog/data/2025-12-16/2025-12-16-init-roles.xml"/>
-    <include file="/db.changelog/data/2025-12-16/2025-12-16-init-accounts.xml"/>
-    <include file="/db.changelog/data/2025-12-21/2025-12-21-insert-skills.xml"/>
-    <include file="/db.changelog/data/2025-12-21/2025-12-21-insert-careers.xml"/>
-    <include file="/db.changelog/data/2025-12-21/2025-12-21-insert-jobs.xml"/>
-    <include file="/db.changelog/data/2025-12-22/insert-reviews-for-companies.xml"/>
-    <!--      Seed data      -->
-
-    <!--      History      -->
-    <include file="db.changelog/schema/2025-12-16/2025-12-16-update-users-blogs.xml"/>
-    <include file="/db.changelog/schema/2025-12-16/2025-12-16-update-foreign-key-blogs-users.xml"/>
-    <include file="/db.changelog/data/2025-12-17/2025-12-17-update-admin-password.xml"/>
-    <include file="/db.changelog/data/2025-12-18/2025-12-18-seed-user-for-admin.xml" />
-    <include file="db.changelog/schema/2025-12-18/2025-12-18-create-users-companies-reviews-relation.xml"/>
-    <include file="db.changelog/data/2025-12-18/2025-12-18-seed-mbbank.xml"/>
-    <include file="db.changelog/schema/2025-12-19/2025-12-19-add-coverPhoto-company.xml"/>
-    <include file="db.changelog/data/2025-12-20/2025-12-20-seed-5-companies.xml"/>
-    <include file="db.changelog/schema/2025-12-20/2025-12-20-update-column-address.xml"/>
-    <include file="db.changelog/data/2025-12-20/2025-12-20-insert-addresses-for-companies.xml"/>
-    <include file="db.changelog/schema/2025-12-20/2025-12-20-enable-citext-extension.xml"/>
-    <include file="db.changelog/schema/2025-12-21/2025-12-21-add-address-entity.xml"/>
-    <include file="db.changelog/schema/2025-12-21/2025-12-21-update-schema-account.xml"/>
-    <include file="/db.changelog/data/2025-12-20/drop-blog-draft-column.xml"/>
-    <include file="/db.changelog/data/2025-12-20/add-company-address-column.xml"/>
-    <include file="db.changelog/schema/2025-12-21/2025-12-20-drop-column-title-blogs.xml"/>
-    <include file="db.changelog/data/2025-12-21/2025-12-21-insert-addresses-for-companies.xml"/>
-    <include file="/db.changelog/schema/2025-12-21/2025-12-21-map-jobs-addresses.xml"/>
-    <include file="db.changelog/schema/2025-12-21/2025-12-21-drop-unique-address.xml"/>
-    <include file="db.changelog/data/2025-12-22/drop-column-description-blogs.xml"/>
-    <include file="/db.changelog/schema/2025-12-22/2025-12-22-enable-citext-column-name-companies.xml"/>
-    <include file="/db.changelog/schema/2025-12-24/create-blog-reaction-sequence.xml"/>
-    <include file="/db.changelog/schema/2025-12-22/2025-12-22changelog.xml"/>
-    <include file="db.changelog/schema/2025-12-22/2025-12-22-unique-constraint-name-companies.xml"/>
-    <include file="db.changelog/schema/2025-12-23/2025-12-23-update-rating-column-reviews.xml"/>
-    <include file="db.changelog/data/2025-12-23/update-rating-reviews.xml"/>
-    <include file="db.changelog/schema/2025-12-25/update-column-companies.xml"/>
-    <include file="db.changelog/data/2025-12-25/update-data-for-column-companies.xml"/>
-    <include file="db.changelog/schema/2025-12-26/modify-type-name-skills.xml"/>
-    <include file="db.changelog/schema/2025-12-28/modify-relation-users-notifications-accounts.xml"/>
-    <include file="db.changelog/schema/2025-12-29/add-table-company-awards.xml"/>
-    <include file="db.changelog/schema/2025-01-03/modify-resumeId-resumes.xml"/>
-    <include file="db.changelog/schema/2025-01-03/modify-applicationId-applications.xml"/>
-    <include file="db.changelog/schema/2025-01-03/add-index-email-accounts.xml"/>
-    <include file="/db.changelog/schema/2025-01-09/remove-relation-interviews-applicants.xml"/>
-    <include file="db.changelog/schema/2025-01-09/change-type-status-type-interviews.xml"/>
-    <include file="db.changelog/schema/2026-1-14/drop-old-message-tables.xml"/>
-    <include file="db.changelog/schema/2026-1-14/fix-chat-room-id-sequence.xml"/>
-    <include file="db.changelog/schema/2026-1-14/fix-chat-member-id-sequence.xml"/>
-    <!--      History      -->
+    <include file="db.changelog/schema/2026-01-16/initial.xml"/>
+    <include file="db.changelog/data/2026-01-16/init-permissions.xml"/>
+    <include file="db.changelog/data/2026-01-16/init-role.xml"/>
+    <include file="db.changelog/data/2026-01-16/init-account.xml"/>
+    <include file="db.changelog/data/2026-01-16/init-companies.xml"/>
+    <include file="db.changelog/data/2026-01-16/init-addresses-for-companies.xml"/>
+    <include file="db.changelog/data/2026-01-16/init-careers.xml"/>
+    <include file="db.changelog/data/2026-01-16/init-skills.xml"/>
+    <include file="db.changelog/data/2026-01-16/init-job.xml"/>
+    <include file="db.changelog/data/2026-01-16/init-reviews-for-companies.xml"/>
+    <include file="db.changelog/schema/2026-01-16/drop-sequence-chat-member.xml"/>
 
 </databaseChangeLog>
