@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+                      http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-5.0.xsd"
+        objectQuotingStrategy="QUOTE_ONLY_RESERVED_WORDS">
+
+    <!-- ================================================= -->
+    <!-- Create sequence for chat_rooms.room_id if missing -->
+    <!-- ================================================= -->
+    <changeSet id="chat-rooms-create-seq-001" author="HP">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <sequenceExists sequenceName="chat_rooms_seq"/>
+            </not>
+        </preConditions>
+
+        <createSequence
+                sequenceName="chat_rooms_seq"
+                startValue="1"
+                incrementBy="1"/>
+    </changeSet>
+
+    <!-- ================================================= -->
+    <!-- Set default value for room_id column -->
+    <!-- ================================================= -->
+    <changeSet id="chat-rooms-set-default-002" author="HP">
+        <preConditions onFail="MARK_RAN">
+            <and>
+                <tableExists tableName="chat_rooms"/>
+                <columnExists tableName="chat_rooms" columnName="room_id"/>
+            </and>
+        </preConditions>
+
+        <addDefaultValue
+                tableName="chat_rooms"
+                columnName="room_id"
+                defaultValueSequenceNext="chat_rooms_seq"/>
+    </changeSet>
+
+</databaseChangeLog>

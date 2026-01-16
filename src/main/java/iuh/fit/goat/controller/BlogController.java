@@ -87,10 +87,7 @@ public class BlogController {
     ) {
         Specification<Blog> baseSpec = (spec != null) ? spec : Specification.unrestricted();
 
-        Specification<Blog> finalSpec = baseSpec
-                .and((root, query, criteriaBuilder) -> criteriaBuilder.isTrue(root.get("enabled")));
-
-        ResultPaginationResponse res = this.blogService.handleGetAllBlogs(finalSpec, pageable);
+        ResultPaginationResponse res = this.blogService.handleGetAllBlogs(baseSpec, pageable);
         return ResponseEntity.status(HttpStatus.OK).body(res);
     }
 

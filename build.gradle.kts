@@ -24,6 +24,7 @@ tasks.bootJar {
 }
 
 dependencies {
+    implementation(platform("software.amazon.awssdk:bom:2.25.62"))
 	implementation("org.springframework.boot:spring-boot-starter")
 	implementation("org.springframework.boot:spring-boot-starter-oauth2-resource-server") {
 		exclude(group = "com.google.code.gson", module = "gson")
@@ -46,16 +47,14 @@ dependencies {
 	implementation("org.postgresql:postgresql:42.7.8")
 	implementation("org.liquibase:liquibase-core:5.0.1")
 	implementation("io.awspring.cloud:spring-cloud-starter-aws-secrets-manager-config:2.4.4")
-	implementation("org.springframework.cloud:spring-cloud-starter-aws:2.2.6.RELEASE")
-
+    implementation("software.amazon.awssdk:dynamodb")
+    implementation("software.amazon.awssdk:dynamodb-enhanced")
 
 	implementation("commons-io:commons-io:2.19.0")
 	implementation("commons-net:commons-net:3.12.0")
 	implementation("dnsjava:dnsjava:3.6.3")
 
-
 	developmentOnly("org.springframework.boot:spring-boot-devtools")
-
 
 	testImplementation("org.springframework.boot:spring-boot-starter-test")
 	testImplementation("org.springframework.security:spring-security-test")

@@ -33,6 +33,13 @@ public class PermissionInterceptor implements HandlerInterceptor {
             User user = this.userService.handleGetUserByEmail(email);
             if(user != null) {
                 Role role = user.getRole();
+
+                // Allow all if user is admin
+                if (iuh.fit.goat.common.Role.ADMIN.getValue().equalsIgnoreCase(role.getName())) {
+                    return true;
+                }
+
+                // Check permission
                 if(role != null) {
                     List<Permission> permissions = user.getRole().getPermissions();
                     boolean hasPermission = permissions.stream().anyMatch(
