@@ -16,5 +16,6 @@
     <include file="db.changelog/data/2026-01-16/init-skills.xml"/>
     <include file="db.changelog/data/2026-01-16/init-job.xml"/>
     <include file="db.changelog/data/2026-01-16/init-reviews-for-companies.xml"/>
+    <include file="db.changelog/schema/2026-01-16/drop-sequence-chat-member.xml"/>
 
 </databaseChangeLog>
