@@ -50,14 +50,11 @@ dependencies {
     implementation("software.amazon.awssdk:dynamodb")
     implementation("software.amazon.awssdk:dynamodb-enhanced")
 
-
 	implementation("commons-io:commons-io:2.19.0")
 	implementation("commons-net:commons-net:3.12.0")
 	implementation("dnsjava:dnsjava:3.6.3")
 
-
 	developmentOnly("org.springframework.boot:spring-boot-devtools")
-
 
 	testImplementation("org.springframework.boot:spring-boot-starter-test")
 	testImplementation("org.springframework.security:spring-security-test")
