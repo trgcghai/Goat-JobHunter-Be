@@ -1,6 +1,5 @@
 package iuh.fit.goat.config.component;
 
-import iuh.fit.goat.service.AiService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.ApplicationArguments;
@@ -12,21 +11,10 @@ import org.springframework.transaction.annotation.Transactional;
 @Slf4j
 @RequiredArgsConstructor
 public class AiCachePreLoader implements ApplicationRunner {
-    private final AiService aiService;
 
     @Override
     @Transactional(readOnly = true)
-    public void run(ApplicationArguments args) throws Exception {
-        this.aiService.getTopJobsContext();
-        this.aiService.getTopApplicantsContext();
-        this.aiService.getTopCompaniesContext();
-        this.aiService.getRecentApplicationsContext();
-        this.aiService.getTopSkillsContext();
-        this.aiService.getRecentBlogsContext();
-        this.aiService.getAllCareersContext();
-        this.aiService.getSystemStatsContext();
-        this.aiService.getJobMarketOverview();
-
+    public void run(ApplicationArguments args) {
         log.info("AI cache preloaded!");
     }
 
