@@ -5,10 +5,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import iuh.fit.goat.enumeration.NotificationType;
 import iuh.fit.goat.dto.response.notification.NotificationResponse;
 import iuh.fit.goat.entity.*;
-import iuh.fit.goat.repository.BlogRepository;
-import iuh.fit.goat.repository.CommentRepository;
-import iuh.fit.goat.repository.NotificationRepository;
-import iuh.fit.goat.repository.UserRepository;
+import iuh.fit.goat.repository.*;
 import iuh.fit.goat.service.NotificationService;
 import iuh.fit.goat.service.RedisService;
 import iuh.fit.goat.util.SecurityUtil;
@@ -26,46 +23,47 @@ import java.util.stream.Collectors;
 @Service
 @RequiredArgsConstructor
 public class NotificationServiceImpl implements NotificationService {
-//    private final NotificationRepository notificationRepository;
+    private final NotificationRepository notificationRepository;
     private final UserRepository userRepository;
-//    private final BlogRepository blogRepository;
-//    private final CommentRepository commentRepository;
-//    private final SimpMessagingTemplate messagingTemplate;
+    private final BlogRepository blogRepository;
+    private final CommentRepository commentRepository;
+    private final AccountRepository accountRepository;
+
+    private final SimpMessagingTemplate messagingTemplate;
     private final RedisService redisService;
     private final ObjectMapper objectMapper;
 
     private User handleGetCurrentUser() {
-        String currentEmail = SecurityUtil.getCurrentUserLogin()
-                .orElse("");
+        String currentEmail = SecurityUtil.getCurrentUserEmail();
         return this.userRepository.findByEmail(currentEmail);
     }
 
-//    @Override
-//    public Notification createNotification(Notification notification) {
-//        return this.notificationRepository.save(notification);
-//    }
-//
-//    @Override
-//    public List<Notification> handleGetAllNotifications() {
-//        User currentUser = this.handleGetCurrentUser();
-//        if (currentUser == null) return Collections.emptyList();
-//
-//        return this.notificationRepository
-//                .findByRecipient_UserIdOrderByCreatedAtDesc(currentUser.getUserId());
-//    }
-//
-//    @Override
-//    @Transactional
-//    public void handleMarkNotificationsAsSeen(List<Long> notificationIds) {
-//        User currentUser = this.handleGetCurrentUser();
-//        if (currentUser == null) return;
-//
-//        List<Notification> notifications = this.notificationRepository
-//                .findByNotificationIdInAndRecipient_UserId(notificationIds, currentUser.getUserId());
-//
-//        notifications.forEach(n -> n.setSeen(true));
-//        this.notificationRepository.saveAll(notifications);
-//    }
+    @Override
+    public Notification createNotification(Notification notification) {
+        return this.notificationRepository.save(notification);
+    }
+
+    @Override
+    public List<Notification> handleGetAllNotifications() {
+        User currentUser = this.handleGetCurrentUser();
+        if (currentUser == null) return Collections.emptyList();
+
+        return this.notificationRepository
+                .findByRecipient_AccountIdOrderByCreatedAtDesc(currentUser.getAccountId());
+    }
+
+    @Override
+    @Transactional
+    public void handleMarkNotificationsAsSeen(List<Long> notificationIds) {
+        User currentUser = this.handleGetCurrentUser();
+        if (currentUser == null) return;
+
+        List<Notification> notifications = this.notificationRepository
+                .findByNotificationIdInAndRecipient_AccountId(notificationIds, currentUser.getAccountId());
+
+        notifications.forEach(n -> n.setSeen(true));
+        this.notificationRepository.saveAll(notifications);
+    }
 
     @Override
     public void handleNotifyCommentBlog(Blog blog, Comment comment) {
@@ -247,126 +245,98 @@ public class NotificationServiceImpl implements NotificationService {
         }
     }
 
-//    @Override
-//    public void sendNotificationToUser(User user, Notification notification) {
-//
-//        log.info("Sending notification to user {}: {}", user.getUserId(), notification.getNotificationId());
-//
-//        NotificationResponse response = convertToNotificationResponse(notification);
-//        messagingTemplate.convertAndSendToUser(
-//                user.getContact().getEmail(),
-//                "/queue/notifications",
-//                response
-//        );
-//    }
-//
-//    @Override
-//    public NotificationResponse convertToNotificationResponse(Notification notification) {
-//        NotificationResponse response = new NotificationResponse();
-//
-//        response.setNotificationId(notification.getNotificationId());
-//        response.setType(notification.getType());
-//        response.setSeen(notification.isSeen());
-//        response.setCreatedAt(notification.getCreatedAt());
-//
-//        if (notification.getBlog() != null) {
-//            NotificationResponse.BlogNotification blog = new NotificationResponse.BlogNotification(
-//                    notification.getBlog().getBlogId(),
-//                    notification.getBlog().getTitle()
-//            );
-//            response.setBlog(blog);
-//        }
-//
-//        NotificationResponse.UserNotification actor = new NotificationResponse.UserNotification(
-//                notification.getLastActor().getUserId(),
-//                notification.getLastActor().getFullName() == null ? "" : notification.getLastActor().getFullName(),
-//                notification.getLastActor().getUsername(),
-//                notification.getLastActor().getAvatar()
-//        );
-//        response.setLastActor(actor);
-//        response.setActorCount(notification.getActorCount());
-//
-//        NotificationResponse.UserNotification recipient = new NotificationResponse.UserNotification(
-//                notification.getRecipient().getUserId(),
-//                notification.getRecipient().getFullName() == null ? "" : notification.getRecipient().getFullName(),
-//                notification.getRecipient().getUsername(),
-//                notification.getRecipient().getAvatar()
-//        );
-//        response.setRecipient(recipient);
-//
-//        if (notification.getComment() != null) {
-//            NotificationResponse.CommentNotification comment = new NotificationResponse.CommentNotification(
-//                    notification.getComment().getCommentId(),
-//                    notification.getComment().getComment()
-//            );
-//            response.setComment(comment);
-//        }
-//
-//        if (notification.getReply() != null) {
-//            NotificationResponse.CommentNotification reply = new NotificationResponse.CommentNotification(
-//                    notification.getReply().getCommentId(),
-//                    notification.getReply().getComment()
-//            );
-//            response.setReply(reply);
-//        }
-//
-//        if (notification.getRepliedOnComment() != null) {
-//            NotificationResponse.CommentNotification repliedOnComment = new NotificationResponse.CommentNotification(
-//                    notification.getRepliedOnComment().getCommentId(),
-//                    notification.getRepliedOnComment().getComment()
-//            );
-//            response.setRepliedOnComment(repliedOnComment);
-//        }
-//
-//        return response;
-//    }
-//
-//    @Override
-//    public Notification buildNotification(Map<String, Object> data) {
-//        Notification notification = new Notification();
-//
-//        notification.setType(NotificationType.valueOf((String) data.get("type")));
-//        notification.setSeen(false);
-//
-//        Long recipientId = ((Number) data.get("recipientId")).longValue();
-//        User recipient = userRepository.findById(recipientId)
-//                .orElseThrow(() -> new IllegalArgumentException("Recipient not found"));
-//        notification.setRecipient(recipient);
-//
-//        @SuppressWarnings("unchecked")
-//        List<Number> actorIds = (List<Number>) data.get("actorIds");
-//        List<User> actors = actorIds.stream()
-//                .map(id -> userRepository.findById(id.longValue()).orElse(null))
-//                .filter(Objects::nonNull)
-//                .collect(Collectors.toList());
-//        notification.setActors(actors);
-//
-//        if (data.containsKey("blogId")) {
-//            Long blogId = ((Number) data.get("blogId")).longValue();
-//            Blog blog = blogRepository.findById(blogId).orElse(null);
-//            notification.setBlog(blog);
-//        }
-//
-//        if (data.containsKey("commentId")) {
-//            Long commentId = ((Number) data.get("commentId")).longValue();
-//            Comment comment = commentRepository.findById(commentId).orElse(null);
-//            notification.setComment(comment);
-//        }
-//
-//        if (data.containsKey("replyId")) {
-//            Long replyId = ((Number) data.get("replyId")).longValue();
-//            Comment reply = commentRepository.findById(replyId).orElse(null);
-//            notification.setReply(reply);
-//        }
-//
-//        if (data.containsKey("repliedOnCommentId")) {
-//            Long repliedOnCommentId = ((Number) data.get("repliedOnCommentId")).longValue();
-//            Comment repliedOnComment = commentRepository.findById(repliedOnCommentId).orElse(null);
-//            notification.setRepliedOnComment(repliedOnComment);
-//        }
-//
-//        return notification;
-//    }
+    @Override
+    public void sendNotificationToUser(Account account, Notification notification) {
+
+        log.info("Sending notification to user {}: {}", account.getAccountId(), notification.getNotificationId());
+
+        NotificationResponse response = this.convertToNotificationResponse(notification);
+        this.messagingTemplate.convertAndSendToUser(
+                account.getEmail(),
+                "/queue/notifications",
+                response
+        );
+    }
+
+    @Override
+    public NotificationResponse convertToNotificationResponse(Notification notification) {
+        NotificationResponse response = new NotificationResponse();
+
+        response.setNotificationId(notification.getNotificationId());
+        response.setType(notification.getType());
+        response.setSeen(notification.isSeen());
+        response.setCreatedAt(notification.getCreatedAt());
+
+        if (notification.getBlog() != null) {
+            NotificationResponse.BlogNotification blog = new NotificationResponse.BlogNotification(
+                    notification.getBlog().getBlogId(),
+                    notification.getBlog().getContent()
+            );
+            response.setBlog(blog);
+        }
+
+        NotificationResponse.UserNotification actor = new NotificationResponse.UserNotification(
+                notification.getLastActor().getAccountId(),
+                notification.getLastActor().getUsername() == null ? "" : notification.getLastActor().getUsername(),
+                notification.getLastActor().getUsername(),
+                notification.getLastActor().getAvatar()
+        );
+        response.setLastActor(actor);
+        response.setActorCount(notification.getActorCount());
+
+        NotificationResponse.UserNotification recipient = new NotificationResponse.UserNotification(
+                notification.getRecipient().getAccountId(),
+                notification.getRecipient().getUsername() == null ? "" : notification.getRecipient().getUsername(),
+                notification.getRecipient().getUsername(),
+                notification.getRecipient().getAvatar()
+        );
+        response.setRecipient(recipient);
+
+        if (notification.getComment() != null) {
+            NotificationResponse.CommentNotification comment = new NotificationResponse.CommentNotification(
+                    notification.getComment().getCommentId(),
+                    notification.getComment().getComment()
+            );
+            response.setComment(comment);
+        }
+
+        return response;
+    }
+
+    @Override
+    public Notification buildNotification(Map<String, Object> data) {
+        Notification notification = new Notification();
+
+        notification.setType(NotificationType.valueOf((String) data.get("type")));
+        notification.setSeen(false);
+
+        Long recipientId = ((Number) data.get("recipientId")).longValue();
+        User recipient = this.userRepository.findById(recipientId)
+                .orElseThrow(() -> new IllegalArgumentException("Recipient not found"));
+        notification.setRecipient(recipient);
+
+        @SuppressWarnings("unchecked")
+        List<Number> actorIds = (List<Number>) data.get("actorIds");
+        List<Account> actors = actorIds.stream()
+                .map(id -> this.accountRepository.findById(id.longValue()).orElse(null))
+                .filter(Objects::nonNull)
+                .collect(Collectors.toList());
+        notification.setActors(actors);
+
+        if (data.containsKey("blogId")) {
+            Long blogId = ((Number) data.get("blogId")).longValue();
+            Blog blog = this.blogRepository.findById(blogId).orElse(null);
+            notification.setBlog(blog);
+        }
+
+        if (data.containsKey("commentId")) {
+            Long commentId = ((Number) data.get("commentId")).longValue();
+            Comment comment = this.commentRepository.findById(commentId).orElse(null);
+            notification.setComment(comment);
+        }
+
+        return notification;
+    }
 
     private void setNotificationToRedis(Notification notification, String redisKey) throws JsonProcessingException {
         Map<String, Object> notificationData = new HashMap<>();

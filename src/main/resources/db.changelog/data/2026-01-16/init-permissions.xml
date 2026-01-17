@@ -1,0 +1,148 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+                      http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-5.0.xsd"
+        objectQuotingStrategy="QUOTE_ONLY_RESERVED_WORDS">
+
+    <changeSet id="seed-permissions-full" author="minhdat">
+        <preConditions onFail="MARK_RAN">
+            <sqlCheck expectedResult="0">
+                SELECT COUNT(*) FROM permissions;
+            </sqlCheck>
+        </preConditions>
+
+        <!-- PERMISSIONS -->
+        <insert tableName="permissions"><column name="permission_id" valueNumeric="1"/><column name="name" value="Create permission"/><column name="api_path" value="/api/v1/permissions"/><column name="method" value="POST"/><column name="module" value="PERMISSIONS"/></insert>
+        <insert tableName="permissions"><column name="permission_id" valueNumeric="2"/><column name="name" value="Update permission"/><column name="api_path" value="/api/v1/permissions"/><column name="method" value="PUT"/><column name="module" value="PERMISSIONS"/></insert>
+        <insert tableName="permissions"><column name="permission_id" valueNumeric="3"/><column name="name" value="Delete permission"/><column name="api_path" value="/api/v1/permissions/{id}"/><column name="method" value="DELETE"/><column name="module" value="PERMISSIONS"/></insert>
+        <insert tableName="permissions"><column name="permission_id" valueNumeric="4"/><column name="name" value="Get permission"/><column name="api_path" value="/api/v1/permissions/{id}"/><column name="method" value="GET"/><column name="module" value="PERMISSIONS"/></insert>
+        <insert tableName="permissions"><column name="permission_id" valueNumeric="5"/><column name="name" value="Get all permissions"/><column name="api_path" value="/api/v1/permissions"/><column name="method" value="GET"/><column name="module" value="PERMISSIONS"/></insert>
+
+        <!-- ROLES -->
+        <insert tableName="permissions"><column name="permission_id" valueNumeric="6"/><column name="name" value="Create role"/><column name="api_path" value="/api/v1/roles"/><column name="method" value="POST"/><column name="module" value="ROLES"/></insert>
+        <insert tableName="permissions"><column name="permission_id" valueNumeric="7"/><column name="name" value="Update role"/><column name="api_path" value="/api/v1/roles"/><column name="method" value="PUT"/><column name="module" value="ROLES"/></insert>
+        <insert tableName="permissions"><column name="permission_id" valueNumeric="8"/><column name="name" value="Delete role"/><column name="api_path" value="/api/v1/roles/{id}"/><column name="method" value="DELETE"/><column name="module" value="ROLES"/></insert>
+        <insert tableName="permissions"><column name="permission_id" valueNumeric="9"/><column name="name" value="Get role"/><column name="api_path" value="/api/v1/roles/{id}"/><column name="method" value="GET"/><column name="module" value="ROLES"/></insert>
+        <insert tableName="permissions"><column name="permission_id" valueNumeric="10"/><column name="name" value="Get all roles"/><column name="api_path" value="/api/v1/roles"/><column name="method" value="GET"/><column name="module" value="ROLES"/></insert>
+
+        <!-- USERS -->
+        <insert tableName="permissions"><column name="permission_id" valueNumeric="11"/><column name="name" value="Update password"/><column name="api_path" value="/api/v1/users/update-password"/><column name="method" value="PUT"/><column name="module" value="USERS"/></insert>
+        <insert tableName="permissions"><column name="permission_id" valueNumeric="12"/><column name="name" value="Reset password"/><column name="api_path" value="/api/v1/users/reset-password"/><column name="method" value="PUT"/><column name="module" value="USERS"/></insert>
+        <insert tableName="permissions"><column name="permission_id" valueNumeric="13"/><column name="name" value="Get all users"/><column name="api_path" value="/api/v1/users"/><column name="method" value="GET"/><column name="module" value="USERS"/></insert>
+        <insert tableName="permissions"><column name="permission_id" valueNumeric="14"/><column name="name" value="Get a user by id"/><column name="api_path" value="/api/v1/users/{id}"/><column name="method" value="GET"/><column name="module" value="USERS"/></insert>
+        <insert tableName="permissions"><column name="permission_id" valueNumeric="15"/><column name="name" value="Create a new user"/><column name="api_path" value="/api/v1/users"/><column name="method" value="POST"/><column name="module" value="USERS"/></insert>
+        <insert tableName="permissions"><column name="permission_id" valueNumeric="16"/><column name="name" value="Activate users"/><column name="api_path" value="/api/v1/users/activate"/><column name="method" value="PUT"/><column name="module" value="USERS"/></insert>
+        <insert tableName="permissions"><column name="permission_id" valueNumeric="17"/><column name="name" value="Deactivate users"/><column name="api_path" value="/api/v1/users/deactivate"/><column name="method" value="PUT"/><column name="module" value="USERS"/></insert>
+
+        <!-- RECRUITERS -->
+        <insert tableName="permissions"><column name="permission_id" valueNumeric="18"/><column name="name" value="Create recruiter"/><column name="api_path" value="/api/v1/recruiters"/><column name="method" value="POST"/><column name="module" value="RECRUITERS"/></insert>
+        <insert tableName="permissions"><column name="permission_id" valueNumeric="19"/><column name="name" value="Update recruiter"/><column name="api_path" value="/api/v1/recruiters"/><column name="method" value="PUT"/><column name="module" value="RECRUITERS"/></insert>
+        <insert tableName="permissions"><column name="permission_id" valueNumeric="20"/><column name="name" value="Delete recruiter"/><column name="api_path" value="/api/v1/recruiters/{id}"/><column name="method" value="DELETE"/><column name="module" value="RECRUITERS"/></insert>
+        <insert tableName="permissions"><column name="permission_id" valueNumeric="21"/><column name="name" value="Get recruiter"/><column name="api_path" value="/api/v1/recruiters/{id}"/><column name="method" value="GET"/><column name="module" value="RECRUITERS"/></insert>
+        <insert tableName="permissions"><column name="permission_id" valueNumeric="22"/><column name="name" value="Get all recruiters"/><column name="api_path" value="/api/v1/recruiters"/><column name="method" value="GET"/><column name="module" value="RECRUITERS"/></insert>
+
+        <!-- APPLICANTS -->
+        <insert tableName="permissions"><column name="permission_id" valueNumeric="23"/><column name="name" value="Create applicant"/><column name="api_path" value="/api/v1/applicants"/><column name="method" value="POST"/><column name="module" value="APPLICANTS"/></insert>
+        <insert tableName="permissions"><column name="permission_id" valueNumeric="24"/><column name="name" value="Update applicant"/><column name="api_path" value="/api/v1/applicants"/><column name="method" value="PUT"/><column name="module" value="APPLICANTS"/></insert>
+        <insert tableName="permissions"><column name="permission_id" valueNumeric="25"/><column name="name" value="Delete applicant"/><column name="api_path" value="/api/v1/applicants/{id}"/><column name="method" value="DELETE"/><column name="module" value="APPLICANTS"/></insert>
+        <insert tableName="permissions"><column name="permission_id" valueNumeric="26"/><column name="name" value="Get applicant"/><column name="api_path" value="/api/v1/applicants/{id}"/><column name="method" value="GET"/><column name="module" value="APPLICANTS"/></insert>
+        <insert tableName="permissions"><column name="permission_id" valueNumeric="27"/><column name="name" value="Get all applicants"/><column name="api_path" value="/api/v1/applicants"/><column name="method" value="GET"/><column name="module" value="APPLICANTS"/></insert>
+
+        <!-- CAREERS -->
+        <insert tableName="permissions"><column name="permission_id" valueNumeric="28"/><column name="name" value="Create career"/><column name="api_path" value="/api/v1/careers"/><column name="method" value="POST"/><column name="module" value="CAREERS"/></insert>
+        <insert tableName="permissions"><column name="permission_id" valueNumeric="29"/><column name="name" value="Update career"/><column name="api_path" value="/api/v1/careers"/><column name="method" value="PUT"/><column name="module" value="CAREERS"/></insert>
+        <insert tableName="permissions"><column name="permission_id" valueNumeric="30"/><column name="name" value="Delete career"/><column name="api_path" value="/api/v1/careers/{id}"/><column name="method" value="DELETE"/><column name="module" value="CAREERS"/></insert>
+        <insert tableName="permissions"><column name="permission_id" valueNumeric="31"/><column name="name" value="Get career"/><column name="api_path" value="/api/v1/careers/{id}"/><column name="method" value="GET"/><column name="module" value="CAREERS"/></insert>
+        <insert tableName="permissions"><column name="permission_id" valueNumeric="32"/><column name="name" value="Get all careers"/><column name="api_path" value="/api/v1/careers"/><column name="method" value="GET"/><column name="module" value="CAREERS"/></insert>
+
+        <!-- SKILLS -->
+        <insert tableName="permissions"><column name="permission_id" valueNumeric="33"/><column name="name" value="Create skill"/><column name="api_path" value="/api/v1/skills"/><column name="method" value="POST"/><column name="module" value="SKILLS"/></insert>
+        <insert tableName="permissions"><column name="permission_id" valueNumeric="34"/><column name="name" value="Update skill"/><column name="api_path" value="/api/v1/skills"/><column name="method" value="PUT"/><column name="module" value="SKILLS"/></insert>
+        <insert tableName="permissions"><column name="permission_id" valueNumeric="35"/><column name="name" value="Delete skill"/><column name="api_path" value="/api/v1/skills/{id}"/><column name="method" value="DELETE"/><column name="module" value="SKILLS"/></insert>
+        <insert tableName="permissions"><column name="permission_id" valueNumeric="36"/><column name="name" value="Get skill"/><column name="api_path" value="/api/v1/skills/{id}"/><column name="method" value="GET"/><column name="module" value="SKILLS"/></insert>
+        <insert tableName="permissions"><column name="permission_id" valueNumeric="37"/><column name="name" value="Get all skills"/><column name="api_path" value="/api/v1/skills"/><column name="method" value="GET"/><column name="module" value="SKILLS"/></insert>
+
+        <!-- JOBS -->
+        <insert tableName="permissions"><column name="permission_id" valueNumeric="38"/><column name="name" value="Create job"/><column name="api_path" value="/api/v1/jobs"/><column name="method" value="POST"/><column name="module" value="JOBS"/></insert>
+        <insert tableName="permissions"><column name="permission_id" valueNumeric="39"/><column name="name" value="Update job"/><column name="api_path" value="/api/v1/jobs"/><column name="method" value="PUT"/><column name="module" value="JOBS"/></insert>
+        <insert tableName="permissions"><column name="permission_id" valueNumeric="40"/><column name="name" value="Activate job"/><column name="api_path" value="/api/v1/jobs/activate"/><column name="method" value="PUT"/><column name="module" value="JOBS"/></insert>
+        <insert tableName="permissions"><column name="permission_id" valueNumeric="41"/><column name="name" value="Deactivate job"/><column name="api_path" value="/api/v1/jobs/deactivate"/><column name="method" value="PUT"/><column name="module" value="JOBS"/></insert>
+        <insert tableName="permissions"><column name="permission_id" valueNumeric="42"/><column name="name" value="Delete job"/><column name="api_path" value="/api/v1/jobs/{id}"/><column name="method" value="DELETE"/><column name="module" value="JOBS"/></insert>
+        <insert tableName="permissions"><column name="permission_id" valueNumeric="43"/><column name="name" value="Get job"/><column name="api_path" value="/api/v1/jobs/{id}"/><column name="method" value="GET"/><column name="module" value="JOBS"/></insert>
+        <insert tableName="permissions"><column name="permission_id" valueNumeric="44"/><column name="name" value="Get all jobs"/><column name="api_path" value="/api/v1/jobs"/><column name="method" value="GET"/><column name="module" value="JOBS"/></insert>
+        <insert tableName="permissions"><column name="permission_id" valueNumeric="45"/><column name="name" value="Get all applicants for job"/><column name="api_path" value="/api/v1/jobs/{jobId}/applicants"/><column name="method" value="GET"/><column name="module" value="JOBS"/></insert>
+        <insert tableName="permissions"><column name="permission_id" valueNumeric="46"/><column name="name" value="Count jobs for recruiter"/><column name="api_path" value="/api/v1/jobs/recruiters/count"/><column name="method" value="GET"/><column name="module" value="JOBS"/></insert>
+        <insert tableName="permissions"><column name="permission_id" valueNumeric="47"/><column name="name" value="Count applications for job"/><column name="api_path" value="/api/v1/jobs/count-applications"/><column name="method" value="GET"/><column name="module" value="JOBS"/></insert>
+        <insert tableName="permissions"><column name="permission_id" valueNumeric="48"/><column name="name" value="Enable jobs"/><column name="api_path" value="/api/v1/jobs/enabled"/><column name="method" value="PUT"/><column name="module" value="JOBS"/></insert>
+        <insert tableName="permissions"><column name="permission_id" valueNumeric="49"/><column name="name" value="Disable jobs"/><column name="api_path" value="/api/v1/jobs/disabled"/><column name="method" value="PUT"/><column name="module" value="JOBS"/></insert>
+
+        <!-- FILES -->
+        <insert tableName="permissions"><column name="permission_id" valueNumeric="50"/><column name="name" value="Upload file"/><column name="api_path" value="/api/v1/files"/><column name="method" value="POST"/><column name="module" value="FILES"/></insert>
+        <insert tableName="permissions"><column name="permission_id" valueNumeric="51"/><column name="name" value="Download file"/><column name="api_path" value="/api/v1/files"/><column name="method" value="GET"/><column name="module" value="FILES"/></insert>
+
+        <!-- APPLICATIONS -->
+        <insert tableName="permissions"><column name="permission_id" valueNumeric="52"/><column name="name" value="Create application"/><column name="api_path" value="/api/v1/applications"/><column name="method" value="POST"/><column name="module" value="APPLICATIONS"/></insert>
+        <insert tableName="permissions"><column name="permission_id" valueNumeric="53"/><column name="name" value="Update application"/><column name="api_path" value="/api/v1/applications"/><column name="method" value="PUT"/><column name="module" value="APPLICATIONS"/></insert>
+        <insert tableName="permissions"><column name="permission_id" valueNumeric="54"/><column name="name" value="Accept application"/><column name="api_path" value="/api/v1/applications/accepted"/><column name="method" value="PUT"/><column name="module" value="APPLICATIONS"/></insert>
+        <insert tableName="permissions"><column name="permission_id" valueNumeric="55"/><column name="name" value="Reject application"/><column name="api_path" value="/api/v1/applications/rejected"/><column name="method" value="PUT"/><column name="module" value="APPLICATIONS"/></insert>
+        <insert tableName="permissions"><column name="permission_id" valueNumeric="56"/><column name="name" value="Delete application"/><column name="api_path" value="/api/v1/applications/{id}"/><column name="method" value="DELETE"/><column name="module" value="APPLICATIONS"/></insert>
+        <insert tableName="permissions"><column name="permission_id" valueNumeric="57"/><column name="name" value="Get application"/><column name="api_path" value="/api/v1/applications/{id}"/><column name="method" value="GET"/><column name="module" value="APPLICATIONS"/></insert>
+        <insert tableName="permissions"><column name="permission_id" valueNumeric="58"/><column name="name" value="Get all applications by recruiter"/><column name="api_path" value="/api/v1/applications"/><column name="method" value="GET"/><column name="module" value="APPLICATIONS"/></insert>
+        <insert tableName="permissions"><column name="permission_id" valueNumeric="59"/><column name="name" value="Get all applications by applicant"/><column name="api_path" value="/api/v1/applications/by-applicant"/><column name="method" value="GET"/><column name="module" value="APPLICATIONS"/></insert>
+        <insert tableName="permissions"><column name="permission_id" valueNumeric="60"/><column name="name" value="Get all applications"/><column name="api_path" value="/api/v1/all-applications"/><column name="method" value="GET"/><column name="module" value="APPLICATIONS"/></insert>
+
+        <!-- NOTIFICATIONS -->
+        <insert tableName="permissions"><column name="permission_id" valueNumeric="61"/><column name="name" value="Get all notifications"/><column name="api_path" value="/api/v1/notifications"/><column name="method" value="GET"/><column name="module" value="NOTIFICATIONS"/></insert>
+        <insert tableName="permissions"><column name="permission_id" valueNumeric="62"/><column name="name" value="Mark seen notifications"/><column name="api_path" value="/api/v1/notifications"/><column name="method" value="PUT"/><column name="module" value="NOTIFICATIONS"/></insert>
+
+        <!-- SUBSCRIBERS -->
+        <insert tableName="permissions"><column name="permission_id" valueNumeric="63"/><column name="name" value="Create subscriber"/><column name="api_path" value="/api/v1/subscribers"/><column name="method" value="POST"/><column name="module" value="SUBSCRIBERS"/></insert>
+        <insert tableName="permissions"><column name="permission_id" valueNumeric="64"/><column name="name" value="Update subscriber"/><column name="api_path" value="/api/v1/subscribers"/><column name="method" value="PUT"/><column name="module" value="SUBSCRIBERS"/></insert>
+        <insert tableName="permissions"><column name="permission_id" valueNumeric="65"/><column name="name" value="Delete subscriber"/><column name="api_path" value="/api/v1/subscribers/{id}"/><column name="method" value="DELETE"/><column name="module" value="SUBSCRIBERS"/></insert>
+        <insert tableName="permissions"><column name="permission_id" valueNumeric="66"/><column name="name" value="Get subscriber"/><column name="api_path" value="/api/v1/subscribers/{id}"/><column name="method" value="GET"/><column name="module" value="SUBSCRIBERS"/></insert>
+        <insert tableName="permissions"><column name="permission_id" valueNumeric="67"/><column name="name" value="Get subscribers"/><column name="api_path" value="/api/v1/subscribers"/><column name="method" value="GET"/><column name="module" value="SUBSCRIBERS"/></insert>
+
+        <!-- BLOGS -->
+        <insert tableName="permissions"><column name="permission_id" valueNumeric="68"/><column name="name" value="Create blog"/><column name="api_path" value="/api/v1/blogs"/><column name="method" value="POST"/><column name="module" value="BLOGS"/></insert>
+        <insert tableName="permissions"><column name="permission_id" valueNumeric="69"/><column name="name" value="Update blog"/><column name="api_path" value="/api/v1/blogs"/><column name="method" value="PUT"/><column name="module" value="BLOGS"/></insert>
+        <insert tableName="permissions"><column name="permission_id" valueNumeric="70"/><column name="name" value="Delete blog"/><column name="api_path" value="/api/v1/blogs"/><column name="method" value="DELETE"/><column name="module" value="BLOGS"/></insert>
+        <insert tableName="permissions"><column name="permission_id" valueNumeric="71"/><column name="name" value="Get blog"/><column name="api_path" value="/api/v1/blogs/{id}"/><column name="method" value="GET"/><column name="module" value="BLOGS"/></insert>
+        <insert tableName="permissions"><column name="permission_id" valueNumeric="72"/><column name="name" value="Get blogs"/><column name="api_path" value="/api/v1/blogs"/><column name="method" value="GET"/><column name="module" value="BLOGS"/></insert>
+        <insert tableName="permissions"><column name="permission_id" valueNumeric="73"/><column name="name" value="Like blogs"/><column name="api_path" value="/api/v1/blogs/liked-blogs"/><column name="method" value="PUT"/><column name="module" value="BLOGS"/></insert>
+        <insert tableName="permissions"><column name="permission_id" valueNumeric="74"/><column name="name" value="Enable blogs"/><column name="api_path" value="/api/v1/blogs/enabled"/><column name="method" value="PUT"/><column name="module" value="BLOGS"/></insert>
+        <insert tableName="permissions"><column name="permission_id" valueNumeric="75"/><column name="name" value="Disable blogs"/><column name="api_path" value="/api/v1/blogs/disabled"/><column name="method" value="PUT"/><column name="module" value="BLOGS"/></insert>
+
+        <!-- COMMENTS -->
+        <insert tableName="permissions"><column name="permission_id" valueNumeric="76"/><column name="name" value="Create comment"/><column name="api_path" value="/api/v1/comments"/><column name="method" value="POST"/><column name="module" value="COMMENTS"/></insert>
+        <insert tableName="permissions"><column name="permission_id" valueNumeric="77"/><column name="name" value="Update comment"/><column name="api_path" value="/api/v1/comments"/><column name="method" value="PUT"/><column name="module" value="COMMENTS"/></insert>
+        <insert tableName="permissions"><column name="permission_id" valueNumeric="78"/><column name="name" value="Delete comment"/><column name="api_path" value="/api/v1/comments/{id}"/><column name="method" value="DELETE"/><column name="module" value="COMMENTS"/></insert>
+        <insert tableName="permissions"><column name="permission_id" valueNumeric="79"/><column name="name" value="Get comments"/><column name="api_path" value="/api/v1/comments"/><column name="method" value="GET"/><column name="module" value="COMMENTS"/></insert>
+        <insert tableName="permissions"><column name="permission_id" valueNumeric="80"/><column name="name" value="Get comment"/><column name="api_path" value="/api/v1/comments/{id}"/><column name="method" value="GET"/><column name="module" value="COMMENTS"/></insert>
+
+        <!-- AUTH -->
+        <insert tableName="permissions"><column name="permission_id" valueNumeric="81"/><column name="name" value="Verify recruiter"/><column name="api_path" value="/api/v1/auth/verify/recruiter/{id}"/><column name="method" value="PATCH"/><column name="module" value="AUTH"/></insert>
+
+        <!-- DASHBOARD -->
+        <insert tableName="permissions"><column name="permission_id" valueNumeric="82"/><column name="name" value="User dashboard"/><column name="api_path" value="/api/v1/dashboard/users"/><column name="method" value="GET"/><column name="module" value="DASHBOARD"/></insert>
+        <insert tableName="permissions"><column name="permission_id" valueNumeric="83"/><column name="name" value="Job dashboard"/><column name="api_path" value="/api/v1/dashboard/jobs"/><column name="method" value="GET"/><column name="module" value="DASHBOARD"/></insert>
+        <insert tableName="permissions"><column name="permission_id" valueNumeric="84"/><column name="name" value="Applications dashboard"/><column name="api_path" value="/api/v1/dashboard/applications"/><column name="method" value="GET"/><column name="module" value="DASHBOARD"/></insert>
+        <insert tableName="permissions"><column name="permission_id" valueNumeric="85"/><column name="name" value="Applications year dashboard"/><column name="api_path" value="/api/v1/dashboard/applications-year"/><column name="method" value="GET"/><column name="module" value="DASHBOARD"/></insert>
+
+        <!-- ADMIN -->
+        <insert tableName="permissions"><column name="permission_id" valueNumeric="86"/><column name="name" value="Backup Database"/><column name="api_path" value="/api/v1/admin/backup"/><column name="method" value="GET"/><column name="module" value="ADMIN"/></insert>
+
+        <!-- CONVERSATIONS -->
+        <insert tableName="permissions"><column name="permission_id" valueNumeric="87"/><column name="name" value="Create conversation"/><column name="api_path" value="/api/v1/conversations"/><column name="method" value="POST"/><column name="module" value="CONVERSATIONS"/></insert>
+        <insert tableName="permissions"><column name="permission_id" valueNumeric="88"/><column name="name" value="Update conversation"/><column name="api_path" value="/api/v1/conversations"/><column name="method" value="PUT"/><column name="module" value="CONVERSATIONS"/></insert>
+        <insert tableName="permissions"><column name="permission_id" valueNumeric="89"/><column name="name" value="Delete conversation"/><column name="api_path" value="/api/v1/conversations"/><column name="method" value="DELETE"/><column name="module" value="CONVERSATIONS"/></insert>
+        <insert tableName="permissions"><column name="permission_id" valueNumeric="90"/><column name="name" value="Get conversations"/><column name="api_path" value="/api/v1/conversations"/><column name="method" value="GET"/><column name="module" value="CONVERSATIONS"/></insert>
+        <insert tableName="permissions"><column name="permission_id" valueNumeric="91"/><column name="name" value="Get conversation"/><column name="api_path" value="/api/v1/conversations/{id}"/><column name="method" value="GET"/><column name="module" value="CONVERSATIONS"/></insert>
+        <insert tableName="permissions"><column name="permission_id" valueNumeric="92"/><column name="name" value="Get messages"/><column name="api_path" value="/api/v1/conversations/{id}/messages"/><column name="method" value="GET"/><column name="module" value="CONVERSATIONS"/></insert>
+        <insert tableName="permissions"><column name="permission_id" valueNumeric="93"/><column name="name" value="Pin conversations"/><column name="api_path" value="/api/v1/conversations/pin"/><column name="method" value="PATCH"/><column name="module" value="CONVERSATIONS"/></insert>
+        <insert tableName="permissions"><column name="permission_id" valueNumeric="94"/><column name="name" value="Unpin conversations"/><column name="api_path" value="/api/v1/conversations/unpin"/><column name="method" value="PATCH"/><column name="module" value="CONVERSATIONS"/></insert>
+
+    </changeSet>
+
+</databaseChangeLog>

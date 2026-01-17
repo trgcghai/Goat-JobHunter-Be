@@ -10,10 +10,6 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class MessageCreateRequest {
-    @NotNull(message = "conversation ID is required")
-    private Long conversationId;
-    @NotNull(message = "Role is required")
-//    private MessageRole role;
     @NotBlank(message = "message is not empty")
     private String content;
 }

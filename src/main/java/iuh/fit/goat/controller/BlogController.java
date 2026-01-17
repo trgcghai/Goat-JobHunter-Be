@@ -28,18 +28,18 @@ public class BlogController {
     private final BlogService blogService;
 
     @PostMapping(consumes = {"multipart/form-data"})
-    public ResponseEntity<?> createBlog(@Valid @ModelAttribute BlogCreateRequest request) {
+    public ResponseEntity<BlogResponse> createBlog(@Valid @ModelAttribute BlogCreateRequest request) throws InvalidException {
         try {
             Blog res = this.blogService.handleCreateBlog(request);
             BlogResponse blogResponse = this.blogService.convertToBlogResponse(res);
             return ResponseEntity.status(HttpStatus.CREATED).body(blogResponse);
         } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
+            throw new InvalidException("Cannot create blog: " + e.getMessage());
         }
     }
 
     @PutMapping
-    public ResponseEntity<?> updateBlog(@Valid @RequestBody BlogUpdateRequest request) throws InvalidException {
+    public ResponseEntity<BlogResponse> updateBlog(@Valid @RequestBody BlogUpdateRequest request) throws InvalidException {
         Blog res = this.blogService.handleUpdateBlog(request);
         if (res == null) throw new InvalidException("Blog doesn't exist");
         BlogResponse blogResponse = this.blogService.convertToBlogResponse(res);
@@ -53,12 +53,12 @@ public class BlogController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<?> getBlogById(
+    public ResponseEntity<BlogResponse> getBlogById(
             @PathVariable("id") String id,
             @RequestParam(value = "read", required = false) Boolean read,
             @CookieValue(value = "guestId", required = false) String guestId
     ) throws InvalidException {
-        Pattern pattern = Pattern.compile("^[0-9]+$");
+        Pattern pattern = Pattern.compile("^\\d+$");
         if (!pattern.matcher(id).matches()) throw new InvalidException("Id is number");
 
         Blog res = this.blogService.handleGetBlogById(Long.parseLong(id));

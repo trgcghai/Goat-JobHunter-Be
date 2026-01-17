@@ -6,9 +6,9 @@ import iuh.fit.goat.common.Role;
 import java.util.List;
 
 public interface EmailNotificationService {
-//    void handleSendEmailWithTemplate(
-//            String recipient, String subject, String templateName, String username, Object object
-//    );
+    void handleSendEmailWithTemplate(
+            String recipient, String subject, String templateName, String username, Object object
+    );
 
     void handleSendVerificationEmail(String email, String verificationCode);
 
@@ -16,19 +16,19 @@ public interface EmailNotificationService {
             String recipient, String username, Object object, String reason, ActionType mode
     );
 
-//    void handleSendJobActionNotice(
-//            String recipient, String username, Object object, String reason, ActionType mode
-//    );
+    void handleSendJobActionNotice(
+            String recipient, String username, Object object, String reason, ActionType mode
+    );
 
     void handleSendApplicationStatusEmail(
             String recipient, String username, Object object, String status, String reason
     );
 
-//    void handleSendJobInvitationEmail(List<Long> applicantIds, Long jobId);
-//
-//    void handleSendUserEnabledEmail(
-//            String recipient, String username, boolean enabled
-//    );
+    void handleSendJobInvitationEmail(List<Long> applicantIds, Long jobId);
+
+    void handleSendUserEnabledEmail(
+            String recipient, String username, boolean enabled
+    );
 
     void handleSendReviewActionNotice(
             String recipient, String username, Object object, String reason, ActionType mode

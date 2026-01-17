@@ -40,7 +40,7 @@ public class DynamoDbMigrationRunner implements CommandLineRunner {
                 .tableName(tableName)
                 .attributeDefinitions(
                         AttributeDefinition.builder()
-                                .attributeName("conversationBucket")
+                                .attributeName("chatRoomBucket")
                                 .attributeType(ScalarAttributeType.S)
                                 .build(),
                         AttributeDefinition.builder()
@@ -50,7 +50,7 @@ public class DynamoDbMigrationRunner implements CommandLineRunner {
                 )
                 .keySchema(
                         KeySchemaElement.builder()
-                                .attributeName("conversationBucket")
+                                .attributeName("chatRoomBucket")
                                 .keyType(KeyType.HASH)
                                 .build(),
                         KeySchemaElement.builder()
@@ -63,10 +63,7 @@ public class DynamoDbMigrationRunner implements CommandLineRunner {
 
         try {
             dynamoDbClient.createTable(request);
-
-            // Wait for table to become active
             waitForTableCreation(tableName);
-
             log.info("✅ Table '{}' created successfully", tableName);
         } catch (Exception e) {
             log.error("❌ Failed to create table '{}'", tableName, e);
@@ -88,7 +85,7 @@ public class DynamoDbMigrationRunner implements CommandLineRunner {
                 .tableName(tableName)
                 .attributeDefinitions(
                         AttributeDefinition.builder()
-                                .attributeName("conversationId")
+                                .attributeName("chatRoomId")
                                 .attributeType(ScalarAttributeType.S)
                                 .build(),
                         AttributeDefinition.builder()
@@ -98,7 +95,7 @@ public class DynamoDbMigrationRunner implements CommandLineRunner {
                 )
                 .keySchema(
                         KeySchemaElement.builder()
-                                .attributeName("conversationId")
+                                .attributeName("chatRoomId")
                                 .keyType(KeyType.HASH)
                                 .build(),
                         KeySchemaElement.builder()
@@ -111,10 +108,7 @@ public class DynamoDbMigrationRunner implements CommandLineRunner {
 
         try {
             dynamoDbClient.createTable(request);
-
-            // Wait for table to become active
             waitForTableCreation(tableName);
-
             log.info("✅ Table '{}' created successfully", tableName);
         } catch (Exception e) {
             log.error("❌ Failed to create table '{}'", tableName, e);

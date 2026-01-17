@@ -15,6 +15,8 @@ import java.util.Optional;
 public interface CompanyRepository extends JpaRepository<Company, Long>,
         JpaSpecificationExecutor<Company> {
 
+    Optional<Company> findByEmail(String email);
+
     Optional<Company> findByAccountIdAndDeletedAtIsNull(Long id);
 
     Optional<Company> findByNameIgnoreCaseAndDeletedAtIsNull(String name);

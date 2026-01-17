@@ -7,9 +7,6 @@ import jakarta.validation.ConstraintValidatorContext;
 
 public class RequireCompanyNameIfRecruiterValidator implements ConstraintValidator<RequireCompanyNameIfRecruiter, RegisterUserRequest> {
 
-    public RequireCompanyNameIfRecruiterValidator() {
-    }
-
     @Override
     public boolean isValid(RegisterUserRequest request, ConstraintValidatorContext context) {
         if (request == null) return true;

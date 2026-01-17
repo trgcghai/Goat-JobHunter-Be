@@ -23,12 +23,9 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class ApplicantServiceImpl implements ApplicantService {
     private final ApplicantRepository applicantRepository;
-    //    private final ApplicationRepository applicationRepository;
-//    private final CommentRepository commentRepository;
-//    private final NotificationRepository notificationRepository;
     private final AddressRepository addressRepository;
     private final RoleService roleService;
-    private final String APPLICANT = "APPLICANT";
+    private final String applicantRole = "APPLICANT";
 
     @Override
     public Applicant handleCreateApplicant(Applicant applicant) {
@@ -36,7 +33,7 @@ public class ApplicantServiceImpl implements ApplicantService {
         if (applicant.getRole() != null) {
             role = this.roleService.handleGetRoleById(applicant.getRole().getRoleId());
         } else {
-            role = this.roleService.handleGetRoleByName(APPLICANT);
+            role = this.roleService.handleGetRoleByName(applicantRole);
         }
         applicant.setRole(role);
         applicant.setEnabled(false);
@@ -47,28 +44,6 @@ public class ApplicantServiceImpl implements ApplicantService {
 
         return this.applicantRepository.save(applicant);
     }
-
-//    @Override
-//    public void handleDeleteApplicant(long id) {
-//        Applicant applicant = this.handleGetApplicantById(id);
-//        if(applicant.getApplications() != null){
-//            List<Application> applications = this.applicationRepository.findByApplicant(applicant);
-//            this.applicationRepository.deleteAll(applications);
-//        }
-//        if(applicant.getComments() != null){
-//            this.commentRepository.deleteAll(applicant.getComments());
-//        }
-//        if(applicant.getActorNotifications() != null){
-//            List<Notification> notifications = applicant.getActorNotifications();
-//            this.notificationRepository.deleteAll(notifications);
-//        }
-//        if(applicant.getRecipientNotifications() != null){
-//            List<Notification> notifications = applicant.getRecipientNotifications();
-//            this.notificationRepository.deleteAll(notifications);
-//        }
-//
-//        this.applicantRepository.deleteById(id);
-//    }
 
     @Override
     public Applicant handleUpdateApplicant(ApplicantUpdateRequest updateRequest) {
@@ -166,33 +141,23 @@ public class ApplicantServiceImpl implements ApplicantService {
         return this.applicantRepository.findById(id).orElse(null);
     }
 
-    //    @Override
-//    public Applicant handleGetCurrentApplicant() {
-//        String email = SecurityUtil.getCurrentUserLogin().orElse(null);
-//        if (email == null) {
-//            return null;
-//        }
-//        return this.applicantRepository.findByContact_Email(email).orElse(null);
-//    }
-//
-//
-//    @Override
-//    public ResultPaginationResponse handleGetAllApplicants(Specification<Applicant> spec, Pageable pageable) {
-//        Page<Applicant> page = this.applicantRepository.findAll(spec, pageable);
-//
-//        ResultPaginationResponse.Meta meta = new ResultPaginationResponse.Meta();
-//        meta.setPage(pageable.getPageNumber() + 1);
-//        meta.setPageSize(pageable.getPageSize());
-//        meta.setPages(page.getTotalPages());
-//        meta.setTotal(page.getTotalElements());
-//
-//        List<ApplicantResponse> applicantResponses = page.getContent().stream()
-//                .map(this :: convertToApplicantResponse)
-//                .toList();
-//
-//        return new ResultPaginationResponse(meta, applicantResponses);
-//    }
-//
+    @Override
+    public ResultPaginationResponse handleGetAllApplicants(Specification<Applicant> spec, Pageable pageable) {
+        Page<Applicant> page = this.applicantRepository.findAll(spec, pageable);
+
+        ResultPaginationResponse.Meta meta = new ResultPaginationResponse.Meta();
+        meta.setPage(pageable.getPageNumber() + 1);
+        meta.setPageSize(pageable.getPageSize());
+        meta.setPages(page.getTotalPages());
+        meta.setTotal(page.getTotalElements());
+
+        List<ApplicantResponse> applicantResponses = page.getContent().stream()
+                .map(this :: convertToApplicantResponse)
+                .toList();
+
+        return new ResultPaginationResponse(meta, applicantResponses);
+    }
+
     @Override
     public ApplicantResponse convertToApplicantResponse(Applicant applicant) {
         ApplicantResponse applicantResponse = new ApplicantResponse();

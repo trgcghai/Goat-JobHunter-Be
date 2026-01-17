@@ -10,7 +10,6 @@ import iuh.fit.goat.dto.response.auth.LoginResponse;
 import iuh.fit.goat.entity.*;
 import iuh.fit.goat.exception.InvalidException;
 import iuh.fit.goat.repository.AccountRepository;
-import iuh.fit.goat.repository.UserRepository;
 import iuh.fit.goat.service.*;
 import iuh.fit.goat.util.SecurityUtil;
 import jakarta.servlet.http.HttpServletResponse;
@@ -48,10 +47,9 @@ public class AuthServiceImpl implements AuthService {
     private final ApplicantService applicantService;
     private final RecruiterService recruiterService;
     private final CompanyService companyService;
+    private final RoleService roleService;
 
-    private final UserRepository userRepository;
     private final AccountRepository accountRepository;
-//    private final RecruiterRepository recruiterRepository;
 
     @Value("${minhdat.jwt.access-token-validity-in-seconds}")
     private long jwtAccessToken;
@@ -61,7 +59,7 @@ public class AuthServiceImpl implements AuthService {
     private long validityInSeconds;
 
     @Override
-    public Object handleLogin(LoginRequest loginRequest, HttpServletResponse response) throws InvalidException {
+    public LoginResponse handleLogin(LoginRequest loginRequest, HttpServletResponse response) throws InvalidException {
 
         log.info("User: {}", this.userService.handleGetUserByEmail(loginRequest.getEmail()));
         log.info("loginRequest: {}", loginRequest);
@@ -97,11 +95,13 @@ public class AuthServiceImpl implements AuthService {
 
         LoginResponse loginResponse = createLoginResponse(account);
 
+        log.info("loginResponse logged in: {}", loginResponse);
+
         // Tạo token và lưu vào Redis
         String accessToken = this.securityUtil.createAccessToken(account.getEmail(), loginResponse);
         String refreshToken = this.securityUtil.createRefreshToken(account.getEmail(), loginResponse);
 
-        System.out.println("Refresh Token Created in Login: " + refreshToken);
+        log.info("Refresh Token Created in Login: {}", refreshToken);
 
         // Lưu refresh token vào Redis
         this.redisService.saveWithTTL(
@@ -136,11 +136,11 @@ public class AuthServiceImpl implements AuthService {
     }
 
     @Override
-    public Object handleRefreshToken(String refreshToken, HttpServletResponse response) throws InvalidException {
+    public LoginResponse handleRefreshToken(String refreshToken, HttpServletResponse response) throws InvalidException {
         if(refreshToken.equalsIgnoreCase("missingValue")) {
             throw new InvalidException("You don't have a refresh token at cookie");
         }
-        System.out.println("Refresh Token in Redis: " + refreshToken);
+        log.info("Refresh Token in Redis: " + refreshToken);
         if (!this.redisService.hasKey("refresh:" + refreshToken)) {
             throw new InvalidException("Invalid or expired refresh token");
         }
@@ -246,11 +246,9 @@ public class AuthServiceImpl implements AuthService {
         }
 
         // Kiểm tra loại user và trả về response tương ứng
-        if (user instanceof Applicant) {
-            Applicant applicant = (Applicant) user;
+        if (user instanceof Applicant applicant) {
             return this.applicantService.convertToApplicantResponse(applicant);
-        } else if (user instanceof Recruiter) {
-            Recruiter recruiter = (Recruiter) user;
+        } else if (user instanceof Recruiter recruiter) {
             return this.recruiterService.convertToRecruiterResponse(recruiter);
         }
 
@@ -278,6 +276,7 @@ public class AuthServiceImpl implements AuthService {
             applicant.setEmail(request.getEmail());
             applicant.setPassword(hashPassword);
             applicant.setPhone(request.getPhone());
+            applicant.setRole(this.roleService.handleGetRoleByName(Role.APPLICANT.getValue()));
 
             // create applicant to save to database
             Applicant newApplicant = this.applicantService.handleCreateApplicant(applicant);
@@ -310,6 +309,7 @@ public class AuthServiceImpl implements AuthService {
             recruiter.setPassword(hashPassword);
             recruiter.setPhone(request.getPhone());
             recruiter.setCompany(company);
+            recruiter.setRole(this.roleService.handleGetRoleByName(Role.RECRUITER.getValue()));
 
             // create recruiter to save to database
             Recruiter newRecruiter = this.recruiterService.handleCreateRecruiter(recruiter);
@@ -399,17 +399,6 @@ public class AuthServiceImpl implements AuthService {
 
         this.redisService.deleteKey(key);
     }
-//
-//    @Override
-//    public void handleVerifyRecruiter(long id) throws InvalidException {
-//        Recruiter recruiter = this.recruiterService.handleGetRecruiterById(id);
-//        if (recruiter != null) {
-//            recruiter.setEnabled(true);
-//            this.recruiterRepository.save(recruiter);
-//        } else {
-//            throw new InvalidException("Recruiter not found");
-//        }
-//    }
 
     @Override
     public void handleResendCode(String email) throws InvalidException {
@@ -441,17 +430,12 @@ public class AuthServiceImpl implements AuthService {
         loginResponse.setEnabled(account.isEnabled());
         loginResponse.setAddresses(Objects.requireNonNullElse(account.getAddresses(), new ArrayList<>()));
 
-        iuh.fit.goat.entity.Role role = account.getRole();
-
-        if (role != null) {
-            role.getName();
-            loginResponse.setRole(role);
+        if (account.getRole() != null) {
+            loginResponse.setRole(account.getRole());
         }
 
         // Thông tin riêng của User
-        if (account instanceof User) {
-            User user = (User) account;
-
+        if (account instanceof User user) {
             loginResponse.setPhone(user.getPhone());
             loginResponse.setDob(user.getDob());
             loginResponse.setAddresses(user.getAddresses());

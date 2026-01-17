@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+                      http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-5.0.xsd"
+        objectQuotingStrategy="QUOTE_ONLY_RESERVED_WORDS">
+    <changeSet id="1768569579579-1"
+               author="minhdat">
+        <dropForeignKeyConstraint baseTableName="chat_messages"
+                                  constraintName="fk_chat_messages_on_room"/>
+    </changeSet>
+    <changeSet id="1768569579579-2"
+               author="minhdat">
+        <dropForeignKeyConstraint baseTableName="chat_messages"
+                                  constraintName="fk_chat_messages_on_sender"/>
+    </changeSet>
+    <changeSet id="1768569579579-3"
+               author="minhdat">
+        <dropForeignKeyConstraint baseTableName="message_read_by"
+                                  constraintName="fk_mesreaby_on_message"/>
+    </changeSet>
+    <changeSet id="1768569579579-4"
+               author="minhdat">
+        <dropForeignKeyConstraint baseTableName="message_read_by"
+                                  constraintName="fk_mesreaby_on_user"/>
+    </changeSet>
+    <changeSet id="1768569579579-5"
+               author="minhdat">
+        <dropTable cascadeConstraints="true"
+                   tableName="chat_messages"/>
+    </changeSet>
+    <changeSet id="1768569579579-6"
+               author="minhdat">
+        <dropTable cascadeConstraints="true"
+                   tableName="message_read_by"/>
+    </changeSet>
+
+</databaseChangeLog>

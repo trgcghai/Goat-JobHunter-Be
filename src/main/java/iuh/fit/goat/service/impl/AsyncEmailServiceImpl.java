@@ -3,6 +3,7 @@ package iuh.fit.goat.service.impl;
 import iuh.fit.goat.service.AsyncEmailService;
 import jakarta.mail.internet.MimeMessage;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.mail.MailSender;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
@@ -14,6 +15,7 @@ import java.nio.charset.StandardCharsets;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class AsyncEmailServiceImpl implements AsyncEmailService {
     private final MailSender mailSender;
     private final JavaMailSender javaMailSender;
@@ -41,7 +43,7 @@ public class AsyncEmailServiceImpl implements AsyncEmailService {
 
             this.javaMailSender.send(mimeMessage);
         } catch (Exception e) {
-            System.out.println("Error sending email to " + recipient + ": " + e.getMessage());
+            log.error("Error sending email to " + recipient + ": " + e.getMessage());
         }
     }
 }

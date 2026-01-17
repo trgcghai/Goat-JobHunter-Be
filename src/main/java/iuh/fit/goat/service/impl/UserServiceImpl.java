@@ -1,9 +1,7 @@
 package iuh.fit.goat.service.impl;
 
-import iuh.fit.goat.dto.request.user.CreateUserRequest;
 import iuh.fit.goat.dto.response.blog.BlogResponse;
 import iuh.fit.goat.dto.response.interview.InterviewResponse;
-import iuh.fit.goat.entity.embeddable.Contact;
 import iuh.fit.goat.dto.request.user.ResetPasswordRequest;
 import iuh.fit.goat.dto.response.auth.LoginResponse;
 import iuh.fit.goat.dto.response.ResultPaginationResponse;
@@ -42,9 +40,9 @@ public class UserServiceImpl implements UserService {
     private final BlogService blogService;
     private final InterviewService interviewService;
 
-//    private final RedisService redisService;
+    private final RedisService redisService;
     private final NotificationService notificationService;
-//    private final EmailNotificationService emailNotificationService;
+    private final EmailNotificationService emailNotificationService;
 
     private final AccountRepository accountRepository;
     private final UserRepository userRepository;
@@ -54,16 +52,16 @@ public class UserServiceImpl implements UserService {
     private final NotificationRepository notificationRepository;
     private final BlogRepository blogRepository;
     private final InterviewRepository interviewRepository;
-//
-//    private final PasswordEncoder passwordEncoder;
-//    private final SecurityUtil securityUtil;
+
+    private final PasswordEncoder passwordEncoder;
+    private final SecurityUtil securityUtil;
 //    private final RoleRepository roleRepository;
-//
-//    @Value("${minhdat.jwt.refresh-token-validity-in-seconds}")
-//    private long jwtRefreshToken;
-//    @Value("${minhdat.verify-code-validity-in-seconds}")
-//    private long validityInSeconds;
-//
+
+    @Value("${minhdat.jwt.refresh-token-validity-in-seconds}")
+    private long jwtRefreshToken;
+    @Value("${minhdat.verify-code-validity-in-seconds}")
+    private long validityInSeconds;
+
     @Override
     public User handleGetUserByEmail(String email) {
         return this.userRepository.findByEmailWithRole(email).orElse(null);
@@ -73,83 +71,11 @@ public class UserServiceImpl implements UserService {
     public boolean handleExistsByEmail(String email) {
         return this.userRepository.existsByEmail(email);
     }
-//
-//    @Override
-//    public User handleGetUserById(long id) {
-//        return this.userRepository.findById(id).orElse(null);
-//    }
-//
-//    @Override
-//    public User handleCreateUser(CreateUserRequest request) throws InvalidException {
-//        // Check if email already exists
-//        if (this.handleExistsByEmail(request.getEmail())) {
-//            throw new InvalidException("Email already exists");
-//        }
-//
-//        // Get role entity
-//        iuh.fit.goat.entity.Role roleEntity;
-//        User newUser;
-//
-//        String hashedPassword = this.passwordEncoder.encode("11111111");
-//
-//        if (Role.APPLICANT.getValue().equalsIgnoreCase(request.getRole())) {
-//            Applicant applicant = new Applicant();
-//            applicant.setPassword(hashedPassword);
-//            applicant.setEnabled(true);
-//            applicant.setFullName(request.getFullName());
-//            applicant.setUsername(request.getUsername());
-//            applicant.setAddress(request.getAddress());
-//
-//            Contact contact = new Contact();
-//            contact.setEmail(request.getEmail());
-//            contact.setPhone(request.getPhone());
-//            applicant.setContact(contact);
-//
-//            // Set role - you need to fetch from RoleRepository
-//            // Assuming you have a RoleRepository injected
-//             roleEntity = roleRepository.findByName(Role.APPLICANT.getValue());
-//             applicant.setRole(roleEntity);
-//
-//            newUser = applicant;
-//        } else if (Role.RECRUITER.getValue().equalsIgnoreCase(request.getRole())) {
-//            Recruiter recruiter = new Recruiter();
-//            recruiter.setPassword(hashedPassword);
-//            recruiter.setEnabled(true);
-//
-//            if (recruiter.getAddress() == null || recruiter.getAddress().isEmpty()) {
-//                recruiter.setAddress("Chưa cung cấp");
-//            } else {
-//                recruiter.setAddress(request.getAddress());
-//            }
-//
-//            if (recruiter.getFullName() == null || recruiter.getFullName().isEmpty()) {
-//                recruiter.setFullName("Chưa cung cấp");
-//            } else {
-//                recruiter.setFullName(request.getFullName());
-//            }
-//
-//            if (recruiter.getUsername() == null || recruiter.getUsername().isEmpty()) {
-//                recruiter.setUsername("Chưa cung cấp");
-//            } else {
-//                recruiter.setUsername(request.getUsername());
-//            }
-//
-//            Contact contact = new Contact();
-//            contact.setEmail(request.getEmail());
-//            contact.setPhone(request.getPhone());
-//            recruiter.setContact(contact);
-//
-//            // Set role
-//             roleEntity = roleRepository.findByName(Role.RECRUITER.getValue());
-//             recruiter.setRole(roleEntity);
-//
-//            newUser = recruiter;
-//        } else {
-//            throw new InvalidException("Invalid role. Must be APPLICANT or RECRUITER");
-//        }
-//
-//        return this.userRepository.save(newUser);
-//    }
+
+    @Override
+    public User handleGetUserById(long id) {
+        return this.userRepository.findById(id).orElse(null);
+    }
 
     @Override
     public ResultPaginationResponse handleGetAllUsers(Specification<User> spec, Pageable pageable) {
@@ -163,91 +89,89 @@ public class UserServiceImpl implements UserService {
 
         List<UserResponse> userResponses = page.getContent().stream()
                 .map(this::convertToUserResponse)
-                .collect(Collectors.toList());
+                .toList();
 
         return new ResultPaginationResponse(meta, userResponses);
     }
 
-//    @Override
-//    public boolean handleCheckCurrentPassword(String currentPassword) {
-//        String currentEmail = SecurityUtil.getCurrentUserLogin().isPresent() ?
-//                SecurityUtil.getCurrentUserLogin().get() : "";
-//
-//        if (!currentEmail.isEmpty()) {
-//            User currentUser = this.handleGetUserByEmail(currentEmail);
-//            return passwordEncoder.matches(currentPassword, currentUser.getPassword());
-//        }
-//
-//        return false;
-//    }
-//
-//    @Override
-//    public Map<String, Object> handleUpdatePassword(String newPassword, String refreshToken) {
-//        String currentEmail = SecurityUtil.getCurrentUserLogin().isPresent() ?
-//                SecurityUtil.getCurrentUserLogin().get() : "";
-//
-//        if (!currentEmail.isEmpty()) {
-//            User currentUser = this.handleGetUserByEmail(currentEmail);
-//            String hashedPassword = this.passwordEncoder.encode(newPassword);
-//            currentUser.setPassword(hashedPassword);
-//            User res = this.userRepository.save(currentUser);
-//
-//            LoginResponse loginResponse = new LoginResponse();
-//            LoginResponse.UserLogin userLogin = new LoginResponse.UserLogin();
-//
-//            userLogin.setUserId(res.getUserId());
-//            userLogin.setDob(res.getDob());
-//            userLogin.setGender(res.getGender());
-//            userLogin.setFullName(res.getFullName());
-//            userLogin.setUsername(res.getUsername());
-//            userLogin.setContact(res.getContact());
-//            userLogin.setAvatar(res.getAvatar());
-//            userLogin.setType(res instanceof Applicant ? Role.APPLICANT.getValue() : Role.RECRUITER.getValue());
-//            userLogin.setRole(res.getRole());
-//            userLogin.setEnabled(res.isEnabled());
-//
-//            loginResponse.setUser(userLogin);
-//            String newAccessToken = this.securityUtil.createAccessToken(currentEmail, loginResponse);
-//            String newRefreshToken = this.securityUtil.createRefreshToken(currentEmail, loginResponse);
-//            this.redisService.replaceKey(
-//                    "refresh:" + refreshToken,
-//                    "refresh:" + newRefreshToken,
-//                    currentEmail, jwtRefreshToken, TimeUnit.SECONDS
-//
-//            );
-//
-//            Map<String, Object> response = new HashMap<>();
-//            response.put("loginResponse", loginResponse);
-//            response.put("refreshToken", newRefreshToken);
-//            response.put("accessToken", newAccessToken);
-//
-//            return response;
-//        }
-//
-//        return null;
-//    }
-//
-//    @Override
-//    public void handleResetPassword(ResetPasswordRequest resetPasswordRequest) throws InvalidException {
-//        User user = this.handleGetUserByEmail(resetPasswordRequest.getEmail());
-//        if (user != null) {
-//            String hashedPassword = this.passwordEncoder.encode(resetPasswordRequest.getNewPassword());
-//            user.setPassword(hashedPassword);
-//            user.setEnabled(false);
-//            this.userRepository.save(user);
-//
-//            String verificationCode = SecurityUtil.generateVerificationCode();
-//            this.redisService.saveWithTTL(
-//                    user.getContact().getEmail(),
-//                    verificationCode,
-//                    validityInSeconds,
-//                    TimeUnit.SECONDS
-//            );
-//            this.emailNotificationService.handleSendVerificationEmail(user.getContact().getEmail(), verificationCode);
-//        } else {
-//            throw new InvalidException("User not found");
-//        }
-//    }
+    @Override
+    public boolean handleCheckCurrentPassword(String currentPassword) {
+        String currentEmail = SecurityUtil.getCurrentUserLogin().isPresent() ?
+                SecurityUtil.getCurrentUserLogin().get() : "";
+
+        if (!currentEmail.isEmpty()) {
+            User currentUser = this.handleGetUserByEmail(currentEmail);
+            return this.passwordEncoder.matches(currentPassword, currentUser.getPassword());
+        }
+
+        return false;
+    }
+
+    @Override
+    public Map<String, Object> handleUpdatePassword(String newPassword, String refreshToken) {
+        String currentEmail = SecurityUtil.getCurrentUserLogin().isPresent() ?
+                SecurityUtil.getCurrentUserLogin().get() : "";
+
+        if (!currentEmail.isEmpty()) {
+            User currentUser = this.handleGetUserByEmail(currentEmail);
+            String hashedPassword = this.passwordEncoder.encode(newPassword);
+            currentUser.setPassword(hashedPassword);
+            User res = this.userRepository.save(currentUser);
+
+            LoginResponse loginResponse = new LoginResponse();
+
+            loginResponse.setAccountId(res.getAccountId());
+            loginResponse.setDob(res.getDob());
+            loginResponse.setGender(res.getGender());
+            loginResponse.setFullName(res.getFullName());
+            loginResponse.setUsername(res.getUsername());
+            loginResponse.setEmail(res.getEmail());
+            loginResponse.setPhone(res.getPhone());
+            loginResponse.setType(res instanceof Applicant ? iuh.fit.goat.common.Role.APPLICANT.getValue() : iuh.fit.goat.common.Role.COMPANY.getValue());
+            loginResponse.setRole(res.getRole());
+            loginResponse.setEnabled(res.isEnabled());
+
+            String newAccessToken = this.securityUtil.createAccessToken(currentEmail, loginResponse);
+            String newRefreshToken = this.securityUtil.createRefreshToken(currentEmail, loginResponse);
+            this.redisService.replaceKey(
+                    "refresh:" + refreshToken,
+                    "refresh:" + newRefreshToken,
+                    currentEmail, jwtRefreshToken, TimeUnit.SECONDS
+
+            );
+
+            Map<String, Object> response = new HashMap<>();
+            response.put("loginResponse", loginResponse);
+            response.put("refreshToken", newRefreshToken);
+            response.put("accessToken", newAccessToken);
+
+            return response;
+        }
+
+        return null;
+    }
+
+    @Override
+    public void handleResetPassword(ResetPasswordRequest resetPasswordRequest) throws InvalidException {
+        User user = this.handleGetUserByEmail(resetPasswordRequest.getEmail());
+        if (user != null) {
+            String hashedPassword = this.passwordEncoder.encode(resetPasswordRequest.getNewPassword());
+            user.setPassword(hashedPassword);
+            user.setEnabled(false);
+            this.userRepository.save(user);
+
+            String verificationCode = SecurityUtil.generateVerificationCode();
+            this.redisService.saveWithTTL(
+                    user.getEmail(),
+                    verificationCode,
+                    validityInSeconds,
+                    TimeUnit.SECONDS
+            );
+            this.emailNotificationService.handleSendVerificationEmail(user.getEmail(), verificationCode);
+        } else {
+            throw new InvalidException("User not found");
+        }
+    }
 
 
     /*     ========================= Saved Job Related Methods =========================  */
@@ -315,7 +239,7 @@ public class UserServiceImpl implements UserService {
                     result.put("result", savedJobIds.contains(jobId));
                     return result;
                 })
-                .collect(Collectors.toList());
+                .toList();
     }
 
     @Override
@@ -413,7 +337,7 @@ public class UserServiceImpl implements UserService {
 
         List<BlogResponse> blogResponses = page.getContent().stream()
                 .map(blogService::convertToBlogResponse)
-                .collect(Collectors.toList());
+                .toList();
 
         return new ResultPaginationResponse(meta, blogResponses);
     }
@@ -438,7 +362,7 @@ public class UserServiceImpl implements UserService {
                     result.put("result", savedBlogIds.contains(blogId));
                     return result;
                 })
-                .collect(Collectors.toList());
+                .toList();
     }
 
     @Override
@@ -506,84 +430,84 @@ public class UserServiceImpl implements UserService {
     /*     ========================= ========================= =========================  */
 
 
-//    // functions for notifications feature
-//    @Override
-//    public ResultPaginationResponse handleGetCurrentUserNotifications(Pageable pageable) {
-//        String currentEmail = SecurityUtil.getCurrentUserLogin().isPresent() ?
-//                SecurityUtil.getCurrentUserLogin().get() : "";
-//
-//        if (currentEmail.isEmpty()) {
-//            return new ResultPaginationResponse(
-//                    new ResultPaginationResponse.Meta(0, 0, 0, 0L),
-//                    new ArrayList<>()
-//            );
-//        }
-//
-//        User currentUser = this.handleGetUserByEmail(currentEmail);
-//        if (currentUser == null) {
-//            return new ResultPaginationResponse(
-//                    new ResultPaginationResponse.Meta(0, 0, 0, 0L),
-//                    new ArrayList<>()
-//            );
-//        }
-//
-//        Page<Notification> page = this.notificationRepository
-//                .findByRecipient_UserId(currentUser.getUserId(), pageable);
-//
-//        ResultPaginationResponse.Meta meta = new ResultPaginationResponse.Meta();
-//        meta.setPage(pageable.getPageNumber() + 1);
-//        meta.setPageSize(pageable.getPageSize());
-//        meta.setPages(page.getTotalPages());
-//        meta.setTotal(page.getTotalElements());
-//
-//        return new ResultPaginationResponse(meta, page.getContent());
-//    }
-//
-//    @Override
-//    public List<Notification> handleGetLatestNotifications() {
-//        String currentEmail = SecurityUtil.getCurrentUserLogin().isPresent() ?
-//                SecurityUtil.getCurrentUserLogin().get() : "";
-//
-//        if (currentEmail.isEmpty()) {
-//            return new ArrayList<>();
-//        }
-//
-//        User currentUser = this.handleGetUserByEmail(currentEmail);
-//        if (currentUser == null) {
-//            return new ArrayList<>();
-//        }
-//
-//        PageRequest pageRequest = PageRequest.of(
-//                0,
-//                10,
-//                Sort.by(Sort.Direction.DESC, "createdAt")
-//        );
-//
-//        return this.notificationRepository
-//                .findByRecipient_UserId(currentUser.getUserId(), pageRequest)
-//                .getContent();
-//    }
-//
-//    @Override
-//    public void handleMarkNotificationsAsSeen(List<Long> notificationIds) {
-//        String currentEmail = SecurityUtil.getCurrentUserLogin().isPresent() ?
-//                SecurityUtil.getCurrentUserLogin().get() : "";
-//
-//        if (currentEmail.isEmpty()) {
-//            return;
-//        }
-//
-//        User currentUser = this.handleGetUserByEmail(currentEmail);
-//        if (currentUser == null) {
-//            return;
-//        }
-//
-//        List<Notification> notifications = this.notificationRepository
-//                .findByNotificationIdInAndRecipient_UserId(notificationIds, currentUser.getUserId());
-//
-//        notifications.forEach(notification -> notification.setSeen(true));
-//        this.notificationRepository.saveAll(notifications);
-//    }
+    // functions for notifications feature
+    @Override
+    public ResultPaginationResponse handleGetCurrentUserNotifications(Pageable pageable) {
+        String currentEmail = SecurityUtil.getCurrentUserLogin().isPresent() ?
+                SecurityUtil.getCurrentUserLogin().get() : "";
+
+        if (currentEmail.isEmpty()) {
+            return new ResultPaginationResponse(
+                    new ResultPaginationResponse.Meta(0, 0, 0, 0L),
+                    new ArrayList<>()
+            );
+        }
+
+        User currentUser = this.handleGetUserByEmail(currentEmail);
+        if (currentUser == null) {
+            return new ResultPaginationResponse(
+                    new ResultPaginationResponse.Meta(0, 0, 0, 0L),
+                    new ArrayList<>()
+            );
+        }
+
+        Page<Notification> page = this.notificationRepository
+                .findByRecipient_AccountId(currentUser.getAccountId(), pageable);
+
+        ResultPaginationResponse.Meta meta = new ResultPaginationResponse.Meta();
+        meta.setPage(pageable.getPageNumber() + 1);
+        meta.setPageSize(pageable.getPageSize());
+        meta.setPages(page.getTotalPages());
+        meta.setTotal(page.getTotalElements());
+
+        return new ResultPaginationResponse(meta, page.getContent());
+    }
+
+    @Override
+    public List<Notification> handleGetLatestNotifications() {
+        String currentEmail = SecurityUtil.getCurrentUserLogin().isPresent() ?
+                SecurityUtil.getCurrentUserLogin().get() : "";
+
+        if (currentEmail.isEmpty()) {
+            return new ArrayList<>();
+        }
+
+        User currentUser = this.handleGetUserByEmail(currentEmail);
+        if (currentUser == null) {
+            return new ArrayList<>();
+        }
+
+        PageRequest pageRequest = PageRequest.of(
+                0,
+                10,
+                Sort.by(Sort.Direction.DESC, "createdAt")
+        );
+
+        return this.notificationRepository
+                .findByRecipient_AccountId(currentUser.getAccountId(), pageRequest)
+                .getContent();
+    }
+
+    @Override
+    public void handleMarkNotificationsAsSeen(List<Long> notificationIds) {
+        String currentEmail = SecurityUtil.getCurrentUserLogin().isPresent() ?
+                SecurityUtil.getCurrentUserLogin().get() : "";
+
+        if (currentEmail.isEmpty()) {
+            return;
+        }
+
+        User currentUser = this.handleGetUserByEmail(currentEmail);
+        if (currentUser == null) {
+            return;
+        }
+
+        List<Notification> notifications = this.notificationRepository
+                .findByNotificationIdInAndRecipient_AccountId(notificationIds, currentUser.getAccountId());
+
+        notifications.forEach(notification -> notification.setSeen(true));
+        this.notificationRepository.saveAll(notifications);
+    }
 
     /*     ========================= Followed Companies Related Endpoints =========================  */
     @Override
@@ -622,7 +546,7 @@ public class UserServiceImpl implements UserService {
                     result.put("result", followedIds.contains(companyId));
                     return result;
                 })
-                .collect(Collectors.toList());
+                .toList();
     }
 
     @Override
@@ -687,7 +611,7 @@ public class UserServiceImpl implements UserService {
                     result.put("result", reviewedIds.contains(companyId));
                     return result;
                 })
-                .collect(Collectors.toList());
+                .toList();
     }
     /*     ========================= ========================= =========================  */
 
@@ -753,39 +677,39 @@ public class UserServiceImpl implements UserService {
     }
     /*     ========================= ========================= =========================  */
 
-//    @Override
-//    public List<UserEnabledResponse> handleActivateUsers(List<Long> userIds) {
-//        return this.setUsersEnabled(userIds, true);
-//    }
-//
-//    @Override
-//    public List<UserEnabledResponse> handleDeactivateUsers(List<Long> userIds) {
-//        return this.setUsersEnabled(userIds, false);
-//    }
-//
-//    private List<UserEnabledResponse> setUsersEnabled(List<Long> userIds, boolean enabled) {
-//        if (userIds == null || userIds.isEmpty()) {
-//            return new ArrayList<>();
-//        }
-//
-//        List<User> users = this.userRepository.findAllById(userIds);
-//        if (users.isEmpty()) {
-//            return new ArrayList<>();
-//        }
-//
-//        users.forEach(u -> {
-//            u.setEnabled(enabled);
-//            this.emailNotificationService.handleSendUserEnabledEmail(
-//                    u.getContact().getEmail(), u.getUsername(), enabled
-//            );
-//        });
-//        this.userRepository.saveAll(users);
-//
-//        return users.stream()
-//                .map(u -> new UserEnabledResponse(u.getUserId(), u.isEnabled()))
-//                .collect(Collectors.toList());
-//    }
-//
+    @Override
+    public List<UserEnabledResponse> handleActivateUsers(List<Long> userIds) {
+        return this.setUsersEnabled(userIds, true);
+    }
+
+    @Override
+    public List<UserEnabledResponse> handleDeactivateUsers(List<Long> userIds) {
+        return this.setUsersEnabled(userIds, false);
+    }
+
+    private List<UserEnabledResponse> setUsersEnabled(List<Long> userIds, boolean enabled) {
+        if (userIds == null || userIds.isEmpty()) {
+            return new ArrayList<>();
+        }
+
+        List<User> users = this.userRepository.findAllById(userIds);
+        if (users.isEmpty()) {
+            return new ArrayList<>();
+        }
+
+        users.forEach(u -> {
+            u.setEnabled(enabled);
+            this.emailNotificationService.handleSendUserEnabledEmail(
+                    u.getEmail(), u.getUsername(), enabled
+            );
+        });
+        this.userRepository.saveAll(users);
+
+        return users.stream()
+                .map(u -> new UserEnabledResponse(u.getAccountId(), u.isEnabled()))
+                .toList();
+    }
+
     @Override
     public UserResponse convertToUserResponse(User user) {
         UserResponse userResponse = new UserResponse();

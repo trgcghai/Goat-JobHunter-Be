@@ -16,9 +16,9 @@ public class PermissionInterceptorConfiguration implements WebMvcConfigurer {
     @Override
     public void addInterceptors(InterceptorRegistry registry) {
         String[] whiteList = {
-                "/api/v1/ping",                      // Endpoint kiểm tra trạng thái server
-                "/api/v1/clear-cookies",             // Xóa toàn bộ cookies trên FE – không cần phân quyền
-                "/api/v1/uuid",                      // Tạo UUID cho user chưa đăng nhập – không cần phân quyền
+                "/ping",                      // Endpoint kiểm tra trạng thái server
+                "/clear-cookies",             // Xóa toàn bộ cookies trên FE – không cần phân quyền
+                "/uuid",                      // Tạo UUID cho user chưa đăng nhập – không cần phân quyền
 
                 "/",                                 // Trang gốc – public
                 "/api/v1/auth/**",                   // Các endpoint xác thực (login, refresh token, logout) – phải public
@@ -26,7 +26,7 @@ public class PermissionInterceptorConfiguration implements WebMvcConfigurer {
                 "/api/v1/recruiters/**",             // Danh sách/Nội dung nhà tuyển dụng – public
                 "/api/v1/jobs/**",                   // Danh sách/Nội dung công việc – public
                 "/api/v1/skills/**",                 // Dữ liệu kỹ năng tham chiếu – public
-                "/api/v1/files",                     // Upload/Download file – không yêu cầu phân quyền
+                "/api/v1/files/**",                  // Upload/Download file – không yêu cầu phân quyền
                 "/api/v1/applications/**",           // Ứng tuyển công việc – cho ứng viên sử dụng trực tiếp
                 "/api/v1/careers/**",                // Dữ liệu ngành nghề – public
                 "/api/v1/roles/**",                  // Lấy danh sách role – không cần kiểm tra permission

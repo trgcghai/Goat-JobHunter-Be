@@ -11,6 +11,7 @@ import iuh.fit.goat.entity.Application;
 import iuh.fit.goat.entity.Interview;
 import iuh.fit.goat.entity.Recruiter;
 import iuh.fit.goat.enumeration.InterviewStatus;
+import iuh.fit.goat.exception.InvalidException;
 import iuh.fit.goat.repository.InterviewRepository;
 import iuh.fit.goat.repository.RecruiterRepository;
 import iuh.fit.goat.service.ApplicationService;
@@ -72,7 +73,11 @@ public class InterviewServiceImpl implements InterviewService {
 
         interviewsByEmail.forEach((email, interviewResponses) -> {
             if(interviewResponses.isEmpty()) return;
-            this.eventProducer.publishInterviewCreated(email, interviewResponses, "");
+            try {
+                this.eventProducer.publishInterviewCreated(email, interviewResponses, "");
+            } catch (InvalidException e) {
+                throw new RuntimeException(e);
+            }
         });
 
         return responses;
@@ -98,7 +103,11 @@ public class InterviewServiceImpl implements InterviewService {
                 ));
         interviewsByEmail.forEach((email, interviewResponses) -> {
             if(interviewResponses.isEmpty()) return;
-            this.eventProducer.publishInterviewCreated(email, interviewResponses, "");
+            try {
+                this.eventProducer.publishInterviewCreated(email, interviewResponses, "");
+            } catch (InvalidException e) {
+                throw new RuntimeException(e);
+            }
         });
 
         return scheduledInterviews.stream()
@@ -128,7 +137,11 @@ public class InterviewServiceImpl implements InterviewService {
                 ));
         interviewsByEmail.forEach((email, interviewResponses) -> {
             if(interviewResponses.isEmpty()) return;
-            this.eventProducer.publishInterviewCreated(email, interviewResponses, request.getReason());
+            try {
+                this.eventProducer.publishInterviewCreated(email, interviewResponses, request.getReason());
+            } catch (InvalidException e) {
+                throw new RuntimeException(e);
+            }
         });
 
         return scheduledInterviews.stream()
@@ -158,7 +171,11 @@ public class InterviewServiceImpl implements InterviewService {
                 ));
         interviewsByEmail.forEach((email, interviewResponses) -> {
             if(interviewResponses.isEmpty()) return;
-            this.eventProducer.publishInterviewCreated(email, interviewResponses, request.getReason());
+            try {
+                this.eventProducer.publishInterviewCreated(email, interviewResponses, request.getReason());
+            } catch (InvalidException e) {
+                throw new RuntimeException(e);
+            }
         });
 
         return scheduledInterviews.stream()
@@ -174,7 +191,7 @@ public class InterviewServiceImpl implements InterviewService {
     }
 
     @Override
-    public Interview handleFeedbackInterview(FeedbackInterviewRequest request) {
+    public Interview handleFeedbackInterview(FeedbackInterviewRequest request) throws InvalidException {
         Interview interview = this.handleGetInterviewById(request.getInterviewId());
         if(interview == null) return null;
 

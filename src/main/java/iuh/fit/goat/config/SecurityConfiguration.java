@@ -7,6 +7,7 @@ import iuh.fit.goat.config.component.AuthenticationEntryPointCustom;
 import iuh.fit.goat.config.component.RedisTokenBlacklistFilter;
 import iuh.fit.goat.util.SecurityUtil;
 import jakarta.servlet.http.Cookie;
+import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -36,6 +37,7 @@ import java.util.List;
 
 @Configuration
 @EnableMethodSecurity(securedEnabled = true)
+@RequiredArgsConstructor
 public class SecurityConfiguration {
     @Value("${minhdat.jwt.base64-secret}")
     private String jwtKey;
@@ -52,17 +54,13 @@ public class SecurityConfiguration {
 
     @Bean
     public JwtDecoder jwtDecoder() {
-        NimbusJwtDecoder jwtDecoder = NimbusJwtDecoder.withSecretKey(getSecretKey())
-                .macAlgorithm(SecurityUtil.JWT_ALGORITHM).build();
-        return token -> {
-            try {
-                return jwtDecoder.decode(token);
-            } catch (Exception e) {
-                System.out.println(">>> JWT error: " + e.getMessage());
-                throw e;
-            }
-        };
+        return NimbusJwtDecoder
+                .withSecretKey(getSecretKey())
+                .macAlgorithm(SecurityUtil.JWT_ALGORITHM)
+                .build();
     }
+
+    private final CorzConfiguration corzConfiguration;
 
     private SecretKey getSecretKey() {
         byte[] keyBytes = Base64.from(jwtKey).decode();
@@ -104,10 +102,10 @@ public class SecurityConfiguration {
             RedisTokenBlacklistFilter redisTokenBlacklistFilter
     ) throws Exception {
         String[] whiteList = {
-                "/api/v1/ping",                       // Endpoint kiểm tra trạng thái server
-                "/api/v1/clear-cookies",              // Xóa toàn bộ cookies trên FE – không cần phân quyền
-                "/api/v1/uuid",                       // Tạo UUID cho user chưa đăng nhập – không cần phân quyền
-                "/api/v1/files",                      // Upload/Download file
+                "/ping",                       // Endpoint kiểm tra trạng thái server
+                "/clear-cookies",              // Xóa toàn bộ cookies trên FE – không cần phân quyền
+                "/uuid",                       // Tạo UUID cho user chưa đăng nhập – không cần phân quyền
+                "/api/v1/files/**",                   // Upload/Download file
 
                 "/",                                  // Trang gốc
 
@@ -137,9 +135,11 @@ public class SecurityConfiguration {
 
         http
                 .csrf(c -> c.disable())
-                .cors(Customizer.withDefaults())
+                .cors(cors -> cors.configurationSource(this.corzConfiguration.corsConfigurationSource()))
                 .authorizeHttpRequests( request ->
-                        request.requestMatchers(whiteList).permitAll()
+                        request
+                                .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
+                                .requestMatchers(whiteList).permitAll()
                                 .requestMatchers(HttpMethod.GET, "/api/v1/reviews").hasRole("SUPER_ADMIN")
                                 .requestMatchers(HttpMethod.GET, "/api/v1/recruiters/**").permitAll()
                                 .requestMatchers(HttpMethod.GET, "/api/v1/companies/**").permitAll()

@@ -9,16 +9,12 @@ import org.springframework.data.jpa.domain.Specification;
 
 public interface ApplicantService {
     Applicant handleCreateApplicant(Applicant applicant);
-//
-//    void handleDeleteApplicant(long id);
 
     Applicant handleUpdateApplicant(ApplicantUpdateRequest updateRequest);
 
     Applicant handleGetApplicantById(long id);
 
-//    Applicant handleGetCurrentApplicant();
-//
-//    ResultPaginationResponse handleGetAllApplicants(Specification<Applicant> spec, Pageable pageable);
-//
+    ResultPaginationResponse handleGetAllApplicants(Specification<Applicant> spec, Pageable pageable);
+
     ApplicantResponse convertToApplicantResponse(Applicant applicant);
 }

@@ -15,33 +15,33 @@ import java.util.Optional;
 
 @Repository
 public interface NotificationRepository extends JpaRepository<Notification, Long>, JpaSpecificationExecutor<Notification> {
-//    Optional<Notification> findByTypeAndActorsContainingAndBlogAndRecipient(
-//            NotificationType type,
-//            User actor,
-//            Blog blog,
-//            User recipient
-//    );
-//
-//    Optional<Notification> findByTypeAndBlogAndRecipient(
-//            NotificationType type,
-//            Blog blog,
-//            User recipient
-//    );
-//
-//    Optional<Notification> findByTypeAndRecipient(
-//            NotificationType type,
-//            User recipient
-//    );
-//
-//    Page<Notification> findByRecipient_UserId(Long userId, Pageable pageable);
-//
-//    List<Notification> findByNotificationIdInAndRecipient_UserId(List<Long> notificationIds, Long userId);
-//
-//    List<Notification> findByRecipient_UserIdOrderByCreatedAtDesc(Long userId);
-//
-//    Optional<Notification> findByTypeAndActorsContainingAndRecipient(
-//            NotificationType type,
-//            User actor,
-//            User recipient
-//    );
+    Optional<Notification> findByTypeAndActorsContainingAndBlogAndRecipient(
+            NotificationType type,
+            User actor,
+            Blog blog,
+            User recipient
+    );
+
+    Optional<Notification> findByTypeAndBlogAndRecipient(
+            NotificationType type,
+            Blog blog,
+            User recipient
+    );
+
+    Optional<Notification> findByTypeAndRecipient(
+            NotificationType type,
+            User recipient
+    );
+
+    Page<Notification> findByRecipient_AccountId(Long accountId, Pageable pageable);
+
+    List<Notification> findByNotificationIdInAndRecipient_AccountId(List<Long> notificationIds, Long accountId);
+
+    List<Notification> findByRecipient_AccountIdOrderByCreatedAtDesc(Long userId);
+
+    Optional<Notification> findByTypeAndActorsContainingAndRecipient(
+            NotificationType type,
+            User actor,
+            User recipient
+    );
 }
