@@ -19,7 +19,6 @@ import iuh.fit.goat.service.MessageService;
 import iuh.fit.goat.service.UserService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.checkerframework.checker.units.qual.C;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -103,61 +102,56 @@ public class ChatRoomServiceImpl implements ChatRoomService {
     @Override
     @Transactional
     public Message createNewSingleChatRoom(User currentUser, MessageToNewChatRoom request) throws InvalidException {
-        try {
-            // Validate if receiver is valid
-            User uReceiver = this.userRepository.findById(request.getAccountId()).orElse(null);
-            if (uReceiver == null) {
-                throw new InvalidException("Receiver not found");
-            }
-
-            // Check if direct chat room already exists between these 2 users
-            Optional<ChatRoom> existingRoom = findExistingDirectChatRoom(
-                    currentUser.getAccountId(),
-                    uReceiver.getAccountId()
-            );
-
-            if (existingRoom.isPresent()) {
-                // Return message in existing room instead of creating new one
-                return this.messageService.sendMessage(
-                        existingRoom.get().getRoomId(),
-                        new MessageCreateRequest(request.getContent()),
-                        currentUser
-                );
-            }
-
-            // Create and save chat room first (no members yet) to avoid transient reference
-            ChatRoom chatRoom = new ChatRoom();
-            chatRoom.setType(ChatRoomType.DIRECT);
-            chatRoom.setName("Không có tên");
-            chatRoom = this.chatRoomRepository.saveAndFlush(chatRoom);
-
-            // Since current user is validated, create chat member
-            ChatMember sender = new ChatMember();
-            sender.setUser(currentUser);
-            sender.setRole(ChatRole.OWNER);
-
-            ChatMember receiver = new ChatMember();
-            receiver.setUser(uReceiver);
-            receiver.setRole(ChatRole.OWNER);
-
-            // Save chat members without room to avoid transient reference
-            this.chatMemberRepository.saveAllAndFlush(Arrays.asList(sender, receiver));
-
-            // Update chat room with members and save, use ArrayList to avoid immutable list
-            chatRoom.setMembers(new ArrayList<>(Arrays.asList(sender, receiver)));
-            chatRoom = this.chatRoomRepository.saveAndFlush(chatRoom);
-
-            // Update chat members with room and save
-            sender.setRoom(chatRoom);
-            receiver.setRoom(chatRoom);
-            this.chatMemberRepository.saveAllAndFlush(Arrays.asList(sender, receiver));
-
-            // Send message
-            return this.messageService.sendMessage(chatRoom.getRoomId(), new MessageCreateRequest(request.getContent()), currentUser);
-        } catch (Exception e) {
-            e.printStackTrace();
-            return null;
+        // Validate if receiver is valid
+        User uReceiver = this.userRepository.findById(request.getAccountId()).orElse(null);
+        if (uReceiver == null) {
+            throw new InvalidException("Receiver not found");
         }
+
+        // Check if direct chat room already exists between these 2 users
+        Optional<ChatRoom> existingRoom = findExistingDirectChatRoom(
+                currentUser.getAccountId(),
+                uReceiver.getAccountId()
+        );
+
+        if (existingRoom.isPresent()) {
+            // Return message in existing room instead of creating new one
+            return this.messageService.sendMessage(
+                    existingRoom.get().getRoomId(),
+                    new MessageCreateRequest(request.getContent()),
+                    currentUser
+            );
+        }
+
+        // Create and save chat room first (no members yet) to avoid transient reference
+        ChatRoom chatRoom = new ChatRoom();
+        chatRoom.setType(ChatRoomType.DIRECT);
+        chatRoom.setName("Không có tên");
+        chatRoom = this.chatRoomRepository.saveAndFlush(chatRoom);
+
+        // Since current user is validated, create chat member
+        ChatMember sender = new ChatMember();
+        sender.setUser(currentUser);
+        sender.setRole(ChatRole.OWNER);
+
+        ChatMember receiver = new ChatMember();
+        receiver.setUser(uReceiver);
+        receiver.setRole(ChatRole.OWNER);
+
+        // Save chat members without room to avoid transient reference
+        this.chatMemberRepository.saveAllAndFlush(Arrays.asList(sender, receiver));
+
+        // Update chat room with members and save, use ArrayList to avoid immutable list
+        chatRoom.setMembers(new ArrayList<>(Arrays.asList(sender, receiver)));
+        chatRoom = this.chatRoomRepository.saveAndFlush(chatRoom);
+
+        // Update chat members with room and save
+        sender.setRoom(chatRoom);
+        receiver.setRoom(chatRoom);
+        this.chatMemberRepository.saveAllAndFlush(Arrays.asList(sender, receiver));
+
+        // Send message
+        return this.messageService.sendMessage(chatRoom.getRoomId(), new MessageCreateRequest(request.getContent()), currentUser);
     }
 
     // =============== HELPER FUNCTIONS ====================

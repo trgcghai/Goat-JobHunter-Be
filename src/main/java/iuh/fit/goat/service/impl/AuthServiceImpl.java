@@ -10,7 +10,6 @@ import iuh.fit.goat.dto.response.auth.LoginResponse;
 import iuh.fit.goat.entity.*;
 import iuh.fit.goat.exception.InvalidException;
 import iuh.fit.goat.repository.AccountRepository;
-import iuh.fit.goat.repository.UserRepository;
 import iuh.fit.goat.service.*;
 import iuh.fit.goat.util.SecurityUtil;
 import jakarta.servlet.http.HttpServletResponse;
@@ -48,6 +47,7 @@ public class AuthServiceImpl implements AuthService {
     private final ApplicantService applicantService;
     private final RecruiterService recruiterService;
     private final CompanyService companyService;
+    private final RoleService roleService;
 
     private final AccountRepository accountRepository;
 
@@ -94,6 +94,8 @@ public class AuthServiceImpl implements AuthService {
         log.info("Account logged in: {}", account);
 
         LoginResponse loginResponse = createLoginResponse(account);
+
+        log.info("loginResponse logged in: {}", loginResponse);
 
         // Tạo token và lưu vào Redis
         String accessToken = this.securityUtil.createAccessToken(account.getEmail(), loginResponse);
@@ -274,6 +276,7 @@ public class AuthServiceImpl implements AuthService {
             applicant.setEmail(request.getEmail());
             applicant.setPassword(hashPassword);
             applicant.setPhone(request.getPhone());
+            applicant.setRole(this.roleService.handleGetRoleByName(Role.APPLICANT.getValue()));
 
             // create applicant to save to database
             Applicant newApplicant = this.applicantService.handleCreateApplicant(applicant);
@@ -306,6 +309,7 @@ public class AuthServiceImpl implements AuthService {
             recruiter.setPassword(hashPassword);
             recruiter.setPhone(request.getPhone());
             recruiter.setCompany(company);
+            recruiter.setRole(this.roleService.handleGetRoleByName(Role.RECRUITER.getValue()));
 
             // create recruiter to save to database
             Recruiter newRecruiter = this.recruiterService.handleCreateRecruiter(recruiter);
@@ -426,11 +430,8 @@ public class AuthServiceImpl implements AuthService {
         loginResponse.setEnabled(account.isEnabled());
         loginResponse.setAddresses(Objects.requireNonNullElse(account.getAddresses(), new ArrayList<>()));
 
-        iuh.fit.goat.entity.Role role = account.getRole();
-
-        if (role != null) {
-            role.getName();
-            loginResponse.setRole(role);
+        if (account.getRole() != null) {
+            loginResponse.setRole(account.getRole());
         }
 
         // Thông tin riêng của User

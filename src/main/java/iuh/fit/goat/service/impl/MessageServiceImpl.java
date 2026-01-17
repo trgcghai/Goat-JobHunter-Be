@@ -12,6 +12,7 @@ import iuh.fit.goat.service.MessageService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Pageable;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
 
 import java.time.Instant;
@@ -30,6 +31,8 @@ public class MessageServiceImpl implements MessageService {
 
     private final MessageRepository messageRepository;
     private final ChatRoomRepository chatRoomRepository;
+
+    private final SimpMessagingTemplate messagingTemplate;
 
     // ========== Message Operations ==========
 
@@ -104,6 +107,9 @@ public class MessageServiceImpl implements MessageService {
 
         log.info("Message created: messageId={}, conversationId={}, senderId={}",
                 messageId, chatRoomId, currentUser.getAccountId());
+
+        // Send realtime message to chat room members
+        sendMessageToUsers(chatRoomId, savedMessage);
 
         return savedMessage;
     }
@@ -257,6 +263,21 @@ public class MessageServiceImpl implements MessageService {
 //        String conversationId = chatRoomId.toString();
 //        return messageRepository.existsPinnedMessage(conversationId, messageId);
 //    }
+
+
+    @Override
+    public void sendMessageToUsers(Long chatRoomId, Message message) {
+        log.info("Sending realtime message to chat room {}: messageId={}",
+                chatRoomId, message.getMessageId());
+
+        // Send to specific chat room topic
+        this.messagingTemplate.convertAndSend(
+                "/topic/chatrooms/" + chatRoomId,
+                message
+        );
+
+        log.info("Realtime message sent to chat room {} successfully", chatRoomId);
+    }
 
     // ========== Helper Methods ==========
     private String generateMessageId() {

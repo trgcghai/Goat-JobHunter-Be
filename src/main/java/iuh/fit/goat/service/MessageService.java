@@ -16,4 +16,5 @@ public interface  MessageService {
 
     Message sendMessage(Long chatRoomId, MessageCreateRequest request, User currentUser) throws InvalidException;
 
+    void sendMessageToUsers(Long chatRoomId, Message message);
 }
