@@ -1,11 +1,11 @@
 package iuh.fit.goat.dto.request.auth;
 
-import iuh.fit.goat.entity.Address;
 import iuh.fit.goat.enumeration.CompanySize;
 import jakarta.validation.constraints.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 
@@ -37,11 +37,11 @@ public class RegisterCompanyRequest {
     @Size(min = 50, message = "Mô tả công ty phải có ít nhất 50 ký tự")
     private String description;
 
-    @NotBlank(message = "Logo không được để trống")
-    private String logo;
+    @NotNull(message = "Logo không được để trống")
+    private MultipartFile logo;
 
-    @NotBlank(message = "Cover photo không được để trống")
-    private String coverPhoto;
+    @NotNull(message = "Cover photo không được để trống")
+    private MultipartFile coverPhoto;
 
     @Pattern(
             regexp = "^(https?:\\/\\/)?([\\w-]+\\.)+[\\w-]+(\\/\\S*)?$",
@@ -71,8 +71,8 @@ public class RegisterCompanyRequest {
     @NotBlank(message = "Chính sách làm thêm không được để trống")
     private String overtimePolicy;
 
-    @NotEmpty(message = "Phải có ít nhất một địa chỉ")
-    private List<Address> addresses;
+    @NotBlank(message = "Phải có ít nhất một địa chỉ")
+    private String addresses;
 
     @AssertTrue(message = "Mật khẩu và xác nhận mật khẩu không khớp")
     public boolean isPasswordMatching() {

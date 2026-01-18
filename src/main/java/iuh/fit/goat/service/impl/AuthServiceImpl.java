@@ -1,11 +1,15 @@
 package iuh.fit.goat.service.impl;
 
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import iuh.fit.goat.common.Role;
 import iuh.fit.goat.dto.request.auth.LoginRequest;
 import iuh.fit.goat.dto.request.auth.RegisterCompanyRequest;
 import iuh.fit.goat.dto.request.auth.RegisterUserRequest;
 import iuh.fit.goat.dto.request.auth.VerifyAccountRequest;
+import iuh.fit.goat.dto.response.StorageResponse;
 import iuh.fit.goat.dto.response.auth.LoginResponse;
 import iuh.fit.goat.entity.*;
 import iuh.fit.goat.exception.InvalidException;
@@ -27,6 +31,7 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 
 
 import java.util.*;
@@ -39,6 +44,7 @@ public class AuthServiceImpl implements AuthService {
     private final AuthenticationManagerBuilder authenticationManagerBuilder;
     private final PasswordEncoder passwordEncoder;
     private final SecurityUtil securityUtil;
+    private final ObjectMapper mapper;
 
     private final AccountService accountService;
     private final UserService userService;
@@ -48,6 +54,7 @@ public class AuthServiceImpl implements AuthService {
     private final RecruiterService recruiterService;
     private final CompanyService companyService;
     private final RoleService roleService;
+    private final StorageService storageService;
 
     private final AccountRepository accountRepository;
 
@@ -346,7 +353,19 @@ public class AuthServiceImpl implements AuthService {
             throw new InvalidException("Company name exists: " + request.getName());
         }
 
+        String logoUrl = this.uploadImage(request.getLogo(), "company-logos");
+        String coverPhotoUrl = this.uploadImage(request.getCoverPhoto(), "company-cover-photos");
         String hashPassword = this.passwordEncoder.encode(request.getPassword());
+
+        List<Address> addressList;
+        try {
+            addressList = this.mapper.readValue(
+                    request.getAddresses(),
+                    new TypeReference<List<Address>>() {}
+            );
+        } catch (JsonProcessingException e) {
+            throw new InvalidException("Invalid address format");
+        }
 
         Company company = new Company();
         company.setUsername(request.getUsername());
@@ -354,8 +373,8 @@ public class AuthServiceImpl implements AuthService {
         company.setPassword(hashPassword);
         company.setName(request.getName());
         company.setDescription(request.getDescription());
-        company.setLogo(request.getLogo());
-        company.setCoverPhoto(request.getCoverPhoto());
+        company.setLogo(logoUrl);
+        company.setCoverPhoto(coverPhotoUrl);
         company.setPhone(request.getPhone());
         company.setSize(request.getSize());
         company.setCountry(request.getCountry());
@@ -363,7 +382,7 @@ public class AuthServiceImpl implements AuthService {
         company.setWorkingDays(request.getWorkingDays());
         company.setOvertimePolicy(request.getOvertimePolicy());
         if(request.getWebsite() != null) company.setWebsite(request.getWebsite());
-        request.getAddresses().forEach(company::addAddress);
+        if(addressList != null) addressList.forEach(company::addAddress);
 
         Company newCompany = this.companyService.handleCreateCompany(company);
 
@@ -417,6 +436,15 @@ public class AuthServiceImpl implements AuthService {
                 TimeUnit.SECONDS
         );
         this.emailNotificationService.handleSendVerificationEmail(key, verificationCode);
+    }
+
+    private String uploadImage(MultipartFile file, String folder) throws InvalidException {
+        StorageResponse response = this.storageService.handleUploadFile(file, folder);
+        if (response == null || response.getUrl() == null) {
+            throw new InvalidException("Failed to upload image");
+        }
+
+        return response.getUrl();
     }
 
     private LoginResponse createLoginResponse(Account account) {

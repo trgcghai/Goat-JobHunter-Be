@@ -12,6 +12,7 @@ import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -66,8 +67,8 @@ public class AuthController {
         return ResponseEntity.status(HttpStatus.CREATED).body(result);
     }
 
-    @PostMapping("/register/companies")
-    public ResponseEntity<Object> registerCompanies(@Valid @RequestBody RegisterCompanyRequest request) throws InvalidException {
+    @PostMapping(value = "/register/companies", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<Object> registerCompanies(@Valid @ModelAttribute RegisterCompanyRequest request) throws InvalidException {
         Object result = this.authService.handleRegisterCompany(request);
         return ResponseEntity.status(HttpStatus.CREATED).body(result);
     }
