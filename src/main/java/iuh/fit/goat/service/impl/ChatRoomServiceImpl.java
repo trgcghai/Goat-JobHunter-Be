@@ -17,9 +17,9 @@ import iuh.fit.goat.repository.UserRepository;
 import iuh.fit.goat.service.ChatRoomService;
 import iuh.fit.goat.service.MessageService;
 import iuh.fit.goat.service.UserService;
+import iuh.fit.goat.util.SecurityUtil;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.checkerframework.checker.units.qual.C;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -103,61 +103,56 @@ public class ChatRoomServiceImpl implements ChatRoomService {
     @Override
     @Transactional
     public Message createNewSingleChatRoom(User currentUser, MessageToNewChatRoom request) throws InvalidException {
-        try {
-            // Validate if receiver is valid
-            User uReceiver = this.userRepository.findById(request.getAccountId()).orElse(null);
-            if (uReceiver == null) {
-                throw new InvalidException("Receiver not found");
-            }
-
-            // Check if direct chat room already exists between these 2 users
-            Optional<ChatRoom> existingRoom = findExistingDirectChatRoom(
-                    currentUser.getAccountId(),
-                    uReceiver.getAccountId()
-            );
-
-            if (existingRoom.isPresent()) {
-                // Return message in existing room instead of creating new one
-                return this.messageService.sendMessage(
-                        existingRoom.get().getRoomId(),
-                        new MessageCreateRequest(request.getContent()),
-                        currentUser
-                );
-            }
-
-            // Create and save chat room first (no members yet) to avoid transient reference
-            ChatRoom chatRoom = new ChatRoom();
-            chatRoom.setType(ChatRoomType.DIRECT);
-            chatRoom.setName("Không có tên");
-            chatRoom = this.chatRoomRepository.saveAndFlush(chatRoom);
-
-            // Since current user is validated, create chat member
-            ChatMember sender = new ChatMember();
-            sender.setUser(currentUser);
-            sender.setRole(ChatRole.OWNER);
-
-            ChatMember receiver = new ChatMember();
-            receiver.setUser(uReceiver);
-            receiver.setRole(ChatRole.OWNER);
-
-            // Save chat members without room to avoid transient reference
-            this.chatMemberRepository.saveAllAndFlush(Arrays.asList(sender, receiver));
-
-            // Update chat room with members and save, use ArrayList to avoid immutable list
-            chatRoom.setMembers(new ArrayList<>(Arrays.asList(sender, receiver)));
-            chatRoom = this.chatRoomRepository.saveAndFlush(chatRoom);
-
-            // Update chat members with room and save
-            sender.setRoom(chatRoom);
-            receiver.setRoom(chatRoom);
-            this.chatMemberRepository.saveAllAndFlush(Arrays.asList(sender, receiver));
-
-            // Send message
-            return this.messageService.sendMessage(chatRoom.getRoomId(), new MessageCreateRequest(request.getContent()), currentUser);
-        } catch (Exception e) {
-            e.printStackTrace();
-            return null;
+        // Validate if receiver is valid
+        User uReceiver = this.userRepository.findById(request.getAccountId()).orElse(null);
+        if (uReceiver == null) {
+            throw new InvalidException("Receiver not found");
         }
+
+        // Check if direct chat room already exists between these 2 users
+        Optional<ChatRoom> existingRoom = findExistingDirectChatRoom(
+                currentUser.getAccountId(),
+                uReceiver.getAccountId()
+        );
+
+        if (existingRoom.isPresent()) {
+            // Return message in existing room instead of creating new one
+            return this.messageService.sendMessage(
+                    existingRoom.get().getRoomId(),
+                    new MessageCreateRequest(request.getContent()),
+                    currentUser
+            );
+        }
+
+        // Create and save chat room first (no members yet) to avoid transient reference
+        ChatRoom chatRoom = new ChatRoom();
+        chatRoom.setType(ChatRoomType.DIRECT);
+        chatRoom.setName("Không có tên");
+        chatRoom = this.chatRoomRepository.saveAndFlush(chatRoom);
+
+        // Since current user is validated, create chat member
+        ChatMember sender = new ChatMember();
+        sender.setUser(currentUser);
+        sender.setRole(ChatRole.OWNER);
+
+        ChatMember receiver = new ChatMember();
+        receiver.setUser(uReceiver);
+        receiver.setRole(ChatRole.OWNER);
+
+        // Save chat members without room to avoid transient reference
+        this.chatMemberRepository.saveAllAndFlush(Arrays.asList(sender, receiver));
+
+        // Update chat room with members and save, use ArrayList to avoid immutable list
+        chatRoom.setMembers(new ArrayList<>(Arrays.asList(sender, receiver)));
+        chatRoom = this.chatRoomRepository.saveAndFlush(chatRoom);
+
+        // Update chat members with room and save
+        sender.setRoom(chatRoom);
+        receiver.setRoom(chatRoom);
+        this.chatMemberRepository.saveAllAndFlush(Arrays.asList(sender, receiver));
+
+        // Send message
+        return this.messageService.sendMessage(chatRoom.getRoomId(), new MessageCreateRequest(request.getContent()), currentUser);
     }
 
     // =============== HELPER FUNCTIONS ====================
@@ -204,53 +199,92 @@ public class ChatRoomServiceImpl implements ChatRoomService {
     }
 
     private ChatRoomResponse mapToChatRoomResponse(ChatRoom chatRoom) {
-        // Get last message
-        Message lastMessage = null;
+        String currentUserEmail = SecurityUtil.getCurrentUserEmail();
+
         try {
-            lastMessage = messageService.getLastMessageByChatRoom(chatRoom.getRoomId());
-        } catch (InvalidException e) {
+            // Get last message
+            Message lastMessage = null;
+            try {
+                lastMessage = messageService.getLastMessageByChatRoom(chatRoom.getRoomId());
+            } catch (InvalidException e) {
+                e.printStackTrace();
+            }
+
+            // Count active members
+            int memberCount = (int) chatRoom.getMembers().stream()
+                    .filter(m -> m.getDeletedAt() == null)
+                    .count();
+
+            // Generate name dynamically if GROUP type
+            String name = chatRoom.getName();
+            if (chatRoom.getType() == ChatRoomType.GROUP && (name == null || name.isBlank())) {
+                name = generateGroupName(chatRoom.getMembers());
+            }
+
+            // For DIRECT type, set name and avatar as the other member's display name
+            String avatar = null;
+            if (chatRoom.getType().getValue().equalsIgnoreCase(ChatRoomType.DIRECT.getValue())) {
+                name = chatRoom.getMembers().stream()
+                        .filter(m -> m.getDeletedAt() == null && m.getUser() != null && !m.getUser().getEmail().equalsIgnoreCase(currentUserEmail))
+                        .map(ChatMember::getUser)
+                        .map(this::getDisplayName)
+                        .filter(Objects::nonNull)
+                        .findFirst()
+                        .orElse("Không có tên");
+
+                avatar = chatRoom.getMembers().stream()
+                        .filter(m -> m.getDeletedAt() == null && m.getUser() != null && !m.getUser().getEmail().equalsIgnoreCase(currentUserEmail))
+                        .map(ChatMember::getUser)
+                        .map(User::getAvatar)
+                        .filter(Objects::nonNull)
+                        .findFirst()
+                        .orElse(null);
+            }
+
+            // Convert Instant to LocalDateTime if lastMessage exists
+            LocalDateTime lastMessageTime = null;
+            String lastMessageContent = MESSAGE_FALLBACK;
+
+            if (lastMessage != null) {
+
+                if (lastMessage.getIsHidden()) {
+                    lastMessageContent = MESSAGE_FALLBACK_HDDEN;
+                } else {
+                    lastMessageContent = lastMessage.getContent();
+                }
+
+                if (lastMessage.getCreatedAt() != null) {
+                    lastMessageTime = LocalDateTime.ofInstant(
+                            lastMessage.getCreatedAt(),
+                            ZoneId.systemDefault()
+                    );
+                }
+            }
+
+            return ChatRoomResponse.builder()
+                    .chatRoomId(chatRoom.getRoomId())
+                    .type(chatRoom.getType())
+                    .name(name)
+                    .avatar(avatar)
+                    .memberCount(memberCount)
+                    .lastMessagePreview(lastMessageContent)
+                    .lastMessageTime(lastMessageTime)
+                    .build();
+
+        } catch (Exception e) {
             e.printStackTrace();
+            log.error("Error mapping ChatRoom to ChatRoomResponse: {}", e.getMessage());
+
+            // Fallback response in case of error
+            return ChatRoomResponse.builder()
+                    .chatRoomId(chatRoom.getRoomId())
+                    .type(chatRoom.getType())
+                    .name("Không có tên")
+                    .avatar(chatRoom.getAvatar())
+                    .memberCount(0)
+                    .lastMessagePreview(MESSAGE_FALLBACK)
+                    .lastMessageTime(null)
+                    .build();
         }
-
-        // Count active members
-        int memberCount = (int) chatRoom.getMembers().stream()
-                .filter(m -> m.getDeletedAt() == null)
-                .count();
-
-        // Generate name dynamically if GROUP type
-        String name = chatRoom.getName();
-        if (chatRoom.getType() == ChatRoomType.GROUP && (name == null || name.isBlank())) {
-            name = generateGroupName(chatRoom.getMembers());
-        }
-
-        // Convert Instant to LocalDateTime if lastMessage exists
-        LocalDateTime lastMessageTime = null;
-        String lastMessageContent = MESSAGE_FALLBACK;
-
-        if (lastMessage != null) {
-
-            if (lastMessage.getIsHidden()) {
-                lastMessageContent = MESSAGE_FALLBACK_HDDEN;
-            } else {
-                lastMessageContent = lastMessage.getContent();
-            }
-
-            if (lastMessage.getCreatedAt() != null) {
-                lastMessageTime = LocalDateTime.ofInstant(
-                        lastMessage.getCreatedAt(),
-                        ZoneId.systemDefault()
-                );
-            }
-        }
-
-        return ChatRoomResponse.builder()
-                .chatRoomId(chatRoom.getRoomId())
-                .type(chatRoom.getType())
-                .name(name)
-                .avatar(chatRoom.getAvatar())
-                .memberCount(memberCount)
-                .lastMessagePreview(lastMessageContent)
-                .lastMessageTime(lastMessageTime)
-                .build();
     }
 }

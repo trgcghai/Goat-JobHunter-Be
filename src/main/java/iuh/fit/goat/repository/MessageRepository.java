@@ -4,12 +4,9 @@ import iuh.fit.goat.entity.Message;
 import iuh.fit.goat.entity.PinnedMessage;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Repository;
-import software.amazon.awssdk.enhanced.dynamodb.DynamoDbEnhancedClient;
 import software.amazon.awssdk.enhanced.dynamodb.DynamoDbTable;
 import software.amazon.awssdk.enhanced.dynamodb.Key;
-import software.amazon.awssdk.enhanced.dynamodb.TableSchema;
 import software.amazon.awssdk.enhanced.dynamodb.model.QueryConditional;
 import software.amazon.awssdk.enhanced.dynamodb.model.QueryEnhancedRequest;
 
@@ -179,7 +176,7 @@ public class MessageRepository {
             return messageTable.query(queryRequest)
                     .items()
                     .stream()
-                    .filter(msg -> !Boolean.TRUE.equals(msg.getIsHidden()))
+                    .sorted(Comparator.comparing(Message::getCreatedAt))
                     .collect(Collectors.toList());
 
         } catch (Exception e) {
