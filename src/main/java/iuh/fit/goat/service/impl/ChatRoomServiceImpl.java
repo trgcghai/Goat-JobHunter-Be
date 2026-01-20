@@ -272,7 +272,7 @@ public class ChatRoomServiceImpl implements ChatRoomService {
             }
 
             return ChatRoomResponse.builder()
-                    .chatRoomId(chatRoom.getRoomId())
+                    .roomId(chatRoom.getRoomId())
                     .type(chatRoom.getType())
                     .name(name)
                     .avatar(avatar)
@@ -287,7 +287,7 @@ public class ChatRoomServiceImpl implements ChatRoomService {
 
             // Fallback response in case of error
             return ChatRoomResponse.builder()
-                    .chatRoomId(chatRoom.getRoomId())
+                    .roomId(chatRoom.getRoomId())
                     .type(chatRoom.getType())
                     .name("Không có tên")
                     .avatar(chatRoom.getAvatar())
