@@ -19,5 +19,7 @@ public interface ChatRoomService {
 
     boolean isUserInChatRoom(Long chatRoomId, Long accountId) throws InvalidException;
 
-    Message createNewSingleChatRoom(User currentUser, MessageToNewChatRoom request) throws InvalidException;
+    ChatRoom createNewSingleChatRoom(User currentUser, MessageToNewChatRoom request) throws InvalidException;
+
+    ChatRoom existsDirectChatRoom(Long currentUserId, Long otherUserId);
 }

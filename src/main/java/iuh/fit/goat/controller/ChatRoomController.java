@@ -3,6 +3,7 @@ package iuh.fit.goat.controller;
 import iuh.fit.goat.dto.request.message.MessageCreateRequest;
 import iuh.fit.goat.dto.request.message.MessageToNewChatRoom;
 import iuh.fit.goat.dto.response.ResultPaginationResponse;
+import iuh.fit.goat.entity.ChatRoom;
 import iuh.fit.goat.entity.Message;
 import iuh.fit.goat.entity.User;
 import iuh.fit.goat.exception.InvalidException;
@@ -57,7 +58,7 @@ public class ChatRoomController {
     }
 
     @PostMapping("/messages")
-    public Message sendMessageToNewChatRoom(@Valid @RequestBody MessageToNewChatRoom request) throws InvalidException {
+    public ResponseEntity<ChatRoom> sendMessageToNewChatRoom(@Valid @RequestBody MessageToNewChatRoom request) throws InvalidException {
         String email = SecurityUtil.getCurrentUserLogin()
                 .orElseThrow(() -> new InvalidException("User not authenticated"));
 
@@ -66,7 +67,8 @@ public class ChatRoomController {
             throw new InvalidException("User not found");
         }
 
-        return this.chatRoomService.createNewSingleChatRoom(currentUser, request);
+        ChatRoom chatRoom = this.chatRoomService.createNewSingleChatRoom(currentUser, request);
+        return ResponseEntity.ok(chatRoom);
     }
 
     @PostMapping("/{id}/messages")
@@ -84,5 +86,19 @@ public class ChatRoomController {
         }
 
         return this.messageService.sendMessage(id, request, currentUser);
+    }
+
+    @GetMapping("/direct/exists")
+    public ResponseEntity<ChatRoom> checkDirectChatRoomExists(@RequestParam Long accountId) throws InvalidException {
+        String email = SecurityUtil.getCurrentUserLogin()
+                .orElseThrow(() -> new InvalidException("User not authenticated"));
+
+        User currentUser = userRepository.findByEmail(email);
+        if (currentUser == null) {
+            throw new InvalidException("User not found");
+        }
+
+        ChatRoom chatRoom = chatRoomService.existsDirectChatRoom(currentUser.getAccountId(), accountId);
+        return ResponseEntity.ok(chatRoom);
     }
 }
