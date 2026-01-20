@@ -60,6 +60,8 @@ public class PermissionInterceptorConfiguration implements WebMvcConfigurer {
 
                 "/api/v1/resumes/**",                // Resume endpoints - public
 
+                "/api/v1/companies/**"
+
         };
 
         registry.addInterceptor(getPermissionInterceptor())

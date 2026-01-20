@@ -1,6 +1,7 @@
 package iuh.fit.goat.service.impl;
 
 import iuh.fit.goat.common.ActionType;
+import iuh.fit.goat.dto.response.job.*;
 import iuh.fit.goat.enumeration.Level;
 import iuh.fit.goat.common.Role;
 import iuh.fit.goat.enumeration.WorkingType;
@@ -9,11 +10,8 @@ import iuh.fit.goat.dto.request.job.JobIdsActionRequest;
 import iuh.fit.goat.dto.request.job.UpdateJobRequest;
 import iuh.fit.goat.dto.response.applicant.ApplicantResponse;
 import iuh.fit.goat.dto.response.ResultPaginationResponse;
-import iuh.fit.goat.dto.response.job.JobActivateResponse;
-import iuh.fit.goat.dto.response.job.JobApplicationCountResponse;
-import iuh.fit.goat.dto.response.job.JobEnabledResponse;
-import iuh.fit.goat.dto.response.job.JobResponse;
 import iuh.fit.goat.service.*;
+import jakarta.persistence.criteria.*;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -254,6 +252,7 @@ public class JobServiceImpl implements JobService {
         Specification<Job> companySpec = ((root, query, cb) ->
                 cb.and(
                     cb.equal(root.get("company").get("accountId"), companyId),
+                    cb.isTrue(root.get("enabled")),
                     cb.isNull(root.get("deletedAt"))
                 )
         );
@@ -424,6 +423,91 @@ public class JobServiceImpl implements JobService {
                         job.isEnabled()
                 )
         ).collect(Collectors.toList());
+    }
+
+    @Override
+    public ResultPaginationResponse handleGetJobSubscribersByCurrentUser(
+            Specification<Job> spec, Pageable pageable
+    ) {
+        String currentEmail = SecurityUtil.getCurrentUserEmail();
+        if(currentEmail.isEmpty()) {
+            return new ResultPaginationResponse(
+                    new ResultPaginationResponse.Meta(0, 0, 0, 0L),
+                    new ArrayList<>()
+            );
+        }
+
+        Subscriber subscriber = this.subscriberRepository.findByEmail(currentEmail).orElse(null);
+        if(subscriber == null) {
+            return new ResultPaginationResponse(
+                    new ResultPaginationResponse.Meta(0, 0, 0, 0L),
+                    new ArrayList<>()
+            );
+        }
+
+        List<Skill> skills = subscriber.getSkills();
+        if(skills == null || skills.isEmpty()) {
+            return new ResultPaginationResponse(
+                    new ResultPaginationResponse.Meta(0, 0, 0, 0L),
+                    new ArrayList<>()
+            );
+        }
+
+        Specification<Job> finalSpec = spec.and((root, query, cb) -> {
+            assert query != null;
+            query.distinct(true);
+            Join<Job, Skill> skillJoin = root.join("skills", JoinType.INNER);
+            return skillJoin.in(skills);
+        });
+
+        Page<Job> page = this.jobRepository.findAll(finalSpec, pageable);
+        ResultPaginationResponse.Meta meta = new ResultPaginationResponse.Meta();
+        meta.setPage(pageable.getPageNumber() + 1);
+        meta.setPageSize(pageable.getPageSize());
+        meta.setPages(page.getTotalPages());
+        meta.setTotal(page.getTotalElements());
+
+        return new ResultPaginationResponse(meta,
+                page.getContent().stream()
+                        .map(this::convertToJobResponse)
+                        .toList()
+        );
+    }
+
+    @Override
+    public ResultPaginationResponse handleGetRelatedJobsByCurrentUser(Specification<Job> spec, Pageable pageable) {
+        String currentEmail = SecurityUtil.getCurrentUserEmail();
+        if(currentEmail.isEmpty()) {
+            return new ResultPaginationResponse(
+                    new ResultPaginationResponse.Meta(0, 0, 0, 0L),
+                    new ArrayList<>()
+            );
+        }
+        Account user = this.accountService.handleGetAccountByEmail(currentEmail);
+
+        List<Long> relatedJobIds = this.jobRepository.findRelatedJobsByCurrentUser(user.getAccountId());
+        if (relatedJobIds.isEmpty()) {
+            return new ResultPaginationResponse(
+                    new ResultPaginationResponse.Meta(0, 0, 0, 0L),
+                    new ArrayList<>()
+            );
+        }
+
+        Specification<Job> finalSpec = spec.and((root, query, cb) -> root.get("jobId").in(relatedJobIds));
+
+        Page<Job> page = this.jobRepository.findAll(finalSpec, pageable);
+        ResultPaginationResponse.Meta meta = new ResultPaginationResponse.Meta();
+        meta.setPage(pageable.getPageNumber() + 1);
+        meta.setPageSize(pageable.getPageSize());
+        meta.setPages(page.getTotalPages());
+        meta.setTotal(page.getTotalElements());
+
+        return new ResultPaginationResponse(
+                meta,
+                page.getContent().stream()
+                        .map(this::convertToJobResponse)
+                        .toList()
+        );
     }
 
     @Override

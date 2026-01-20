@@ -99,6 +99,7 @@ public class JobController {
         Specification<Job> finalSpec = baseSpec
                 .and((root, query, criteriaBuilder)
                         -> criteriaBuilder.and(
+                                criteriaBuilder.isTrue(root.get("enabled")),
                                 criteriaBuilder.isNull(root.get("deletedAt"))
                         )
                 );

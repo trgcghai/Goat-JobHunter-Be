@@ -26,14 +26,17 @@ public class SubscriberController {
     private final SubscriberService subscriberService;
 
     @PostMapping
-    public ResponseEntity<Subscriber> createSubscriber(@Valid @RequestBody SubscriberCreateDto dto)
-            throws InvalidException {
-        if (this.subscriberService.handleGetSubscriberByEmail(dto.getEmail()) == null) {
-            return ResponseEntity.status(HttpStatus.CREATED)
-                    .body(this.subscriberService.handleCreateSubscriber(dto));
-        } else {
-            throw new InvalidException("Email exists");
-        }
+    public ResponseEntity<Subscriber> createSubscriber(
+            @Valid @RequestBody SubscriberCreateDto dto
+    ) throws InvalidException
+    {
+        Subscriber subscriber = this.subscriberService.handleGetSubscriberByEmail();
+        if(subscriber != null) throw new InvalidException("Email already exists");
+
+        Subscriber createdSubscriber = this.subscriberService.handleCreateSubscriber(dto);
+        if(createdSubscriber == null) throw new InvalidException("Cannot create subscriber");
+
+        return ResponseEntity.status(HttpStatus.CREATED).body(createdSubscriber);
     }
 
     @PutMapping

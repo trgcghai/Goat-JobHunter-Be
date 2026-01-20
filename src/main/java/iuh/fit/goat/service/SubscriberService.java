@@ -24,7 +24,7 @@ public interface SubscriberService {
 
     Subscriber handleGetSubscribersSkill(String email);
 
-    Subscriber handleGetSubscriberByEmail(String email);
+    Subscriber handleGetSubscriberByEmail();
 
     void handleSendSubscribersEmailJobs();
 

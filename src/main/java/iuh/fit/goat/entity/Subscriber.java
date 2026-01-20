@@ -27,7 +27,7 @@ import static jakarta.persistence.FetchType.LAZY;
 @FilterDef(name = "activeSubscriberFilter")
 public class Subscriber extends BaseEntity {
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @GeneratedValue(strategy = GenerationType.AUTO)
     private long subscriberId;
     @NotBlank(message = "Name is not empty")
     private String name;
