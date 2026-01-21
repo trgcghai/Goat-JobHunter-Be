@@ -93,7 +93,7 @@ public class MessageServiceImpl implements MessageService {
                 .messageId(messageId)
                 .senderId(String.valueOf(currentUser.getAccountId()))
                 .content(request.getContent())
-                .messageType(String.valueOf(MessageType.TEXT))
+                .messageType(MessageType.TEXT)
                 .isHidden(false)
                 .createdAt(now)
                 .updatedAt(now)
