@@ -1,6 +1,7 @@
 package iuh.fit.goat.service.impl;
 
 import iuh.fit.goat.dto.request.message.MessageCreateRequest;
+import iuh.fit.goat.dto.response.StorageResponse;
 import iuh.fit.goat.entity.ChatRoom;
 import iuh.fit.goat.entity.Message;
 import iuh.fit.goat.entity.User;
@@ -9,16 +10,19 @@ import iuh.fit.goat.exception.InvalidException;
 import iuh.fit.goat.repository.ChatRoomRepository;
 import iuh.fit.goat.repository.MessageRepository;
 import iuh.fit.goat.service.MessageService;
+import iuh.fit.goat.service.StorageService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Pageable;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
@@ -31,6 +35,8 @@ public class MessageServiceImpl implements MessageService {
 
     private final MessageRepository messageRepository;
     private final ChatRoomRepository chatRoomRepository;
+
+    private final StorageService storageService;
 
     private final SimpMessagingTemplate messagingTemplate;
 
@@ -93,7 +99,7 @@ public class MessageServiceImpl implements MessageService {
                 .messageId(messageId)
                 .senderId(String.valueOf(currentUser.getAccountId()))
                 .content(request.getContent())
-                .messageType(String.valueOf(MessageType.TEXT))
+                .messageType(MessageType.TEXT)
                 .isHidden(false)
                 .createdAt(now)
                 .updatedAt(now)
@@ -114,156 +120,96 @@ public class MessageServiceImpl implements MessageService {
         return savedMessage;
     }
 
-//    @Override
-//    public Message hideMessage(String messageId, String chatRoomId, String hiddenByAccountId) {
-//        // Validation
-//        if (messageId == null || messageId.isBlank()) {
-//            throw new IllegalArgumentException("Message ID is required");
-//        }
-//        if (chatRoomId == null || chatRoomId.isBlank()) {
-//            throw new IllegalArgumentException("Conversation ID is required");
-//        }
-//        if (hiddenByAccountId == null || hiddenByAccountId.isBlank()) {
-//            throw new IllegalArgumentException("Hidden by account ID is required");
-//        }
-//
-//        // Note: This is a simplified approach
-//        // For production, you'd need a GSI on messageId for efficient lookup
-//        log.warn("hideMessage operation requires scanning buckets - consider adding GSI on messageId");
-//
-//        // Try to find message in recent buckets
-//        String currentBucket = getCurrentBucket();
-//        Message message = null;
-//
-//        for (int i = 0; i < 7; i++) { // Search last 7 days
-//            String conversationBucket = Message.buildChatRoomBucket(chatRoomId, currentBucket);
-//            List<Message> messages = messageRepository.findMessagesByBucket(
-//                    chatRoomId, currentBucket, 100, false);
-//
-//            message = messages.stream()
-//                    .filter(m -> messageId.equals(m.getMessageId()))
-//                    .findFirst()
-//                    .orElse(null);
-//
-//            if (message != null) {
-//                break;
-//            }
-//
-//            currentBucket = getPreviousBucket(currentBucket);
-//        }
-//
-//        if (message == null) {
-//            throw new IllegalStateException("Message not found: " + messageId);
-//        }
-//
-//        // Update message
-//        message.setIsHidden(true);
-//        message.setUpdatedAt(Instant.now());
-//
-//        Message updatedMessage = messageRepository.updateMessage(message);
-//
-//        log.info("Message hidden: messageId={}, conversationId={}, hiddenBy={}",
-//                messageId, chatRoomId, hiddenByAccountId);
-//
-//        return updatedMessage;
-//    }
-//
-//    // ========== PinnedMessage Operations ==========
-//
-//    @Override
-//    public PinnedMessage pinMessage(Long chatRoomId, String messageId, String pinnedBy) {
-//        // Validation
-//        if (chatRoomId == null) {
-//            throw new IllegalArgumentException("Chat room ID is required");
-//        }
-//        if (messageId == null || messageId.isBlank()) {
-//            throw new IllegalArgumentException("Message ID is required");
-//        }
-//        if (pinnedBy == null || pinnedBy.isBlank()) {
-//            throw new IllegalArgumentException("Pinned by user is required");
-//        }
-//
-//        String conversationId = chatRoomId.toString();
-//
-//        // Check if already pinned
-//        if (messageRepository.existsPinnedMessage(conversationId, messageId)) {
-//            throw new IllegalStateException("Message is already pinned in this conversation");
-//        }
-//
-//        // Create pinned message
-//        Instant pinnedAt = Instant.now();
-//        String pinnedSk = PinnedMessage.buildPinnedSk(pinnedAt.toEpochMilli(), messageId);
-//        String messageBucket = getCurrentBucket();
-//
-//        PinnedMessage pinnedMessage = PinnedMessage.builder()
-//                .chatRoomId(conversationId)
-//                .pinnedSk(pinnedSk)
-//                .messageId(messageId)
-//                .messageBucket(messageBucket)
-//                .pinnedBy(pinnedBy)
-//                .pinnedAt(pinnedAt)
-//                .build();
-//
-//        PinnedMessage saved = messageRepository.savePinnedMessage(pinnedMessage);
-//
-//        log.info("Message pinned: chatRoomId={}, messageId={}, pinnedBy={}",
-//                chatRoomId, messageId, pinnedBy);
-//
-//        return saved;
-//    }
-//
-//    @Override
-//    public void unpinMessage(Long chatRoomId, String messageId) {
-//        // Validation
-//        if (chatRoomId == null) {
-//            throw new IllegalArgumentException("Chat room ID is required");
-//        }
-//        if (messageId == null || messageId.isBlank()) {
-//            throw new IllegalArgumentException("Message ID is required");
-//        }
-//
-//        String conversationId = chatRoomId.toString();
-//
-//        // Find the pinned message
-//        PinnedMessage pinnedMessage = messageRepository
-//                .findPinnedMessageByConversationAndMessageId(conversationId, messageId)
-//                .orElse(null);
-//
-//        if (pinnedMessage == null) {
-//            log.debug("Message not pinned (idempotent): chatRoomId={}, messageId={}",
-//                     chatRoomId, messageId);
-//            return; // Idempotent - no error if not exists
-//        }
-//
-//        // Delete the pinned message
-//        messageRepository.deletePinnedMessage(
-//                pinnedMessage.getChatRoomId(),
-//                pinnedMessage.getPinnedSk()
-//        );
-//
-//        log.info("Message unpinned: chatRoomId={}, messageId={}", chatRoomId, messageId);
-//    }
-//
-//    @Override
-//    public List<PinnedMessage> getPinnedMessages(Long chatRoomId) {
-//        if (chatRoomId == null) {
-//            throw new IllegalArgumentException("Chat room ID is required");
-//        }
-//
-//        String conversationId = chatRoomId.toString();
-//        return messageRepository.findAllPinnedMessagesByConversation(conversationId);
-//    }
-//
-//    @Override
-//    public boolean isMessagePinned(Long chatRoomId, String messageId) {
-//        if (chatRoomId == null || messageId == null || messageId.isBlank()) {
-//            return false;
-//        }
-//
-//        String conversationId = chatRoomId.toString();
-//        return messageRepository.existsPinnedMessage(conversationId, messageId);
-//    }
+    /**
+     * Send batch messages: files + optional text content
+     * Mỗi file/content tạo 1 message riêng
+     */
+    @Override
+    public List<Message> sendMessagesWithFiles(
+            Long chatRoomId,
+            MessageCreateRequest request,
+            List<MultipartFile> files,
+            User currentUser) throws InvalidException {
 
+        // Validate chat room exists
+        ChatRoom chatRoom = this.chatRoomRepository
+                .findById(chatRoomId).orElse(null);
+
+        if (chatRoom == null) {
+            throw new InvalidException("Chat Room not found");
+        }
+
+        List<Message> createdMessages = new ArrayList<>();
+
+        try {
+            // 1. Process files first - mỗi file = 1 message
+            if (files != null && !files.isEmpty()) {
+                for (MultipartFile file : files) {
+                    // Validate file
+                    validateFile(file);
+
+                    // Determine message type from MIME type
+                    String mimeType = file.getContentType();
+                    MessageType messageType = determineMessageType(mimeType);
+
+                    // Upload file to S3
+                    String folder = getFolderByMessageType(messageType);
+                    StorageResponse storageResponse = storageService
+                            .handleUploadFile(file, folder);
+
+                    String fileUrl = storageResponse.getUrl();
+
+                    // Create message with file URL
+                    Message fileMessage = createFileMessage(
+                            chatRoomId,
+                            fileUrl,
+                            messageType,
+                            currentUser
+                    );
+
+                    // Save message
+                    Message savedMessage = messageRepository
+                            .saveMessage(fileMessage);
+
+                    log.info("File message created: messageId={}, type={}, file={}",
+                            savedMessage.getMessageId(),
+                            messageType,
+                            file.getOriginalFilename());
+
+                    createdMessages.add(savedMessage);
+
+                    // Send realtime message to chat room members
+                    sendMessageToUsers(chatRoomId, savedMessage);
+                }
+            }
+
+            // 2. Process text content - nếu có content thì tạo thêm 1 text message
+            if (request != null && request.getContent() != null && !request.getContent().isBlank()) {
+
+                MessageCreateRequest textRequest = new MessageCreateRequest(request.getContent());
+                Message textMessage = sendMessage(chatRoomId, textRequest, currentUser);
+
+                createdMessages.add(textMessage);
+
+                log.info("Text message created: messageId={}", textMessage.getMessageId());
+            }
+
+            // Validate: phải có ít nhất 1 file hoặc content
+            if (createdMessages.isEmpty()) {
+                throw new InvalidException("At least one file or text content is required");
+            }
+
+            log.info("Batch message creation completed: {} messages created", createdMessages.size());
+
+            return createdMessages;
+
+        } catch (Exception e) {
+            log.error("Error creating messages, rolling back uploaded files", e);
+            e.printStackTrace();
+        }
+
+        return null;
+    }
 
     @Override
     public void sendMessageToUsers(Long chatRoomId, Message message) {
@@ -280,6 +226,95 @@ public class MessageServiceImpl implements MessageService {
     }
 
     // ========== Helper Methods ==========
+
+    /**
+     * Xác định MessageType dựa trên MIME type của file
+     */
+    private MessageType determineMessageType(String mimeType) {
+        if (mimeType == null) {
+            return MessageType.FILE;
+        }
+
+        String type = mimeType.toLowerCase();
+        if (type.startsWith("image/")) {
+            return MessageType.IMAGE;
+        } else if (type.startsWith("video/")) {
+            return MessageType.VIDEO;
+        } else if (type.startsWith("audio/")) {
+            return MessageType.AUDIO;
+        } else {
+            return MessageType.FILE;
+        }
+    }
+
+    /**
+     * Validate file trước khi upload
+     */
+    private void validateFile(MultipartFile file) throws InvalidException {
+        if (file == null || file.isEmpty()) {
+            throw new InvalidException("File cannot be empty");
+        }
+
+        // Max 20MB per file
+        long maxSize = 20 * 1024 * 1024;
+        if (file.getSize() > maxSize) {
+            throw new InvalidException(
+                    String.format("File '%s' exceeds maximum size of 20MB",
+                            file.getOriginalFilename()));
+        }
+
+        // Validate filename
+        String filename = file.getOriginalFilename();
+        if (filename == null || filename.contains("..") || filename.contains("/")) {
+            throw new InvalidException("Invalid filename");
+        }
+    }
+
+    /**
+     * Xác định folder trong S3 dựa trên MessageType
+     */
+    private String getFolderByMessageType(MessageType type) {
+        switch (type) {
+            case IMAGE:
+                return "images";
+            case VIDEO:
+                return "videos";
+            case AUDIO:
+                return "audios";
+            default:
+                return "files";
+        }
+    }
+
+    /**
+     * Tạo 1 message cho file đã upload
+     */
+    private Message createFileMessage(Long chatRoomId, String fileUrl, MessageType messageType, User currentUser) {
+
+        String messageId = generateMessageId();
+        Instant now = Instant.now();
+        long timestamp = now.toEpochMilli();
+        String bucket = getBucketFromInstant(now);
+
+        String chatRoomBucket = Message.buildChatRoomBucket(
+                chatRoomId.toString(), bucket);
+        String messageSk = Message.buildMessageSk(timestamp, messageId);
+
+        return Message.builder()
+                .chatRoomBucket(chatRoomBucket)
+                .messageSk(messageSk)
+                .chatRoomId(chatRoomId.toString())
+                .bucket(bucket)
+                .messageId(messageId)
+                .senderId(String.valueOf(currentUser.getAccountId()))
+                .content(fileUrl) // URL của file
+                .messageType(messageType)
+                .isHidden(false)
+                .createdAt(now)
+                .updatedAt(now)
+                .build();
+    }
+
     private String generateMessageId() {
         return "msg_" + UUID.randomUUID().toString().replace("-", "");
     }
@@ -293,7 +328,7 @@ public class MessageServiceImpl implements MessageService {
         LocalDate date = instant.atZone(ZoneId.systemDefault()).toLocalDate();
         return date.format(BUCKET_FORMATTER);
     }
-//
+
 //    private String getPreviousBucket(String bucket) {
 //        try {
 //            LocalDate date = LocalDate.parse(bucket, BUCKET_FORMATTER);

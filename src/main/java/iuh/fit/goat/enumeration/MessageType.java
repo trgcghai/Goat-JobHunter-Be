@@ -5,7 +5,7 @@ import lombok.Getter;
 @Getter
 public enum MessageType {
     TEXT("text"), IMAGE("image"),
-    VOICE("voice"), FILE("file");
+    AUDIO("audio"), VIDEO("Video"), FILE("file");
 
     private final String value;
 

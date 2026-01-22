@@ -10,7 +10,6 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class MessageToNewChatRoom {
-    @NotBlank(message = "Content is not empty")
     private String content;
 
     @NotNull(message = "AccountId is not null")
