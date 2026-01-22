@@ -456,8 +456,14 @@ public class JobServiceImpl implements JobService {
         Specification<Job> finalSpec = spec.and((root, query, cb) -> {
             assert query != null;
             query.distinct(true);
+
+            Predicate enabledPredicate = cb.isTrue(root.get("enabled"));
+            Predicate notDeletedPredicate = cb.isNull(root.get("deletedAt"));
+
             Join<Job, Skill> skillJoin = root.join("skills", JoinType.INNER);
-            return skillJoin.in(skills);
+            Predicate skillPredicate = skillJoin.in(skills);
+
+            return cb.and(enabledPredicate, notDeletedPredicate, skillPredicate);
         });
 
         Page<Job> page = this.jobRepository.findAll(finalSpec, pageable);
