@@ -52,4 +52,8 @@ public interface JobService {
     List<JobEnabledResponse> handleEnabledJobs(JobIdsActionRequest request);
 
     List<JobEnabledResponse> handleDisabledJobs(JobIdsActionRequest request);
+
+    ResultPaginationResponse handleGetJobSubscribersByCurrentUser(Specification<Job> spec, Pageable pageable);
+
+    ResultPaginationResponse handleGetRelatedJobsByCurrentUser(Specification<Job> spec, Pageable pageable);
 }

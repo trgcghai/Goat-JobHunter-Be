@@ -622,7 +622,7 @@ public class AiServiceImpl implements AiService {
                     List<ApplicantMatch> matches = new ArrayList<>();
 
                     for (Applicant applicant : applicants) {
-                        Subscriber sub = this.subscriberRepository.findByEmail(applicant.getEmail());
+                        Subscriber sub = this.subscriberRepository.findByEmail(applicant.getEmail()).orElse(null);
                         if (sub == null || sub.getSkills().isEmpty()) continue;
 
                         Set<String> applicantSkills = sub.getSkills().stream()
@@ -674,7 +674,7 @@ public class AiServiceImpl implements AiService {
         return this.getOrSet(
                 "recommendedeJobsApplicant" + applicant.getAccountId(),
                 () -> {
-                    Subscriber sub = this.subscriberRepository.findByEmail(applicant.getEmail());
+                    Subscriber sub = this.subscriberRepository.findByEmail(applicant.getEmail()).orElse(null);
 
                     if (sub == null || sub.getSkills().isEmpty()) {
                         return getTopJobsContext();
@@ -746,7 +746,7 @@ public class AiServiceImpl implements AiService {
                     Applicant a = this.applicantRepository.findById(applicant.getAccountId()).orElse(null);
                     if (a == null) return "Bạn chưa có đăng ký nào";
 
-                    Subscriber sub = this.subscriberRepository.findByEmail(a.getEmail());
+                    Subscriber sub = this.subscriberRepository.findByEmail(a.getEmail()).orElse(null);
                     if (sub == null) return "Bạn chưa có đăng ký nào";
 
                     return String.format(
