@@ -11,7 +11,6 @@ import software.amazon.awssdk.enhanced.dynamodb.model.QueryConditional;
 import software.amazon.awssdk.enhanced.dynamodb.model.QueryEnhancedRequest;
 
 import java.time.LocalDate;
-import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -22,44 +21,159 @@ import java.util.stream.Collectors;
 public class MessageRepository {
 
     private static final DateTimeFormatter BUCKET_FORMATTER = DateTimeFormatter.ofPattern("yyyyMMdd");
-    private static final int BUCKET_SEARCH_LIMIT = 7; // Search up to 7 days back
-    private static final int DEFAULT_LIMIT = 100; // Search 100 message once
+    private static final int BUCKET_SEARCH_LIMIT = 30;
+    private static final int DEFAULT_LIMIT = 100;
 
     private final DynamoDbTable<Message> messageTable;
     private final DynamoDbTable<PinnedMessage> pinnedMessageTable;
 
-    // ========== Message Operations ==========
+    // ========== NEW: Multi-Bucket Query Methods ==========
 
     /**
-     * Find the last (newest) message for a chat room
-     * @param chatRoomId the Chat Room ID (mapped from chatRoomId)
-     * @return Optional containing the last message
+     * Find messages across multiple buckets with smart fallback
+     * Strategy:
+     * 1. Start from today's bucket
+     * 2. If not enough messages, fetch from previous buckets
+     * 3. Merge and sort by timestamp DESC
+     */
+    public List<Message> findMessagesAcrossBuckets(
+            String chatRoomId,
+            int limit,
+            boolean includeHidden) {
+
+        List<Message> allMessages = new ArrayList<>();
+        LocalDate currentDate = LocalDate.now();
+
+        // Search up to 30 days back or until we have enough messages
+        for (int daysBack = 0; daysBack < BUCKET_SEARCH_LIMIT && allMessages.size() < limit; daysBack++) {
+            LocalDate targetDate = currentDate.minusDays(daysBack);
+            String bucket = targetDate.format(BUCKET_FORMATTER);
+            String chatRoomBucket = Message.buildChatRoomBucket(chatRoomId, bucket);
+
+            log.debug("Querying bucket: {} for chatRoom: {}", bucket, chatRoomId);
+
+            List<Message> bucketMessages = queryMessagesInBucket(
+                    chatRoomBucket,
+                    limit - allMessages.size(),
+                    includeHidden
+            );
+
+            if (!bucketMessages.isEmpty()) {
+                log.info("Found {} messages in bucket: {}", bucketMessages.size(), bucket);
+                allMessages.addAll(bucketMessages);
+            }
+        }
+
+        // Sort by timestamp DESC and apply limit
+        return allMessages.stream()
+                .sorted(Comparator.comparing(Message::getCreatedAt).reversed())
+                .limit(limit)
+                .collect(Collectors.toList());
+    }
+
+    /**
+     * Query messages from a specific bucket
+     */
+    private List<Message> queryMessagesInBucket(
+            String chatRoomBucket,
+            int limit,
+            boolean includeHidden) {
+
+        QueryConditional queryConditional = QueryConditional
+                .keyEqualTo(Key.builder()
+                        .partitionValue(chatRoomBucket)
+                        .build());
+
+        QueryEnhancedRequest queryRequest = QueryEnhancedRequest.builder()
+                .queryConditional(queryConditional)
+                .scanIndexForward(false) // Descending order (newest first)
+                .limit(limit)
+                .build();
+
+        List<Message> messages = new ArrayList<>();
+        messageTable.query(queryRequest).items().forEach(message -> {
+            // Filter hidden messages unless explicitly requested
+            if (includeHidden || !Boolean.TRUE.equals(message.getIsHidden())) {
+                messages.add(message);
+            }
+        });
+
+        return messages;
+    }
+
+    /**
+     * Count messages in a specific bucket
+     */
+    public long countMessagesInBucket(String chatRoomId, String bucket) {
+        String chatRoomBucket = Message.buildChatRoomBucket(chatRoomId, bucket);
+
+        QueryConditional queryConditional = QueryConditional
+                .keyEqualTo(Key.builder()
+                        .partitionValue(chatRoomBucket)
+                        .build());
+
+        QueryEnhancedRequest queryRequest = QueryEnhancedRequest.builder()
+                .queryConditional(queryConditional)
+                .scanIndexForward(false)
+                .build();
+
+        long count = 0;
+        for (Message ignored : messageTable.query(queryRequest).items()) {
+            count++;
+        }
+
+        log.debug("Bucket {} has {} messages", bucket, count);
+        return count;
+    }
+
+    /**
+     * Get the most recent bucket that contains messages
+     */
+    public Optional<String> findLatestNonEmptyBucket(String chatRoomId) {
+        LocalDate currentDate = LocalDate.now();
+
+        for (int daysBack = 0; daysBack < BUCKET_SEARCH_LIMIT; daysBack++) {
+            LocalDate targetDate = currentDate.minusDays(daysBack);
+            String bucket = targetDate.format(BUCKET_FORMATTER);
+
+            long messageCount = countMessagesInBucket(chatRoomId, bucket);
+            if (messageCount > 0) {
+                log.info("Found latest non-empty bucket: {} with {} messages", bucket, messageCount);
+                return Optional.of(bucket);
+            }
+        }
+
+        log.warn("No non-empty buckets found for chatRoom: {}", chatRoomId);
+        return Optional.empty();
+    }
+
+    // ========== UPDATED: Last Message Query ==========
+
+    /**
+     * Find the last (newest) message with aggressive multi-bucket fallback
      */
     public Optional<Message> findLastMessageByConversation(String chatRoomId) {
         try {
-            String currentBucket = getCurrentBucket();
-            int daysSearched = 0;
+            LocalDate currentDate = LocalDate.now();
 
-            while (daysSearched < BUCKET_SEARCH_LIMIT) {
-                String chatRoomBucket = Message.buildChatRoomBucket(chatRoomId, currentBucket);
-                Optional<Message> message = queryLastMessageInBucket(chatRoomBucket);
+            // Search up to 30 days back (increased from 7)
+            for (int daysBack = 0; daysBack < BUCKET_SEARCH_LIMIT; daysBack++) {
+                LocalDate targetDate = currentDate.minusDays(daysBack);
+                String bucket = targetDate.format(BUCKET_FORMATTER);
+                String chatRoomBucket = Message.buildChatRoomBucket(chatRoomId, bucket);
 
-                if (message.isPresent()) {
-                    log.debug("Found last message in bucket: {}", currentBucket);
-                    return message;
+                Optional<Message> lastMessage = queryLastMessageInBucket(chatRoomBucket);
+                if (lastMessage.isPresent()) {
+                    log.debug("Found last message in bucket: {}", bucket);
+                    return lastMessage;
                 }
-
-                // Move to previous day
-                currentBucket = getPreviousBucket(currentBucket);
-                daysSearched++;
             }
 
-            log.debug("No messages found for chatroom: {} in last {} days",
-                     chatRoomId, BUCKET_SEARCH_LIMIT);
+            log.info("No messages found in any bucket for chatRoom: {}", chatRoomId);
             return Optional.empty();
 
         } catch (Exception e) {
-            log.error("Error finding last message for chatroom: {}", chatRoomId, e);
+            log.error("Error finding last message for chatRoom: {}", chatRoomId, e);
             return Optional.empty();
         }
     }
@@ -72,232 +186,48 @@ public class MessageRepository {
 
         QueryEnhancedRequest queryRequest = QueryEnhancedRequest.builder()
                 .queryConditional(queryConditional)
-                .scanIndexForward(false) // Descending order (newest first)
-                .limit(1)
+                .scanIndexForward(false)
+                .limit(5) // Get top 5 to skip hidden messages
                 .build();
 
         Iterator<Message> results = messageTable.query(queryRequest).items().iterator();
 
-        if (results.hasNext()) {
+        while (results.hasNext()) {
             Message message = results.next();
             // Skip hidden messages
-            if (Boolean.TRUE.equals(message.getIsHidden())) {
-                // Try next message
-                if (results.hasNext()) {
-                    return Optional.of(results.next());
-                }
-                return Optional.empty();
+            if (!Boolean.TRUE.equals(message.getIsHidden())) {
+                return Optional.of(message);
             }
-            return Optional.of(message);
         }
 
         return Optional.empty();
     }
 
-    /**
-     * Save a new message
-     * @param message the message to save
-     * @return the saved message
-     */
+    // ========== EXISTING: Message Operations ==========
+
+    public List<Message> findMessagesByBucket(
+            String chatRoomId,
+            String bucket,
+            boolean includeHidden) {
+
+        String chatRoomBucket = Message.buildChatRoomBucket(chatRoomId, bucket);
+        return queryMessagesInBucket(chatRoomBucket, DEFAULT_LIMIT, includeHidden);
+    }
+
     public Message saveMessage(Message message) {
         try {
             messageTable.putItem(message);
-            log.debug("Message saved: messageId={}", message.getMessageId());
+            log.info("Message saved successfully: PK={}, SK={}",
+                    message.getChatRoomBucket(), message.getMessageSk());
             return message;
         } catch (Exception e) {
-            log.error("Error saving message: {}", message.getMessageId(), e);
+            log.error("Error saving message: PK={}, SK={}",
+                    message.getChatRoomBucket(), message.getMessageSk(), e);
             throw new RuntimeException("Failed to save message", e);
         }
     }
 
-//    /**
-//     * Update an existing message
-//     * @param message the message to update
-//     * @return the updated message
-//     */
-//    public Message updateMessage(Message message) {
-//        try {
-//            DynamoDbTable<Message> table = getMessagesTable();
-//            Message updated = table.updateItem(message);
-//            log.debug("Message updated: messageId={}", message.getMessageId());
-//            return updated;
-//        } catch (Exception e) {
-//            log.error("Error updating message: {}", message.getMessageId(), e);
-//            throw new RuntimeException("Failed to update message", e);
-//        }
-//    }
-//
-//    /**
-//     * Find a message by its composite key
-//     * @param conversationBucket the partition key
-//     * @param messageSk the sort key
-//     * @return Optional containing the message
-//     */
-//    public Optional<Message> findMessageByKey(String conversationBucket, String messageSk) {
-//        try {
-//            DynamoDbTable<Message> table = getMessagesTable();
-//
-//            Key key = Key.builder()
-//                    .partitionValue(conversationBucket)
-//                    .sortValue(messageSk)
-//                    .build();
-//
-//            Message message = table.getItem(key);
-//            return Optional.ofNullable(message);
-//
-//        } catch (Exception e) {
-//            log.error("Error finding message by key: bucket={}, sk={}", conversationBucket, messageSk, e);
-//            return Optional.empty();
-//        }
-//    }
-//
-//
-    /**
-     * Find messages in a specific bucket
-     * @param chatRoomId the chatroom ID
-     * @param bucket the date bucket (yyyyMMdd)
-     * @param scanIndexForward true for ascending, false for descending
-     * @return list of messages
-     */
-    public List<Message> findMessagesByBucket(String chatRoomId, String bucket, boolean scanIndexForward) {
-        try {
-            String conversationBucket = Message.buildChatRoomBucket(chatRoomId, bucket);
-            QueryConditional queryConditional = QueryConditional
-                    .keyEqualTo(Key.builder()
-                            .partitionValue(conversationBucket)
-                            .build());
-
-            QueryEnhancedRequest queryRequest = QueryEnhancedRequest.builder()
-                    .queryConditional(queryConditional)
-                    .scanIndexForward(scanIndexForward)
-                    .limit(DEFAULT_LIMIT)
-                    .build();
-
-            return messageTable.query(queryRequest)
-                    .items()
-                    .stream()
-                    .sorted(Comparator.comparing(Message::getCreatedAt))
-                    .collect(Collectors.toList());
-
-        } catch (Exception e) {
-            log.error("Error finding messages by bucket: chatRoomId={}, bucket={}",
-                     chatRoomId, bucket, e);
-            return List.of();
-        }
-    }
-//
-//    // ========== PinnedMessage Operations ==========
-//
-//    /**
-//     * Save a pinned message
-//     * @param pinnedMessage the pinned message to save
-//     * @return the saved pinned message
-//     */
-//    public PinnedMessage savePinnedMessage(PinnedMessage pinnedMessage) {
-//        try {
-//            DynamoDbTable<PinnedMessage> table = getPinnedMessagesTable();
-//            table.putItem(pinnedMessage);
-//            log.debug("Pinned message saved: chatRoomId={}, messageId={}",
-//                     pinnedMessage.getChatRoomId(), pinnedMessage.getMessageId());
-//            return pinnedMessage;
-//        } catch (Exception e) {
-//            log.error("Error saving pinned message: chatRoomId={}, messageId={}",
-//                     pinnedMessage.getChatRoomId(), pinnedMessage.getMessageId(), e);
-//            throw new RuntimeException("Failed to save pinned message", e);
-//        }
-//    }
-//
-//    /**
-//     * Delete a pinned message by its composite key
-//     * @param chatRoomId the chatroom ID (PK)
-//     * @param pinnedSk the pinned sort key (SK)
-//     */
-//    public void deletePinnedMessage(String chatRoomId, String pinnedSk) {
-//        try {
-//            DynamoDbTable<PinnedMessage> table = getPinnedMessagesTable();
-//
-//            Key key = Key.builder()
-//                    .partitionValue(chatRoomId)
-//                    .sortValue(pinnedSk)
-//                    .build();
-//
-//            table.deleteItem(key);
-//            log.debug("Pinned message deleted: chatRoomId={}, pinnedSk={}", chatRoomId, pinnedSk);
-//
-//        } catch (Exception e) {
-//            log.error("Error deleting pinned message: chatRoomId={}, pinnedSk={}",
-//                     chatRoomId, pinnedSk, e);
-//            throw new RuntimeException("Failed to delete pinned message", e);
-//        }
-//    }
-//
-//    /**
-//     * Find a pinned message by chatroom and message ID
-//     * @param chatRoomId the chatroom ID
-//     * @param messageId the message ID
-//     * @return Optional containing the pinned message
-//     */
-//    public Optional<PinnedMessage> findPinnedMessageByConversationAndMessageId(String chatRoomId, String messageId) {
-//        try {
-//            List<PinnedMessage> allPinned = findAllPinnedMessagesByConversation(chatRoomId);
-//
-//            return allPinned.stream()
-//                    .filter(pm -> messageId.equals(pm.getMessageId()))
-//                    .findFirst();
-//
-//        } catch (Exception e) {
-//            log.error("Error finding pinned message: chatRoomId={}, messageId={}",
-//                     chatRoomId, messageId, e);
-//            return Optional.empty();
-//        }
-//    }
-//
-//    /**
-//     * Find all pinned messages for a chatroom
-//     * @param chatRoomId the chatroom ID
-//     * @return list of pinned messages, sorted by pinnedAt descending
-//     */
-//    public List<PinnedMessage> findAllPinnedMessagesByConversation(String chatRoomId) {
-//        try {
-//            DynamoDbTable<PinnedMessage> table = getPinnedMessagesTable();
-//
-//            QueryConditional queryConditional = QueryConditional
-//                    .keyEqualTo(Key.builder()
-//                            .partitionValue(chatRoomId)
-//                            .build());
-//
-//            QueryEnhancedRequest queryRequest = QueryEnhancedRequest.builder()
-//                    .queryConditional(queryConditional)
-//                    .scanIndexForward(false) // Newest pins first
-//                    .build();
-//
-//            return table.query(queryRequest)
-//                    .items()
-//                    .stream()
-//                    .collect(Collectors.toList());
-//
-//        } catch (Exception e) {
-//            log.error("Error finding all pinned messages for chatroom: {}", chatRoomId, e);
-//            return List.of();
-//        }
-//    }
-//
-//    /**
-//     * Check if a message is pinned in a chatroom
-//     * @param chatRoomId the chatroom ID
-//     * @param messageId the message ID
-//     * @return true if pinned, false otherwise
-//     */
-//    public boolean existsPinnedMessage(String chatRoomId, String messageId) {
-//        return findPinnedMessageByConversationAndMessageId(chatRoomId, messageId).isPresent();
-//    }
-
     // ========== Helper Methods ==========
-
-    private String getCurrentBucket() {
-        LocalDate now = LocalDate.now(ZoneId.systemDefault());
-        return now.format(BUCKET_FORMATTER);
-    }
 
     private String getPreviousBucket(String bucket) {
         try {
