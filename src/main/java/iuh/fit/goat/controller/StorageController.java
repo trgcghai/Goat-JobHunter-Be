@@ -33,7 +33,7 @@ public class StorageController {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("File is empty. Please upload file");
         }
 
-        FileUploadUtil.assertAllowed(file, FileUploadUtil.FILE_PATTERN);
+        FileUploadUtil.assertAllowed(file);
 
         StorageResponse response = this.storageService.handleUploadFile(file, folder);
 
@@ -56,7 +56,7 @@ public class StorageController {
                 continue;
             }
 
-            FileUploadUtil.assertAllowed(file, FileUploadUtil.FILE_PATTERN);
+            FileUploadUtil.assertAllowed(file);
 
             StorageResponse response = this.storageService.handleUploadFile(file, folder);
             responses.add(response);

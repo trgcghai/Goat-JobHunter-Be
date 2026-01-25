@@ -14,7 +14,7 @@ public class AccountServiceImpl implements AccountService {
 
     @Override
     public Account handleGetAccountByEmail(String email) {
-        return this.accountRepository.findByEmail(email).orElse(null);
+        return this.accountRepository.findByEmailAndDeletedAtIsNull(email).orElse(null);
     }
 
 }

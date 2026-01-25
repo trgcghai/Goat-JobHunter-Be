@@ -1,8 +1,14 @@
 package iuh.fit.goat.util;
 
 import com.nimbusds.jose.util.Base64;
+import iuh.fit.goat.dto.response.StorageResponse;
 import iuh.fit.goat.dto.response.auth.LoginResponse;
+import iuh.fit.goat.exception.InvalidException;
+import iuh.fit.goat.service.StorageService;
+import iuh.fit.goat.service.impl.StorageServiceImpl;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -10,6 +16,7 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.oauth2.jose.jws.MacAlgorithm;
 import org.springframework.security.oauth2.jwt.*;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 
 import javax.crypto.SecretKey;
 import javax.crypto.spec.SecretKeySpec;
@@ -24,7 +31,6 @@ import java.util.regex.Pattern;
 @Service
 @Slf4j
 public class SecurityUtil {
-
     public static final MacAlgorithm JWT_ALGORITHM = MacAlgorithm.HS512;
     @Value("${minhdat.jwt.base64-secret}")
     private String jwtKey;
@@ -144,6 +150,14 @@ public class SecurityUtil {
     public static boolean checkValidNumber(String str) {
         Pattern pattern = Pattern.compile("^\\d+$");
         return pattern.matcher(str).matches();
+    }
+
+    public static String uploadImage(MultipartFile file, String folder, StorageService storageService) throws InvalidException {
+        StorageResponse response = storageService.handleUploadFile(file, folder);
+        if (response == null || response.getUrl() == null) {
+            throw new InvalidException("Failed to upload file");
+        }
+        return response.getUrl();
     }
 
 }
