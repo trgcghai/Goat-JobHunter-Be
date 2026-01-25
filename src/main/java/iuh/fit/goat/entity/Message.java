@@ -1,5 +1,6 @@
 package iuh.fit.goat.entity;
 
+import iuh.fit.goat.enumeration.MessageType;
 import lombok.*;
 import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.*;
 
@@ -20,7 +21,7 @@ public class Message {
     private String messageId;
     private String senderId;
     private String content;
-    private String messageType;        // TEXT | FILES | CARD
+    private MessageType messageType;        // TEXT | FILES | CARD
     private String replyTo;            // nullable
     private Boolean isHidden;
     private Instant createdAt;
@@ -66,7 +67,7 @@ public class Message {
     }
 
     @DynamoDbAttribute("messageType")
-    public String getMessageType() {
+    public MessageType getMessageType() {
         return messageType;
     }
 

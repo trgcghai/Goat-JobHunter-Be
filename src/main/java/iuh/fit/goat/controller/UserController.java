@@ -1,7 +1,6 @@
 package iuh.fit.goat.controller;
 
 import com.turkraft.springfilter.boot.Filter;
-import iuh.fit.goat.dto.request.user.CreateUserRequest;
 import iuh.fit.goat.dto.request.user.ResetPasswordRequest;
 import iuh.fit.goat.dto.request.user.UpdatePasswordRequest;
 import iuh.fit.goat.dto.request.user.UserEnabledRequest;
@@ -11,6 +10,8 @@ import iuh.fit.goat.dto.response.user.UserEnabledResponse;
 import iuh.fit.goat.dto.response.user.UserResponse;
 import iuh.fit.goat.entity.*;
 import iuh.fit.goat.exception.InvalidException;
+import iuh.fit.goat.service.JobService;
+import iuh.fit.goat.service.ResumeService;
 import iuh.fit.goat.service.UserService;
 import iuh.fit.goat.util.SecurityUtil;
 import jakarta.validation.Valid;
@@ -22,7 +23,6 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseCookie;
 import org.springframework.http.ResponseEntity;
-import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -33,6 +33,8 @@ import java.util.Map;
 @RequiredArgsConstructor
 public class UserController {
     private final UserService userService;
+    private final JobService jobService;
+    private final ResumeService resumeService;
 
     @Value("${minhdat.jwt.access-token-validity-in-seconds}")
     private long jwtAccessToken;
@@ -115,7 +117,7 @@ public class UserController {
         }
     }
 
-    /*     ========================= Saved Job Related Endpoints =========================  */
+    /*     ========================= Job Related Endpoints =========================  */
 
     @GetMapping("/me/saved-jobs")
     public ResponseEntity<ResultPaginationResponse> getCurrentUserSavedJobs(Pageable pageable) {
@@ -159,6 +161,20 @@ public class UserController {
         }
 
         return ResponseEntity.status(HttpStatus.OK).body(userResponse);
+    }
+
+    @GetMapping("/me/jobs/subscribers")
+    public ResponseEntity<ResultPaginationResponse> getJobSubscribersByCurrentUser(
+            @Filter Specification<Job> spec, Pageable pageable
+    ) {
+        return ResponseEntity.ok(this.jobService.handleGetJobSubscribersByCurrentUser(spec, pageable));
+    }
+
+    @GetMapping("/me/jobs/related")
+    public ResponseEntity<ResultPaginationResponse> getRelatedJobsByCurrentUser(
+            @Filter Specification<Job> spec, Pageable pageable
+    ) {
+        return ResponseEntity.ok(this.jobService.handleGetRelatedJobsByCurrentUser(spec, pageable));
     }
 
     /*     ========================= ========================= =========================  */
@@ -307,6 +323,17 @@ public class UserController {
             @Filter Specification<Interview> spec, Pageable pageable
     ) {
         ResultPaginationResponse result = this.userService.handleGetCurrentUserInterviews(spec, pageable);
+        return ResponseEntity.status(HttpStatus.OK).body(result);
+    }
+    /*     ========================= ========================= =========================  */
+
+
+    /*     ========================= Resume Related Endpoints =========================  */
+    @GetMapping("/me/resumes")
+    public ResponseEntity<ResultPaginationResponse> getCurrentUserResumes(
+            @Filter Specification<Resume> spec, Pageable pageable
+    ) {
+        ResultPaginationResponse result = this.resumeService.handleGetAllResumes(spec, pageable);
         return ResponseEntity.status(HttpStatus.OK).body(result);
     }
     /*     ========================= ========================= =========================  */

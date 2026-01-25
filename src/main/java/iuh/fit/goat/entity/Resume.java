@@ -32,8 +32,6 @@ public class Resume extends BaseEntity {
     private String fileUrl;
     private String fileName;
     private long fileSize;
-    @Column(columnDefinition = "TEXT")
-    private String summary;
     private boolean isDefault = false;
     private boolean isPublic = false;
     private Double aiScore;

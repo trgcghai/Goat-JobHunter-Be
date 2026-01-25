@@ -24,6 +24,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.time.LocalDateTime;
 import java.time.ZoneId;
@@ -102,7 +103,7 @@ public class ChatRoomServiceImpl implements ChatRoomService {
 
     @Override
     @Transactional
-    public Message createNewSingleChatRoom(User currentUser, MessageToNewChatRoom request) throws InvalidException {
+    public ChatRoom createNewSingleChatRoom(User currentUser, MessageToNewChatRoom request) throws InvalidException {
         // Validate if receiver is valid
         User uReceiver = this.userRepository.findById(request.getAccountId()).orElse(null);
         if (uReceiver == null) {
@@ -116,12 +117,15 @@ public class ChatRoomServiceImpl implements ChatRoomService {
         );
 
         if (existingRoom.isPresent()) {
-            // Return message in existing room instead of creating new one
-            return this.messageService.sendMessage(
+            // Send message in existing room instead of creating new one
+            this.messageService.sendMessage(
                     existingRoom.get().getRoomId(),
                     new MessageCreateRequest(request.getContent()),
                     currentUser
             );
+
+            // Return existing room
+            return existingRoom.orElse(null);
         }
 
         // Create and save chat room first (no members yet) to avoid transient reference
@@ -152,9 +156,86 @@ public class ChatRoomServiceImpl implements ChatRoomService {
         this.chatMemberRepository.saveAllAndFlush(Arrays.asList(sender, receiver));
 
         // Send message
-        return this.messageService.sendMessage(chatRoom.getRoomId(), new MessageCreateRequest(request.getContent()), currentUser);
-    }
+        this.messageService.sendMessage(chatRoom.getRoomId(), new MessageCreateRequest(request.getContent()), currentUser);
 
+        return chatRoom;
+    }
+    
+    @Override
+    @Transactional
+    public ChatRoom createNewSingleChatRoomWithFiles(
+            User currentUser,
+            MessageToNewChatRoom request,
+            List<MultipartFile> files
+    ) throws InvalidException {
+    
+        // Validate receiver exists
+        User uReceiver = this.userRepository.findById(request.getAccountId()).orElse(null);
+
+        if (uReceiver == null) {
+            throw new InvalidException("Receiver not found");
+        }
+    
+        // Check if direct chat room already exists
+        Optional<ChatRoom> existingRoom = findExistingDirectChatRoom(currentUser.getAccountId(), uReceiver.getAccountId());
+    
+        if (existingRoom.isPresent()) {
+            // Send messages in existing room
+            this.messageService.sendMessagesWithFiles(
+                    existingRoom.get().getRoomId(),
+                    new MessageCreateRequest(request.getContent()),
+                    files,
+                    currentUser
+            );
+    
+            return existingRoom.get();
+        }
+    
+        // Create new chat room
+        ChatRoom chatRoom = new ChatRoom();
+        chatRoom.setType(ChatRoomType.DIRECT);
+        chatRoom.setName("Không có tên");
+        chatRoom = this.chatRoomRepository.saveAndFlush(chatRoom);
+    
+        // Create chat members
+        ChatMember sender = new ChatMember();
+        sender.setUser(currentUser);
+        sender.setRole(ChatRole.OWNER);
+    
+        ChatMember receiver = new ChatMember();
+        receiver.setUser(uReceiver);
+        receiver.setRole(ChatRole.OWNER);
+    
+        this.chatMemberRepository.saveAllAndFlush(
+            Arrays.asList(sender, receiver));
+    
+        // Update chat room with members
+        chatRoom.setMembers(new ArrayList<>(
+            Arrays.asList(sender, receiver)));
+        chatRoom = this.chatRoomRepository.saveAndFlush(chatRoom);
+    
+        // Update members with room
+        sender.setRoom(chatRoom);
+        receiver.setRoom(chatRoom);
+        this.chatMemberRepository.saveAllAndFlush(
+            Arrays.asList(sender, receiver));
+    
+        // Send messages with files
+        this.messageService.sendMessagesWithFiles(
+                chatRoom.getRoomId(),
+                new MessageCreateRequest(request.getContent()),
+                files,
+                currentUser
+        );
+    
+        return chatRoom;
+    }
+    
+    @Override
+    @Transactional(readOnly = true)
+    public ChatRoom existsDirectChatRoom(Long currentUserId, Long otherUserId) {
+        return findExistingDirectChatRoom(currentUserId, otherUserId).orElse(null);
+    }
     // =============== HELPER FUNCTIONS ====================
 
     /**
@@ -262,7 +343,7 @@ public class ChatRoomServiceImpl implements ChatRoomService {
             }
 
             return ChatRoomResponse.builder()
-                    .chatRoomId(chatRoom.getRoomId())
+                    .roomId(chatRoom.getRoomId())
                     .type(chatRoom.getType())
                     .name(name)
                     .avatar(avatar)
@@ -277,7 +358,7 @@ public class ChatRoomServiceImpl implements ChatRoomService {
 
             // Fallback response in case of error
             return ChatRoomResponse.builder()
-                    .chatRoomId(chatRoom.getRoomId())
+                    .roomId(chatRoom.getRoomId())
                     .type(chatRoom.getType())
                     .name("Không có tên")
                     .avatar(chatRoom.getAvatar())

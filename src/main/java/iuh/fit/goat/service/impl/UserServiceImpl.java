@@ -28,7 +28,6 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.*;
 import java.util.concurrent.TimeUnit;
-import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -39,16 +38,13 @@ public class UserServiceImpl implements UserService {
     @Autowired
     private final BlogService blogService;
     private final InterviewService interviewService;
-
+    private final ResumeService resumeService;
     private final RedisService redisService;
-    private final NotificationService notificationService;
     private final EmailNotificationService emailNotificationService;
 
     private final AccountRepository accountRepository;
     private final UserRepository userRepository;
     private final JobRepository jobRepository;
-    private final CompanyRepository companyRepository;
-    private final ReviewRepository reviewRepository;
     private final NotificationRepository notificationRepository;
     private final BlogRepository blogRepository;
     private final InterviewRepository interviewRepository;
@@ -627,7 +623,7 @@ public class UserServiceImpl implements UserService {
             );
         }
 
-        Account currentAccount = this.accountRepository.findByEmail(currentEmail).orElse(null);
+        Account currentAccount = this.accountRepository.findByEmailAndDeletedAtIsNull(currentEmail).orElse(null);
         if (currentAccount == null) {
             return new ResultPaginationResponse(
                     new ResultPaginationResponse.Meta(0, 0, 0, 0L),

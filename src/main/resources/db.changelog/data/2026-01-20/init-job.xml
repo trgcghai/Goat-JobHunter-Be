@@ -1,0 +1,435 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+                      http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-5.0.xsd"
+>
+    <changeSet id="insert-job-2" author="minhdat">
+        <sql><![CDATA[
+            INSERT INTO jobs (
+                job_id,
+                description,
+                start_date,
+                end_date,
+                active,
+                level,
+                quantity,
+                salary,
+                title,
+                working_type,
+                enabled,
+                company_id,
+                career_id
+            )
+            VALUES
+                (
+                    2,
+                    '3 Lý do để gia nhập công ty\n
+                    Attractive remuneration package with 18 days off\n
+                    Smart people, interesting project & swiss quality\n
+                    Travel opportunities to Switzerland\n
+                    Mô tả công việc\n
+                    Manage DB health and services to ensure the highest standards of availability, resilience, integrity, security, tuning, and performance, as well as backups and recovery plans.\n
+                    Execute disaster recovery plans and procedures to ensure database availability during system outages or dysfunctions.\n
+                    Support development teams on database aspects.\n
+                    Join operations sessions with customers for live monitoring, troubleshooting, and fine-tuning of production databases.\n
+                    Monitor and resolve issues in both Production and Integration environments.\n
+                    Coach, supervise, or lead other team members when necessary.\n
+                    Continuously improve through transformation and architecture initiatives related to OCI Cloud, AWS, and MongoDB.\n
+                    Yêu cầu công việc\n
+                    Strong experience Oracle Database service on OCI and AWS in large-scale production environments, covering DR, performance, backup, and full administration.\n
+                    Strong experience on database optimization: PL/SQL/ turning/....\n
+                    Experience on MongoDB\n
+                    Good English communication skills\n
+                    At least 5-7 years experience in Oracle DB\n
+                    Bachelor’s Degree\n
+                    Nice to have\n
+                    Experience IaC - Terraform, Ansible\n
+                    Knowledge with other databases (MSSQL, Postgres,...)\n
+                    Willingness to work on Shifts schedule\n
+                    Tại sao bạn sẽ yêu thích làm việc tại đây\n
+                    Professional European-based company\n
+                    Attractive salary\n
+                    Performance bonus of up to 4 months salary\n
+                    Opportunities for travel to Europe\n
+                    Hybrid home/office working model\n
+                    Flexible working time\n
+                    Structured training & development roadmap\n
+                    Good work-life balance\n
+                    Premium healthcare insurance\n
+                    Loyalty programs\n
+                    Well-being activities\n
+                    Annual company trips and team-building events.',
+                    '2026-01-20',
+                    '2026-01-23',
+                    true,
+                    'SENIOR',
+                    5,
+                    50000000,
+                    'Senior Database Administrator (Oracle, AWS, SQL)',
+                    'FULLTIME',
+                    true,
+                    3,
+                    6
+                );
+            ]]></sql>
+
+        <insert tableName="job_skill">
+            <column name="job_id" valueNumeric="2"/>
+            <column name="skill_id" valueNumeric="25"/>
+        </insert>
+        <insert tableName="job_skill">
+            <column name="job_id" valueNumeric="2"/>
+            <column name="skill_id" valueNumeric="211"/>
+        </insert>
+        <insert tableName="job_skill">
+            <column name="job_id" valueNumeric="2"/>
+            <column name="skill_id" valueNumeric="186"/>
+        </insert>
+        <insert tableName="job_skill">
+            <column name="job_id" valueNumeric="2"/>
+            <column name="skill_id" valueNumeric="217"/>
+        </insert>
+        <insert tableName="job_skill">
+            <column name="job_id" valueNumeric="2"/>
+            <column name="skill_id" valueNumeric="52"/>
+        </insert>
+
+        <insert tableName="addresses">
+            <column name="address_id" valueNumeric="15"/>
+            <column name="province" value="Hồ Chí Minh"/>
+            <column name="full_address" value="CII Building, 152 Dien Bien Phu, Thanh My Tay Ward , Quận Bình Thạnh, TP Hồ Chí Minh"/>
+            <column name="job_id" valueNumeric="2"/>
+        </insert>
+    </changeSet>
+
+    <changeSet id="insert-job-3" author="minhdat">
+        <sql><![CDATA[
+            INSERT INTO jobs (
+                job_id,
+                description,
+                start_date,
+                end_date,
+                active,
+                level,
+                quantity,
+                salary,
+                title,
+                working_type,
+                enabled,
+                company_id,
+                career_id
+            )
+            VALUES
+                (
+                    3,
+                    'Mô tả công việc\n
+                    OVERVIEW OF GPBANK\n
+                    On January 17, 2025, GPBank was converted into a single-member limited liability Commercial Bank with 100% capital owned by VPBank. From October 8, 2025, GPBank officially launches a new brand identity, marking a comprehensive transformation with the new name Generation of Prosperity Bank - symbolizing the journey towards an era of prosperity and sustainable development.\n
+                    At the same time, GPBank is the pioneer bank in Vietnam to implement a completely new Core Banking system, built on China’s modern OneConnect Core platform. This strategic move reflects the bank’s ambition to become a technology-driven digital banking leader, not only rebuilding its entire system from scratch but also laying the foundation to replicate and transfer this model to other member units within the VPBank ecosystem.\n
+                    Department / Division: Data Solutions and Analytics Department - Information Technology Division\n
+                    Reports To: Department Manager\n
+                    JOB RESPONSIBILITIES\n
+                    Enterprise Data Governance Framework: Develop and implement data governance policies, standards, and roles (Data Owner, Data Steward).\n
+                    Data Catalog & Glossary Management: Maintain and update enterprise data catalog and data glossary to ensure consistency and clarity.\n
+                    Data Quality Management: Define and monitor data quality metrics (completeness, accuracy, consistency, timeliness) and drive improvements.\n
+                    Business Data Support: Support business units in validating and managing input data to ensure accuracy and completeness.\n
+                    Cross-Functional Collaboration: Work with IT, BI, and analytics teams to maintain data integrity and consistency across systems.\n
+                    Data Governance Tools Implementation: Deploy and oversee tools for data governance, quality, and metadata management.\n
+                    Data Projects Participation: Contribute to data integration, warehouse, and analytics projects, ensuring metadata and data quality compliance.\n
+                    Yêu cầu công việc\n
+                    JOB REQUIREMENTS\n
+                    I. Educational Qualifications\n
+                    Bachelor’s degree in Information Systems, Information Technology, Computer Science, Data Science, or an equivalent field.\n
+                    II. Relevant Knowledge / Expertise\n
+                    At least 5 - 7 years of experience in data management, data control, or business data analysis.\n
+                    Strong understanding of:\n
+                    + Data management concepts (Data Governance, Master Data, Metadata, Data Quality)\n
+                    + Banking business processes (preferred)\n
+                    + Relational and analytical data models (OLTP/OLAP)\n
+                    Skilled in analysis, documentation, and communication with both technical and business teams.\n
+                    Proficient in Excel and SQL; experience with Power BI, Tableau, Collibra, Talend, etc. is a plus.\n
+                    III. Skills\n
+                    Strong system thinking and logical reasoning.\n
+                    Clear communication and presentation skills with both technical and non-technical audiences.\n
+                    High sense of responsibility, attention to detail, and focus on quality.\n
+                    Ability to work independently or as part of a team.\n
+                    IV. Required Competencies\n
+                    • Experience participating in projects on Data Governance, Data Quality, or Data Catalog.\n
+                    • Experience in information system architecture.\n
+                    Tại sao bạn sẽ yêu thích làm việc tại đây\n
+                    ATTACTIVE BENEFITS & COMPENSATION PACKAGEA\n
+                    I. Career Opportunities & Projects\n
+                    Participate in implementing data and system integration between cloud platforms and Vietnam’s largest Core Banking Transformation Systems.\n
+                    Work in a modern, technology-driven environment leveraging Cloud-native, DevOps, Microservices, and CI/CD practices.\n
+                    Learn directly from international technology experts and participate in strategic digital banking initiatives.\n
+                    Enjoy a clear career development roadmap with opportunities to advance to Leader or Expert roles in the Digital Banking domain.\n
+                    II. Compensation & Benefits\n
+                    Competitive salary package: 40-48M Gross (Senior), 55-65M (Expert) x 14–15 months/year.\n
+                    Performance-based bonuses: business results, individual performance, innovation, responsibility, etc.\n
+                    ESOP program: opportunity to own bank shares.\n
+                    Health insurance & wellness: GPBankCare package (provided by Bao Viet Insurance, include Inpatient and Outpatient Healthcare Insurance) extended to employees and family members.\n
+                    Learning & Development: support for professional training courses and international certification exams.\n
+                    Annual company trip and vacation allowance: up to 6M/year.\n
+                    Holiday & special occasion bonuses (National holidays: Sept 2nd, Apr 30th, Hung Kings’ Festival, birthdays, weddings, etc.): up to 3M/time.\n
+                    WORKING HOURS AND LOCATION\n
+                    I. Working Hours\n
+                    Standard working hours: Monday – Friday (flexible start time: 8:00 / 8:30 / 9:00) and 2 Saturday mornings per month (8:00–12:00).\n
+                    II. Work Locations\n
+                    - Location 01: 89 Lang Ha, Dong Da, Hanoi (VPBank Headquarters)\n
+                    - Location 02: 19 Ba Trieu, Hoan Kiem, Hanoi (GPBank Headquarters)\n
+                    - Location 03: 45 Nguyen Van Huyen/88 Tran Thai Tong, Cau Giay, Ha Noi (New GPBank Technology Headquarters).',
+                    '2026-01-20',
+                    '2026-01-23',
+                    true,
+                    'SENIOR',
+                    5,
+                    70000000,
+                    'Data Governance Expert',
+                    'FULLTIME',
+                    true,
+                    4,
+                    6
+                );
+            ]]></sql>
+
+        <insert tableName="job_skill">
+            <column name="job_id" valueNumeric="3"/>
+            <column name="skill_id" valueNumeric="64"/>
+        </insert>
+        <insert tableName="job_skill">
+            <column name="job_id" valueNumeric="3"/>
+            <column name="skill_id" valueNumeric="65"/>
+        </insert>
+        <insert tableName="job_skill">
+            <column name="job_id" valueNumeric="3"/>
+            <column name="skill_id" valueNumeric="66"/>
+        </insert>
+        <insert tableName="job_skill">
+            <column name="job_id" valueNumeric="3"/>
+            <column name="skill_id" valueNumeric="67"/>
+        </insert>
+        <insert tableName="job_skill">
+            <column name="job_id" valueNumeric="3"/>
+            <column name="skill_id" valueNumeric="68"/>
+        </insert>
+        <insert tableName="job_skill">
+            <column name="job_id" valueNumeric="3"/>
+            <column name="skill_id" valueNumeric="69"/>
+        </insert>
+        <insert tableName="job_skill">
+            <column name="job_id" valueNumeric="3"/>
+            <column name="skill_id" valueNumeric="70"/>
+        </insert>
+        <insert tableName="job_skill">
+            <column name="job_id" valueNumeric="3"/>
+            <column name="skill_id" valueNumeric="71"/>
+        </insert>
+        <insert tableName="job_skill">
+            <column name="job_id" valueNumeric="3"/>
+            <column name="skill_id" valueNumeric="72"/>
+        </insert>
+        <insert tableName="job_skill">
+            <column name="job_id" valueNumeric="3"/>
+            <column name="skill_id" valueNumeric="73"/>
+        </insert>
+        <insert tableName="job_skill">
+            <column name="job_id" valueNumeric="3"/>
+            <column name="skill_id" valueNumeric="74"/>
+        </insert>
+
+        <insert tableName="addresses">
+            <column name="address_id" valueNumeric="16"/>
+            <column name="province" value="Hà Nội"/>
+            <column name="full_address" value="45 Nguyễn Văn Huyên, Quận Cầu Giấy, Hà Nội"/>
+            <column name="job_id" valueNumeric="3"/>
+        </insert>
+    </changeSet>
+
+    <changeSet id="insert-job-4" author="minhdat">
+        <sql><![CDATA[
+            INSERT INTO jobs (
+                job_id,
+                description,
+                start_date,
+                end_date,
+                active,
+                level,
+                quantity,
+                salary,
+                title,
+                working_type,
+                enabled,
+                company_id,
+                career_id
+            )
+            VALUES
+                (
+                    4,
+                    $$3 Lý do để gia nhập công ty
+                    Flexible hybrid working model
+                    Lead innovative projects with global brands
+                    Empower your personal and professional growth
+                    Mô tả công việc
+                    EPAM Vietnam is hiring a Senior Java Developer to join an exciting project with our high-profile client. We seek naturally curious, persistent, logical and clever individuals with a true passion for technology. If you take pride in living by the code of your craft and enjoy developing elegant solutions for complex problems, you are a good fit for our talented Java team.
+
+                    At EPAM, we embrace a dynamic and inclusive culture. Here you will collaborate with multinational teams, contribute to innovative projects that deliver creative and modern solutions, and have a chance to learn and grow continuously. No matter where you are located, you will join a dedicated, creative, and diverse community to help you discover your fullest potential.
+
+                    Understand, and analyze requirements clearly and estimate tasks properly. And then research, design, implement and test software programs by applying best practices of engineering. Finally, write and update technical documentation on Confluence pages
+                    Coordinate with other members to create technical analysis and proposal, review code and mentor other software developers
+                    Implement troubleshooting to identify possible causes of problems, provide suitable solutions and fix issues without breaking existing functionalities
+                    Participate in Agile Scrum activities: daily stand up, demo session, retrospective, estimate and planning, etc
+                    Perform technical interviews for EPAM, not only EPAM Vietnam
+                    Yêu cầu công việc
+                    At least 5 years of experience in software development with a degree in computer science or equivalents
+                    Strong experience with Java, Spring, Spring boot, JUnit, Git, Maven, design patterns, and SOLID design principles
+                    Good at data structures, algorithms and problem-solving
+                    Proficient with Rest API, Spring MVC, Spring Data and relational DB (MSSQL, DB2, MySQL, Postgres) or NoSQL (MongoDB, Cassandra, etc.)
+                    Experience with Spring Security, Microservices, JWT, Swagger, Kafka, TDD/BDD practices and Mockito
+                    Proficient in both spoken and written English (B1 and above levels) with can-do attitudes, willing to learn and apply new technologies quickly
+                    Experience with development processes and CI/CD tools e.g. Atlassian JIRA, Jenkins, SonarQube
+                    Tại sao bạn sẽ yêu thích làm việc tại đây
+                    By choosing EPAM Vietnam, you're getting a job at a Vietnam Best Workplace certified company (2022-23 and 2023-24)
+                    You'll work with the latest and most advanced technologies on exciting global projects with a supportive multicultural team where your voice matters
+                    We prioritize a healthy work-life balance with a flexible hybrid working model and generous annual leave of up to 19 days.
+                    We offer a transparent career path and an individual roadmap to engineer your future and accelerate your journey
+                    Our commitment is to the well-being of our employees and their families by offering premium healthcare insurance for employees and 2 dependents, annual health checkup and 10 days of paid sick leave
+                    At EPAM, you can find vast opportunities for self-development: access to over 25,000 online courses and libraries from industry leaders, English classes, mentoring programs, partial grants of certification, and experience exchange with colleagues around the world. You will learn, contribute, and grow with us.$$,
+                    '2026-01-20',
+                    '2026-01-23',
+                    true,
+                    'SENIOR',
+                    5,
+                    70000000,
+                    'Senior Java Engineer (Spring Boot, Microservices, SQL)',
+                    'ONLINE',
+                    true,
+                    5,
+                    4
+                );
+            ]]></sql>
+
+        <insert tableName="job_skill">
+            <column name="job_id" valueNumeric="4"/>
+            <column name="skill_id" valueNumeric="148"/>
+        </insert>
+        <insert tableName="job_skill">
+            <column name="job_id" valueNumeric="4"/>
+            <column name="skill_id" valueNumeric="178"/>
+        </insert>
+        <insert tableName="job_skill">
+            <column name="job_id" valueNumeric="4"/>
+            <column name="skill_id" valueNumeric="273"/>
+        </insert>
+        <insert tableName="job_skill">
+            <column name="job_id" valueNumeric="4"/>
+            <column name="skill_id" valueNumeric="274"/>
+        </insert>
+        <insert tableName="job_skill">
+            <column name="job_id" valueNumeric="4"/>
+            <column name="skill_id" valueNumeric="201"/>
+        </insert>
+        <insert tableName="job_skill">
+            <column name="job_id" valueNumeric="4"/>
+            <column name="skill_id" valueNumeric="268"/>
+        </insert>
+
+        <insert tableName="addresses">
+            <column name="address_id" valueNumeric="17"/>
+            <column name="province" value="Hồ Chí Minh"/>
+            <column name="full_address" value="Floor 13, MB Sunny Tower, 259 Tran Hung Dao, Co Giang ward, Quận 1, TP Hồ Chí Minh"/>
+            <column name="job_id" valueNumeric="4"/>
+        </insert>
+    </changeSet>
+
+    <changeSet id="insert-job-5" author="minhdat">
+        <sql><![CDATA[
+            INSERT INTO jobs (
+                job_id,
+                description,
+                start_date,
+                end_date,
+                active,
+                level,
+                quantity,
+                salary,
+                title,
+                working_type,
+                enabled,
+                company_id,
+                career_id
+            )
+            VALUES
+                (
+                    5,
+                    '3 Lý do để gia nhập công ty\n
+                    Lương thưởng, phúc lợi tốt\n
+                    Môi trường làm việc thoải mái\n
+                    Đánh giá tăng lương 1 lần/năm\n
+                    Mô tả công việc\n
+                    Làm việc với khách hàng, soạn thảo hợp đồng, đàm phán các điều khoản hợp tác giữa VNPT EPAY và khách hàng về dịch vụ triển khai;\n
+                    Tổng hợp và phân tích các yêu cầu của Khách hàng, chuyển giao các tài liệu phân tích yêu cầu cho Developer;\n
+                    Nghiên cứu và phân tích thị trường, đối thủ cạnh tranh từ đó đưa ra hướng phát triển cho sản phẩm Ví điện tử;\n
+                    Kiểm tra chất lượng, tính năng dịch vụ; xây dựng kịch bản kiểm chứng, đảm bảo testcase đầy đủ và đáp ứng đúng đặc tả nghiệp vụ; \n
+                    Thực hiện kiểm duyệt chất lượng sản phẩm, đảm bảo đáp ứng đúng yêu cầu nghiệp vụ.\n
+                    Yêu cầu công việc\n
+                    Có ít nhất 2 năm kinh nghiệm làm việc ở vị trí tương đương;\n
+                    Biết về hệ thống IT, hệ thống thanh toán điện tử là một lợi thế;\n
+                    Tốt nghiệp ngành CNTT/Lập trình/IT là một lợi thế;\n
+                    Có kỹ năng nghiên cứu thị trường (market research);\n
+                    Có kinh nghiệm sử dụng các công cụ vẽ sơ đồ: Draw.io, có thể sử dụng figma là 1 lợi thế;\n
+                    Thành thạo vẽ các loại biểu đồ: UML, sequence diagram, use case, activity diagram, business flow diagram…\n
+                    Sử dụng thành thạo các phần mềm văn phòng: Excel, Powerpoint, Word;\n
+                    Có khả năng sử dụng Tiếng Anh là một lợi thế;\n
+                    Tư duy logic tốt;\n
+                    Vui vẻ, hòa đồng, lạc quan, cẩn thận và trách nhiệm;\n
+                    Tại sao bạn sẽ yêu thích làm việc tại đây\n
+                    Mức lương từ 18-25 triệu/tháng;\n
+                    Lương tháng 13 và các khoản thưởng Lễ Tết;\n
+                    Đánh giá tăng lương 1 lần/năm;\n
+                    Các khoản thưởng khác (thưởng quý, thưởng năm) sẽ căn cứ vào tình hình kinh doanh thực tế của công ty;\n
+                    Được hưởng chế độ bảo hiểm theo quy định nhà nước;\n
+                    Được mua bảo hiểm PTI và chế độ khám sức khỏe chuyên sâu định kỳ 1 lần/năm;\n
+                    Được tham gia các hoạt động của công ty: Happy Hour, Teambuilding, Company Trip, Year End Party, Sinh nhật Công ty với chất lượng 5 sao;\n
+                    Được tham gia các CLB thể thao của công ty: CLB Đá bóng, Bóng bàn, Bi lắc…',
+                    '2026-01-20',
+                    '2026-01-23',
+                    true,
+                    'MIDDLE',
+                    3,
+                    25000000,
+                    'Product Owner (UML, Figma, Market Research)',
+                    'FULLTIME',
+                    true,
+                    6,
+                    3
+                );
+            ]]></sql>
+
+        <insert tableName="job_skill">
+            <column name="job_id" valueNumeric="5"/>
+            <column name="skill_id" valueNumeric="227"/>
+        </insert>
+        <insert tableName="job_skill">
+            <column name="job_id" valueNumeric="5"/>
+            <column name="skill_id" valueNumeric="103"/>
+        </insert>
+        <insert tableName="job_skill">
+            <column name="job_id" valueNumeric="5"/>
+            <column name="skill_id" valueNumeric="173"/>
+        </insert>
+        <insert tableName="job_skill">
+            <column name="job_id" valueNumeric="5"/>
+            <column name="skill_id" valueNumeric="297"/>
+        </insert>
+
+        <insert tableName="addresses">
+            <column name="address_id" valueNumeric="18"/>
+            <column name="province" value="Hà Nội"/>
+            <column name="full_address" value="Tầng 14, Tòa Handico Phạm Hùng,, Quận Nam Từ Liêm, Hà Nội"/>
+            <column name="job_id" valueNumeric="5"/>
+        </insert>
+    </changeSet>
+
+</databaseChangeLog>

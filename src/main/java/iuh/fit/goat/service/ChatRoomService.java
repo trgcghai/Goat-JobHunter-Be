@@ -7,6 +7,7 @@ import iuh.fit.goat.entity.Message;
 import iuh.fit.goat.entity.User;
 import iuh.fit.goat.exception.InvalidException;
 import org.springframework.data.domain.Pageable;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 
@@ -19,5 +20,9 @@ public interface ChatRoomService {
 
     boolean isUserInChatRoom(Long chatRoomId, Long accountId) throws InvalidException;
 
-    Message createNewSingleChatRoom(User currentUser, MessageToNewChatRoom request) throws InvalidException;
+    ChatRoom createNewSingleChatRoom(User currentUser, MessageToNewChatRoom request) throws InvalidException;
+
+    ChatRoom createNewSingleChatRoomWithFiles(User currentUser, MessageToNewChatRoom request, List<MultipartFile> files) throws InvalidException;
+
+    ChatRoom existsDirectChatRoom(Long currentUserId, Long otherUserId);
 }

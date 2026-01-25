@@ -11,5 +11,5 @@ import java.util.Optional;
 public interface AccountRepository extends JpaRepository<Account, Long>,
         JpaSpecificationExecutor<Account> {
 
-    Optional<Account> findByEmail(String email);
+    Optional<Account> findByEmailAndDeletedAtIsNull(String email);
 }

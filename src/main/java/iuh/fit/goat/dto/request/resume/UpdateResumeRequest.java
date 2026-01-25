@@ -1,4 +1,4 @@
-package iuh.fit.goat.dto.request.message;
+package iuh.fit.goat.dto.request.resume;
 
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
@@ -9,6 +9,9 @@ import lombok.NoArgsConstructor;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class MessageCreateRequest {
-    private String content;
+public class UpdateResumeRequest {
+    @NotNull(message = "Resume ID is required")
+    private Long resumeId;
+    @NotBlank(message = "Title is required")
+    private String title;
 }

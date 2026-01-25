@@ -11,6 +11,7 @@ import iuh.fit.goat.repository.SubscriberRepository;
 import iuh.fit.goat.repository.UserRepository;
 import iuh.fit.goat.service.EmailNotificationService;
 import iuh.fit.goat.service.SubscriberService;
+import iuh.fit.goat.util.SecurityUtil;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -27,17 +28,22 @@ import java.util.stream.Collectors;
 @Service
 @RequiredArgsConstructor
 public class SubscriberServiceImpl implements SubscriberService {
+    private final EmailNotificationService emailNotificationService;
+
     private final SubscriberRepository subscriberRepository;
     private final SkillRepository skillRepository;
     private final JobRepository jobRepository;
     private final UserRepository userRepository;
-    private final EmailNotificationService emailNotificationService;
 
     @Override
     public Subscriber handleCreateSubscriber(SubscriberCreateDto dto) {
+        String currentEmail = SecurityUtil.getCurrentUserEmail();
+        if(currentEmail.isEmpty()) return null;
+
+        User user = this.userRepository.findByEmail(currentEmail);
         Subscriber subscriber = new Subscriber();
-        subscriber.setName(dto.getName());
-        subscriber.setEmail(dto.getEmail());
+        subscriber.setName(user.getFullName());
+        subscriber.setEmail(user.getEmail());
 
         if (dto.getSkillIds() != null && !dto.getSkillIds().isEmpty()) {
             List<Skill> skills = this.skillRepository.findBySkillIdIn(dto.getSkillIds());
@@ -93,12 +99,13 @@ public class SubscriberServiceImpl implements SubscriberService {
 
     @Override
     public Subscriber handleGetSubscribersSkill(String email) {
-        return this.subscriberRepository.findByEmail(email);
+        return this.subscriberRepository.findByEmail(email).orElse(null);
     }
 
     @Override
-    public Subscriber handleGetSubscriberByEmail(String email) {
-        return this.subscriberRepository.findByEmail(email);
+    public Subscriber handleGetSubscriberByEmail() {
+        String email = SecurityUtil.getCurrentUserEmail();
+        return this.subscriberRepository.findByEmail(email).orElse(null);
     }
 
     @Override

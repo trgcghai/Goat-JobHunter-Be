@@ -18,12 +18,11 @@
     <include file="db.changelog/data/2026-01-16/init-reviews-for-companies.xml"/>
     <include file="db.changelog/schema/2026-01-16/drop-sequence-chat-member.xml"/>
     <include file="db.changelog/schema/2026-01-16/drop-chat-message.xml"/>
-
-    <!--  Fix chat room and chat member id  -->
     <include file="db.changelog/schema/2026-1-14/fix-chat-member-id-sequence.xml"/>
     <include file="db.changelog/schema/2026-1-14/fix-chat-room-id-sequence.xml"/>
-
-    <!--  Remove old message table since we change to use dynamo db for message  -->
     <include file="db.changelog/schema/2026-1-14/drop-old-message-tables.xml"/>
+    <include file="db.changelog/data/2026-01-20/init-job.xml"/>
+    <include file="db.changelog/schema/2026-01-20/create-sequence-subscribers.xml"/>
+    <include file="db.changelog/schema/2026-01-24/drop-summary-resumes.xml"/>
 
 </databaseChangeLog>

@@ -13,7 +13,7 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 @AllArgsConstructor
 public class ChatRoomResponse {
-    private Long chatRoomId;
+    private Long roomId;
     private ChatRoomType type;
     private String name;
     private String avatar;

@@ -58,7 +58,9 @@ public class PermissionInterceptorConfiguration implements WebMvcConfigurer {
 
                 "/api/v1/tickets/**",               // báo cáo bài viết hoặc comment - public
 
-                "/api/v1/resumes/**",                // Resume endpoints - public
+                "/api/v1/resumes/**",                // Resume endpoints - khi login thì chỉ thao tác với resume của chính mình
+
+                "/api/v1/companies/**"
 
         };
 
