@@ -11,6 +11,7 @@ import java.io.InputStreamReader;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.List;
+import java.util.Objects;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -18,27 +19,27 @@ import java.util.stream.Collectors;
 @UtilityClass
 public class FileUploadUtil {
     public static final long MAX_FILE_SIZE = 1024 * 1024 * 2L;
-    public static final String FILE_PATTERN = "([^\\s]+(\\.(?i)(jpg|jpeg|png|gif|bmp|pdf|doc|docx))$)";
+    public static final String FILE_PATTERN = "([^\\s]+(\\.(?i)(jpg|jpeg|png|pdf|doc|docx))$)";
     public static final String DATE_FORMAT = "ddMMyyyyHHmmss";
     public static final String FILE_NAME_FORMAT = "%s_%s";
     public static final String AVATAR = "https://api.dicebear.com/7.x/avataaars/png?seed=";
     public static final String AVATAR_RECRUITER
             = "https://t2.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url=http://";
 
-    public static boolean isAllowedExtension(String fileName, String pattern){
-        Matcher matcher = Pattern.compile(pattern, Pattern.CASE_INSENSITIVE).matcher(fileName);
+    public static boolean isAllowedExtension(String fileName){
+        Matcher matcher = Pattern.compile(FILE_PATTERN, Pattern.CASE_INSENSITIVE).matcher(fileName);
         return matcher.matches();
     }
 
-    public static void assertAllowed(MultipartFile file, String pattern) throws InvalidException {
+    public static void assertAllowed(MultipartFile file) throws InvalidException {
         long fileSize = file.getSize();
         if(fileSize > MAX_FILE_SIZE){
             throw new InvalidException("Max file size is 2MB");
         }
 
-        final String fileName = file.getOriginalFilename().replaceAll("\\s+", "_");
-        if (!isAllowedExtension(fileName, pattern)) {
-            throw new InvalidException("Only jpg, jpeg, png, gif, bmp, pdf, doc, docx files are allowed");
+        final String fileName = Objects.requireNonNull(file.getOriginalFilename()).replaceAll("\\s+", "_");
+        if (!isAllowedExtension(fileName)) {
+            throw new InvalidException("Only jpg, jpeg, png, pdf, doc, docx files are allowed");
         }
     }
 

@@ -23,5 +23,6 @@
     <include file="db.changelog/schema/2026-1-14/drop-old-message-tables.xml"/>
     <include file="db.changelog/data/2026-01-20/init-job.xml"/>
     <include file="db.changelog/schema/2026-01-20/create-sequence-subscribers.xml"/>
+    <include file="db.changelog/schema/2026-01-24/drop-summary-resumes.xml"/>
 
 </databaseChangeLog>

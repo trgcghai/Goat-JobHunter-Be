@@ -11,6 +11,7 @@ import iuh.fit.goat.dto.response.user.UserResponse;
 import iuh.fit.goat.entity.*;
 import iuh.fit.goat.exception.InvalidException;
 import iuh.fit.goat.service.JobService;
+import iuh.fit.goat.service.ResumeService;
 import iuh.fit.goat.service.UserService;
 import iuh.fit.goat.util.SecurityUtil;
 import jakarta.validation.Valid;
@@ -22,7 +23,6 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseCookie;
 import org.springframework.http.ResponseEntity;
-import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -34,6 +34,7 @@ import java.util.Map;
 public class UserController {
     private final UserService userService;
     private final JobService jobService;
+    private final ResumeService resumeService;
 
     @Value("${minhdat.jwt.access-token-validity-in-seconds}")
     private long jwtAccessToken;
@@ -322,6 +323,17 @@ public class UserController {
             @Filter Specification<Interview> spec, Pageable pageable
     ) {
         ResultPaginationResponse result = this.userService.handleGetCurrentUserInterviews(spec, pageable);
+        return ResponseEntity.status(HttpStatus.OK).body(result);
+    }
+    /*     ========================= ========================= =========================  */
+
+
+    /*     ========================= Resume Related Endpoints =========================  */
+    @GetMapping("/me/resumes")
+    public ResponseEntity<ResultPaginationResponse> getCurrentUserResumes(
+            @Filter Specification<Resume> spec, Pageable pageable
+    ) {
+        ResultPaginationResponse result = this.resumeService.handleGetAllResumes(spec, pageable);
         return ResponseEntity.status(HttpStatus.OK).body(result);
     }
     /*     ========================= ========================= =========================  */

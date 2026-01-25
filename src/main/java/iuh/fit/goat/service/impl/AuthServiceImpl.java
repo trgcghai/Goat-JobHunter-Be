@@ -15,6 +15,7 @@ import iuh.fit.goat.entity.*;
 import iuh.fit.goat.exception.InvalidException;
 import iuh.fit.goat.repository.AccountRepository;
 import iuh.fit.goat.service.*;
+import iuh.fit.goat.util.FileUploadUtil;
 import iuh.fit.goat.util.SecurityUtil;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
@@ -353,8 +354,11 @@ public class AuthServiceImpl implements AuthService {
             throw new InvalidException("Company name exists: " + request.getName());
         }
 
-        String logoUrl = this.uploadImage(request.getLogo(), "company-logos");
-        String coverPhotoUrl = this.uploadImage(request.getCoverPhoto(), "company-cover-photos");
+        FileUploadUtil.assertAllowed(request.getLogo());
+        FileUploadUtil.assertAllowed(request.getCoverPhoto());
+
+        String logoUrl = SecurityUtil.uploadImage(request.getLogo(), "company-logos", storageService);
+        String coverPhotoUrl = SecurityUtil.uploadImage(request.getCoverPhoto(), "company-cover-photos", storageService);
         String hashPassword = this.passwordEncoder.encode(request.getPassword());
 
         List<Address> addressList;
@@ -436,15 +440,6 @@ public class AuthServiceImpl implements AuthService {
                 TimeUnit.SECONDS
         );
         this.emailNotificationService.handleSendVerificationEmail(key, verificationCode);
-    }
-
-    private String uploadImage(MultipartFile file, String folder) throws InvalidException {
-        StorageResponse response = this.storageService.handleUploadFile(file, folder);
-        if (response == null || response.getUrl() == null) {
-            throw new InvalidException("Failed to upload image");
-        }
-
-        return response.getUrl();
     }
 
     private LoginResponse createLoginResponse(Account account) {

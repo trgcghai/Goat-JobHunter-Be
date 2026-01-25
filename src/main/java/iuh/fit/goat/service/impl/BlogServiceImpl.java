@@ -70,7 +70,7 @@ public class BlogServiceImpl implements BlogService {
             for (MultipartFile file : request.getFiles()) {
                 if (file.isEmpty()) continue;
 
-                FileUploadUtil.assertAllowed(file, FileUploadUtil.FILE_PATTERN);
+                FileUploadUtil.assertAllowed(file);
                 StorageResponse response = this.storageService.handleUploadFile(file, "blogs");
                 imageUrls.add(response.getUrl());
             }
