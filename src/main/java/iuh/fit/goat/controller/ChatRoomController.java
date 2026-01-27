@@ -3,7 +3,6 @@ package iuh.fit.goat.controller;
 import iuh.fit.goat.dto.request.message.MessageCreateRequest;
 import iuh.fit.goat.dto.request.message.MessageToNewChatRoom;
 import iuh.fit.goat.dto.response.ResultPaginationResponse;
-import iuh.fit.goat.dto.response.message.MessageResponse;
 import iuh.fit.goat.entity.ChatRoom;
 import iuh.fit.goat.entity.Message;
 import iuh.fit.goat.entity.User;
@@ -22,10 +21,8 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
-import java.util.stream.Collectors;
 
 @Slf4j
 @RestController
