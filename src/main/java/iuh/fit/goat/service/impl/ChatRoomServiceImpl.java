@@ -52,6 +52,19 @@ public class ChatRoomServiceImpl implements ChatRoomService {
 
         List<ChatRoomResponse> chatRooms = chatRoomPage.getContent().stream()
                 .map(this::mapToChatRoomResponse)
+                .sorted((cr1, cr2) -> {
+                    // Sort theo lastMessageTime DESC (mới nhất lên đầu)
+                    LocalDateTime time1 = cr1.getLastMessageTime();
+                    LocalDateTime time2 = cr2.getLastMessageTime();
+
+                    // Null safety: Phòng ở cuối
+                    if (time1 == null && time2 == null) return 0;
+                    if (time1 == null) return 1;  // cr1 xuống dưới
+                    if (time2 == null) return -1; // cr2 xuống dưới
+
+                    // So sánh DESC: mới nhất trước
+                    return time2.compareTo(time1);
+                })
                 .collect(Collectors.toList());
 
         ResultPaginationResponse.Meta meta = new ResultPaginationResponse.Meta();
@@ -160,7 +173,7 @@ public class ChatRoomServiceImpl implements ChatRoomService {
 
         return chatRoom;
     }
-    
+
     @Override
     @Transactional
     public ChatRoom createNewSingleChatRoomWithFiles(
@@ -168,17 +181,17 @@ public class ChatRoomServiceImpl implements ChatRoomService {
             MessageToNewChatRoom request,
             List<MultipartFile> files
     ) throws InvalidException {
-    
+
         // Validate receiver exists
         User uReceiver = this.userRepository.findById(request.getAccountId()).orElse(null);
 
         if (uReceiver == null) {
             throw new InvalidException("Receiver not found");
         }
-    
+
         // Check if direct chat room already exists
         Optional<ChatRoom> existingRoom = findExistingDirectChatRoom(currentUser.getAccountId(), uReceiver.getAccountId());
-    
+
         if (existingRoom.isPresent()) {
             // Send messages in existing room
             this.messageService.sendMessagesWithFiles(
@@ -187,39 +200,39 @@ public class ChatRoomServiceImpl implements ChatRoomService {
                     files,
                     currentUser
             );
-    
+
             return existingRoom.get();
         }
-    
+
         // Create new chat room
         ChatRoom chatRoom = new ChatRoom();
         chatRoom.setType(ChatRoomType.DIRECT);
         chatRoom.setName("Không có tên");
         chatRoom = this.chatRoomRepository.saveAndFlush(chatRoom);
-    
+
         // Create chat members
         ChatMember sender = new ChatMember();
         sender.setUser(currentUser);
         sender.setRole(ChatRole.OWNER);
-    
+
         ChatMember receiver = new ChatMember();
         receiver.setUser(uReceiver);
         receiver.setRole(ChatRole.OWNER);
-    
+
         this.chatMemberRepository.saveAllAndFlush(
-            Arrays.asList(sender, receiver));
-    
+                Arrays.asList(sender, receiver));
+
         // Update chat room with members
         chatRoom.setMembers(new ArrayList<>(
-            Arrays.asList(sender, receiver)));
+                Arrays.asList(sender, receiver)));
         chatRoom = this.chatRoomRepository.saveAndFlush(chatRoom);
-    
+
         // Update members with room
         sender.setRoom(chatRoom);
         receiver.setRoom(chatRoom);
         this.chatMemberRepository.saveAllAndFlush(
-            Arrays.asList(sender, receiver));
-    
+                Arrays.asList(sender, receiver));
+
         // Send messages with files
         this.messageService.sendMessagesWithFiles(
                 chatRoom.getRoomId(),
@@ -227,10 +240,10 @@ public class ChatRoomServiceImpl implements ChatRoomService {
                 files,
                 currentUser
         );
-    
+
         return chatRoom;
     }
-    
+
     @Override
     @Transactional(readOnly = true)
     public ChatRoom existsDirectChatRoom(Long currentUserId, Long otherUserId) {
@@ -283,64 +296,11 @@ public class ChatRoomServiceImpl implements ChatRoomService {
         String currentUserEmail = SecurityUtil.getCurrentUserEmail();
 
         try {
-            // Get last message
-            Message lastMessage = null;
-            try {
-                lastMessage = messageService.getLastMessageByChatRoom(chatRoom.getRoomId());
-            } catch (InvalidException e) {
-                e.printStackTrace();
-            }
-
-            // Count active members
-            int memberCount = (int) chatRoom.getMembers().stream()
-                    .filter(m -> m.getDeletedAt() == null)
-                    .count();
-
-            // Generate name dynamically if GROUP type
-            String name = chatRoom.getName();
-            if (chatRoom.getType() == ChatRoomType.GROUP && (name == null || name.isBlank())) {
-                name = generateGroupName(chatRoom.getMembers());
-            }
-
-            // For DIRECT type, set name and avatar as the other member's display name
-            String avatar = null;
-            if (chatRoom.getType().getValue().equalsIgnoreCase(ChatRoomType.DIRECT.getValue())) {
-                name = chatRoom.getMembers().stream()
-                        .filter(m -> m.getDeletedAt() == null && m.getUser() != null && !m.getUser().getEmail().equalsIgnoreCase(currentUserEmail))
-                        .map(ChatMember::getUser)
-                        .map(this::getDisplayName)
-                        .filter(Objects::nonNull)
-                        .findFirst()
-                        .orElse("Không có tên");
-
-                avatar = chatRoom.getMembers().stream()
-                        .filter(m -> m.getDeletedAt() == null && m.getUser() != null && !m.getUser().getEmail().equalsIgnoreCase(currentUserEmail))
-                        .map(ChatMember::getUser)
-                        .map(User::getAvatar)
-                        .filter(Objects::nonNull)
-                        .findFirst()
-                        .orElse(null);
-            }
-
-            // Convert Instant to LocalDateTime if lastMessage exists
-            LocalDateTime lastMessageTime = null;
-            String lastMessageContent = MESSAGE_FALLBACK;
-
-            if (lastMessage != null) {
-
-                if (lastMessage.getIsHidden()) {
-                    lastMessageContent = MESSAGE_FALLBACK_HDDEN;
-                } else {
-                    lastMessageContent = lastMessage.getContent();
-                }
-
-                if (lastMessage.getCreatedAt() != null) {
-                    lastMessageTime = LocalDateTime.ofInstant(
-                            lastMessage.getCreatedAt(),
-                            ZoneId.systemDefault()
-                    );
-                }
-            }
+            Message lastMessage = getLastMessageSafely(chatRoom.getRoomId());
+            int memberCount = countActiveMembers(chatRoom);
+            String name = resolveChatRoomName(chatRoom, currentUserEmail);
+            String avatar = resolveChatRoomAvatar(chatRoom, currentUserEmail);
+            LastMessageInfo lastMessageInfo = buildLastMessageInfo(lastMessage, currentUserEmail);
 
             return ChatRoomResponse.builder()
                     .roomId(chatRoom.getRoomId())
@@ -348,24 +308,142 @@ public class ChatRoomServiceImpl implements ChatRoomService {
                     .name(name)
                     .avatar(avatar)
                     .memberCount(memberCount)
-                    .lastMessagePreview(lastMessageContent)
-                    .lastMessageTime(lastMessageTime)
+                    .lastMessagePreview(lastMessageInfo.content())
+                    .lastMessageTime(lastMessageInfo.time())
+                    .currentUserSentLastMessage(lastMessageInfo.isCurrentUserSender())
                     .build();
 
         } catch (Exception e) {
-            e.printStackTrace();
-            log.error("Error mapping ChatRoom to ChatRoomResponse: {}", e.getMessage());
-
-            // Fallback response in case of error
-            return ChatRoomResponse.builder()
-                    .roomId(chatRoom.getRoomId())
-                    .type(chatRoom.getType())
-                    .name("Không có tên")
-                    .avatar(chatRoom.getAvatar())
-                    .memberCount(0)
-                    .lastMessagePreview(MESSAGE_FALLBACK)
-                    .lastMessageTime(null)
-                    .build();
+            log.error("Error mapping ChatRoom to ChatRoomResponse: {}", e.getMessage(), e);
+            return buildFallbackResponse(chatRoom);
         }
+    }
+
+    // =============== HELPER METHODS FOR mapToChatRoomResponse ====================
+
+    private record LastMessageInfo(String content, LocalDateTime time, boolean isCurrentUserSender) {}
+
+    private Message getLastMessageSafely(Long chatRoomId) {
+        try {
+            return messageService.getLastMessageByChatRoom(chatRoomId);
+        } catch (InvalidException e) {
+            log.warn("Failed to get last message for chatRoom {}: {}", chatRoomId, e.getMessage());
+            return null;
+        }
+    }
+
+    private int countActiveMembers(ChatRoom chatRoom) {
+        return (int) chatRoom.getMembers().stream()
+                .filter(m -> m.getDeletedAt() == null)
+                .count();
+    }
+
+    private String resolveChatRoomName(ChatRoom chatRoom, String currentUserEmail) {
+        if (chatRoom.getType() == ChatRoomType.DIRECT) {
+            return getOtherMemberDisplayName(chatRoom, currentUserEmail);
+        }
+
+        if (chatRoom.getType() == ChatRoomType.GROUP) {
+            String name = chatRoom.getName();
+            if (name == null || name.isBlank()) {
+                return generateGroupName(chatRoom.getMembers());
+            }
+            return name;
+        }
+
+        return chatRoom.getName();
+    }
+
+    private String resolveChatRoomAvatar(ChatRoom chatRoom, String currentUserEmail) {
+        if (chatRoom.getType() != ChatRoomType.DIRECT) {
+            return chatRoom.getAvatar();
+        }
+
+        return chatRoom.getMembers().stream()
+                .filter(m -> isOtherActiveMember(m, currentUserEmail))
+                .map(ChatMember::getUser)
+                .map(User::getAvatar)
+                .filter(Objects::nonNull)
+                .findFirst()
+                .orElse(null);
+    }
+
+    private String getOtherMemberDisplayName(ChatRoom chatRoom, String currentUserEmail) {
+        return chatRoom.getMembers().stream()
+                .filter(m -> isOtherActiveMember(m, currentUserEmail))
+                .map(ChatMember::getUser)
+                .map(this::getDisplayName)
+                .filter(Objects::nonNull)
+                .findFirst()
+                .orElse("Không có tên");
+    }
+
+    private boolean isOtherActiveMember(ChatMember member, String currentUserEmail) {
+        return member.getDeletedAt() == null
+                && member.getUser() != null
+                && !member.getUser().getEmail().equalsIgnoreCase(currentUserEmail);
+    }
+
+    private LastMessageInfo buildLastMessageInfo(Message lastMessage, String currentUserEmail) {
+        if (lastMessage == null) {
+            return new LastMessageInfo(MESSAGE_FALLBACK, null, false);
+        }
+
+        String content = resolveMessageContent(lastMessage);
+        LocalDateTime time = convertToLocalDateTime(lastMessage.getCreatedAt());
+        boolean isCurrentUserSender = isMessageFromCurrentUser(lastMessage, currentUserEmail);
+
+        return new LastMessageInfo(content, time, isCurrentUserSender);
+    }
+
+    private String resolveMessageContent(Message message) {
+        if (message.getIsHidden()) {
+            return MESSAGE_FALLBACK_HDDEN;
+        }
+        return formatMessageContent(message);
+    }
+
+    private boolean isMessageFromCurrentUser(Message message, String currentUserEmail) {
+        if (message.getSenderId() == null) {
+            return false;
+        }
+
+        return userRepository.findById(Long.parseLong(message.getSenderId()))
+                .map(sender -> sender.getEmail().equalsIgnoreCase(currentUserEmail))
+                .orElse(false);
+    }
+
+    private LocalDateTime convertToLocalDateTime(java.time.Instant instant) {
+        if (instant == null) {
+            return null;
+        }
+        return LocalDateTime.ofInstant(instant, ZoneId.systemDefault());
+    }
+
+    private ChatRoomResponse buildFallbackResponse(ChatRoom chatRoom) {
+        return ChatRoomResponse.builder()
+                .roomId(chatRoom.getRoomId())
+                .type(chatRoom.getType())
+                .name("Không có tên")
+                .avatar(chatRoom.getAvatar())
+                .memberCount(0)
+                .lastMessagePreview(MESSAGE_FALLBACK)
+                .currentUserSentLastMessage(false)
+                .lastMessageTime(null)
+                .build();
+    }
+
+    /**
+     * Format message content based on type
+     */
+    private String formatMessageContent(Message message) {
+        return switch (message.getMessageType()) {
+            case TEXT -> message.getContent() != null ? message.getContent() : MESSAGE_FALLBACK;
+            case IMAGE -> "[Hình ảnh]";
+            case VIDEO -> "[Video]";
+            case FILE -> "[Tệp tin]";
+            case AUDIO -> "[Âm thanh]";
+            default -> "[Tin nhắn không xác định]";
+        };
     }
 }
