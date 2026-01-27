@@ -91,6 +91,36 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
+    public ResultPaginationResponse handleSearchUsers(String searchTerm, Pageable pageable) throws InvalidException {
+
+        if (searchTerm == null || searchTerm.trim().isEmpty()) {
+            return new ResultPaginationResponse(
+                    new ResultPaginationResponse.Meta(0, 0, 0, 0L),
+                    new ArrayList<>()
+            );
+        }
+
+        // Get current logged-in user email
+        String currentUserEmail = SecurityUtil.getCurrentUserLogin().orElseThrow(() -> new InvalidException("User not authenticated"));
+
+        // Fetch filtered users using repository method
+        Page<User> pageUser = this.userRepository.searchUsers(searchTerm, currentUserEmail, pageable);
+
+        // Convert to response
+        ResultPaginationResponse.Meta meta = new ResultPaginationResponse.Meta();
+        meta.setPage(pageable.getPageNumber() + 1);
+        meta.setPageSize(pageable.getPageSize());
+        meta.setPages(pageUser.getTotalPages());
+        meta.setTotal(pageUser.getTotalElements());
+
+        List<UserResponse> userResponses = pageUser.getContent().stream()
+                .map(this::convertToUserResponse)
+                .toList();
+
+        return new ResultPaginationResponse(meta, userResponses);
+    }
+
+    @Override
     public boolean handleCheckCurrentPassword(String currentPassword) {
         String currentEmail = SecurityUtil.getCurrentUserLogin().isPresent() ?
                 SecurityUtil.getCurrentUserLogin().get() : "";
@@ -636,21 +666,21 @@ public class UserServiceImpl implements UserService {
         switch (role.getName()) {
             case "APPLICANT" -> userInterviewSpec = (root, query, cb) ->
                     cb.and(
-                        cb.equal(root.get("application").get("applicant").get("accountId"), currentAccount.getAccountId()),
-                        cb.isNull(root.get("deletedAt"))
+                            cb.equal(root.get("application").get("applicant").get("accountId"), currentAccount.getAccountId()),
+                            cb.isNull(root.get("deletedAt"))
                     );
             case "RECRUITER" -> userInterviewSpec = (root, query, cb) ->
                     cb.and(
-                        cb.equal(root.get("interviewer").get("accountId"), currentAccount.getAccountId()),
-                        cb.isNull(root.get("deletedAt"))
+                            cb.equal(root.get("interviewer").get("accountId"), currentAccount.getAccountId()),
+                            cb.isNull(root.get("deletedAt"))
                     );
             case "COMPANY" -> userInterviewSpec = (root, query, cb) -> {
-                    Join<Object, Object> recruiterJoin = root.join("interviewer");
-                    Join<Object, Object> companyJoin = recruiterJoin.join("company");
-                    return cb.and(
+                Join<Object, Object> recruiterJoin = root.join("interviewer");
+                Join<Object, Object> companyJoin = recruiterJoin.join("company");
+                return cb.and(
                         cb.equal(companyJoin.get("accountId"), currentAccount.getAccountId()),
                         cb.isNull(root.get("deletedAt"))
-                    );
+                );
             };
             default -> userInterviewSpec = (root, query, cb) ->
                     cb.isNull(root.get("deletedAt"));

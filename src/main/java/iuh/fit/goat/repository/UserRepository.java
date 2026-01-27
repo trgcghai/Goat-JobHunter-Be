@@ -1,6 +1,8 @@
 package iuh.fit.goat.repository;
 
 import iuh.fit.goat.entity.User;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.data.jpa.repository.Modifying;
@@ -52,5 +54,24 @@ public interface UserRepository extends JpaRepository<User, Long>, JpaSpecificat
     int unfollowCompanies(
             @Param("userId") Long userId,
             @Param("companyIds") List<Long> companyIds
+    );
+
+    @Query("""
+        SELECT u FROM User u
+        WHERE u.deletedAt IS NULL
+        AND u.role.name <> 'SUPER_ADMIN'
+        AND u.email <> :currentUserEmail
+        AND (
+            :searchTerm IS NULL
+            OR :searchTerm = ''
+            OR u.email = :searchTerm
+            OR LOWER(u.username) LIKE LOWER(CONCAT('%', :searchTerm, '%'))
+            OR LOWER(u.fullName) LIKE LOWER(CONCAT('%', :searchTerm, '%'))
+        )
+        """)
+    Page<User> searchUsers(
+        @Param("searchTerm") String searchTerm,
+        @Param("currentUserEmail") String currentUserEmail,
+        Pageable pageable
     );
 }
