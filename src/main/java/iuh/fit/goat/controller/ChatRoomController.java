@@ -63,6 +63,38 @@ public class ChatRoomController {
         return ResponseEntity.ok(messages);
     }
 
+    @GetMapping("/{id}/media")
+    public ResponseEntity<List<Message>> getMediaMessagesInChatRoom(
+            @PathVariable Long id,
+            Pageable pageable
+    ) throws InvalidException {
+        String email = SecurityUtil.getCurrentUserLogin().orElseThrow(() -> new InvalidException("User not authenticated"));
+
+        User currentUser = userRepository.findByEmail(email);
+        if (currentUser == null) {
+            throw new InvalidException("User not found");
+        }
+
+        List<Message> mediaMessages = chatRoomService.getMediaMessagesInChatRoom(currentUser, id, pageable);
+        return ResponseEntity.ok(mediaMessages);
+    }
+
+    @GetMapping("/{id}/file")
+    public ResponseEntity<List<Message>> getFileMessagesInChatRoom(
+            @PathVariable Long id,
+            Pageable pageable
+    ) throws InvalidException {
+        String email = SecurityUtil.getCurrentUserLogin().orElseThrow(() -> new InvalidException("User not authenticated"));
+
+        User currentUser = userRepository.findByEmail(email);
+        if (currentUser == null) {
+            throw new InvalidException("User not found");
+        }
+
+        List<Message> fileMessages = chatRoomService.getFileMessagesInChatRoom(currentUser, id, pageable);
+        return ResponseEntity.ok(fileMessages);
+    }
+
     /**
      * Tạo chat room mới và gửi messages
      * Hỗ trợ:
@@ -71,11 +103,11 @@ public class ChatRoomController {
      * - Files + text (multipart)
      */
     @PostMapping(
-        value = "/messages",
-        consumes = {
-            MediaType.MULTIPART_FORM_DATA_VALUE,
-            MediaType.APPLICATION_JSON_VALUE
-        }
+            value = "/messages",
+            consumes = {
+                    MediaType.MULTIPART_FORM_DATA_VALUE,
+                    MediaType.APPLICATION_JSON_VALUE
+            }
     )
     public ResponseEntity<ChatRoom> sendMessageToNewChatRoom(
             @RequestPart(required = false) @Valid MessageToNewChatRoom request,
@@ -133,11 +165,11 @@ public class ChatRoomController {
      * - Files + text (multipart)
      */
     @PostMapping(
-        value = "/{id}/messages",
-        consumes = {
-            MediaType.MULTIPART_FORM_DATA_VALUE,
-            MediaType.APPLICATION_JSON_VALUE
-        }
+            value = "/{id}/messages",
+            consumes = {
+                    MediaType.MULTIPART_FORM_DATA_VALUE,
+                    MediaType.APPLICATION_JSON_VALUE
+            }
     )
     public ResponseEntity<List<Message>> sendMessageToExistChatRoom(
             @PathVariable Long id,

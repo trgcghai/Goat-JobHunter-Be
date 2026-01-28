@@ -249,6 +249,29 @@ public class ChatRoomServiceImpl implements ChatRoomService {
     public ChatRoom existsDirectChatRoom(Long currentUserId, Long otherUserId) {
         return findExistingDirectChatRoom(currentUserId, otherUserId).orElse(null);
     }
+
+    @Override
+    public List<Message> getMediaMessagesInChatRoom(User user, Long chatRoomId, Pageable pageable) throws InvalidException {
+        ChatRoom chatRoom = this.chatRoomRepository.findById(chatRoomId).orElseThrow(() -> new InvalidException("Chat room not found"));
+
+        if (!this.isUserInChatRoom(chatRoom, user.getAccountId())) {
+            throw new InvalidException("User is not in chat room");
+        }
+
+        return this.messageService.getMediaMessagesByChatRoom(chatRoomId, pageable);
+    }
+
+    @Override
+    public List<Message> getFileMessagesInChatRoom(User user, Long chatRoomId, Pageable pageable) throws InvalidException {
+        ChatRoom chatRoom = this.chatRoomRepository.findById(chatRoomId).orElseThrow(() -> new InvalidException("Chat room not found"));
+
+        if (!this.isUserInChatRoom(chatRoom, user.getAccountId())) {
+            throw new InvalidException("User is not in chat room");
+        }
+
+        return this.messageService.getFileMessagesByChatRoom(chatRoomId, pageable);
+    }
+
     // =============== HELPER FUNCTIONS ====================
 
     /**
