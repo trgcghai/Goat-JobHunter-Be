@@ -25,4 +25,8 @@ public interface ChatRoomService {
     ChatRoom createNewSingleChatRoomWithFiles(User currentUser, MessageToNewChatRoom request, List<MultipartFile> files) throws InvalidException;
 
     ChatRoom existsDirectChatRoom(Long currentUserId, Long otherUserId);
+
+    List<Message> getMediaMessagesInChatRoom(User user, Long chatRoomId, Pageable pageable) throws InvalidException;
+
+    List<Message> getFileMessagesInChatRoom(User user, Long chatRoomId, Pageable pageable) throws InvalidException;
 }
