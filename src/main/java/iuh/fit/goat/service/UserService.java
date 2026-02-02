@@ -21,6 +21,8 @@ public interface UserService {
 
     ResultPaginationResponse handleGetAllUsers(Specification<User> spec, Pageable pageable);
 
+    ResultPaginationResponse handleSearchUsers(String searchTerm, Pageable pageable) throws InvalidException;
+
     boolean handleCheckCurrentPassword(String currentPassword);
 
     Map<String, Object> handleUpdatePassword(String newPassword, String refreshToken);

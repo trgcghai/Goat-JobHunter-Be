@@ -215,6 +215,67 @@ public class MessageServiceImpl implements MessageService {
         messagingTemplate.convertAndSend("/topic/chatrooms/" + chatRoomId, message);
     }
 
+    @Override
+    public List<Message> getMediaMessagesByChatRoom(Long chatRoomId, Pageable pageable) throws InvalidException {
+        if (chatRoomId == null) {
+            throw new InvalidException("Chat room ID cannot be null");
+        }
+
+        chatRoomRepository.findById(chatRoomId).orElseThrow(() -> new InvalidException("Chat Room not found"));
+
+        int requestedSize = pageable.getPageSize();
+
+        log.info("Fetching up to {} media messages for chatRoom: {}", requestedSize, chatRoomId);
+
+        List<Message> allMessages = messageRepository.findMessagesAcrossBuckets(
+                chatRoomId.toString(),
+                requestedSize * 3, // Fetch more to filter
+                false
+        );
+
+        List<Message> mediaMessages = allMessages.stream()
+                .filter(msg -> isMediaType(msg.getMessageType()))
+                .limit(requestedSize)
+                .toList();
+
+        log.info("Retrieved {} media messages for chatRoom: {}", mediaMessages.size(), chatRoomId);
+
+        return mediaMessages;
+    }
+
+    @Override
+    public List<Message> getFileMessagesByChatRoom(Long chatRoomId, Pageable pageable) throws InvalidException {
+        if (chatRoomId == null) {
+            throw new InvalidException("Chat room ID cannot be null");
+        }
+
+        chatRoomRepository.findById(chatRoomId)
+                .orElseThrow(() -> new InvalidException("Chat Room not found"));
+
+        int requestedSize = pageable.getPageSize();
+
+        log.info("Fetching up to {} file messages for chatRoom: {}", requestedSize, chatRoomId);
+
+        List<Message> allMessages = messageRepository.findMessagesAcrossBuckets(
+                chatRoomId.toString(),
+                requestedSize * 3, // Fetch more to filter
+                false
+        );
+
+        List<Message> fileMessages = allMessages.stream()
+                .filter(msg -> msg.getMessageType() == MessageType.FILE)
+                .limit(requestedSize)
+                .toList();
+
+        log.info("Retrieved {} file messages for chatRoom: {}", fileMessages.size(), chatRoomId);
+
+        return fileMessages;
+    }
+
+    private boolean isMediaType(MessageType type) {
+        return type == MessageType.IMAGE || type == MessageType.VIDEO || type == MessageType.AUDIO;
+    }
+
     // ========== SMART BUCKET LOGIC ==========
 
     /**
@@ -224,7 +285,7 @@ public class MessageServiceImpl implements MessageService {
      * 2. If today's bucket is full → create overflow bucket with timestamp
      * 3. Check yesterday's bucket → if < 100 messages AND no messages today, reuse it
      * 4. Default → create today's bucket
-     *
+     * <p>
      * Bucket naming:
      * - Normal: "20250521"
      * - Overflow: "20250521_1716300000123"
@@ -292,10 +353,14 @@ public class MessageServiceImpl implements MessageService {
 
     private String getFolderByMessageType(MessageType type) {
         switch (type) {
-            case IMAGE: return "images";
-            case VIDEO: return "videos";
-            case AUDIO: return "audios";
-            default: return "files";
+            case IMAGE:
+                return "images";
+            case VIDEO:
+                return "videos";
+            case AUDIO:
+                return "audios";
+            default:
+                return "files";
         }
     }
 

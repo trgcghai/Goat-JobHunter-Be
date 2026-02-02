@@ -20,4 +20,8 @@ public interface  MessageService {
     List<Message> sendMessagesWithFiles(Long chatRoomId, MessageCreateRequest request, List<MultipartFile> files, User currentUser) throws InvalidException;
 
     void sendMessageToUsers(Long chatRoomId, Message message);
+
+    List<Message> getMediaMessagesByChatRoom(Long chatRoomId, Pageable pageable) throws InvalidException;
+
+    List<Message> getFileMessagesByChatRoom(Long chatRoomId, Pageable pageable) throws InvalidException;
 }

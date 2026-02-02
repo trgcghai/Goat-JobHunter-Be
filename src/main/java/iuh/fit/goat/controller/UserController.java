@@ -49,14 +49,13 @@ public class UserController {
         return ResponseEntity.status(HttpStatus.OK).body(result);
     }
 
-    @GetMapping("/{id}")
-    public ResponseEntity<UserResponse> getUserById(@PathVariable("id") long id) {
-        User user = this.userService.handleGetUserById(id);
-        if (user == null) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
-        }
-        UserResponse userResponse = this.userService.convertToUserResponse(user);
-        return ResponseEntity.status(HttpStatus.OK).body(userResponse);
+    @GetMapping("/search")
+    public ResponseEntity<ResultPaginationResponse> searchUsers(
+            @RequestParam(required = false) String keyword,
+            Pageable pageable
+    ) throws InvalidException {
+        ResultPaginationResponse result = this.userService.handleSearchUsers(keyword, pageable);
+        return ResponseEntity.status(HttpStatus.OK).body(result);
     }
 
     @GetMapping("/me")

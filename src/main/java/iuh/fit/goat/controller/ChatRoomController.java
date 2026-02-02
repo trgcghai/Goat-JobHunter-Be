@@ -3,7 +3,6 @@ package iuh.fit.goat.controller;
 import iuh.fit.goat.dto.request.message.MessageCreateRequest;
 import iuh.fit.goat.dto.request.message.MessageToNewChatRoom;
 import iuh.fit.goat.dto.response.ResultPaginationResponse;
-import iuh.fit.goat.dto.response.message.MessageResponse;
 import iuh.fit.goat.entity.ChatRoom;
 import iuh.fit.goat.entity.Message;
 import iuh.fit.goat.entity.User;
@@ -22,10 +21,8 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
-import java.util.stream.Collectors;
 
 @Slf4j
 @RestController
@@ -66,6 +63,38 @@ public class ChatRoomController {
         return ResponseEntity.ok(messages);
     }
 
+    @GetMapping("/{id}/media")
+    public ResponseEntity<List<Message>> getMediaMessagesInChatRoom(
+            @PathVariable Long id,
+            Pageable pageable
+    ) throws InvalidException {
+        String email = SecurityUtil.getCurrentUserLogin().orElseThrow(() -> new InvalidException("User not authenticated"));
+
+        User currentUser = userRepository.findByEmail(email);
+        if (currentUser == null) {
+            throw new InvalidException("User not found");
+        }
+
+        List<Message> mediaMessages = chatRoomService.getMediaMessagesInChatRoom(currentUser, id, pageable);
+        return ResponseEntity.ok(mediaMessages);
+    }
+
+    @GetMapping("/{id}/file")
+    public ResponseEntity<List<Message>> getFileMessagesInChatRoom(
+            @PathVariable Long id,
+            Pageable pageable
+    ) throws InvalidException {
+        String email = SecurityUtil.getCurrentUserLogin().orElseThrow(() -> new InvalidException("User not authenticated"));
+
+        User currentUser = userRepository.findByEmail(email);
+        if (currentUser == null) {
+            throw new InvalidException("User not found");
+        }
+
+        List<Message> fileMessages = chatRoomService.getFileMessagesInChatRoom(currentUser, id, pageable);
+        return ResponseEntity.ok(fileMessages);
+    }
+
     /**
      * Tạo chat room mới và gửi messages
      * Hỗ trợ:
@@ -74,11 +103,11 @@ public class ChatRoomController {
      * - Files + text (multipart)
      */
     @PostMapping(
-        value = "/messages",
-        consumes = {
-            MediaType.MULTIPART_FORM_DATA_VALUE,
-            MediaType.APPLICATION_JSON_VALUE
-        }
+            value = "/messages",
+            consumes = {
+                    MediaType.MULTIPART_FORM_DATA_VALUE,
+                    MediaType.APPLICATION_JSON_VALUE
+            }
     )
     public ResponseEntity<ChatRoom> sendMessageToNewChatRoom(
             @RequestPart(required = false) @Valid MessageToNewChatRoom request,
@@ -136,11 +165,11 @@ public class ChatRoomController {
      * - Files + text (multipart)
      */
     @PostMapping(
-        value = "/{id}/messages",
-        consumes = {
-            MediaType.MULTIPART_FORM_DATA_VALUE,
-            MediaType.APPLICATION_JSON_VALUE
-        }
+            value = "/{id}/messages",
+            consumes = {
+                    MediaType.MULTIPART_FORM_DATA_VALUE,
+                    MediaType.APPLICATION_JSON_VALUE
+            }
     )
     public ResponseEntity<List<Message>> sendMessageToExistChatRoom(
             @PathVariable Long id,
