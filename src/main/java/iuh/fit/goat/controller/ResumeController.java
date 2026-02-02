@@ -19,7 +19,10 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.io.IOException;
+import java.net.URISyntaxException;
 import java.net.URL;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 
 @RestController
 @RequiredArgsConstructor
@@ -74,7 +77,10 @@ public class ResumeController {
     }
 
     @GetMapping("/{id}/file")
-    public ResponseEntity<Resource> downloadResume(@PathVariable("id") String id) throws InvalidException, IOException {
+    public ResponseEntity<Resource> downloadResume(
+            @PathVariable("id") String id
+    ) throws InvalidException, IOException, URISyntaxException
+    {
         if(!SecurityUtil.checkValidNumber(id)) throw new InvalidException("Invalid resume id");
 
         Resume resume = this.resumeService.handleGetResumeById(Long.parseLong(id));
@@ -83,13 +89,21 @@ public class ResumeController {
         URL url = new URL(resume.getFileUrl());
         InputStreamResource resource = new InputStreamResource(url.openStream());
 
+        String fileName = Paths.get(url.toURI().getPath()).getFileName().toString();
+
+        String contentType = Files.probeContentType(
+                Paths.get(resume.getFileName())
+        );
+        if (contentType == null) {
+            contentType = MediaType.APPLICATION_OCTET_STREAM_VALUE;
+        }
+
         return ResponseEntity.ok()
                 .header(
                         HttpHeaders.CONTENT_DISPOSITION,
-                        "attachment; filename=\"" + resume.getFileName() + "\""
+                        "attachment; filename=\"" + fileName + "\""
                 )
-                .contentType(MediaType.APPLICATION_OCTET_STREAM)
-                .contentLength(resume.getFileSize())
+                .contentType(MediaType.parseMediaType(contentType))
                 .body(resource);
     }
 

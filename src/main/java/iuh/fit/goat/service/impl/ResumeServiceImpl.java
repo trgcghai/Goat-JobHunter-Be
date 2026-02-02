@@ -40,7 +40,7 @@ public class ResumeServiceImpl implements ResumeService {
         String currentEmail = SecurityUtil.getCurrentUserEmail();
         if(currentEmail.isEmpty()) throw new InvalidException("You should be logged in");
 
-        Applicant applicant = this.applicantRepository.findByEmail(currentEmail).orElse(null);
+        Applicant applicant = this.applicantRepository.findByEmailAndDeletedAtIsNull(currentEmail).orElse(null);
         if(applicant == null) throw new InvalidException("Applicant not found");
 
         FileUploadUtil.assertAllowed(request.getFileUrl());
@@ -96,14 +96,22 @@ public class ResumeServiceImpl implements ResumeService {
             case "RECRUITER", "COMPANY" -> resumesSpec = (root, query, cb) ->
                     cb.and(
                             cb.isNull(root.get("deletedAt")),
-                            cb.isTrue(root.get("public"))
+                            cb.isTrue(root.get("applicant").get("availableStatus")),
+                            cb.isTrue(root.get("isPublic"))
                     );
 
-            case "APPLICANT" -> resumesSpec = (root, query, cb) ->
-                    cb.and(
-                            cb.isNull(root.get("deletedAt")),
-                            cb.equal(root.get("applicant").get("accountId"), currentAccount.getAccountId())
-                    );
+            case "APPLICANT" -> resumesSpec = (root, query, cb) -> {
+                assert query != null;
+                query.orderBy(
+                        cb.desc(root.get("isDefault")),
+                        cb.desc(root.get("updatedAt"))
+                );
+
+                return cb.and(
+                        cb.isNull(root.get("deletedAt")),
+                        cb.equal(root.get("applicant").get("accountId"), currentAccount.getAccountId())
+                );
+            };
 
             default -> resumesSpec = (root, query, cb) ->
                     cb.and(
@@ -219,7 +227,7 @@ public class ResumeServiceImpl implements ResumeService {
 
     private Resume validateResumeOwnership(Long resumeId) throws InvalidException {
         String currentEmail = SecurityUtil.getCurrentUserEmail();
-        Applicant applicant = this.applicantRepository.findByEmail(currentEmail)
+        Applicant applicant = this.applicantRepository.findByEmailAndDeletedAtIsNull(currentEmail)
                 .orElseThrow(() -> new InvalidException("Applicant not found"));
 
         Resume resume = this.handleGetResumeById(resumeId);
