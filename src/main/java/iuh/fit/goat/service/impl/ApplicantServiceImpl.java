@@ -4,6 +4,7 @@ import iuh.fit.goat.dto.request.applicant.ApplicantUpdateRequest;
 import iuh.fit.goat.dto.response.applicant.ApplicantResponse;
 import iuh.fit.goat.dto.response.ResultPaginationResponse;
 import iuh.fit.goat.dto.response.user.UserResponse;
+import iuh.fit.goat.exception.InvalidException;
 import iuh.fit.goat.service.ApplicantService;
 import iuh.fit.goat.service.RoleService;
 import lombok.RequiredArgsConstructor;
@@ -139,6 +140,18 @@ public class ApplicantServiceImpl implements ApplicantService {
     @Override
     public Applicant handleGetApplicantById(long id) {
         return this.applicantRepository.findById(id).orElse(null);
+    }
+
+    @Override
+    public Applicant handleToggleAvailableStatus() throws InvalidException {
+        String email = SecurityUtil.getCurrentUserEmail();
+        Applicant applicant = this.applicantRepository.findByEmailAndDeletedAtIsNull(email)
+                .orElseThrow(() -> new InvalidException("Applicant not found"));
+
+        boolean currentStatus = applicant.isAvailableStatus();
+        applicant.setAvailableStatus(!currentStatus);
+
+        return this.applicantRepository.save(applicant);
     }
 
     @Override

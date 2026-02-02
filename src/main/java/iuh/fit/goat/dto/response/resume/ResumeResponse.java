@@ -19,7 +19,6 @@ public class ResumeResponse {
     private String fileUrl;
     private String fileName;
     private long fileSize;
-    private String summary;
     private boolean isDefault;
     private boolean isPublic;
     private Double aiScore;

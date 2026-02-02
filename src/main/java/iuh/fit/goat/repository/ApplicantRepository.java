@@ -9,5 +9,5 @@ import java.util.Optional;
 
 @Repository
 public interface ApplicantRepository extends JpaRepository<Applicant, Long>, JpaSpecificationExecutor<Applicant> {
-    Optional<Applicant> findByEmail(String email);
+    Optional<Applicant> findByEmailAndDeletedAtIsNull(String email);
 }

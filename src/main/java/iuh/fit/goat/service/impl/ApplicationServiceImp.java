@@ -39,7 +39,7 @@ public class ApplicationServiceImp implements ApplicationService {
         String currentEmail = SecurityUtil.getCurrentUserEmail();
 
         Job job = this.jobRepository.findById(request.getJobId()).orElse(null);
-        Applicant applicant = this.applicantRepository.findByEmail(currentEmail).orElse(null);
+        Applicant applicant = this.applicantRepository.findByEmailAndDeletedAtIsNull(currentEmail).orElse(null);
         Resume resume = this.resumeRepository.findById(request.getResumeId()).orElse(null);
         if(applicant == null || resume == null || job == null) return null;
 
@@ -158,7 +158,7 @@ public class ApplicationServiceImp implements ApplicationService {
         if(jobId == null || resumeId == null) return false;
 
         String currentEmail = SecurityUtil.getCurrentUserEmail();
-        Applicant applicant = this.applicantRepository.findByEmail(currentEmail).orElse(null);
+        Applicant applicant = this.applicantRepository.findByEmailAndDeletedAtIsNull(currentEmail).orElse(null);
         Job job = this.jobRepository.findById(jobId).orElse(null);
         Resume resume = this.resumeRepository.findById(resumeId).orElse(null);
 
