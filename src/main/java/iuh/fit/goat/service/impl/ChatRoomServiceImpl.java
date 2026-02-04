@@ -669,13 +669,7 @@ public class ChatRoomServiceImpl implements ChatRoomService {
     }
 
     private boolean isMessageFromCurrentUser(Message message, String currentUserEmail) {
-        if (message.getSenderId() == null) {
-            return false;
-        }
-
-        return userRepository.findById(Long.parseLong(message.getSenderId()))
-                .map(sender -> sender.getEmail().equalsIgnoreCase(currentUserEmail))
-                .orElse(false);
+        return message.getSender().getEmail().equalsIgnoreCase(currentUserEmail);
     }
 
     private LocalDateTime convertToLocalDateTime(java.time.Instant instant) {

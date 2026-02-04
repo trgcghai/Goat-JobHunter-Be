@@ -4,6 +4,7 @@ import iuh.fit.goat.dto.request.message.MessageCreateRequest;
 import iuh.fit.goat.dto.response.StorageResponse;
 import iuh.fit.goat.entity.Message;
 import iuh.fit.goat.entity.User;
+import iuh.fit.goat.entity.embeddable.SenderInfo;
 import iuh.fit.goat.enumeration.MessageType;
 import iuh.fit.goat.exception.InvalidException;
 import iuh.fit.goat.repository.ChatRoomRepository;
@@ -100,12 +101,10 @@ public class MessageServiceImpl implements MessageService {
     public Message sendMessage(Long chatRoomId, MessageCreateRequest request, User currentUser)
             throws InvalidException {
 
-        chatRoomRepository.findById(chatRoomId).orElseThrow(() -> new InvalidException("Chat Room not found"));
+        chatRoomRepository.findById(chatRoomId)
+                .orElseThrow(() -> new InvalidException("Chat Room not found"));
 
-        // NEW: Smart bucket selection
         String bucketKey = getOrCreateSmartBucket(chatRoomId.toString());
-
-        // Generate message metadata
         String messageId = generateMessageId();
         Instant now = Instant.now();
         long timestamp = now.toEpochMilli();
@@ -113,14 +112,16 @@ public class MessageServiceImpl implements MessageService {
         String chatRoomBucket = Message.buildChatRoomBucket(chatRoomId.toString(), bucketKey);
         String messageSk = Message.buildMessageSk(timestamp, messageId);
 
-        // Build message entity
+        // Build sender information
+        SenderInfo senderInfo = buildSenderInfo(currentUser);
+
         Message message = Message.builder()
                 .chatRoomBucket(chatRoomBucket)
                 .messageSk(messageSk)
                 .chatRoomId(chatRoomId.toString())
                 .bucket(bucketKey)
                 .messageId(messageId)
-                .senderId(String.valueOf(currentUser.getAccountId()))
+                .sender(senderInfo)  // NEW: Use embedded sender
                 .content(request.getContent())
                 .messageType(MessageType.TEXT)
                 .isHidden(false)
@@ -378,13 +379,16 @@ public class MessageServiceImpl implements MessageService {
         String chatRoomBucket = Message.buildChatRoomBucket(chatRoomId, bucketKey);
         String messageSk = Message.buildMessageSk(timestamp, messageId);
 
+        // Build sender information
+        SenderInfo senderInfo = buildSenderInfo(currentUser);
+
         return Message.builder()
                 .chatRoomBucket(chatRoomBucket)
                 .messageSk(messageSk)
                 .chatRoomId(chatRoomId)
                 .bucket(bucketKey)
                 .messageId(messageId)
-                .senderId(String.valueOf(currentUser.getAccountId()))
+                .sender(senderInfo)  // NEW: Use embedded sender
                 .content(fileUrl)
                 .messageType(messageType)
                 .isHidden(false)
@@ -399,5 +403,15 @@ public class MessageServiceImpl implements MessageService {
 
     private String formatBucket(LocalDate date) {
         return date.format(BUCKET_FORMATTER);
+    }
+
+    private SenderInfo buildSenderInfo(User user) {
+        return SenderInfo.builder()
+                .accountId(user.getAccountId())
+                .fullName(user.getFullName())
+                .username(user.getUsername())
+                .email(user.getEmail())
+                .avatar(user.getAvatar())
+                .build();
     }
 }

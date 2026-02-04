@@ -27,6 +27,17 @@ public class MessageRepository {
     private final DynamoDbTable<Message> messageTable;
     private final DynamoDbTable<PinnedMessage> pinnedMessageTable;
 
+    /**
+     * Scan all messages (for migration only)
+     * WARNING: Expensive operation - use only during migration
+     */
+    public List<Message> scanAllMessages() {
+        return messageTable.scan()
+                .items()
+                .stream()
+                .toList();
+    }
+
     // ========== NEW: Multi-Bucket Query Methods ==========
 
     /**
