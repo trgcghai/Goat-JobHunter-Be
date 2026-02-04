@@ -3,6 +3,7 @@ package iuh.fit.goat.service.impl;
 import iuh.fit.goat.dto.request.chat.*;
 import iuh.fit.goat.dto.request.message.MessageCreateRequest;
 import iuh.fit.goat.dto.request.message.MessageToNewChatRoom;
+import iuh.fit.goat.dto.response.StorageResponse;
 import iuh.fit.goat.dto.response.chat.ChatRoomResponse;
 import iuh.fit.goat.dto.response.ResultPaginationResponse;
 import iuh.fit.goat.entity.ChatMember;
@@ -17,6 +18,7 @@ import iuh.fit.goat.repository.ChatRoomRepository;
 import iuh.fit.goat.repository.UserRepository;
 import iuh.fit.goat.service.ChatRoomService;
 import iuh.fit.goat.service.MessageService;
+import iuh.fit.goat.service.StorageService;
 import iuh.fit.goat.service.UserService;
 import iuh.fit.goat.util.SecurityUtil;
 import lombok.RequiredArgsConstructor;
@@ -43,7 +45,7 @@ public class ChatRoomServiceImpl implements ChatRoomService {
     private final ChatRoomRepository chatRoomRepository;
     private final ChatMemberRepository chatMemberRepository;
     private final MessageService messageService;
-    private final UserService userService;
+    private final StorageService storageService;
     private final UserRepository userRepository;
 
     @Override
@@ -284,7 +286,11 @@ public class ChatRoomServiceImpl implements ChatRoomService {
         ChatRoom groupChatRoom = new ChatRoom();
         groupChatRoom.setType(ChatRoomType.GROUP);
         groupChatRoom.setName(request.getName() != null ? request.getName() : "Nhóm mới");
-        groupChatRoom.setAvatar(request.getAvatar());
+
+        StorageResponse storageResponse = storageService.handleUploadFile(request.getAvatar(), "/chatgroup/avatars");
+        String avatarUrl = storageResponse.getUrl();
+
+        groupChatRoom.setAvatar(avatarUrl);
         groupChatRoom = chatRoomRepository.saveAndFlush(groupChatRoom);
 
         // Create chat members
@@ -333,7 +339,8 @@ public class ChatRoomServiceImpl implements ChatRoomService {
             chatRoom.setName(request.getName());
         }
         if (request.getAvatar() != null) {
-            chatRoom.setAvatar(request.getAvatar());
+            StorageResponse storageResponse = storageService.handleUploadFile(request.getAvatar(), "/chatgroup/avatars");
+            String avatarUrl = storageResponse.getUrl();
         }
 
         return chatRoomRepository.save(chatRoom);

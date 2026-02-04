@@ -97,19 +97,19 @@ public class ChatRoomController {
         return ResponseEntity.ok(fileMessages);
     }
 
-    @PostMapping("/group")
+    @PostMapping(value = "/group", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<ChatRoom> createGroupChat(
-            @Valid @RequestBody CreateGroupChatRequest request
+            @Valid @ModelAttribute CreateGroupChatRequest request
     ) throws InvalidException {
         User currentUser = getCurrentUser();
         ChatRoom groupChat = chatRoomService.createGroupChat(currentUser, request);
         return ResponseEntity.ok(groupChat);
     }
 
-    @PutMapping("/group/{chatRoomId}")
+    @PutMapping(value = "/group/{chatRoomId}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<ChatRoom> updateGroupInfo(
             @PathVariable Long chatRoomId,
-            @Valid @RequestBody UpdateGroupInfoRequest request
+            @Valid @ModelAttribute UpdateGroupInfoRequest request
     ) throws InvalidException {
         User currentUser = getCurrentUser();
         ChatRoom updatedChatRoom = chatRoomService.updateGroupInfo(currentUser, chatRoomId, request);
