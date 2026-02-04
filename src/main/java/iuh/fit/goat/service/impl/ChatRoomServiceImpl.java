@@ -19,7 +19,6 @@ import iuh.fit.goat.repository.UserRepository;
 import iuh.fit.goat.service.ChatRoomService;
 import iuh.fit.goat.service.MessageService;
 import iuh.fit.goat.service.StorageService;
-import iuh.fit.goat.service.UserService;
 import iuh.fit.goat.util.SecurityUtil;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -40,7 +39,7 @@ import java.util.stream.Collectors;
 public class ChatRoomServiceImpl implements ChatRoomService {
 
     private final String MESSAGE_FALLBACK = "Không thể tải tin nhắn này.";
-    private final String MESSAGE_FALLBACK_HDDEN = "Tin nhắn đã được ẩn.";
+    private final String MESSAGE_FALLBACK_HIDDEN = "Tin nhắn đã được ẩn.";
 
     private final ChatRoomRepository chatRoomRepository;
     private final ChatMemberRepository chatMemberRepository;
@@ -341,6 +340,7 @@ public class ChatRoomServiceImpl implements ChatRoomService {
         if (request.getAvatar() != null) {
             StorageResponse storageResponse = storageService.handleUploadFile(request.getAvatar(), "/chatgroup/avatars");
             String avatarUrl = storageResponse.getUrl();
+            chatRoom.setAvatar(avatarUrl);
         }
 
         return chatRoomRepository.save(chatRoom);
@@ -588,7 +588,10 @@ public class ChatRoomServiceImpl implements ChatRoomService {
         try {
             return messageService.getLastMessageByChatRoom(chatRoomId);
         } catch (InvalidException e) {
-            log.warn("Failed to get last message for chatRoom {}: {}", chatRoomId, e.getMessage());
+            log.debug("No messages found for chatRoom {}: {}", chatRoomId, e.getMessage());
+            return null;
+        } catch (Exception e) {
+            log.error("Unexpected error getting last message for chatRoom {}: {}", chatRoomId, e.getMessage());
             return null;
         }
     }
@@ -606,13 +609,14 @@ public class ChatRoomServiceImpl implements ChatRoomService {
 
         if (chatRoom.getType() == ChatRoomType.GROUP) {
             String name = chatRoom.getName();
-            if (name == null || name.isBlank()) {
+            // Trả về tên group ngay cả khi chưa có tin nhắn
+            if (name == null || name.isBlank() || "Không có tên".equals(name)) {
                 return generateGroupName(chatRoom.getMembers());
             }
             return name;
         }
 
-        return chatRoom.getName();
+        return chatRoom.getName() != null ? chatRoom.getName() : "";
     }
 
     private String resolveChatRoomAvatar(ChatRoom chatRoom, String currentUserEmail) {
@@ -647,7 +651,7 @@ public class ChatRoomServiceImpl implements ChatRoomService {
 
     private LastMessageInfo buildLastMessageInfo(Message lastMessage, String currentUserEmail) {
         if (lastMessage == null) {
-            return new LastMessageInfo(MESSAGE_FALLBACK, null, false);
+            return new LastMessageInfo("", null, false);
         }
 
         String content = resolveMessageContent(lastMessage);
@@ -659,7 +663,7 @@ public class ChatRoomServiceImpl implements ChatRoomService {
 
     private String resolveMessageContent(Message message) {
         if (message.getIsHidden()) {
-            return MESSAGE_FALLBACK_HDDEN;
+            return MESSAGE_FALLBACK_HIDDEN;
         }
         return formatMessageContent(message);
     }
@@ -682,13 +686,15 @@ public class ChatRoomServiceImpl implements ChatRoomService {
     }
 
     private ChatRoomResponse buildFallbackResponse(ChatRoom chatRoom) {
+        String currentUserEmail = SecurityUtil.getCurrentUserEmail();
+
         return ChatRoomResponse.builder()
                 .roomId(chatRoom.getRoomId())
                 .type(chatRoom.getType())
-                .name("Không có tên")
-                .avatar(chatRoom.getAvatar())
-                .memberCount(0)
-                .lastMessagePreview(MESSAGE_FALLBACK)
+                .name(resolveChatRoomName(chatRoom, currentUserEmail))
+                .avatar(resolveChatRoomAvatar(chatRoom, currentUserEmail))
+                .memberCount(countActiveMembers(chatRoom))
+                .lastMessagePreview("") // Để trống thay vì "Không thể tải tin nhắn này"
                 .currentUserSentLastMessage(false)
                 .lastMessageTime(null)
                 .build();
