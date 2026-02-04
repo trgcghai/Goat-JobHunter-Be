@@ -1,5 +1,6 @@
 package iuh.fit.goat.service.impl;
 
+import iuh.fit.goat.dto.request.chat.*;
 import iuh.fit.goat.dto.request.message.MessageCreateRequest;
 import iuh.fit.goat.dto.request.message.MessageToNewChatRoom;
 import iuh.fit.goat.dto.response.chat.ChatRoomResponse;
@@ -270,6 +271,236 @@ public class ChatRoomServiceImpl implements ChatRoomService {
         }
 
         return this.messageService.getFileMessagesByChatRoom(chatRoomId, pageable);
+    }
+
+
+    @Override
+    @Transactional
+    public ChatRoom createGroupChat(User currentUser, CreateGroupChatRequest request) throws InvalidException {
+        // Validate all member IDs exist
+        List<User> members = validateAndGetUsers(request.getAccountIds());
+
+        // Create group chat room
+        ChatRoom groupChatRoom = new ChatRoom();
+        groupChatRoom.setType(ChatRoomType.GROUP);
+        groupChatRoom.setName(request.getName() != null ? request.getName() : "Nhóm mới");
+        groupChatRoom.setAvatar(request.getAvatar());
+        groupChatRoom = chatRoomRepository.saveAndFlush(groupChatRoom);
+
+        // Create chat members
+        List<ChatMember> chatMembers = new ArrayList<>();
+
+        // Add current user as OWNER
+        ChatMember owner = new ChatMember();
+        owner.setUser(currentUser);
+        owner.setRole(ChatRole.OWNER);
+        owner.setRoom(groupChatRoom);
+        chatMembers.add(owner);
+
+        // Add other members as MEMBER
+        for (User member : members) {
+            if (member.getAccountId() != currentUser.getAccountId()) {
+                ChatMember chatMember = new ChatMember();
+                chatMember.setUser(member);
+                chatMember.setRole(ChatRole.MEMBER);
+                chatMember.setRoom(groupChatRoom);
+                chatMembers.add(chatMember);
+            }
+        }
+
+        // Save all members
+        chatMemberRepository.saveAllAndFlush(chatMembers);
+        groupChatRoom.setMembers(chatMembers);
+
+        log.info("Created group chat: {} with {} members",
+                groupChatRoom.getRoomId(), chatMembers.size());
+
+        return groupChatRoom;
+    }
+
+    @Override
+    @Transactional
+    public ChatRoom updateGroupInfo(User currentUser, Long chatRoomId, UpdateGroupInfoRequest request) throws InvalidException {
+        ChatRoom chatRoom = getChatRoomById(chatRoomId);
+        validateGroupChatRoom(chatRoom);
+
+        // Check if user is member and has permission to update
+        ChatMember currentMember = getCurrentMemberInChatRoom(chatRoom, currentUser.getAccountId());
+        validateModeratorOrOwnerPermission(currentMember, "update group info");
+
+        // Update group info
+        if (request.getName() != null) {
+            chatRoom.setName(request.getName());
+        }
+        if (request.getAvatar() != null) {
+            chatRoom.setAvatar(request.getAvatar());
+        }
+
+        return chatRoomRepository.save(chatRoom);
+    }
+
+    @Override
+    @Transactional
+    public void leaveGroupChat(User currentUser, Long chatRoomId) throws InvalidException {
+        ChatRoom chatRoom = getChatRoomById(chatRoomId);
+        validateGroupChatRoom(chatRoom);
+
+        ChatMember currentMember = getCurrentMemberInChatRoom(chatRoom, currentUser.getAccountId());
+
+        // OWNER cannot leave unless ownership is transferred
+        if (currentMember.getRole() == ChatRole.OWNER) {
+            throw new InvalidException("Owner cannot leave group. Please transfer ownership first.");
+        }
+
+        // Delete member
+        chatMemberRepository.delete(currentMember);
+
+        log.info("User: {} left group chat: {}", currentUser.getAccountId(), chatRoomId);
+    }
+
+    @Override
+    @Transactional
+    public ChatMember addMemberToGroup(User currentUser, Long chatRoomId, AddMemberRequest request) throws InvalidException {
+        ChatRoom chatRoom = getChatRoomById(chatRoomId);
+        validateGroupChatRoom(chatRoom);
+
+        // Check requester permission
+        ChatMember requesterMember = getCurrentMemberInChatRoom(chatRoom, currentUser.getAccountId());
+        validateModeratorOrOwnerPermission(requesterMember, "add member");
+
+        // Validate target user exists
+        User targetUser = userRepository.findById(request.getAccountId())
+                .orElseThrow(() -> new InvalidException("User to be added not found"));
+
+        // Check if user is already a member
+        boolean isAlreadyMember = chatRoom.getMembers().stream()
+                .anyMatch(m -> m.getDeletedAt() == null &&
+                             m.getUser().getAccountId() == targetUser.getAccountId());
+
+        if (isAlreadyMember) {
+            throw new InvalidException("User is already a member of this group");
+        }
+
+        // Create new member
+        ChatMember newMember = new ChatMember();
+        newMember.setUser(targetUser);
+        newMember.setRole(ChatRole.MEMBER);
+        newMember.setRoom(chatRoom);
+
+        return chatMemberRepository.save(newMember);
+    }
+
+    @Override
+    @Transactional
+    public void removeMemberFromGroup(User currentUser, Long chatRoomId, Long chatMemberId) throws InvalidException {
+        ChatRoom chatRoom = getChatRoomById(chatRoomId);
+        validateGroupChatRoom(chatRoom);
+
+        // Check requester permission
+        ChatMember requesterMember = getCurrentMemberInChatRoom(chatRoom, currentUser.getAccountId());
+        validateModeratorOrOwnerPermission(requesterMember, "remove member");
+
+        // Get target member
+        ChatMember targetMember = chatMemberRepository.findById(chatMemberId)
+                .orElseThrow(() -> new InvalidException("Chat member not found"));
+
+        // Validate target member belongs to this chat room
+        if (!targetMember.getRoom().getRoomId().equals(chatRoomId)) {
+            throw new InvalidException("Member does not belong to this chat room");
+        }
+
+        // Cannot remove yourself via this endpoint
+        if (targetMember.getUser().getAccountId() == currentUser.getAccountId()) {
+            throw new InvalidException("Cannot remove yourself. Use leave group endpoint instead");
+        }
+
+        // MODERATOR cannot remove OWNER
+        if (requesterMember.getRole() == ChatRole.MODERATOR && targetMember.getRole() == ChatRole.OWNER) {
+            throw new InvalidException("Moderator cannot remove owner");
+        }
+
+        // Delete member
+        chatMemberRepository.delete(targetMember);
+
+        log.info("Removed member: {} from group: {} by user: {}",
+                chatMemberId, chatRoomId, currentUser.getAccountId());
+    }
+
+    @Override
+    @Transactional
+    public ChatMember updateMemberRole(User currentUser, Long chatRoomId, Long chatMemberId, UpdateMemberRoleRequest request) throws InvalidException {
+        ChatRoom chatRoom = getChatRoomById(chatRoomId);
+        validateGroupChatRoom(chatRoom);
+
+        // Check requester permission
+        ChatMember requesterMember = getCurrentMemberInChatRoom(chatRoom, currentUser.getAccountId());
+        validateModeratorOrOwnerPermission(requesterMember, "update member role");
+
+        // Get target member
+        ChatMember targetMember = chatMemberRepository.findById(chatMemberId)
+                .orElseThrow(() -> new InvalidException("Chat member not found"));
+
+        // Validate target member belongs to this chat room
+        if (!targetMember.getRoom().getRoomId().equals(chatRoomId)) {
+            throw new InvalidException("Member does not belong to this chat room");
+        }
+
+        // MODERATOR cannot change OWNER role
+        if (requesterMember.getRole() == ChatRole.MODERATOR && targetMember.getRole() == ChatRole.OWNER) {
+            throw new InvalidException("Moderator cannot change owner role");
+        }
+
+        // Prevent removing last OWNER
+        if (targetMember.getRole() == ChatRole.OWNER && request.getRole() != ChatRole.OWNER) {
+            long ownerCount = chatRoom.getMembers().stream()
+                    .filter(m -> m.getDeletedAt() == null && m.getRole() == ChatRole.OWNER)
+                    .count();
+
+            if (ownerCount <= 1) {
+                throw new InvalidException("Cannot remove the last owner. Assign another owner first");
+            }
+        }
+
+        // Update role
+        targetMember.setRole(request.getRole());
+        return chatMemberRepository.save(targetMember);
+    }
+
+    // =============== HELPER METHODS FOR GROUP CHAT ====================
+
+    private List<User> validateAndGetUsers(List<Long> accountIds) throws InvalidException {
+        List<User> users = userRepository.findAllById(accountIds);
+
+        if (users.size() != accountIds.size()) {
+            throw new InvalidException("One or more users not found");
+        }
+
+        return users;
+    }
+
+    private ChatRoom getChatRoomById(Long chatRoomId) throws InvalidException {
+        return chatRoomRepository.findById(chatRoomId)
+                .orElseThrow(() -> new InvalidException("Chat room not found"));
+    }
+
+    private void validateGroupChatRoom(ChatRoom chatRoom) throws InvalidException {
+        if (chatRoom.getType() != ChatRoomType.GROUP) {
+            throw new InvalidException("This operation is only available for group chats");
+        }
+    }
+
+    private ChatMember getCurrentMemberInChatRoom(ChatRoom chatRoom, Long accountId) throws InvalidException {
+        return chatRoom.getMembers().stream()
+                .filter(m -> m.getDeletedAt() == null &&
+                            m.getUser().getAccountId() == accountId)
+                .findFirst()
+                .orElseThrow(() -> new InvalidException("User is not a member of this chat room"));
+    }
+
+    private void validateModeratorOrOwnerPermission(ChatMember member, String action) throws InvalidException {
+        if (member.getRole() != ChatRole.OWNER && member.getRole() != ChatRole.MODERATOR) {
+            throw new InvalidException("Only owners and moderators can " + action);
+        }
     }
 
     // =============== HELPER FUNCTIONS ====================

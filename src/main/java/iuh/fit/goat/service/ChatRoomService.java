@@ -1,7 +1,9 @@
 package iuh.fit.goat.service;
 
+import iuh.fit.goat.dto.request.chat.*;
 import iuh.fit.goat.dto.request.message.MessageToNewChatRoom;
 import iuh.fit.goat.dto.response.ResultPaginationResponse;
+import iuh.fit.goat.entity.ChatMember;
 import iuh.fit.goat.entity.ChatRoom;
 import iuh.fit.goat.entity.Message;
 import iuh.fit.goat.entity.User;
@@ -29,4 +31,16 @@ public interface ChatRoomService {
     List<Message> getMediaMessagesInChatRoom(User user, Long chatRoomId, Pageable pageable) throws InvalidException;
 
     List<Message> getFileMessagesInChatRoom(User user, Long chatRoomId, Pageable pageable) throws InvalidException;
+
+    ChatRoom createGroupChat(User currentUser, CreateGroupChatRequest request) throws InvalidException;
+
+    ChatRoom updateGroupInfo(User currentUser, Long chatRoomId, UpdateGroupInfoRequest request) throws InvalidException;
+
+    void leaveGroupChat(User currentUser, Long chatRoomId) throws InvalidException;
+
+    ChatMember addMemberToGroup(User currentUser, Long chatRoomId, AddMemberRequest request) throws InvalidException;
+
+    void removeMemberFromGroup(User currentUser, Long chatRoomId, Long chatMemberId) throws InvalidException;
+
+    ChatMember updateMemberRole(User currentUser, Long chatRoomId, Long chatMemberId, UpdateMemberRoleRequest request) throws InvalidException;
 }
