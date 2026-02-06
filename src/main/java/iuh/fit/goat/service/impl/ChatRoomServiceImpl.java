@@ -360,8 +360,15 @@ public class ChatRoomServiceImpl implements ChatRoomService {
             throw new InvalidException("Owner cannot leave group. Please transfer ownership first.");
         }
 
-        // Delete member
+        // Remove from collection
+        chatRoom.getMembers().remove(currentMember);
+
+        // Clear relationship
+        currentMember.setRoom(null);
+
+        // Hard delete
         chatMemberRepository.delete(currentMember);
+        chatMemberRepository.flush();
 
         log.info("User: {} left group chat: {}", currentUser.getAccountId(), chatRoomId);
     }
@@ -427,8 +434,15 @@ public class ChatRoomServiceImpl implements ChatRoomService {
             throw new InvalidException("Moderator cannot remove owner");
         }
 
-        // Delete member
+        // 1. Remove from collection FIRST (important for bidirectional relationship)
+        chatRoom.getMembers().remove(targetMember);
+
+        // 2. Clear foreign key
+        targetMember.setRoom(null);
+
+        // 3. Hard delete from database
         chatMemberRepository.delete(targetMember);
+        chatMemberRepository.flush();
 
         log.info("Removed member: {} from group: {} by user: {}",
                 chatMemberId, chatRoomId, currentUser.getAccountId());
