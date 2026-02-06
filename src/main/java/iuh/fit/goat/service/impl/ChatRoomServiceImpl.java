@@ -6,6 +6,7 @@ import iuh.fit.goat.dto.request.message.MessageToNewChatRoom;
 import iuh.fit.goat.dto.response.StorageResponse;
 import iuh.fit.goat.dto.response.chat.ChatRoomResponse;
 import iuh.fit.goat.dto.response.ResultPaginationResponse;
+import iuh.fit.goat.dto.response.chat.GroupMemberResponse;
 import iuh.fit.goat.entity.ChatMember;
 import iuh.fit.goat.entity.ChatRoom;
 import iuh.fit.goat.entity.Message;
@@ -382,7 +383,7 @@ public class ChatRoomServiceImpl implements ChatRoomService {
         // Check if user is already a member
         boolean isAlreadyMember = chatRoom.getMembers().stream()
                 .anyMatch(m -> m.getDeletedAt() == null &&
-                             m.getUser().getAccountId() == targetUser.getAccountId());
+                        m.getUser().getAccountId() == targetUser.getAccountId());
 
         if (isAlreadyMember) {
             throw new InvalidException("User is already a member of this group");
@@ -473,7 +474,39 @@ public class ChatRoomServiceImpl implements ChatRoomService {
         return chatMemberRepository.save(targetMember);
     }
 
+    @Override
+    @Transactional(readOnly = true)
+    public List<GroupMemberResponse> getGroupMembers(User currentUser, Long chatRoomId) throws InvalidException {
+        ChatRoom chatRoom = getChatRoomById(chatRoomId);
+        validateGroupChatRoom(chatRoom);
+
+        // Check if current user is a member
+        getCurrentMemberInChatRoom(chatRoom, currentUser.getAccountId());
+
+        // Fetch active members using repository
+        List<ChatMember> members = chatMemberRepository.findByRoomRoomIdAndDeletedAtIsNull(chatRoomId);
+
+        // Map to DTO
+        return members.stream()
+                .map(this::mapToGroupMemberResponse)
+                .toList();
+    }
+
     // =============== HELPER METHODS FOR GROUP CHAT ====================
+
+    private GroupMemberResponse mapToGroupMemberResponse(ChatMember member) {
+        User user = member.getUser();
+        return GroupMemberResponse.builder()
+                .chatMemberId(member.getMemberId())
+                .accountId(user.getAccountId())
+                .fullName(user.getFullName())
+                .username(user.getUsername())
+                .email(user.getEmail())
+                .avatar(user.getAvatar())
+                .role(member.getRole())
+                .joinedAt(member.getCreatedAt())
+                .build();
+    }
 
     private List<User> validateAndGetUsers(List<Long> accountIds) throws InvalidException {
         List<User> users = userRepository.findAllById(accountIds);
@@ -499,7 +532,7 @@ public class ChatRoomServiceImpl implements ChatRoomService {
     private ChatMember getCurrentMemberInChatRoom(ChatRoom chatRoom, Long accountId) throws InvalidException {
         return chatRoom.getMembers().stream()
                 .filter(m -> m.getDeletedAt() == null &&
-                            m.getUser().getAccountId() == accountId)
+                        m.getUser().getAccountId() == accountId)
                 .findFirst()
                 .orElseThrow(() -> new InvalidException("User is not a member of this chat room"));
     }
@@ -582,7 +615,8 @@ public class ChatRoomServiceImpl implements ChatRoomService {
 
     // =============== HELPER METHODS FOR mapToChatRoomResponse ====================
 
-    private record LastMessageInfo(String content, LocalDateTime time, boolean isCurrentUserSender) {}
+    private record LastMessageInfo(String content, LocalDateTime time, boolean isCurrentUserSender) {
+    }
 
     private Message getLastMessageSafely(Long chatRoomId) {
         try {

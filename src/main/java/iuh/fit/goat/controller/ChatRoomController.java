@@ -4,6 +4,7 @@ import iuh.fit.goat.dto.request.chat.*;
 import iuh.fit.goat.dto.request.message.MessageCreateRequest;
 import iuh.fit.goat.dto.request.message.MessageToNewChatRoom;
 import iuh.fit.goat.dto.response.ResultPaginationResponse;
+import iuh.fit.goat.dto.response.chat.GroupMemberResponse;
 import iuh.fit.goat.entity.ChatMember;
 import iuh.fit.goat.entity.ChatRoom;
 import iuh.fit.goat.entity.Message;
@@ -104,6 +105,15 @@ public class ChatRoomController {
         User currentUser = getCurrentUser();
         ChatRoom groupChat = chatRoomService.createGroupChat(currentUser, request);
         return ResponseEntity.ok(groupChat);
+    }
+
+    @GetMapping("/group/{groupId}/members")
+    public ResponseEntity<List<GroupMemberResponse>> getGroupMembers(
+            @PathVariable Long groupId
+    ) throws InvalidException {
+        User currentUser = getCurrentUser();
+        List<GroupMemberResponse> members = chatRoomService.getGroupMembers(currentUser, groupId);
+        return ResponseEntity.ok(members);
     }
 
     @PutMapping(value = "/group/{chatRoomId}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
