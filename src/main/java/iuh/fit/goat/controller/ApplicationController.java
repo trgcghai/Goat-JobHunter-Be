@@ -117,7 +117,7 @@ public class ApplicationController {
     public ResponseEntity<ResultPaginationResponse> getAllApplicationsByApplicant(Pageable pageable) {
         String email = SecurityUtil.getCurrentUserLogin().isPresent() ? SecurityUtil.getCurrentUserLogin().get() : "";
 
-        FilterNode filterNode = this.filterParser.parse("email='" + email + "'");
+        FilterNode filterNode = this.filterParser.parse("applicant.email='" + email + "'");
         FilterSpecification<Application> spec = this.filterSpecificationConverter.convert(filterNode);
 
         ResultPaginationResponse result = this.applicationService.handleGetAllApplications(spec, pageable);
