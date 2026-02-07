@@ -1,5 +1,6 @@
 package iuh.fit.goat.service.impl;
 
+import iuh.fit.goat.common.MessageEvent;
 import iuh.fit.goat.dto.request.chat.*;
 import iuh.fit.goat.dto.request.message.MessageCreateRequest;
 import iuh.fit.goat.dto.request.message.MessageToNewChatRoom;
@@ -318,6 +319,13 @@ public class ChatRoomServiceImpl implements ChatRoomService {
         chatMemberRepository.saveAllAndFlush(chatMembers);
         groupChatRoom.setMembers(chatMembers);
 
+        messageService.createAndSendSystemMessage(
+                groupChatRoom.getRoomId(),
+                MessageEvent.GROUP_CREATED,
+                currentUser,
+                groupChatRoom.getName()
+        );
+
         log.info("Created group chat: {} with {} members",
                 groupChatRoom.getRoomId(), chatMembers.size());
 
@@ -337,11 +345,23 @@ public class ChatRoomServiceImpl implements ChatRoomService {
         // Update group info
         if (request.getName() != null) {
             chatRoom.setName(request.getName());
+            messageService.createAndSendSystemMessage(
+                    chatRoomId,
+                    MessageEvent.GROUP_NAME_CHANGED,
+                    currentUser,
+                    request.getName()
+            );
         }
         if (request.getAvatar() != null) {
             StorageResponse storageResponse = storageService.handleUploadFile(request.getAvatar(), "/chatgroup/avatars");
             String avatarUrl = storageResponse.getUrl();
             chatRoom.setAvatar(avatarUrl);
+
+            messageService.createAndSendSystemMessage(
+                    chatRoomId,
+                    MessageEvent.GROUP_AVATAR_CHANGED,
+                    currentUser
+            );
         }
 
         return chatRoomRepository.save(chatRoom);
@@ -402,7 +422,16 @@ public class ChatRoomServiceImpl implements ChatRoomService {
         newMember.setRole(ChatRole.MEMBER);
         newMember.setRoom(chatRoom);
 
-        return chatMemberRepository.save(newMember);
+        newMember = chatMemberRepository.save(newMember);
+
+        messageService.createAndSendSystemMessage(
+                chatRoomId,
+                MessageEvent.MEMBER_ADDED,
+                currentUser,
+                getDisplayName(targetUser)
+        );
+
+        return newMember;
     }
 
     @Override
@@ -443,6 +472,15 @@ public class ChatRoomServiceImpl implements ChatRoomService {
         // 3. Hard delete from database
         chatMemberRepository.delete(targetMember);
         chatMemberRepository.flush();
+
+        String targetUserName = getDisplayName(targetMember.getUser());
+
+        messageService.createAndSendSystemMessage(
+                chatRoomId,
+                MessageEvent.MEMBER_REMOVED,
+                currentUser,
+                targetUserName
+        );
 
         log.info("Removed member: {} from group: {} by user: {}",
                 chatMemberId, chatRoomId, currentUser.getAccountId());
@@ -485,7 +523,22 @@ public class ChatRoomServiceImpl implements ChatRoomService {
 
         // Update role
         targetMember.setRole(request.getRole());
-        return chatMemberRepository.save(targetMember);
+
+        ChatRole oldRole = targetMember.getRole();
+        targetMember.setRole(request.getRole());
+        ChatMember updatedMember = chatMemberRepository.save(targetMember);
+
+        // Create system message
+        messageService.createAndSendSystemMessage(
+                chatRoomId,
+                MessageEvent.ROLE_CHANGED,
+                currentUser,
+                getDisplayName(targetMember.getUser()),
+                oldRole,
+                request.getRole()
+        );
+
+        return updatedMember;
     }
 
     @Override

@@ -1,5 +1,6 @@
 package iuh.fit.goat.service.impl;
 
+import iuh.fit.goat.common.MessageEvent;
 import iuh.fit.goat.dto.request.message.MessageCreateRequest;
 import iuh.fit.goat.dto.response.StorageResponse;
 import iuh.fit.goat.entity.Message;
@@ -11,6 +12,7 @@ import iuh.fit.goat.repository.ChatRoomRepository;
 import iuh.fit.goat.repository.MessageRepository;
 import iuh.fit.goat.service.MessageService;
 import iuh.fit.goat.service.StorageService;
+import iuh.fit.goat.util.MessageHelper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Pageable;
@@ -271,6 +273,45 @@ public class MessageServiceImpl implements MessageService {
         log.info("Retrieved {} file messages for chatRoom: {}", fileMessages.size(), chatRoomId);
 
         return fileMessages;
+    }
+
+    @Override
+    public Message createAndSendSystemMessage(
+            Long chatRoomId,
+            MessageEvent type,
+            User actor,
+            Object... params) {
+
+        String content = MessageHelper.generateSystemMessage(type, actor, params);
+        String bucketKey = getOrCreateSmartBucket(chatRoomId.toString());
+        String messageId = generateMessageId();
+        Instant now = Instant.now();
+        long timestamp = now.toEpochMilli();
+
+        String chatRoomBucket = Message.buildChatRoomBucket(chatRoomId.toString(), bucketKey);
+        String messageSk = Message.buildMessageSk(timestamp, messageId);
+
+        SenderInfo senderInfo = buildSenderInfo(actor);
+
+        Message systemMessage = Message.builder()
+                .chatRoomBucket(chatRoomBucket)
+                .messageSk(messageSk)
+                .chatRoomId(chatRoomId.toString())
+                .bucket(bucketKey)
+                .messageId(messageId)
+                .sender(senderInfo)
+                .content(content)
+                .messageType(MessageType.SYSTEM)
+                .isHidden(false)
+                .createdAt(now)
+                .updatedAt(now)
+                .build();
+
+        Message savedMessage = messageRepository.saveMessage(systemMessage);
+        sendMessageToUsers(chatRoomId, savedMessage);
+
+        log.info("System message created: type={}, chatRoomId={}", type, chatRoomId);
+        return savedMessage;
     }
 
     private boolean isMediaType(MessageType type) {

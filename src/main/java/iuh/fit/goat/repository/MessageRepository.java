@@ -2,6 +2,7 @@ package iuh.fit.goat.repository;
 
 import iuh.fit.goat.entity.Message;
 import iuh.fit.goat.entity.PinnedMessage;
+import iuh.fit.goat.enumeration.MessageType;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Repository;
@@ -206,7 +207,7 @@ public class MessageRepository {
         while (results.hasNext()) {
             Message message = results.next();
             // Skip hidden messages
-            if (!Boolean.TRUE.equals(message.getIsHidden())) {
+            if (!Boolean.TRUE.equals(message.getIsHidden()) && message.getMessageType() != MessageType.SYSTEM) {
                 return Optional.of(message);
             }
         }
