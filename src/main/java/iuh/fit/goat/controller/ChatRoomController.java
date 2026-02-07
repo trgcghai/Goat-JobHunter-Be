@@ -4,6 +4,7 @@ import iuh.fit.goat.dto.request.chat.*;
 import iuh.fit.goat.dto.request.message.MessageCreateRequest;
 import iuh.fit.goat.dto.request.message.MessageToNewChatRoom;
 import iuh.fit.goat.dto.response.ResultPaginationResponse;
+import iuh.fit.goat.dto.response.chat.ChatRoomResponse;
 import iuh.fit.goat.dto.response.chat.GroupMemberResponse;
 import iuh.fit.goat.entity.ChatMember;
 import iuh.fit.goat.entity.ChatRoom;
@@ -53,6 +54,20 @@ public class ChatRoomController {
     }
 
     @GetMapping("/{id}")
+    public ResponseEntity<?> getDetailChatRoomInformation(@PathVariable Long id) throws InvalidException {
+        String email = SecurityUtil.getCurrentUserLogin()
+                .orElseThrow(() -> new InvalidException("User not authenticated"));
+
+        User currentUser = userRepository.findByEmail(email);
+        if (currentUser == null) {
+            throw new InvalidException("User not found");
+        }
+
+        ChatRoomResponse response = chatRoomService.getDetailChatRoomInformation(currentUser, id);
+        return ResponseEntity.ok(response);
+    }
+
+    @GetMapping("/{id}/messages")
     public ResponseEntity<?> getMessagesInChatRoom(@PathVariable Long id, Pageable pageable) throws InvalidException {
         String email = SecurityUtil.getCurrentUserLogin()
                 .orElseThrow(() -> new InvalidException("User not authenticated"));

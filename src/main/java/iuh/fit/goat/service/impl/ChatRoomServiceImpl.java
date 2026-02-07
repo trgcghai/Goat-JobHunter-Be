@@ -81,6 +81,19 @@ public class ChatRoomServiceImpl implements ChatRoomService {
     }
 
     @Override
+    @Transactional(readOnly = true)
+    public ChatRoomResponse getDetailChatRoomInformation(User currentUser, Long chatRoomId) throws InvalidException {
+        // Validate chat room exists
+        ChatRoom chatRoom = getChatRoomById(chatRoomId);
+
+        // Check if user is member
+        getCurrentMemberInChatRoom(chatRoom, currentUser.getAccountId());
+
+        return this.mapToChatRoomResponse(chatRoom);
+    }
+
+
+    @Override
     public List<Message> getMessagesInChatRoom(User user, Long chatRoomId, Pageable pageable) throws InvalidException {
 
         // Check if user belong to chat room or not

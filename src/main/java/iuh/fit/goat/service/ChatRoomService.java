@@ -3,6 +3,7 @@ package iuh.fit.goat.service;
 import iuh.fit.goat.dto.request.chat.*;
 import iuh.fit.goat.dto.request.message.MessageToNewChatRoom;
 import iuh.fit.goat.dto.response.ResultPaginationResponse;
+import iuh.fit.goat.dto.response.chat.ChatRoomResponse;
 import iuh.fit.goat.dto.response.chat.GroupMemberResponse;
 import iuh.fit.goat.entity.ChatMember;
 import iuh.fit.goat.entity.ChatRoom;
@@ -16,6 +17,8 @@ import java.util.List;
 
 public interface ChatRoomService {
     ResultPaginationResponse getMyChatRooms(Long accountId, Pageable pageable);
+
+    ChatRoomResponse getDetailChatRoomInformation(User currentUser, Long chatRoomId) throws InvalidException;
 
     List<Message> getMessagesInChatRoom(User user, Long chatRoomId, Pageable pageable) throws InvalidException;
 
