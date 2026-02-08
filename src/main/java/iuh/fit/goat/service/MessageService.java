@@ -1,5 +1,6 @@
 package iuh.fit.goat.service;
 
+import iuh.fit.goat.common.MessageEvent;
 import iuh.fit.goat.dto.request.message.MessageCreateRequest;
 import iuh.fit.goat.entity.Message;
 import iuh.fit.goat.entity.User;
@@ -24,4 +25,6 @@ public interface  MessageService {
     List<Message> getMediaMessagesByChatRoom(Long chatRoomId, Pageable pageable) throws InvalidException;
 
     List<Message> getFileMessagesByChatRoom(Long chatRoomId, Pageable pageable) throws InvalidException;
+
+    Message createAndSendSystemMessage(Long chatRoomId, MessageEvent type, User actor, Object... params);
 }

@@ -1,5 +1,6 @@
 package iuh.fit.goat.entity;
 
+import iuh.fit.goat.entity.embeddable.SenderInfo;
 import iuh.fit.goat.enumeration.MessageType;
 import lombok.*;
 import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.*;
@@ -13,28 +14,32 @@ import java.time.Instant;
 @Builder
 public class Message {
 
-    private String chatRoomBucket; // PK: <chatRoomId>#<bucket>
-    private String messageSk;          // SK: MSG#<timestamp>#<messageId>
-
+    private String chatRoomBucket;
+    private String messageSk;
     private String chatRoomId;
     private String bucket;
     private String messageId;
+
+    // NEW: Embedded sender information
+    private SenderInfo sender;
+
+    // DEPRECATED: Keep for backward compatibility during migration
+    @Deprecated
     private String senderId;
+
     private String content;
-    private MessageType messageType;        // TEXT | FILES | CARD
-    private String replyTo;            // nullable
+    private MessageType messageType;
+    private String replyTo;
     private Boolean isHidden;
     private Instant createdAt;
     private Instant updatedAt;
 
-    // Partition Key
     @DynamoDbPartitionKey
     @DynamoDbAttribute("chatRoomBucket")
     public String getChatRoomBucket() {
         return chatRoomBucket;
     }
 
-    // Sort Key
     @DynamoDbSortKey
     @DynamoDbAttribute("messageSk")
     public String getMessageSk() {
@@ -56,6 +61,12 @@ public class Message {
         return messageId;
     }
 
+    @DynamoDbAttribute("sender")
+    public SenderInfo getSender() {
+        return sender;
+    }
+
+    @Deprecated
     @DynamoDbAttribute("senderId")
     public String getSenderId() {
         return senderId;
@@ -91,21 +102,14 @@ public class Message {
         return updatedAt;
     }
 
-    // Helper method: Generate chatRoomBucket from chatRoomId and bucket
-    // Format: <chatRoomId>#<bucket>
-    // Example: conv_123#20240129
     public static String buildChatRoomBucket(String chatRoomId, String bucket) {
         return chatRoomId + "#" + bucket;
     }
 
-    // Helper method: Generate messageSk from timestamp and messageId
-    // Format: MSG#<timestamp>#<messageId>
-    // Example: MSG#1706500000123#msg_abc123
     public static String buildMessageSk(Long timestamp, String messageId) {
         return "MSG#" + timestamp + "#" + messageId;
     }
 
-    // Helper method: Extract timestamp from messageSk
     public Long extractTimestamp() {
         if (messageSk == null || !messageSk.startsWith("MSG#")) {
             return null;
