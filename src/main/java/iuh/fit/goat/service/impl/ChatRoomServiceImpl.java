@@ -4,7 +4,6 @@ import iuh.fit.goat.common.MessageEvent;
 import iuh.fit.goat.dto.request.chat.*;
 import iuh.fit.goat.dto.request.message.MessageCreateRequest;
 import iuh.fit.goat.dto.request.message.MessageToNewChatRoom;
-import iuh.fit.goat.dto.response.StorageResponse;
 import iuh.fit.goat.dto.response.chat.ChatRoomResponse;
 import iuh.fit.goat.dto.response.ResultPaginationResponse;
 import iuh.fit.goat.dto.response.chat.GroupMemberResponse;
@@ -20,7 +19,6 @@ import iuh.fit.goat.repository.ChatRoomRepository;
 import iuh.fit.goat.repository.UserRepository;
 import iuh.fit.goat.service.ChatRoomService;
 import iuh.fit.goat.service.MessageService;
-import iuh.fit.goat.service.StorageService;
 import iuh.fit.goat.util.SecurityUtil;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -40,13 +38,9 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class ChatRoomServiceImpl implements ChatRoomService {
 
-    private final String MESSAGE_FALLBACK = "Không thể tải tin nhắn này.";
-    private final String MESSAGE_FALLBACK_HIDDEN = "Tin nhắn đã được ẩn.";
-
     private final ChatRoomRepository chatRoomRepository;
     private final ChatMemberRepository chatMemberRepository;
     private final MessageService messageService;
-    private final StorageService storageService;
     private final UserRepository userRepository;
 
     @Override
@@ -301,10 +295,11 @@ public class ChatRoomServiceImpl implements ChatRoomService {
         groupChatRoom.setType(ChatRoomType.GROUP);
         groupChatRoom.setName(request.getName() != null ? request.getName() : "Nhóm mới");
 
-        StorageResponse storageResponse = storageService.handleUploadFile(request.getAvatar(), "/chatgroup/avatars");
-        String avatarUrl = storageResponse.getUrl();
+        // Set avatar URL trực tiếp
+        if (request.getAvatar() != null && !request.getAvatar().isBlank()) {
+            groupChatRoom.setAvatar(request.getAvatar());
+        }
 
-        groupChatRoom.setAvatar(avatarUrl);
         groupChatRoom = chatRoomRepository.saveAndFlush(groupChatRoom);
 
         // Create chat members
@@ -356,20 +351,20 @@ public class ChatRoomServiceImpl implements ChatRoomService {
         validateModeratorOrOwnerPermission(currentMember, "update group info");
 
         // Update group info
-        if (request.getName() != null) {
+        if (request.getName() != null && !request.getName().isBlank()) {
+            String oldName = chatRoom.getName();
             chatRoom.setName(request.getName());
             messageService.createAndSendSystemMessage(
                     chatRoomId,
                     MessageEvent.GROUP_NAME_CHANGED,
                     currentUser,
+                    oldName,
                     request.getName()
             );
         }
-        if (request.getAvatar() != null) {
-            StorageResponse storageResponse = storageService.handleUploadFile(request.getAvatar(), "/chatgroup/avatars");
-            String avatarUrl = storageResponse.getUrl();
-            chatRoom.setAvatar(avatarUrl);
 
+        if (request.getAvatar() != null && !request.getAvatar().isBlank()) {
+            chatRoom.setAvatar(request.getAvatar());
             messageService.createAndSendSystemMessage(
                     chatRoomId,
                     MessageEvent.GROUP_AVATAR_CHANGED,
@@ -777,7 +772,7 @@ public class ChatRoomServiceImpl implements ChatRoomService {
 
     private String resolveMessageContent(Message message) {
         if (message.getIsHidden()) {
-            return MESSAGE_FALLBACK_HIDDEN;
+            return "Tin nhắn đã được ẩn.";
         }
         return formatMessageContent(message);
     }
@@ -812,6 +807,7 @@ public class ChatRoomServiceImpl implements ChatRoomService {
      * Format message content based on type
      */
     private String formatMessageContent(Message message) {
+        String MESSAGE_FALLBACK = "Không thể tải tin nhắn này.";
         return switch (message.getMessageType()) {
             case TEXT -> message.getContent() != null ? message.getContent() : MESSAGE_FALLBACK;
             case IMAGE -> "[Hình ảnh]";
