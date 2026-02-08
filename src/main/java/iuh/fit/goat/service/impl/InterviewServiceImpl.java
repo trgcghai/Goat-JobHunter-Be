@@ -240,6 +240,8 @@ public class InterviewServiceImpl implements InterviewService {
         response.setRating(interview.getRating());
         response.setInterviewer(interviewer);
         response.setApplication(application);
+        response.setCreatedAt(interview.getCreatedAt());
+        response.setUpdatedAt(interview.getUpdatedAt());
 
         return response;
     }

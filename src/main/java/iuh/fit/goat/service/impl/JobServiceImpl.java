@@ -295,7 +295,7 @@ public class JobServiceImpl implements JobService {
                 continue;
             }
 
-            List<Application> apps = this.applicationRepository.findByJob(job);
+            List<Application> apps = this.applicationRepository.findByJobAndDeletedAtIsNull(job);
             long count = (apps == null) ? 0L : apps.size();
             results.add(new JobApplicationCountResponse(id, count));
         }

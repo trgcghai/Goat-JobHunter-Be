@@ -67,14 +67,14 @@ public class ApplicationController {
         return ResponseEntity.status(HttpStatus.OK).body(result);
     }
 
-    @DeleteMapping("/applications/{id}")
+    @DeleteMapping("/{id}")
     @ApiMessage("Delete a application")
     public ResponseEntity<Void> deleteApplication(@PathVariable("id") long id) {
         this.applicationService.handleDeleteApplication(id);
         return ResponseEntity.status(HttpStatus.OK).body(null);
     }
 
-    @GetMapping("/applications/{id}")
+    @GetMapping("/{id}")
     public ResponseEntity<ApplicationResponse> getApplicationById(@PathVariable("id") String id)
             throws InvalidException {
         Pattern pattern = Pattern.compile("^[0-9]+$");
@@ -99,7 +99,7 @@ public class ApplicationController {
         return ResponseEntity.status(HttpStatus.OK).body(result);
     }
 
-    @GetMapping("/applications")
+    @GetMapping
     public ResponseEntity<ResultPaginationResponse> getAllApplicationsByRecruiter(
             @Filter Specification<Application> spec, Pageable pageable) {
         List<Long> jobIds = this.jobService.handleGetAllJobIdsByCompany();
@@ -113,18 +113,18 @@ public class ApplicationController {
         return ResponseEntity.status(HttpStatus.OK).body(result);
     }
 
-    @GetMapping("/applications/by-applicant")
+    @GetMapping("/by-applicant")
     public ResponseEntity<ResultPaginationResponse> getAllApplicationsByApplicant(Pageable pageable) {
         String email = SecurityUtil.getCurrentUserLogin().isPresent() ? SecurityUtil.getCurrentUserLogin().get() : "";
 
-        FilterNode filterNode = this.filterParser.parse("email='" + email + "'");
+        FilterNode filterNode = this.filterParser.parse("applicant.email='" + email + "'");
         FilterSpecification<Application> spec = this.filterSpecificationConverter.convert(filterNode);
 
         ResultPaginationResponse result = this.applicationService.handleGetAllApplications(spec, pageable);
         return ResponseEntity.status(HttpStatus.OK).body(result);
     }
 
-    @GetMapping("/applications/by-applicant/{applicantId}")
+    @GetMapping("/by-applicant/{applicantId}")
     public ResponseEntity<ResultPaginationResponse> getApplicationsByApplicantId(
             @PathVariable("applicantId") String applicantId,
             Pageable pageable) throws InvalidException {
@@ -141,15 +141,11 @@ public class ApplicationController {
         return ResponseEntity.status(HttpStatus.OK).body(result);
     }
 
-    @GetMapping("/applications/count")
-    public ResponseEntity<Map<String, Object>> countApplications(
-            @RequestParam Long applicantId,
-            @RequestParam Long jobId
-    ) {
+    @GetMapping("/count")
+    public ResponseEntity<Map<String, Object>> countApplications(@RequestParam Long jobId) {
         Long count = this.applicationService.handleCountApplicationsByApplicantForJob(jobId);
         Map<String, Object> response = new HashMap<>();
         response.put("submittedApplications", count);
-
         return ResponseEntity.ok(response);
     }
 }

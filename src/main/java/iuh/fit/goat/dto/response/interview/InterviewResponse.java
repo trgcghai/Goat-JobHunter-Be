@@ -31,6 +31,9 @@ public class InterviewResponse {
     private InterviewUser interviewer;
     private InterviewApplication application;
 
+    private Instant createdAt;
+    private Instant updatedAt;
+
     @Getter
     @Setter
     @NoArgsConstructor
