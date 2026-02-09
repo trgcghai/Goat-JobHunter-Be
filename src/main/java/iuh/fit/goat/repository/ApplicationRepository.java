@@ -13,12 +13,12 @@ import java.util.List;
 @Repository
 public interface ApplicationRepository extends JpaRepository<Application, Long>, JpaSpecificationExecutor<Application> {
     List<Application> findByApplicant(Applicant applicant);
-    List<Application> findByJob(Job job);
+    List<Application> findByJobAndDeletedAtIsNull(Job job);
 
     @Query(
         """
         SELECT COUNT(a) FROM Application a
-        WHERE a.applicant.email = :email AND a.job.jobId = :jobId
+        WHERE a.applicant.email = :email AND a.job.jobId = :jobId AND a.deletedAt IS NULL
         """
     )
     Long countApplicationsByApplicantAndJob(String email, Long jobId);

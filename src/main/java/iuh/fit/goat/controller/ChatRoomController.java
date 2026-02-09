@@ -1,8 +1,12 @@
 package iuh.fit.goat.controller;
 
+import iuh.fit.goat.dto.request.chat.*;
 import iuh.fit.goat.dto.request.message.MessageCreateRequest;
 import iuh.fit.goat.dto.request.message.MessageToNewChatRoom;
 import iuh.fit.goat.dto.response.ResultPaginationResponse;
+import iuh.fit.goat.dto.response.chat.ChatRoomResponse;
+import iuh.fit.goat.dto.response.chat.GroupMemberResponse;
+import iuh.fit.goat.entity.ChatMember;
 import iuh.fit.goat.entity.ChatRoom;
 import iuh.fit.goat.entity.Message;
 import iuh.fit.goat.entity.User;
@@ -50,6 +54,20 @@ public class ChatRoomController {
     }
 
     @GetMapping("/{id}")
+    public ResponseEntity<?> getDetailChatRoomInformation(@PathVariable Long id) throws InvalidException {
+        String email = SecurityUtil.getCurrentUserLogin()
+                .orElseThrow(() -> new InvalidException("User not authenticated"));
+
+        User currentUser = userRepository.findByEmail(email);
+        if (currentUser == null) {
+            throw new InvalidException("User not found");
+        }
+
+        ChatRoomResponse response = chatRoomService.getDetailChatRoomInformation(currentUser, id);
+        return ResponseEntity.ok(response);
+    }
+
+    @GetMapping("/{id}/messages")
     public ResponseEntity<?> getMessagesInChatRoom(@PathVariable Long id, Pageable pageable) throws InvalidException {
         String email = SecurityUtil.getCurrentUserLogin()
                 .orElseThrow(() -> new InvalidException("User not authenticated"));
@@ -93,6 +111,86 @@ public class ChatRoomController {
 
         List<Message> fileMessages = chatRoomService.getFileMessagesInChatRoom(currentUser, id, pageable);
         return ResponseEntity.ok(fileMessages);
+    }
+
+    @PostMapping("/group")
+    public ResponseEntity<ChatRoom> createGroupChat(
+            @Valid @RequestBody CreateGroupChatRequest request
+    ) throws InvalidException {
+        User currentUser = getCurrentUser();
+        ChatRoom groupChat = chatRoomService.createGroupChat(currentUser, request);
+        return ResponseEntity.ok(groupChat);
+    }
+
+    @GetMapping("/group/{groupId}/members")
+    public ResponseEntity<List<GroupMemberResponse>> getGroupMembers(
+            @PathVariable Long groupId
+    ) throws InvalidException {
+        User currentUser = getCurrentUser();
+        List<GroupMemberResponse> members = chatRoomService.getGroupMembers(currentUser, groupId);
+        return ResponseEntity.ok(members);
+    }
+
+    @PutMapping("/group/{chatRoomId}")
+    public ResponseEntity<ChatRoom> updateGroupInfo(
+            @PathVariable Long chatRoomId,
+            @Valid @RequestBody UpdateGroupInfoRequest request
+    ) throws InvalidException {
+        User currentUser = getCurrentUser();
+        ChatRoom updatedChatRoom = chatRoomService.updateGroupInfo(currentUser, chatRoomId, request);
+        return ResponseEntity.ok(updatedChatRoom);
+    }
+
+    @DeleteMapping("/group/{chatRoomId}")
+    public ResponseEntity<Void> leaveGroupChat(
+            @PathVariable Long chatRoomId
+    ) throws InvalidException {
+        User currentUser = getCurrentUser();
+        chatRoomService.leaveGroupChat(currentUser, chatRoomId);
+        return ResponseEntity.ok().build();
+    }
+
+    @PostMapping("/group/{chatRoomId}/member")
+    public ResponseEntity<ChatMember> addMemberToGroup(
+            @PathVariable Long chatRoomId,
+            @Valid @RequestBody AddMemberRequest request
+    ) throws InvalidException {
+        User currentUser = getCurrentUser();
+        ChatMember newMember = chatRoomService.addMemberToGroup(currentUser, chatRoomId, request);
+        return ResponseEntity.ok(newMember);
+    }
+
+    @DeleteMapping("/group/{chatRoomId}/member/{chatMemberId}")
+    public ResponseEntity<Void> removeMemberFromGroup(
+            @PathVariable Long chatRoomId,
+            @PathVariable Long chatMemberId
+    ) throws InvalidException {
+        User currentUser = getCurrentUser();
+        chatRoomService.removeMemberFromGroup(currentUser, chatRoomId, chatMemberId);
+        return ResponseEntity.ok().build();
+    }
+
+    @PutMapping("/group/{chatRoomId}/member/{chatMemberId}")
+    public ResponseEntity<ChatMember> updateMemberRole(
+            @PathVariable Long chatRoomId,
+            @PathVariable Long chatMemberId,
+            @Valid @RequestBody UpdateMemberRoleRequest request
+    ) throws InvalidException {
+        User currentUser = getCurrentUser();
+        ChatMember updatedMember = chatRoomService.updateMemberRole(
+                currentUser, chatRoomId, chatMemberId, request);
+        return ResponseEntity.ok(updatedMember);
+    }
+
+    private User getCurrentUser() throws InvalidException {
+        String email = SecurityUtil.getCurrentUserLogin()
+                .orElseThrow(() -> new InvalidException("User not authenticated"));
+
+        User currentUser = userRepository.findByEmail(email);
+        if (currentUser == null) {
+            throw new InvalidException("User not found");
+        }
+        return currentUser;
     }
 
     /**

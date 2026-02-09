@@ -1,9 +1,12 @@
 package iuh.fit.goat.service.impl;
 
+import iuh.fit.goat.common.MessageEvent;
+import iuh.fit.goat.dto.request.chat.*;
 import iuh.fit.goat.dto.request.message.MessageCreateRequest;
 import iuh.fit.goat.dto.request.message.MessageToNewChatRoom;
 import iuh.fit.goat.dto.response.chat.ChatRoomResponse;
 import iuh.fit.goat.dto.response.ResultPaginationResponse;
+import iuh.fit.goat.dto.response.chat.GroupMemberResponse;
 import iuh.fit.goat.entity.ChatMember;
 import iuh.fit.goat.entity.ChatRoom;
 import iuh.fit.goat.entity.Message;
@@ -16,7 +19,6 @@ import iuh.fit.goat.repository.ChatRoomRepository;
 import iuh.fit.goat.repository.UserRepository;
 import iuh.fit.goat.service.ChatRoomService;
 import iuh.fit.goat.service.MessageService;
-import iuh.fit.goat.service.UserService;
 import iuh.fit.goat.util.SecurityUtil;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -36,13 +38,9 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class ChatRoomServiceImpl implements ChatRoomService {
 
-    private final String MESSAGE_FALLBACK = "Không thể tải tin nhắn này.";
-    private final String MESSAGE_FALLBACK_HDDEN = "Tin nhắn đã được ẩn.";
-
     private final ChatRoomRepository chatRoomRepository;
     private final ChatMemberRepository chatMemberRepository;
     private final MessageService messageService;
-    private final UserService userService;
     private final UserRepository userRepository;
 
     @Override
@@ -75,6 +73,19 @@ public class ChatRoomServiceImpl implements ChatRoomService {
 
         return new ResultPaginationResponse(meta, chatRooms);
     }
+
+    @Override
+    @Transactional(readOnly = true)
+    public ChatRoomResponse getDetailChatRoomInformation(User currentUser, Long chatRoomId) throws InvalidException {
+        // Validate chat room exists
+        ChatRoom chatRoom = getChatRoomById(chatRoomId);
+
+        // Check if user is member
+        getCurrentMemberInChatRoom(chatRoom, currentUser.getAccountId());
+
+        return this.mapToChatRoomResponse(chatRoom);
+    }
+
 
     @Override
     public List<Message> getMessagesInChatRoom(User user, Long chatRoomId, Pageable pageable) throws InvalidException {
@@ -272,6 +283,341 @@ public class ChatRoomServiceImpl implements ChatRoomService {
         return this.messageService.getFileMessagesByChatRoom(chatRoomId, pageable);
     }
 
+
+    @Override
+    @Transactional
+    public ChatRoom createGroupChat(User currentUser, CreateGroupChatRequest request) throws InvalidException {
+        // Validate all member IDs exist
+        List<User> members = validateAndGetUsers(request.getAccountIds());
+
+        // Create group chat room
+        ChatRoom groupChatRoom = new ChatRoom();
+        groupChatRoom.setType(ChatRoomType.GROUP);
+        groupChatRoom.setName(request.getName() != null ? request.getName() : "Nhóm mới");
+
+        // Set avatar URL trực tiếp
+        if (request.getAvatar() != null && !request.getAvatar().isBlank()) {
+            groupChatRoom.setAvatar(request.getAvatar());
+        }
+
+        groupChatRoom = chatRoomRepository.saveAndFlush(groupChatRoom);
+
+        // Create chat members
+        List<ChatMember> chatMembers = new ArrayList<>();
+
+        // Add current user as OWNER
+        ChatMember owner = new ChatMember();
+        owner.setUser(currentUser);
+        owner.setRole(ChatRole.OWNER);
+        owner.setRoom(groupChatRoom);
+        chatMembers.add(owner);
+
+        // Add other members as MEMBER
+        for (User member : members) {
+            if (member.getAccountId() != currentUser.getAccountId()) {
+                ChatMember chatMember = new ChatMember();
+                chatMember.setUser(member);
+                chatMember.setRole(ChatRole.MEMBER);
+                chatMember.setRoom(groupChatRoom);
+                chatMembers.add(chatMember);
+            }
+        }
+
+        // Save all members
+        chatMemberRepository.saveAllAndFlush(chatMembers);
+        groupChatRoom.setMembers(chatMembers);
+
+        messageService.createAndSendSystemMessage(
+                groupChatRoom.getRoomId(),
+                MessageEvent.GROUP_CREATED,
+                currentUser,
+                groupChatRoom.getName()
+        );
+
+        log.info("Created group chat: {} with {} members",
+                groupChatRoom.getRoomId(), chatMembers.size());
+
+        return groupChatRoom;
+    }
+
+    @Override
+    @Transactional
+    public ChatRoom updateGroupInfo(User currentUser, Long chatRoomId, UpdateGroupInfoRequest request) throws InvalidException {
+        ChatRoom chatRoom = getChatRoomById(chatRoomId);
+        validateGroupChatRoom(chatRoom);
+
+        // Check if user is member and has permission to update
+        ChatMember currentMember = getCurrentMemberInChatRoom(chatRoom, currentUser.getAccountId());
+        validateModeratorOrOwnerPermission(currentMember, "update group info");
+
+        // Update group info
+        if (request.getName() != null && !request.getName().isBlank()) {
+            String oldName = chatRoom.getName();
+            chatRoom.setName(request.getName());
+            messageService.createAndSendSystemMessage(
+                    chatRoomId,
+                    MessageEvent.GROUP_NAME_CHANGED,
+                    currentUser,
+                    oldName,
+                    request.getName()
+            );
+        }
+
+        if (request.getAvatar() != null && !request.getAvatar().isBlank()) {
+            chatRoom.setAvatar(request.getAvatar());
+            messageService.createAndSendSystemMessage(
+                    chatRoomId,
+                    MessageEvent.GROUP_AVATAR_CHANGED,
+                    currentUser
+            );
+        }
+
+        return chatRoomRepository.save(chatRoom);
+    }
+
+    @Override
+    @Transactional
+    public void leaveGroupChat(User currentUser, Long chatRoomId) throws InvalidException {
+        ChatRoom chatRoom = getChatRoomById(chatRoomId);
+        validateGroupChatRoom(chatRoom);
+
+        ChatMember currentMember = getCurrentMemberInChatRoom(chatRoom, currentUser.getAccountId());
+
+        // OWNER cannot leave unless ownership is transferred
+        if (currentMember.getRole() == ChatRole.OWNER) {
+            throw new InvalidException("Owner cannot leave group. Please transfer ownership first.");
+        }
+
+        // Remove from collection
+        chatRoom.getMembers().remove(currentMember);
+
+        // Clear relationship
+        currentMember.setRoom(null);
+
+        // Hard delete
+        chatMemberRepository.delete(currentMember);
+        chatMemberRepository.flush();
+
+        log.info("User: {} left group chat: {}", currentUser.getAccountId(), chatRoomId);
+    }
+
+    @Override
+    @Transactional
+    public ChatMember addMemberToGroup(User currentUser, Long chatRoomId, AddMemberRequest request) throws InvalidException {
+        ChatRoom chatRoom = getChatRoomById(chatRoomId);
+        validateGroupChatRoom(chatRoom);
+
+        // Check requester permission
+        ChatMember requesterMember = getCurrentMemberInChatRoom(chatRoom, currentUser.getAccountId());
+        validateModeratorOrOwnerPermission(requesterMember, "add member");
+
+        // Validate target user exists
+        User targetUser = userRepository.findById(request.getAccountId())
+                .orElseThrow(() -> new InvalidException("User to be added not found"));
+
+        // Check if user is already a member
+        boolean isAlreadyMember = chatRoom.getMembers().stream()
+                .anyMatch(m -> m.getDeletedAt() == null &&
+                        m.getUser().getAccountId() == targetUser.getAccountId());
+
+        if (isAlreadyMember) {
+            throw new InvalidException("User is already a member of this group");
+        }
+
+        // Create new member
+        ChatMember newMember = new ChatMember();
+        newMember.setUser(targetUser);
+        newMember.setRole(ChatRole.MEMBER);
+        newMember.setRoom(chatRoom);
+
+        newMember = chatMemberRepository.save(newMember);
+
+        messageService.createAndSendSystemMessage(
+                chatRoomId,
+                MessageEvent.MEMBER_ADDED,
+                currentUser,
+                getDisplayName(targetUser)
+        );
+
+        return newMember;
+    }
+
+    @Override
+    @Transactional
+    public void removeMemberFromGroup(User currentUser, Long chatRoomId, Long chatMemberId) throws InvalidException {
+        ChatRoom chatRoom = getChatRoomById(chatRoomId);
+        validateGroupChatRoom(chatRoom);
+
+        // Check requester permission
+        ChatMember requesterMember = getCurrentMemberInChatRoom(chatRoom, currentUser.getAccountId());
+        validateModeratorOrOwnerPermission(requesterMember, "remove member");
+
+        // Get target member
+        ChatMember targetMember = chatMemberRepository.findById(chatMemberId)
+                .orElseThrow(() -> new InvalidException("Chat member not found"));
+
+        // Validate target member belongs to this chat room
+        if (!targetMember.getRoom().getRoomId().equals(chatRoomId)) {
+            throw new InvalidException("Member does not belong to this chat room");
+        }
+
+        // Cannot remove yourself via this endpoint
+        if (targetMember.getUser().getAccountId() == currentUser.getAccountId()) {
+            throw new InvalidException("Cannot remove yourself. Use leave group endpoint instead");
+        }
+
+        // MODERATOR cannot remove OWNER
+        if (requesterMember.getRole() == ChatRole.MODERATOR && targetMember.getRole() == ChatRole.OWNER) {
+            throw new InvalidException("Moderator cannot remove owner");
+        }
+
+        // 1. Remove from collection FIRST (important for bidirectional relationship)
+        chatRoom.getMembers().remove(targetMember);
+
+        // 2. Clear foreign key
+        targetMember.setRoom(null);
+
+        // 3. Hard delete from database
+        chatMemberRepository.delete(targetMember);
+        chatMemberRepository.flush();
+
+        String targetUserName = getDisplayName(targetMember.getUser());
+
+        messageService.createAndSendSystemMessage(
+                chatRoomId,
+                MessageEvent.MEMBER_REMOVED,
+                currentUser,
+                targetUserName
+        );
+
+        log.info("Removed member: {} from group: {} by user: {}",
+                chatMemberId, chatRoomId, currentUser.getAccountId());
+    }
+
+    @Override
+    @Transactional
+    public ChatMember updateMemberRole(User currentUser, Long chatRoomId, Long chatMemberId, UpdateMemberRoleRequest request) throws InvalidException {
+        ChatRoom chatRoom = getChatRoomById(chatRoomId);
+        validateGroupChatRoom(chatRoom);
+
+        // Check requester permission
+        ChatMember requesterMember = getCurrentMemberInChatRoom(chatRoom, currentUser.getAccountId());
+        validateModeratorOrOwnerPermission(requesterMember, "update member role");
+
+        // Get target member
+        ChatMember targetMember = chatMemberRepository.findById(chatMemberId)
+                .orElseThrow(() -> new InvalidException("Chat member not found"));
+
+        // Validate target member belongs to this chat room
+        if (!targetMember.getRoom().getRoomId().equals(chatRoomId)) {
+            throw new InvalidException("Member does not belong to this chat room");
+        }
+
+        // MODERATOR cannot change OWNER role
+        if (requesterMember.getRole() == ChatRole.MODERATOR && targetMember.getRole() == ChatRole.OWNER) {
+            throw new InvalidException("Moderator cannot change owner role");
+        }
+
+        // Prevent removing last OWNER
+        if (targetMember.getRole() == ChatRole.OWNER && request.getRole() != ChatRole.OWNER) {
+            long ownerCount = chatRoom.getMembers().stream()
+                    .filter(m -> m.getDeletedAt() == null && m.getRole() == ChatRole.OWNER)
+                    .count();
+
+            if (ownerCount <= 1) {
+                throw new InvalidException("Cannot remove the last owner. Assign another owner first");
+            }
+        }
+
+        // Update role
+        targetMember.setRole(request.getRole());
+
+        ChatRole oldRole = targetMember.getRole();
+        targetMember.setRole(request.getRole());
+        ChatMember updatedMember = chatMemberRepository.save(targetMember);
+
+        // Create system message
+        messageService.createAndSendSystemMessage(
+                chatRoomId,
+                MessageEvent.ROLE_CHANGED,
+                currentUser,
+                getDisplayName(targetMember.getUser()),
+                oldRole,
+                request.getRole()
+        );
+
+        return updatedMember;
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<GroupMemberResponse> getGroupMembers(User currentUser, Long chatRoomId) throws InvalidException {
+        ChatRoom chatRoom = getChatRoomById(chatRoomId);
+        validateGroupChatRoom(chatRoom);
+
+        // Check if current user is a member
+        getCurrentMemberInChatRoom(chatRoom, currentUser.getAccountId());
+
+        // Fetch active members using repository
+        List<ChatMember> members = chatMemberRepository.findByRoomRoomIdAndDeletedAtIsNull(chatRoomId);
+
+        // Map to DTO
+        return members.stream()
+                .map(this::mapToGroupMemberResponse)
+                .toList();
+    }
+
+    // =============== HELPER METHODS FOR GROUP CHAT ====================
+
+    private GroupMemberResponse mapToGroupMemberResponse(ChatMember member) {
+        User user = member.getUser();
+        return GroupMemberResponse.builder()
+                .chatMemberId(member.getMemberId())
+                .accountId(user.getAccountId())
+                .fullName(user.getFullName())
+                .username(user.getUsername())
+                .email(user.getEmail())
+                .avatar(user.getAvatar())
+                .role(member.getRole())
+                .joinedAt(member.getCreatedAt())
+                .build();
+    }
+
+    private List<User> validateAndGetUsers(List<Long> accountIds) throws InvalidException {
+        List<User> users = userRepository.findAllById(accountIds);
+
+        if (users.size() != accountIds.size()) {
+            throw new InvalidException("One or more users not found");
+        }
+
+        return users;
+    }
+
+    private ChatRoom getChatRoomById(Long chatRoomId) throws InvalidException {
+        return chatRoomRepository.findById(chatRoomId)
+                .orElseThrow(() -> new InvalidException("Chat room not found"));
+    }
+
+    private void validateGroupChatRoom(ChatRoom chatRoom) throws InvalidException {
+        if (chatRoom.getType() != ChatRoomType.GROUP) {
+            throw new InvalidException("This operation is only available for group chats");
+        }
+    }
+
+    private ChatMember getCurrentMemberInChatRoom(ChatRoom chatRoom, Long accountId) throws InvalidException {
+        return chatRoom.getMembers().stream()
+                .filter(m -> m.getDeletedAt() == null &&
+                        m.getUser().getAccountId() == accountId)
+                .findFirst()
+                .orElseThrow(() -> new InvalidException("User is not a member of this chat room"));
+    }
+
+    private void validateModeratorOrOwnerPermission(ChatMember member, String action) throws InvalidException {
+        if (member.getRole() != ChatRole.OWNER && member.getRole() != ChatRole.MODERATOR) {
+            throw new InvalidException("Only owners and moderators can " + action);
+        }
+    }
+
     // =============== HELPER FUNCTIONS ====================
 
     /**
@@ -344,13 +690,17 @@ public class ChatRoomServiceImpl implements ChatRoomService {
 
     // =============== HELPER METHODS FOR mapToChatRoomResponse ====================
 
-    private record LastMessageInfo(String content, LocalDateTime time, boolean isCurrentUserSender) {}
+    private record LastMessageInfo(String content, LocalDateTime time, boolean isCurrentUserSender) {
+    }
 
     private Message getLastMessageSafely(Long chatRoomId) {
         try {
             return messageService.getLastMessageByChatRoom(chatRoomId);
         } catch (InvalidException e) {
-            log.warn("Failed to get last message for chatRoom {}: {}", chatRoomId, e.getMessage());
+            log.debug("No messages found for chatRoom {}: {}", chatRoomId, e.getMessage());
+            return null;
+        } catch (Exception e) {
+            log.error("Unexpected error getting last message for chatRoom {}: {}", chatRoomId, e.getMessage());
             return null;
         }
     }
@@ -368,13 +718,14 @@ public class ChatRoomServiceImpl implements ChatRoomService {
 
         if (chatRoom.getType() == ChatRoomType.GROUP) {
             String name = chatRoom.getName();
-            if (name == null || name.isBlank()) {
+            // Trả về tên group ngay cả khi chưa có tin nhắn
+            if (name == null || name.isBlank() || "Không có tên".equals(name)) {
                 return generateGroupName(chatRoom.getMembers());
             }
             return name;
         }
 
-        return chatRoom.getName();
+        return chatRoom.getName() != null ? chatRoom.getName() : "";
     }
 
     private String resolveChatRoomAvatar(ChatRoom chatRoom, String currentUserEmail) {
@@ -409,7 +760,7 @@ public class ChatRoomServiceImpl implements ChatRoomService {
 
     private LastMessageInfo buildLastMessageInfo(Message lastMessage, String currentUserEmail) {
         if (lastMessage == null) {
-            return new LastMessageInfo(MESSAGE_FALLBACK, null, false);
+            return new LastMessageInfo("", null, false);
         }
 
         String content = resolveMessageContent(lastMessage);
@@ -421,19 +772,13 @@ public class ChatRoomServiceImpl implements ChatRoomService {
 
     private String resolveMessageContent(Message message) {
         if (message.getIsHidden()) {
-            return MESSAGE_FALLBACK_HDDEN;
+            return "Tin nhắn đã được ẩn.";
         }
         return formatMessageContent(message);
     }
 
     private boolean isMessageFromCurrentUser(Message message, String currentUserEmail) {
-        if (message.getSenderId() == null) {
-            return false;
-        }
-
-        return userRepository.findById(Long.parseLong(message.getSenderId()))
-                .map(sender -> sender.getEmail().equalsIgnoreCase(currentUserEmail))
-                .orElse(false);
+        return message.getSender().getEmail().equalsIgnoreCase(currentUserEmail);
     }
 
     private LocalDateTime convertToLocalDateTime(java.time.Instant instant) {
@@ -444,13 +789,15 @@ public class ChatRoomServiceImpl implements ChatRoomService {
     }
 
     private ChatRoomResponse buildFallbackResponse(ChatRoom chatRoom) {
+        String currentUserEmail = SecurityUtil.getCurrentUserEmail();
+
         return ChatRoomResponse.builder()
                 .roomId(chatRoom.getRoomId())
                 .type(chatRoom.getType())
-                .name("Không có tên")
-                .avatar(chatRoom.getAvatar())
-                .memberCount(0)
-                .lastMessagePreview(MESSAGE_FALLBACK)
+                .name(resolveChatRoomName(chatRoom, currentUserEmail))
+                .avatar(resolveChatRoomAvatar(chatRoom, currentUserEmail))
+                .memberCount(countActiveMembers(chatRoom))
+                .lastMessagePreview("") // Để trống thay vì "Không thể tải tin nhắn này"
                 .currentUserSentLastMessage(false)
                 .lastMessageTime(null)
                 .build();
@@ -460,6 +807,7 @@ public class ChatRoomServiceImpl implements ChatRoomService {
      * Format message content based on type
      */
     private String formatMessageContent(Message message) {
+        String MESSAGE_FALLBACK = "Không thể tải tin nhắn này.";
         return switch (message.getMessageType()) {
             case TEXT -> message.getContent() != null ? message.getContent() : MESSAGE_FALLBACK;
             case IMAGE -> "[Hình ảnh]";
