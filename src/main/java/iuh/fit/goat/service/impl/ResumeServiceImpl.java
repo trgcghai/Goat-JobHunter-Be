@@ -206,10 +206,6 @@ public class ResumeServiceImpl implements ResumeService {
         response.setFileSize(resume.getFileSize());
         response.setDefault(resume.isDefault());
         response.setPublic(resume.isPublic());
-        response.setAiScore(resume.getAiScore());
-        response.setAiAnalysis(resume.getAiAnalysis());
-        response.setAiSuggestions(resume.getAiSuggestions());
-        response.setAnalyzedAt(resume.getAnalyzedAt());
 
         ResumeResponse.ResumeApplicant applicantResponse = new ResumeResponse.ResumeApplicant(
                 resume.getApplicant().getAccountId(),

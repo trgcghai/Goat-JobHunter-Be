@@ -24,5 +24,6 @@
     <include file="db.changelog/data/2026-01-20/init-job.xml"/>
     <include file="db.changelog/schema/2026-01-20/create-sequence-subscribers.xml"/>
     <include file="db.changelog/schema/2026-01-24/drop-summary-resumes.xml"/>
+    <include file="db.changelog/schema/2026-02-14/init-resume-evaluations.xml"/>
 
 </databaseChangeLog>

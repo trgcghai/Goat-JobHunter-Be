@@ -21,7 +21,8 @@ public enum SoftDeleteFilter {
     CHATROOM("activeChatRoomFilter"),
     CHATMEMBER("activeChatMemberFilter"),
     TICKET("activeTicketFilter"),
-    REVIEW("activeReviewFilter");
+    REVIEW("activeReviewFilter"),
+    RESUMEEVALUATION("activeResumeEvaluationFilter");
 
     private final String value;
 

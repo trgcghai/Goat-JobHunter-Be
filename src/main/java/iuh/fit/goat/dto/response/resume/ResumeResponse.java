@@ -21,11 +21,6 @@ public class ResumeResponse {
     private long fileSize;
     private boolean isDefault;
     private boolean isPublic;
-    private Double aiScore;
-    private String aiAnalysis;
-    private String aiSuggestions;
-    private Instant analyzedAt;
-
     private ResumeApplicant applicant;
 
     private Instant createdAt;
