@@ -4,8 +4,6 @@ import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.FilterDef;
 
-import java.time.Instant;
-
 @Entity
 @Table(name = "resume_evaluations")
 @Getter
@@ -26,8 +24,9 @@ public class ResumeEvaluation extends BaseEntity {
     @Column(columnDefinition = "TEXT")
     private String missingSkills;
     @Column(columnDefinition = "TEXT")
+    private String skills;
+    @Column(columnDefinition = "TEXT")
     private String suggestions;
-    private Instant analyzedAt;
     private String aiModel;
 
     @ManyToOne(fetch = FetchType.LAZY)

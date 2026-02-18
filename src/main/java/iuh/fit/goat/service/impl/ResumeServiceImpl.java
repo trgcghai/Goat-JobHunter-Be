@@ -2,15 +2,14 @@ package iuh.fit.goat.service.impl;
 
 import iuh.fit.goat.dto.request.resume.CreateResumeRequest;
 import iuh.fit.goat.dto.response.ResultPaginationResponse;
+import iuh.fit.goat.dto.response.resume.ResumeEvaluationResponse;
 import iuh.fit.goat.dto.response.resume.ResumeResponse;
 import iuh.fit.goat.dto.response.resume.ResumeStatusResponse;
-import iuh.fit.goat.entity.Account;
-import iuh.fit.goat.entity.Applicant;
-import iuh.fit.goat.entity.Resume;
-import iuh.fit.goat.entity.Role;
+import iuh.fit.goat.entity.*;
 import iuh.fit.goat.exception.InvalidException;
 import iuh.fit.goat.repository.AccountRepository;
 import iuh.fit.goat.repository.ApplicantRepository;
+import iuh.fit.goat.repository.ResumeEvaluationRepository;
 import iuh.fit.goat.repository.ResumeRepository;
 import iuh.fit.goat.service.ResumeService;
 import iuh.fit.goat.service.StorageService;
@@ -34,6 +33,7 @@ public class ResumeServiceImpl implements ResumeService {
     private final ResumeRepository resumeRepository;
     private final ApplicantRepository applicantRepository;
     private final AccountRepository accountRepository;
+    private final ResumeEvaluationRepository resumeEvaluationRepository;
 
     @Override
     public Resume handleCreateResume(CreateResumeRequest request) throws InvalidException {
@@ -197,6 +197,35 @@ public class ResumeServiceImpl implements ResumeService {
     }
 
     @Override
+    public ResultPaginationResponse handleGetAllResumeEvaluationByResume(
+            Specification<ResumeEvaluation> spec, Pageable pageable, Long resumeId
+    ) throws InvalidException
+    {
+        Resume resume = this.handleGetResumeById(resumeId);
+        if (resume == null) throw new InvalidException("Resume not found");
+
+         Specification<ResumeEvaluation> resumeEvaluationsSpec = (root, query, cb) ->
+            cb.and(
+                cb.isNull(root.get("deletedAt")),
+                cb.equal(root.get("resume").get("resumeId"), resumeId)
+            );
+        Specification<ResumeEvaluation> finalSpec = spec == null ? resumeEvaluationsSpec : spec.and(resumeEvaluationsSpec);
+        Page<ResumeEvaluation> page = this.resumeEvaluationRepository.findAll(finalSpec, pageable);
+
+        ResultPaginationResponse.Meta meta = new ResultPaginationResponse.Meta();
+        meta.setPage(pageable.getPageNumber() + 1);
+        meta.setPageSize(pageable.getPageSize());
+        meta.setPages(page.getTotalPages());
+        meta.setTotal(page.getTotalElements());
+
+        List<ResumeEvaluationResponse> resumeEvaluationResponses = page.getContent().stream()
+                .map(this::handleConvertToResumeEvaluationResponse)
+                .toList();
+
+        return new ResultPaginationResponse(meta, resumeEvaluationResponses);
+    }
+
+    @Override
     public ResumeResponse handleConvertToResumeResponse(Resume resume) {
         ResumeResponse response = new ResumeResponse();
         response.setResumeId(resume.getResumeId());
@@ -217,6 +246,24 @@ public class ResumeServiceImpl implements ResumeService {
         response.setCreatedBy(resume.getCreatedBy());
         response.setUpdatedAt(resume.getUpdatedAt());
         response.setUpdatedBy(resume.getUpdatedBy());
+
+        return response;
+    }
+
+    @Override
+    public ResumeEvaluationResponse handleConvertToResumeEvaluationResponse(ResumeEvaluation resume) {
+        ResumeEvaluationResponse response = new ResumeEvaluationResponse();
+        response.setResumeEvaluationId(resume.getResumeEvaluationId());
+        response.setScore(resume.getScore());
+        response.setStrengths(resume.getStrengths());
+        response.setWeaknesses(resume.getWeaknesses());
+        response.setMissingSkills(resume.getMissingSkills());
+        response.setSkills(resume.getSkills());
+        response.setSuggestions(resume.getSuggestions());
+        response.setAiModel(resume.getAiModel());
+        response.setCreatedAt(resume.getCreatedAt());
+        response.setUpdatedAt(resume.getUpdatedAt());
+        response.setResume(new ResumeEvaluationResponse.Resume(resume.getResume().getResumeId()));
 
         return response;
     }

@@ -13,6 +13,8 @@ import java.util.Optional;
 public interface ResumeRepository extends JpaRepository<Resume, Long>, JpaSpecificationExecutor<Resume> {
     Optional<Resume> findByResumeIdAndDeletedAtIsNull(Long resumeId);
 
+    Optional<Resume> findByFileUrlAndDeletedAtIsNull(String resumeUrl);
+
     @Modifying
     @Query(
         """

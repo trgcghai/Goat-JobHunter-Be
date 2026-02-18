@@ -2,15 +2,14 @@ package iuh.fit.goat.controller;
 
 import iuh.fit.goat.dto.request.ai.BlogContentRequest;
 import iuh.fit.goat.dto.request.ai.ChatRequest;
+import iuh.fit.goat.dto.response.resume.ResumeEvaluationResponse;
 import iuh.fit.goat.exception.InvalidException;
 import iuh.fit.goat.service.AiService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
@@ -32,5 +31,11 @@ public class AiController {
     ) {
         List<String> tags = this.aiService.generateBlogTags(request.getContent());
         return ResponseEntity.ok(tags);
+    }
+
+    @PostMapping("/evaluate/resumes")
+    public ResponseEntity<ResumeEvaluationResponse> evaluateResume(@RequestParam String resumeUrl) throws InvalidException {
+        ResumeEvaluationResponse response = this.aiService.evaluateResume(resumeUrl);
+        return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 }

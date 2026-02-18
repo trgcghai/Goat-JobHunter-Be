@@ -1,10 +1,13 @@
 package iuh.fit.goat.controller;
 
+import com.turkraft.springfilter.boot.Filter;
 import iuh.fit.goat.dto.request.resume.CreateResumeRequest;
 import iuh.fit.goat.dto.request.resume.UpdateResumeRequest;
+import iuh.fit.goat.dto.response.ResultPaginationResponse;
 import iuh.fit.goat.dto.response.resume.ResumeResponse;
 import iuh.fit.goat.dto.response.resume.ResumeStatusResponse;
 import iuh.fit.goat.entity.Resume;
+import iuh.fit.goat.entity.ResumeEvaluation;
 import iuh.fit.goat.exception.InvalidException;
 import iuh.fit.goat.service.ResumeService;
 import iuh.fit.goat.util.SecurityUtil;
@@ -12,6 +15,8 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.core.io.InputStreamResource;
 import org.springframework.core.io.Resource;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -111,5 +116,19 @@ public class ResumeController {
     public ResponseEntity<ResumeResponse> updateTitle(@Valid @RequestBody UpdateResumeRequest request) throws InvalidException {
         Resume resume = this.resumeService.handleUpdateTitle(request.getResumeId(), request.getTitle());
         return ResponseEntity.status(HttpStatus.OK).body(this.resumeService.handleConvertToResumeResponse(resume));
+    }
+
+    @GetMapping("/{resumeId}/evaluations")
+    public ResponseEntity<ResultPaginationResponse> getAllResumeEvaluationByResume(
+            @Filter Specification<ResumeEvaluation> spec, Pageable pageable,
+            @PathVariable("resumeId") String resumeId
+    ) throws InvalidException
+    {
+        if(!SecurityUtil.checkValidNumber(resumeId)) throw new InvalidException("Invalid resume id");
+
+        ResultPaginationResponse result = this.resumeService.handleGetAllResumeEvaluationByResume(
+                spec, pageable, Long.parseLong(resumeId)
+        );
+        return ResponseEntity.status(HttpStatus.OK).body(result);
     }
 }

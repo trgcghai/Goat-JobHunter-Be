@@ -160,4 +160,31 @@ public class SecurityUtil {
         return response.getUrl();
     }
 
+    public static String detectMimeType(String url) throws InvalidException {
+        String lower = url.toLowerCase();
+
+        if (lower.endsWith(".pdf")) {
+            return "application/pdf";
+        }
+
+        if (lower.endsWith(".docx")) {
+            return "application/vnd.openxmlformats-officedocument.wordprocessingml.document";
+        }
+
+        if (lower.endsWith(".doc")) {
+            return "application/msword";
+        }
+
+        if (lower.endsWith(".jpg") || lower.endsWith(".jpeg")) {
+            return "image/jpeg";
+        }
+
+        if (lower.endsWith(".png")) {
+            return "image/png";
+        }
+
+        throw new InvalidException("Unsupported file type");
+    }
+
+
 }
