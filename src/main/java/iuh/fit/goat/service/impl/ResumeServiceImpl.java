@@ -11,6 +11,7 @@ import iuh.fit.goat.repository.AccountRepository;
 import iuh.fit.goat.repository.ApplicantRepository;
 import iuh.fit.goat.repository.ResumeEvaluationRepository;
 import iuh.fit.goat.repository.ResumeRepository;
+import iuh.fit.goat.service.EvaluationService;
 import iuh.fit.goat.service.ResumeService;
 import iuh.fit.goat.service.StorageService;
 import iuh.fit.goat.util.FileUploadUtil;
@@ -29,6 +30,7 @@ import java.util.List;
 @RequiredArgsConstructor
 public class ResumeServiceImpl implements ResumeService {
     private final StorageService storageService;
+    private final EvaluationService evaluationService;
 
     private final ResumeRepository resumeRepository;
     private final ApplicantRepository applicantRepository;
@@ -219,7 +221,7 @@ public class ResumeServiceImpl implements ResumeService {
         meta.setTotal(page.getTotalElements());
 
         List<ResumeEvaluationResponse> resumeEvaluationResponses = page.getContent().stream()
-                .map(this::handleConvertToResumeEvaluationResponse)
+                .map(this.evaluationService::handleConvertToResumeEvaluationResponse)
                 .toList();
 
         return new ResultPaginationResponse(meta, resumeEvaluationResponses);
@@ -246,24 +248,6 @@ public class ResumeServiceImpl implements ResumeService {
         response.setCreatedBy(resume.getCreatedBy());
         response.setUpdatedAt(resume.getUpdatedAt());
         response.setUpdatedBy(resume.getUpdatedBy());
-
-        return response;
-    }
-
-    @Override
-    public ResumeEvaluationResponse handleConvertToResumeEvaluationResponse(ResumeEvaluation resume) {
-        ResumeEvaluationResponse response = new ResumeEvaluationResponse();
-        response.setResumeEvaluationId(resume.getResumeEvaluationId());
-        response.setScore(resume.getScore());
-        response.setStrengths(resume.getStrengths());
-        response.setWeaknesses(resume.getWeaknesses());
-        response.setMissingSkills(resume.getMissingSkills());
-        response.setSkills(resume.getSkills());
-        response.setSuggestions(resume.getSuggestions());
-        response.setAiModel(resume.getAiModel());
-        response.setCreatedAt(resume.getCreatedAt());
-        response.setUpdatedAt(resume.getUpdatedAt());
-        response.setResume(new ResumeEvaluationResponse.Resume(resume.getResume().getResumeId()));
 
         return response;
     }

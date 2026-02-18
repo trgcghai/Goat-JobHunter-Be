@@ -2,7 +2,6 @@ package iuh.fit.goat.service;
 
 import iuh.fit.goat.dto.request.resume.CreateResumeRequest;
 import iuh.fit.goat.dto.response.ResultPaginationResponse;
-import iuh.fit.goat.dto.response.resume.ResumeEvaluationResponse;
 import iuh.fit.goat.dto.response.resume.ResumeResponse;
 import iuh.fit.goat.dto.response.resume.ResumeStatusResponse;
 import iuh.fit.goat.entity.Resume;
@@ -35,6 +34,4 @@ public interface ResumeService {
     ) throws InvalidException;
 
     ResumeResponse handleConvertToResumeResponse(Resume resume);
-
-    ResumeEvaluationResponse handleConvertToResumeEvaluationResponse(ResumeEvaluation resume);
 }

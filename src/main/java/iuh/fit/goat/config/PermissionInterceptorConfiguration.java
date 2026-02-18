@@ -60,8 +60,8 @@ public class PermissionInterceptorConfiguration implements WebMvcConfigurer {
 
                 "/api/v1/resumes/**",                // Resume endpoints - khi login thì chỉ thao tác với resume của chính mình
 
-                "/api/v1/companies/**"
-
+                "/api/v1/companies/**",
+                "/api/v1/evaluations/**"
         };
 
         registry.addInterceptor(getPermissionInterceptor())
