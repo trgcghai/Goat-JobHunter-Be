@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+                      http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-5.0.xsd"
+        objectQuotingStrategy="QUOTE_ONLY_RESERVED_WORDS">
+    <changeSet id="1771047530696-1" author="minhdat">
+        <createSequence incrementBy="50" sequenceName="resume_evaluations_seq" startValue="1"/>
+    </changeSet>
+    <changeSet id="1771047530696-2" author="minhdat">
+        <createTable tableName="resume_evaluations">
+            <column name="resume_evaluation_id" type="BIGINT">
+                <constraints primaryKey="true" primaryKeyName="pk_resume_evaluations"/>
+            </column>
+            <column name="created_at" type="DATETIME"/>
+            <column name="created_by" type="VARCHAR(255)"/>
+            <column name="updated_at" type="DATETIME"/>
+            <column name="updated_by" type="VARCHAR(255)"/>
+            <column name="deleted_at" type="DATETIME"/>
+            <column name="deleted_by" type="VARCHAR(255)"/>
+            <column name="score" type="DOUBLE"/>
+            <column name="strengths" type="TEXT"/>
+            <column name="weaknesses" type="TEXT"/>
+            <column name="missing_skills" type="TEXT"/>
+            <column name="suggestions" type="TEXT"/>
+            <column name="analyzed_at" type="DATETIME"/>
+            <column name="ai_model" type="VARCHAR(255)"/>
+            <column name="resume_id" type="BIGINT"/>
+        </createTable>
+    </changeSet>
+    <changeSet id="1771047530696-3" author="minhdat">
+        <addForeignKeyConstraint baseColumnNames="resume_id" baseTableName="resume_evaluations"
+                                 constraintName="FK_RESUME_EVALUATIONS_ON_RESUME" referencedColumnNames="resume_id"
+                                 referencedTableName="resumes"/>
+    </changeSet>
+    <changeSet id="1771047530696-4" author="minhdat">
+        <dropColumn columnName="ai_analysis" tableName="resumes"/>
+
+        <dropColumn columnName="ai_score" tableName="resumes"/>
+
+        <dropColumn columnName="ai_suggestions" tableName="resumes"/>
+
+        <dropColumn columnName="analyzed_at" tableName="resumes"/>
+    </changeSet>
+
+</databaseChangeLog>
