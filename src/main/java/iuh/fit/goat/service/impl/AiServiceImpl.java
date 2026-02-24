@@ -1,10 +1,16 @@
 package iuh.fit.goat.service.impl;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.genai.Client;
+import com.google.genai.types.Content;
 import com.google.genai.types.GenerateContentResponse;
+import com.google.genai.types.Part;
 import iuh.fit.goat.common.Role;
 import iuh.fit.goat.dto.request.ai.ChatRequest;
+import iuh.fit.goat.dto.response.ai.ResumeEvaluationAiResponse;
+import iuh.fit.goat.dto.response.resume.ResumeEvaluationResponse;
 import iuh.fit.goat.entity.*;
+import iuh.fit.goat.exception.InvalidException;
 import iuh.fit.goat.repository.*;
 import iuh.fit.goat.service.*;
 import iuh.fit.goat.util.SecurityUtil;
@@ -35,6 +41,8 @@ public class AiServiceImpl implements AiService {
     private final CareerRepository careerRepository;
     private final SkillRepository skillRepository;
     private final CompanyRepository companyRepository;
+    private final ResumeRepository resumeRepository;
+    private final ResumeEvaluationRepository resumeEvaluationRepository;
 
     @Value("${google.api.model}")
     private String model;
@@ -429,7 +437,96 @@ public class AiServiceImpl implements AiService {
     }
     // Lấy dữ liệu lưu vào cache
 
+//    AI đánh giá Resume
+    @Override
+    @Transactional
+    public ResumeEvaluationResponse evaluateResume(String resumeUrl) throws InvalidException {
+        Resume resume = this.resumeRepository.findByFileUrlAndDeletedAtIsNull(resumeUrl)
+                .orElseThrow(() -> new InvalidException("Resume not found"));
 
+        ResumeEvaluationAiResponse aiResponse = this.evaluateResumeByUrl(resumeUrl);
+
+        ResumeEvaluation evaluation = new ResumeEvaluation();
+        evaluation.setScore(aiResponse.getScore());
+        evaluation.setStrengths(aiResponse.getStrengths());
+        evaluation.setWeaknesses(aiResponse.getWeaknesses());
+        evaluation.setMissingSkills(aiResponse.getMissingSkills());
+        evaluation.setSkills(aiResponse.getSkills());
+        evaluation.setSuggestions(aiResponse.getSuggestions());
+        evaluation.setAiModel("gemini-2.5-flash");
+        evaluation.setResume(resume);
+
+        ResumeEvaluation saved = this.resumeEvaluationRepository.save(evaluation);
+
+        return new ResumeEvaluationResponse(
+                saved.getResumeEvaluationId(),
+                saved.getScore(),
+                saved.getStrengths(),
+                saved.getWeaknesses(),
+                saved.getMissingSkills(),
+                saved.getSkills(),
+                saved.getSuggestions(),
+                saved.getAiModel(),
+                new ResumeEvaluationResponse.Resume(resume.getResumeId()),
+                saved.getCreatedAt(),
+                saved.getUpdatedAt()
+        );
+    }
+
+    private ResumeEvaluationAiResponse evaluateResumeByUrl(String resumeUrl) throws InvalidException {
+        String prompt = """
+        Bạn là chuyên gia HR chuyên nghiệp.
+
+        Hãy phân tích CV sau và trả về JSON với format:
+
+        {
+          "score": number (0-100),
+          "strengths": "string",
+          "weaknesses": "string",
+          "missingSkills": "string",
+          "skills": "string",
+          "suggestions": "string"
+        }
+
+        Chỉ trả về JSON, không thêm bất kỳ giải thích nào và bằng Tiếng Việt.
+        """;
+
+        try {
+            GenerateContentResponse response = this.client.models.generateContent(
+                model,
+                Content.builder().parts(
+                    List.of(
+                        Part.fromText(prompt),
+                        Part.fromUri(resumeUrl, SecurityUtil.detectMimeType(resumeUrl))
+                    )
+                )
+                .build(),
+                null
+            );
+            String raw  = Objects.requireNonNull(response.text()).trim();
+            String json = extractJson(raw);
+
+            return new ObjectMapper().readValue(json, ResumeEvaluationAiResponse.class);
+        } catch (Exception e) {
+            throw new InvalidException("AI evaluation failed");
+        }
+    }
+
+    private String extractJson(String text) throws InvalidException {
+        if (text == null || text.isBlank()) {
+            throw new InvalidException("Empty AI response");
+        }
+
+        int start = text.indexOf("{");
+        int end = text.lastIndexOf("}");
+
+        if (start < 0 || end < 0 || end <= start) {
+            throw new InvalidException("No valid JSON found in AI response");
+        }
+
+        return text.substring(start, end + 1);
+    }
+//    AI đánh giá Resume
 
     // Format response
     private String formatJobContext(Job job) {
@@ -534,7 +631,6 @@ public class AiServiceImpl implements AiService {
         return text.length() <= limit ? text : text.substring(0, limit) + "...";
     }
     // Format response
-
 
     // Lấy dữ liệu
     private String getJobsContextForCompany(Company company) {

@@ -2,16 +2,16 @@ package iuh.fit.goat.service.impl;
 
 import iuh.fit.goat.dto.request.resume.CreateResumeRequest;
 import iuh.fit.goat.dto.response.ResultPaginationResponse;
+import iuh.fit.goat.dto.response.resume.ResumeEvaluationResponse;
 import iuh.fit.goat.dto.response.resume.ResumeResponse;
 import iuh.fit.goat.dto.response.resume.ResumeStatusResponse;
-import iuh.fit.goat.entity.Account;
-import iuh.fit.goat.entity.Applicant;
-import iuh.fit.goat.entity.Resume;
-import iuh.fit.goat.entity.Role;
+import iuh.fit.goat.entity.*;
 import iuh.fit.goat.exception.InvalidException;
 import iuh.fit.goat.repository.AccountRepository;
 import iuh.fit.goat.repository.ApplicantRepository;
+import iuh.fit.goat.repository.ResumeEvaluationRepository;
 import iuh.fit.goat.repository.ResumeRepository;
+import iuh.fit.goat.service.EvaluationService;
 import iuh.fit.goat.service.ResumeService;
 import iuh.fit.goat.service.StorageService;
 import iuh.fit.goat.util.FileUploadUtil;
@@ -30,10 +30,12 @@ import java.util.List;
 @RequiredArgsConstructor
 public class ResumeServiceImpl implements ResumeService {
     private final StorageService storageService;
+    private final EvaluationService evaluationService;
 
     private final ResumeRepository resumeRepository;
     private final ApplicantRepository applicantRepository;
     private final AccountRepository accountRepository;
+    private final ResumeEvaluationRepository resumeEvaluationRepository;
 
     @Override
     public Resume handleCreateResume(CreateResumeRequest request) throws InvalidException {
@@ -197,6 +199,35 @@ public class ResumeServiceImpl implements ResumeService {
     }
 
     @Override
+    public ResultPaginationResponse handleGetAllResumeEvaluationByResume(
+            Specification<ResumeEvaluation> spec, Pageable pageable, Long resumeId
+    ) throws InvalidException
+    {
+        Resume resume = this.handleGetResumeById(resumeId);
+        if (resume == null) throw new InvalidException("Resume not found");
+
+         Specification<ResumeEvaluation> resumeEvaluationsSpec = (root, query, cb) ->
+            cb.and(
+                cb.isNull(root.get("deletedAt")),
+                cb.equal(root.get("resume").get("resumeId"), resumeId)
+            );
+        Specification<ResumeEvaluation> finalSpec = spec == null ? resumeEvaluationsSpec : spec.and(resumeEvaluationsSpec);
+        Page<ResumeEvaluation> page = this.resumeEvaluationRepository.findAll(finalSpec, pageable);
+
+        ResultPaginationResponse.Meta meta = new ResultPaginationResponse.Meta();
+        meta.setPage(pageable.getPageNumber() + 1);
+        meta.setPageSize(pageable.getPageSize());
+        meta.setPages(page.getTotalPages());
+        meta.setTotal(page.getTotalElements());
+
+        List<ResumeEvaluationResponse> resumeEvaluationResponses = page.getContent().stream()
+                .map(this.evaluationService::handleConvertToResumeEvaluationResponse)
+                .toList();
+
+        return new ResultPaginationResponse(meta, resumeEvaluationResponses);
+    }
+
+    @Override
     public ResumeResponse handleConvertToResumeResponse(Resume resume) {
         ResumeResponse response = new ResumeResponse();
         response.setResumeId(resume.getResumeId());
@@ -206,10 +237,6 @@ public class ResumeServiceImpl implements ResumeService {
         response.setFileSize(resume.getFileSize());
         response.setDefault(resume.isDefault());
         response.setPublic(resume.isPublic());
-        response.setAiScore(resume.getAiScore());
-        response.setAiAnalysis(resume.getAiAnalysis());
-        response.setAiSuggestions(resume.getAiSuggestions());
-        response.setAnalyzedAt(resume.getAnalyzedAt());
 
         ResumeResponse.ResumeApplicant applicantResponse = new ResumeResponse.ResumeApplicant(
                 resume.getApplicant().getAccountId(),

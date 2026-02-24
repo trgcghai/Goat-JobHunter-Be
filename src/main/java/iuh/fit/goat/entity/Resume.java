@@ -20,7 +20,7 @@ import static jakarta.persistence.FetchType.*;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-@ToString(exclude = {"applicant", "applications"})
+@ToString(exclude = {"applicant", "applications", "resumeEvaluations"})
 @FilterDef(name = "activeResumeFilter")
 public class Resume extends BaseEntity {
     @Id
@@ -34,12 +34,6 @@ public class Resume extends BaseEntity {
     private long fileSize;
     private boolean isDefault = false;
     private boolean isPublic = false;
-    private Double aiScore;
-    @Column(columnDefinition = "TEXT")
-    private String aiAnalysis;
-    @Column(columnDefinition = "TEXT")
-    private String aiSuggestions;
-    private Instant analyzedAt;
 
     @ManyToOne(fetch = LAZY)
     @JoinColumn(name = "applicant_id")
@@ -52,4 +46,12 @@ public class Resume extends BaseEntity {
             condition = "deleted_at IS NULL"
     )
     private List<Application> applications = new ArrayList<>();
+
+    @OneToMany(mappedBy = "resume", fetch = LAZY, cascade = {PERSIST, MERGE})
+    @JsonIgnore
+    @Filter(
+            name = "activeResumeEvaluationFilter",
+            condition = "deleted_at IS NULL"
+    )
+    private List<ResumeEvaluation> resumeEvaluations = new ArrayList<>();
 }
