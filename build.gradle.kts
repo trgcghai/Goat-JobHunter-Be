@@ -37,7 +37,10 @@ dependencies {
 	implementation("org.springframework.boot:spring-boot-starter-web")
 	implementation("org.thymeleaf.extras:thymeleaf-extras-springsecurity6")
 	implementation("com.turkraft.springfilter:jpa:3.2.1")
-	implementation("org.springframework.boot:spring-boot-starter-mail:4.0.1")
+	implementation("org.springframework.boot:spring-boot-starter-mail") {
+		exclude(group = "jakarta.mail", module = "jakarta.mail-api")
+	}
+	implementation("org.eclipse.angus:angus-mail:2.0.3")
 	implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:2.8.8")
 	implementation("org.springframework.boot:spring-boot-starter-data-redis:3.5.7")
 	implementation ("com.cloudinary:cloudinary-http44:1.39.0")
