@@ -95,11 +95,12 @@ public class ResumeServiceImpl implements ResumeService {
         Role currentRole = currentAccount.getRole();
         Specification<Resume> resumesSpec;
         switch (currentRole.getName()) {
-            case "RECRUITER", "COMPANY" -> resumesSpec = (root, query, cb) ->
+            case "HR", "COMPANY" -> resumesSpec = (root, query, cb) ->
                     cb.and(
                             cb.isNull(root.get("deletedAt")),
                             cb.isTrue(root.get("applicant").get("availableStatus")),
-                            cb.isTrue(root.get("isPublic"))
+                            cb.isTrue(root.get("isPublic")),
+                            cb.isTrue(root.get("isDefault"))
                     );
 
             case "APPLICANT" -> resumesSpec = (root, query, cb) -> {
