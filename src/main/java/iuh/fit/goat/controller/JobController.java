@@ -12,6 +12,7 @@ import iuh.fit.goat.dto.response.job.JobResponse;
 import iuh.fit.goat.dto.response.ResultPaginationResponse;
 import iuh.fit.goat.entity.Applicant;
 import iuh.fit.goat.entity.Job;
+import iuh.fit.goat.entity.Resume;
 import iuh.fit.goat.exception.InvalidException;
 import iuh.fit.goat.service.JobService;
 import iuh.fit.goat.util.SecurityUtil;
@@ -143,22 +144,17 @@ public class JobController {
         return ResponseEntity.ok(result);
     }
 
-    @GetMapping("/{jobId}/applicants")
-    public ResponseEntity<ResultPaginationResponse> getSuitableApplicantsForJob(
-            @Filter Specification<Applicant> spec, Pageable pageable,
+    @GetMapping("/{jobId}/resumes")
+    public ResponseEntity<ResultPaginationResponse> getSuitableResumesForJob(
+            @Filter Specification<Resume> spec, Pageable pageable,
             @PathVariable("jobId") String jobId
     ) throws InvalidException {
-        if(!SecurityUtil.checkValidNumber(jobId)){
-            ResultPaginationResponse result = this.jobService.handleGetApplicants(spec, pageable);
-            return ResponseEntity.status(HttpStatus.OK).body(result);
-        }
+        if(!SecurityUtil.checkValidNumber(jobId)) throw new InvalidException("Job id must be number");
 
         Job currentJob = this.jobService.handleGetJobById(Long.parseLong(jobId));
-        if (currentJob == null) {
-            throw new InvalidException("Job doesn't exist");
-        }
+        if (currentJob == null) throw new InvalidException("Job doesn't exist");
 
-        ResultPaginationResponse result = this.jobService.handleGetApplicantsForJob(spec, pageable, Long.parseLong(jobId));
+        ResultPaginationResponse result = this.jobService.handleGetResumesForJob(spec, pageable, currentJob);
         return ResponseEntity.status(HttpStatus.OK).body(result);
     }
 

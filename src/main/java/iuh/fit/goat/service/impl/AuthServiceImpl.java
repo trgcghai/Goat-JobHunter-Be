@@ -465,6 +465,15 @@ public class AuthServiceImpl implements AuthService {
             loginResponse.setGender(user.getGender());
             loginResponse.setFullName(Objects.requireNonNullElse(user.getFullName(), ""));
             loginResponse.setType(user instanceof Applicant ? Role.APPLICANT.getValue() : Role.RECRUITER.getValue());
+
+            // Nếu như là Recruiter thì mới có company
+            if (user instanceof Recruiter recruiter) {
+                LoginResponse.UserCompany userCompany = new LoginResponse.UserCompany(
+                        recruiter.getCompany().getAccountId(),
+                        recruiter.getCompany().getName()
+                );
+                loginResponse.setCompany(userCompany);
+            }
         }
         // Thông tin riêng của Company
         else if (account instanceof Company company) {

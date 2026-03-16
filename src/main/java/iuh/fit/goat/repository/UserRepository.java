@@ -17,6 +17,8 @@ import java.util.Optional;
 public interface UserRepository extends JpaRepository<User, Long>, JpaSpecificationExecutor<User> {
     User findByEmail(String email);
 
+    Optional<User> findByAccountIdAndDeletedAtIsNull(Long accountId);
+
     boolean existsByEmail(String email);
 
     List<User> findByAccountIdIn(List<Long> accountIds);
