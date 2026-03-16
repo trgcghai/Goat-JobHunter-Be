@@ -10,9 +10,7 @@ import iuh.fit.goat.dto.response.user.UserEnabledResponse;
 import iuh.fit.goat.dto.response.user.UserResponse;
 import iuh.fit.goat.entity.*;
 import iuh.fit.goat.exception.InvalidException;
-import iuh.fit.goat.service.JobService;
-import iuh.fit.goat.service.ResumeService;
-import iuh.fit.goat.service.UserService;
+import iuh.fit.goat.service.*;
 import iuh.fit.goat.util.SecurityUtil;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -33,6 +31,8 @@ import java.util.Map;
 @RequiredArgsConstructor
 public class UserController {
     private final UserService userService;
+    private final ApplicantService applicantService;
+    private final RecruiterService recruiterService;
     private final JobService jobService;
     private final ResumeService resumeService;
 
@@ -47,6 +47,23 @@ public class UserController {
     ) {
         ResultPaginationResponse result = this.userService.handleGetAllUsers(spec, pageable);
         return ResponseEntity.status(HttpStatus.OK).body(result);
+    }
+
+    @GetMapping("/{id}")
+    public <T extends UserResponse> ResponseEntity<T> getUserById(@PathVariable("id") String id) throws InvalidException {
+        if(!SecurityUtil.checkValidNumber(id)) throw new InvalidException("User ID must be a valid number");
+        User user = this.userService.handleGetUserById(Long.parseLong(id));
+
+        T response;
+        if(user instanceof Applicant applicant) {
+            response = (T) this.applicantService.convertToApplicantResponse(applicant);
+        } else if(user instanceof Recruiter recruiter) {
+            response = (T) this.recruiterService.convertToRecruiterResponse(recruiter);
+        } else {
+            response = (T) this.userService.convertToUserResponse(user);
+        }
+
+        return ResponseEntity.status(HttpStatus.OK).body(response);
     }
 
     @GetMapping("/search")

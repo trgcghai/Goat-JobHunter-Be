@@ -7,6 +7,7 @@ import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
 
+import java.util.List;
 import java.util.Optional;
 
 @Repository
@@ -14,6 +15,8 @@ public interface ResumeRepository extends JpaRepository<Resume, Long>, JpaSpecif
     Optional<Resume> findByResumeIdAndDeletedAtIsNull(Long resumeId);
 
     Optional<Resume> findByFileUrlAndDeletedAtIsNull(String resumeUrl);
+
+    List<Resume> findByDeletedAtIsNullAndIsPublicTrueAndIsDefaultTrueAndApplicant_AvailableStatusIsTrue();
 
     @Modifying
     @Query(

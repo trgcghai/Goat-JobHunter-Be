@@ -70,7 +70,7 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public User handleGetUserById(long id) {
-        return this.userRepository.findById(id).orElse(null);
+        return this.userRepository.findByAccountIdAndDeletedAtIsNull(id).orElse(null);
     }
 
     @Override

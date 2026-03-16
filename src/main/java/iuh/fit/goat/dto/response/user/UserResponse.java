@@ -3,7 +3,6 @@ package iuh.fit.goat.dto.response.user;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import iuh.fit.goat.entity.Address;
 import iuh.fit.goat.enumeration.Gender;
-import iuh.fit.goat.entity.embeddable.Contact;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;

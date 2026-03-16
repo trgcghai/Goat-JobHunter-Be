@@ -2,6 +2,7 @@ package iuh.fit.goat.service.impl;
 
 import iuh.fit.goat.common.ActionType;
 import iuh.fit.goat.dto.response.job.*;
+import iuh.fit.goat.dto.response.resume.ResumeResponse;
 import iuh.fit.goat.enumeration.Level;
 import iuh.fit.goat.common.Role;
 import iuh.fit.goat.enumeration.WorkingType;
@@ -34,6 +35,7 @@ public class JobServiceImpl implements JobService {
     private final AccountService accountService;
     private final ApplicantService applicantService;
     private final EmailNotificationService emailNotificationService;
+    private final ResumeService resumeService;
 
     private final CompanyRepository companyRepository;
     private final ApplicantRepository applicantRepository;
@@ -42,6 +44,7 @@ public class JobServiceImpl implements JobService {
     private final CareerRepository careerRepository;
     private final ApplicationRepository applicationRepository;
     private final SubscriberRepository subscriberRepository;
+    private final ResumeRepository resumeRepository;
 
     @Override
     public JobResponse handleCreateJob(CreateJobRequest request) {
@@ -304,47 +307,101 @@ public class JobServiceImpl implements JobService {
     }
 
     @Override
-    public ResultPaginationResponse handleGetApplicantsForJob(Specification<Applicant> spec, Pageable pageable, Long jobId) {
-        Job job = this.handleGetJobById(jobId);
+    public ResultPaginationResponse handleGetResumesForJob(Specification<Resume> spec, Pageable pageable, Job job) {
+        if (job == null) {
+            return new ResultPaginationResponse(
+                    new ResultPaginationResponse.Meta(0, 0, 0, 0L),
+                    new ArrayList<>()
+            );
+        }
 
-        List<Applicant> applicants = this.applicantRepository.findAll(spec);
+        List<Resume> resumes = spec == null
+                ? this.resumeRepository.findByDeletedAtIsNullAndIsPublicTrueAndIsDefaultTrueAndApplicant_AvailableStatusIsTrue()
+                : this.resumeRepository.findAll(spec).stream()
+                    .filter(Objects::nonNull)
+                    .filter(r -> r.getDeletedAt() == null)
+                    .filter(r -> r.getApplicant() != null && r.getApplicant().isAvailableStatus())
+                    .filter(r -> r.isPublic() && r.isDefault())
+                    .toList();
+        if(resumes.isEmpty()) {
+            return new ResultPaginationResponse(
+                    new ResultPaginationResponse.Meta(0, 0, 0, 0L),
+                    new ArrayList<>()
+            );
+        }
 
-        List<Subscriber> subscribers = this.subscriberRepository.findAll();
-        Map<String, Subscriber> emailSubscriberMap = subscribers.stream()
-                .collect(Collectors.toMap(Subscriber::getEmail, s -> s));
+        Set<Long> jobSkillIds = job.getSkills() == null
+                ? Collections.emptySet()
+                : job.getSkills().stream().filter(Objects::nonNull).map(Skill::getSkillId).collect(Collectors.toSet());
+        Set<String> jobSkillNames = (job.getSkills() == null) ? Collections.emptySet() :
+                job.getSkills().stream()
+                        .filter(Objects::nonNull)
+                        .map(s -> s.getName() == null ? "" : s.getName().toLowerCase().trim())
+                        .filter(n -> !n.isEmpty())
+                        .collect(Collectors.toSet());
 
-        List<Applicant> matchedApplicants = applicants.stream()
-                .filter(a -> {
-                    boolean levelMatch = a.getLevel() != null && a.getLevel() == job.getLevel();
+        Set<String> applicantEmails = resumes.stream()
+                .map(r -> r.getApplicant().getEmail())
+                .filter(Objects::nonNull)
+                .collect(Collectors.toSet());
+        List<Subscriber> subscribers = this.subscriberRepository.findByEmailIn(applicantEmails);
+        Map<String, Set<Long>> subscriberSkillMap = subscribers.stream()
+                .filter(s -> s.getEmail() != null)
+                .collect(Collectors.toMap(
+                    Subscriber::getEmail,
+                    s -> s.getSkills() == null
+                            ? Collections.emptySet()
+                            : s.getSkills().stream().filter(Objects::nonNull).map(Skill::getSkillId).collect(Collectors.toSet()),
+                    (a, b) -> a
+                ));
 
-                    Subscriber subscriber = emailSubscriberMap.get(a.getEmail());
-                    boolean skillMatch = false;
-                    if (subscriber != null && subscriber.getSkills() != null && !subscriber.getSkills().isEmpty()) {
-                        skillMatch = subscriber.getSkills().stream()
-                                .anyMatch(job.getSkills()::contains);
+        List<Resume> matchedResumes = resumes.stream()
+                .filter(Objects::nonNull)
+                .filter(r -> {
+                    Applicant a = r.getApplicant();
+
+                    boolean levelMatch = (a.getLevel() != null && job.getLevel() != null && a.getLevel() == job.getLevel());
+                    if(levelMatch) return true;
+
+                    if (!jobSkillNames.isEmpty() && r.getResumeEvaluations() != null && !r.getResumeEvaluations().isEmpty()) {
+                        for (ResumeEvaluation ev : r.getResumeEvaluations()) {
+                            if (ev == null || ev.getSkills() == null || ev.getSkills().isEmpty()) continue;
+                            String evSkillsText = ev.getSkills().toLowerCase();
+                            for (String js : jobSkillNames) {
+                                if (evSkillsText.contains(js)) return true;
+                            }
+                        }
                     }
 
-                    return (levelMatch || skillMatch) && a.isAvailableStatus(); // only include available applicants
+                    if (!jobSkillIds.isEmpty()) {
+                        Set<Long> subSkills = subscriberSkillMap.get(a.getEmail());
+                        if(subSkills != null) {
+                            for (Long subId : subSkills) {
+                                if(jobSkillIds.contains(subId)) return true;
+                            }
+                        }
+                    }
+
+                    return false;
                 })
                 .toList();
 
         int start = (int) pageable.getOffset();
-        int end = Math.min(start + pageable.getPageSize(), matchedApplicants.size());
-        List<Applicant> pageContent = start >= matchedApplicants.size() ? List.of() : matchedApplicants.subList(start, end);
+        int end = Math.min(start + pageable.getPageSize(), matchedResumes.size());
+        List<Resume> pageContent = start >= matchedResumes.size() ? List.of() : matchedResumes.subList(start, end);
 
         ResultPaginationResponse.Meta meta = new ResultPaginationResponse.Meta();
         meta.setPage(pageable.getPageNumber() + 1);
         meta.setPageSize(pageable.getPageSize());
-        meta.setPages((int) Math.ceil((double) matchedApplicants.size() / pageable.getPageSize()));
-        meta.setTotal(matchedApplicants.size());
+        meta.setPages((int) Math.ceil((double) matchedResumes.size() / pageable.getPageSize()));
+        meta.setTotal(matchedResumes.size());
 
-        List<ApplicantResponse> result = pageContent.stream()
-                .map(this.applicantService::convertToApplicantResponse)
+        List<ResumeResponse> result = pageContent.stream()
+                .map(this.resumeService::handleConvertToResumeResponse)
                 .toList();
 
         return new ResultPaginationResponse(meta, result);
     }
-
 
     @Override
     public ResultPaginationResponse handleGetApplicants(Specification<Applicant> spec, Pageable pageable) {
@@ -601,4 +658,3 @@ public class JobServiceImpl implements JobService {
         return results;
     }
 }
-
