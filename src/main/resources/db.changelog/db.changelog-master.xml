@@ -6,6 +6,7 @@
                       http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-5.0.xsd"
 >
 
+    <include file="db.changelog/schema/2026-03-18/create-citext.xml"/>
     <include file="db.changelog/schema/2026-01-16/initial.xml"/>
     <include file="db.changelog/data/2026-01-16/init-permissions.xml"/>
     <include file="db.changelog/data/2026-01-16/init-role.xml"/>
