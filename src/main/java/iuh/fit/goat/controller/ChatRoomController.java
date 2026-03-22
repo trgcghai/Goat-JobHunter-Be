@@ -250,9 +250,8 @@ public class ChatRoomController {
             return ResponseEntity.ok(chatRoom);
         }
 
-        throw new InvalidException("Message content or files are required");
-//        ChatRoom chatRoom = this.chatRoomService.createNewSingleChatRoom(currentUser, request);
-//        return ResponseEntity.ok(chatRoom);
+        ChatRoom chatRoom = this.chatRoomService.createNewSingleChatRoom(currentUser, request);
+        return ResponseEntity.ok(chatRoom);
     }
 
     /**
