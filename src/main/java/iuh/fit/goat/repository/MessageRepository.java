@@ -11,18 +11,13 @@ import software.amazon.awssdk.enhanced.dynamodb.Key;
 import software.amazon.awssdk.enhanced.dynamodb.model.QueryConditional;
 import software.amazon.awssdk.enhanced.dynamodb.model.QueryEnhancedRequest;
 
-import java.time.LocalDate;
-import java.time.format.DateTimeFormatter;
 import java.util.*;
-import java.util.stream.Collectors;
 
 @Repository
 @Slf4j
 @RequiredArgsConstructor
 public class MessageRepository {
 
-    private static final DateTimeFormatter BUCKET_FORMATTER = DateTimeFormatter.ofPattern("yyyyMMdd");
-    private static final int BUCKET_SEARCH_LIMIT = 30;
     private static final int DEFAULT_LIMIT = 100;
 
     private final DynamoDbTable<Message> messageTable;
@@ -39,61 +34,29 @@ public class MessageRepository {
                 .toList();
     }
 
-    // ========== NEW: Multi-Bucket Query Methods ==========
+    // ========== Message Query Methods ==========
 
     /**
-     * Find messages across multiple buckets with smart fallback
-     * Strategy:
-     * 1. Start from today's bucket
-     * 2. If not enough messages, fetch from previous buckets
-     * 3. Merge and sort by timestamp DESC
+         * Find messages in a chat room sorted by newest first.
      */
-    public List<Message> findMessagesAcrossBuckets(
+    public List<Message> findMessagesByChatRoom(
             String chatRoomId,
             int limit,
             boolean includeHidden) {
-
-        List<Message> allMessages = new ArrayList<>();
-        LocalDate currentDate = LocalDate.now();
-
-        // Search up to 30 days back or until we have enough messages
-        for (int daysBack = 0; daysBack < BUCKET_SEARCH_LIMIT && allMessages.size() < limit; daysBack++) {
-            LocalDate targetDate = currentDate.minusDays(daysBack);
-            String bucket = targetDate.format(BUCKET_FORMATTER);
-            String chatRoomBucket = Message.buildChatRoomBucket(chatRoomId, bucket);
-
-            log.debug("Querying bucket: {} for chatRoom: {}", bucket, chatRoomId);
-
-            List<Message> bucketMessages = queryMessagesInBucket(
-                    chatRoomBucket,
-                    limit - allMessages.size(),
-                    includeHidden
-            );
-
-            if (!bucketMessages.isEmpty()) {
-                log.info("Found {} messages in bucket: {}", bucketMessages.size(), bucket);
-                allMessages.addAll(bucketMessages);
-            }
-        }
-
-        // Sort by timestamp DESC and apply limit
-        return allMessages.stream()
-                .sorted(Comparator.comparing(Message::getCreatedAt).reversed())
-                .limit(limit)
-                .collect(Collectors.toList());
+        return queryMessagesByChatRoom(chatRoomId, limit, includeHidden);
     }
 
     /**
-     * Query messages from a specific bucket
+         * Query messages from a specific chat room partition.
      */
-    private List<Message> queryMessagesInBucket(
-            String chatRoomBucket,
+        private List<Message> queryMessagesByChatRoom(
+            String chatRoomId,
             int limit,
             boolean includeHidden) {
 
         QueryConditional queryConditional = QueryConditional
                 .keyEqualTo(Key.builder()
-                        .partitionValue(chatRoomBucket)
+                .partitionValue(chatRoomId)
                         .build());
 
         QueryEnhancedRequest queryRequest = QueryEnhancedRequest.builder()
@@ -114,75 +77,15 @@ public class MessageRepository {
     }
 
     /**
-     * Count messages in a specific bucket
-     */
-    public long countMessagesInBucket(String chatRoomId, String bucket) {
-        String chatRoomBucket = Message.buildChatRoomBucket(chatRoomId, bucket);
-
-        QueryConditional queryConditional = QueryConditional
-                .keyEqualTo(Key.builder()
-                        .partitionValue(chatRoomBucket)
-                        .build());
-
-        QueryEnhancedRequest queryRequest = QueryEnhancedRequest.builder()
-                .queryConditional(queryConditional)
-                .scanIndexForward(false)
-                .build();
-
-        long count = 0;
-        for (Message ignored : messageTable.query(queryRequest).items()) {
-            count++;
-        }
-
-        log.debug("Bucket {} has {} messages", bucket, count);
-        return count;
-    }
-
-    /**
-     * Get the most recent bucket that contains messages
-     */
-    public Optional<String> findLatestNonEmptyBucket(String chatRoomId) {
-        LocalDate currentDate = LocalDate.now();
-
-        for (int daysBack = 0; daysBack < BUCKET_SEARCH_LIMIT; daysBack++) {
-            LocalDate targetDate = currentDate.minusDays(daysBack);
-            String bucket = targetDate.format(BUCKET_FORMATTER);
-
-            long messageCount = countMessagesInBucket(chatRoomId, bucket);
-            if (messageCount > 0) {
-                log.info("Found latest non-empty bucket: {} with {} messages", bucket, messageCount);
-                return Optional.of(bucket);
-            }
-        }
-
-        log.warn("No non-empty buckets found for chatRoom: {}", chatRoomId);
-        return Optional.empty();
-    }
-
-    // ========== UPDATED: Last Message Query ==========
-
-    /**
-     * Find the last (newest) message with aggressive multi-bucket fallback
+     * Find the last (newest) visible message in a chat room.
      */
     public Optional<Message> findLastMessageByConversation(String chatRoomId) {
         try {
-            LocalDate currentDate = LocalDate.now();
-
-            // Search up to 30 days back (increased from 7)
-            for (int daysBack = 0; daysBack < BUCKET_SEARCH_LIMIT; daysBack++) {
-                LocalDate targetDate = currentDate.minusDays(daysBack);
-                String bucket = targetDate.format(BUCKET_FORMATTER);
-                String chatRoomBucket = Message.buildChatRoomBucket(chatRoomId, bucket);
-
-                Optional<Message> lastMessage = queryLastMessageInBucket(chatRoomBucket);
-                if (lastMessage.isPresent()) {
-                    log.debug("Found last message in bucket: {}", bucket);
-                    return lastMessage;
-                }
+            Optional<Message> lastMessage = queryLastMessageByChatRoom(chatRoomId);
+            if (lastMessage.isEmpty()) {
+                log.info("No messages found for chatRoom: {}", chatRoomId);
             }
-
-            log.info("No messages found in any bucket for chatRoom: {}", chatRoomId);
-            return Optional.empty();
+            return lastMessage;
 
         } catch (Exception e) {
             log.error("Error finding last message for chatRoom: {}", chatRoomId, e);
@@ -190,10 +93,10 @@ public class MessageRepository {
         }
     }
 
-    private Optional<Message> queryLastMessageInBucket(String chatRoomBucket) {
+    private Optional<Message> queryLastMessageByChatRoom(String chatRoomId) {
         QueryConditional queryConditional = QueryConditional
                 .keyEqualTo(Key.builder()
-                        .partitionValue(chatRoomBucket)
+                        .partitionValue(chatRoomId)
                         .build());
 
         QueryEnhancedRequest queryRequest = QueryEnhancedRequest.builder()
@@ -215,40 +118,18 @@ public class MessageRepository {
         return Optional.empty();
     }
 
-    // ========== EXISTING: Message Operations ==========
-
-    public List<Message> findMessagesByBucket(
-            String chatRoomId,
-            String bucket,
-            boolean includeHidden) {
-
-        String chatRoomBucket = Message.buildChatRoomBucket(chatRoomId, bucket);
-        return queryMessagesInBucket(chatRoomBucket, DEFAULT_LIMIT, includeHidden);
-    }
+    // ========== Message Operations ==========
 
     public Message saveMessage(Message message) {
         try {
             messageTable.putItem(message);
-            log.info("Message saved successfully: PK={}, SK={}",
-                    message.getChatRoomBucket(), message.getMessageSk());
+            log.info("Message saved successfully: chatRoomId={}, SK={}",
+                    message.getChatRoomId(), message.getMessageSk());
             return message;
         } catch (Exception e) {
-            log.error("Error saving message: PK={}, SK={}",
-                    message.getChatRoomBucket(), message.getMessageSk(), e);
+            log.error("Error saving message: chatRoomId={}, SK={}",
+                    message.getChatRoomId(), message.getMessageSk(), e);
             throw new RuntimeException("Failed to save message", e);
-        }
-    }
-
-    // ========== Helper Methods ==========
-
-    private String getPreviousBucket(String bucket) {
-        try {
-            LocalDate date = LocalDate.parse(bucket, BUCKET_FORMATTER);
-            LocalDate previousDate = date.minusDays(1);
-            return previousDate.format(BUCKET_FORMATTER);
-        } catch (Exception e) {
-            log.error("Error parsing bucket date: {}", bucket, e);
-            return bucket;
         }
     }
 }

@@ -2,11 +2,14 @@ package iuh.fit.goat.migration;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 import software.amazon.awssdk.services.dynamodb.DynamoDbClient;
 import software.amazon.awssdk.services.dynamodb.model.*;
+
+import java.util.List;
 
 @Component
 @Order(1)
@@ -15,6 +18,12 @@ import software.amazon.awssdk.services.dynamodb.model.*;
 public class DynamoDbMigrationRunner implements CommandLineRunner {
 
     private final DynamoDbClient dynamoDbClient;
+
+    @Value("${dynamodb.table.messages}")
+    private String messagesTableName;
+
+    @Value("${dynamodb.table.pinned_messages}")
+    private String pinnedMessagesTableName;
 
     @Override
     public void run(String... args) {
@@ -27,10 +36,14 @@ public class DynamoDbMigrationRunner implements CommandLineRunner {
     }
 
     private void createMessagesTable() {
-        String tableName = "messages";
+        String tableName = messagesTableName;
+        List<KeySchemaElement> expectedSchema = List.of(
+                KeySchemaElement.builder().attributeName("chatRoomId").keyType(KeyType.HASH).build(),
+                KeySchemaElement.builder().attributeName("messageSk").keyType(KeyType.RANGE).build()
+        );
 
-        if (tableExists(tableName)) {
-            log.info("📦 Table '{}' already exists, skipping creation", tableName);
+        if (tableExistsAndValidateSchema(tableName, expectedSchema)) {
+            log.info("📦 Table '{}' already exists with expected schema, skipping creation", tableName);
             return;
         }
 
@@ -40,7 +53,7 @@ public class DynamoDbMigrationRunner implements CommandLineRunner {
                 .tableName(tableName)
                 .attributeDefinitions(
                         AttributeDefinition.builder()
-                                .attributeName("chatRoomBucket")
+                        .attributeName("chatRoomId")
                                 .attributeType(ScalarAttributeType.S)
                                 .build(),
                         AttributeDefinition.builder()
@@ -50,7 +63,7 @@ public class DynamoDbMigrationRunner implements CommandLineRunner {
                 )
                 .keySchema(
                         KeySchemaElement.builder()
-                                .attributeName("chatRoomBucket")
+                        .attributeName("chatRoomId")
                                 .keyType(KeyType.HASH)
                                 .build(),
                         KeySchemaElement.builder()
@@ -72,10 +85,14 @@ public class DynamoDbMigrationRunner implements CommandLineRunner {
     }
 
     private void createPinnedMessagesTable() {
-        String tableName = "pinned_messages";
+        String tableName = pinnedMessagesTableName;
+        List<KeySchemaElement> expectedSchema = List.of(
+                KeySchemaElement.builder().attributeName("chatRoomId").keyType(KeyType.HASH).build(),
+                KeySchemaElement.builder().attributeName("messageId").keyType(KeyType.RANGE).build()
+        );
 
-        if (tableExists(tableName)) {
-            log.info("📦 Table '{}' already exists, skipping creation", tableName);
+        if (tableExistsAndValidateSchema(tableName, expectedSchema)) {
+            log.info("📦 Table '{}' already exists with expected schema, skipping creation", tableName);
             return;
         }
 
@@ -89,7 +106,7 @@ public class DynamoDbMigrationRunner implements CommandLineRunner {
                                 .attributeType(ScalarAttributeType.S)
                                 .build(),
                         AttributeDefinition.builder()
-                                .attributeName("pinnedSk")
+                        .attributeName("messageId")
                                 .attributeType(ScalarAttributeType.S)
                                 .build()
                 )
@@ -99,7 +116,7 @@ public class DynamoDbMigrationRunner implements CommandLineRunner {
                                 .keyType(KeyType.HASH)
                                 .build(),
                         KeySchemaElement.builder()
-                                .attributeName("pinnedSk")
+                            .attributeName("messageId")
                                 .keyType(KeyType.RANGE)
                                 .build()
                 )
@@ -135,6 +152,57 @@ public class DynamoDbMigrationRunner implements CommandLineRunner {
             log.error("Error checking if table '{}' exists", tableName, e);
             throw new RuntimeException("Failed to check table existence", e);
         }
+    }
+
+    private boolean tableExistsAndValidateSchema(String tableName, List<KeySchemaElement> expectedSchema) {
+        if (!tableExists(tableName)) {
+            return false;
+        }
+
+        DescribeTableResponse response = dynamoDbClient.describeTable(
+                DescribeTableRequest.builder().tableName(tableName).build()
+        );
+
+        List<KeySchemaElement> actualSchema = response.table().keySchema();
+        if (!sameKeySchema(actualSchema, expectedSchema)) {
+            String actual = formatKeySchema(actualSchema);
+            String expected = formatKeySchema(expectedSchema);
+            String message = "Schema mismatch for table '" + tableName + "'. Expected " + expected +
+                    " but found " + actual + ". Use a new table name and migrate data before cutover.";
+            log.error(message);
+            throw new IllegalStateException(message);
+        }
+
+        return true;
+    }
+
+    private boolean sameKeySchema(List<KeySchemaElement> actual, List<KeySchemaElement> expected) {
+        if (actual == null || expected == null || actual.size() != expected.size()) {
+            return false;
+        }
+
+        for (KeySchemaElement expectedElement : expected) {
+            boolean found = actual.stream().anyMatch(a ->
+                    a.keyType() == expectedElement.keyType()
+                            && a.attributeName().equals(expectedElement.attributeName()));
+            if (!found) {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    private String formatKeySchema(List<KeySchemaElement> schema) {
+        if (schema == null || schema.isEmpty()) {
+            return "[]";
+        }
+
+        return schema.stream()
+                .map(s -> s.keyType().toString() + "=" + s.attributeName())
+                .sorted()
+                .toList()
+                .toString();
     }
 
     private void waitForTableCreation(String tableName) {

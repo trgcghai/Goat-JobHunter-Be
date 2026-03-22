@@ -2,6 +2,7 @@ package iuh.fit.goat.service.impl;
 
 import iuh.fit.goat.common.MessageEvent;
 import iuh.fit.goat.dto.request.message.MessageCreateRequest;
+import iuh.fit.goat.dto.response.message.MessageResponse;
 import iuh.fit.goat.dto.response.StorageResponse;
 import iuh.fit.goat.entity.Message;
 import iuh.fit.goat.entity.User;
@@ -13,6 +14,7 @@ import iuh.fit.goat.repository.MessageRepository;
 import iuh.fit.goat.service.MessageService;
 import iuh.fit.goat.service.StorageService;
 import iuh.fit.goat.util.MessageHelper;
+import iuh.fit.goat.util.MessageMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Pageable;
@@ -21,8 +23,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.time.Instant;
-import java.time.LocalDate;
-import java.time.format.DateTimeFormatter;
 import java.util.*;
 
 @Service
@@ -30,8 +30,6 @@ import java.util.*;
 @RequiredArgsConstructor
 public class MessageServiceImpl implements MessageService {
 
-    private static final DateTimeFormatter BUCKET_FORMATTER = DateTimeFormatter.ofPattern("yyyyMMdd");
-    private static final int MAX_MESSAGES_PER_BUCKET = 100;
     private static final long MAX_FILE_SIZE = 20 * 1024 * 1024; // 20MB
 
     private final MessageRepository messageRepository;
@@ -42,8 +40,7 @@ public class MessageServiceImpl implements MessageService {
     // ========== PUBLIC API METHODS ==========
 
     /**
-     * Get last message with aggressive multi-bucket fallback
-     * Never returns null if messages exist in any bucket
+    * Get last message in chat room.
      */
     @Override
     public Message getLastMessageByChatRoom(Long chatRoomId) throws InvalidException {
@@ -57,18 +54,14 @@ public class MessageServiceImpl implements MessageService {
                 .findLastMessageByConversation(chatRoomId.toString());
 
         if (lastMessage.isEmpty()) {
-            log.warn("No messages found in any bucket for chatRoom: {}", chatRoomId);
+            log.warn("No messages found for chatRoom: {}", chatRoomId);
         }
 
         return lastMessage.orElse(null);
     }
 
     /**
-     * Get messages with smart multi-bucket merging
-     * Strategy:
-     * 1. Use new findMessagesAcrossBuckets() method
-     * 2. Automatically fetches from multiple buckets if needed
-     * 3. Returns sorted and paginated results
+    * Get messages sorted by newest first.
      */
     @Override
     public List<Message> getMessagesByChatRoom(Long chatRoomId, Pageable pageable) {
@@ -80,8 +73,7 @@ public class MessageServiceImpl implements MessageService {
 
         log.info("Fetching up to {} messages for chatRoom: {}", requestedSize, chatRoomId);
 
-        // NEW: Use multi-bucket query method
-        List<Message> messages = messageRepository.findMessagesAcrossBuckets(
+        List<Message> messages = messageRepository.findMessagesByChatRoom(
                 chatRoomId.toString(),
                 requestedSize,
                 false // Don't include hidden messages
@@ -93,11 +85,7 @@ public class MessageServiceImpl implements MessageService {
     }
 
     /**
-     * Send message with SMART bucket selection
-     * Rules:
-     * 1. Reuse today's bucket if < 100 messages
-     * 2. Reuse yesterday's bucket if today hasn't started AND < 100 messages
-     * 3. Create overflow bucket if today's bucket is full
+    * Send text message.
      */
     @Override
     public Message sendMessage(Long chatRoomId, MessageCreateRequest request, User currentUser)
@@ -106,22 +94,18 @@ public class MessageServiceImpl implements MessageService {
         chatRoomRepository.findById(chatRoomId)
                 .orElseThrow(() -> new InvalidException("Chat Room not found"));
 
-        String bucketKey = getOrCreateSmartBucket(chatRoomId.toString());
         String messageId = generateMessageId();
         Instant now = Instant.now();
         long timestamp = now.toEpochMilli();
 
-        String chatRoomBucket = Message.buildChatRoomBucket(chatRoomId.toString(), bucketKey);
         String messageSk = Message.buildMessageSk(timestamp, messageId);
 
         // Build sender information
         SenderInfo senderInfo = buildSenderInfo(currentUser);
 
         Message message = Message.builder()
-                .chatRoomBucket(chatRoomBucket)
                 .messageSk(messageSk)
                 .chatRoomId(chatRoomId.toString())
-                .bucket(bucketKey)
                 .messageId(messageId)
                 .sender(senderInfo)  // NEW: Use embedded sender
                 .content(request.getContent())
@@ -131,12 +115,12 @@ public class MessageServiceImpl implements MessageService {
                 .updatedAt(now)
                 .build();
 
-        log.info("Saving message - PK: {}, SK: {}", chatRoomBucket, messageSk);
+        log.info("Saving message - chatRoomId: {}, SK: {}", chatRoomId, messageSk);
 
         Message savedMessage = messageRepository.saveMessage(message);
 
-        log.info("Message created: messageId={}, bucket={}, chatRoomId={}",
-                messageId, bucketKey, chatRoomId);
+        log.info("Message created: messageId={}, chatRoomId={}",
+            messageId, chatRoomId);
 
         sendMessageToUsers(chatRoomId, savedMessage);
 
@@ -155,9 +139,6 @@ public class MessageServiceImpl implements MessageService {
 
         chatRoomRepository.findById(chatRoomId).orElseThrow(() -> new InvalidException("Chat Room not found"));
 
-        // NEW: Smart bucket selection (reused for all messages in this batch)
-        String bucketKey = getOrCreateSmartBucket(chatRoomId.toString());
-
         List<Message> createdMessages = new ArrayList<>();
 
         try {
@@ -175,7 +156,6 @@ public class MessageServiceImpl implements MessageService {
 
                     Message fileMessage = createFileMessage(
                             chatRoomId.toString(),
-                            bucketKey, // Use same bucket
                             fileUrl,
                             messageType,
                             currentUser
@@ -185,8 +165,8 @@ public class MessageServiceImpl implements MessageService {
                     createdMessages.add(savedMessage);
                     sendMessageToUsers(chatRoomId, savedMessage);
 
-                    log.info("File message created: messageId={}, type={}, bucket={}",
-                            savedMessage.getMessageId(), messageType, bucketKey);
+                        log.info("File message created: messageId={}, type={}, chatRoomId={}",
+                            savedMessage.getMessageId(), messageType, chatRoomId);
                 }
             }
 
@@ -201,8 +181,8 @@ public class MessageServiceImpl implements MessageService {
                 throw new InvalidException("At least one file or text content is required");
             }
 
-            log.info("Batch message creation completed: {} messages created in bucket {}",
-                    createdMessages.size(), bucketKey);
+                log.info("Batch message creation completed: {} messages created in chatRoom {}",
+                    createdMessages.size(), chatRoomId);
 
             return createdMessages;
 
@@ -215,7 +195,8 @@ public class MessageServiceImpl implements MessageService {
     @Override
     public void sendMessageToUsers(Long chatRoomId, Message message) {
         log.debug("Sending realtime message to chatRoom: {}", chatRoomId);
-        messagingTemplate.convertAndSend("/topic/chatrooms/" + chatRoomId, message);
+        MessageResponse payload = MessageMapper.toResponse(message);
+        messagingTemplate.convertAndSend("/topic/chatrooms/" + chatRoomId, payload);
     }
 
     @Override
@@ -230,7 +211,7 @@ public class MessageServiceImpl implements MessageService {
 
         log.info("Fetching up to {} media messages for chatRoom: {}", requestedSize, chatRoomId);
 
-        List<Message> allMessages = messageRepository.findMessagesAcrossBuckets(
+        List<Message> allMessages = messageRepository.findMessagesByChatRoom(
                 chatRoomId.toString(),
                 requestedSize * 3, // Fetch more to filter
                 false
@@ -259,7 +240,7 @@ public class MessageServiceImpl implements MessageService {
 
         log.info("Fetching up to {} file messages for chatRoom: {}", requestedSize, chatRoomId);
 
-        List<Message> allMessages = messageRepository.findMessagesAcrossBuckets(
+        List<Message> allMessages = messageRepository.findMessagesByChatRoom(
                 chatRoomId.toString(),
                 requestedSize * 3, // Fetch more to filter
                 false
@@ -283,21 +264,17 @@ public class MessageServiceImpl implements MessageService {
             Object... params) {
 
         String content = MessageHelper.generateSystemMessage(type, actor, params);
-        String bucketKey = getOrCreateSmartBucket(chatRoomId.toString());
         String messageId = generateMessageId();
         Instant now = Instant.now();
         long timestamp = now.toEpochMilli();
 
-        String chatRoomBucket = Message.buildChatRoomBucket(chatRoomId.toString(), bucketKey);
         String messageSk = Message.buildMessageSk(timestamp, messageId);
 
         SenderInfo senderInfo = buildSenderInfo(actor);
 
         Message systemMessage = Message.builder()
-                .chatRoomBucket(chatRoomBucket)
                 .messageSk(messageSk)
                 .chatRoomId(chatRoomId.toString())
-                .bucket(bucketKey)
                 .messageId(messageId)
                 .sender(senderInfo)
                 .content(content)
@@ -316,55 +293,6 @@ public class MessageServiceImpl implements MessageService {
 
     private boolean isMediaType(MessageType type) {
         return type == MessageType.IMAGE || type == MessageType.VIDEO || type == MessageType.AUDIO;
-    }
-
-    // ========== SMART BUCKET LOGIC ==========
-
-    /**
-     * Smart bucket selection with rollover logic
-     * Rules:
-     * 1. Check today's bucket → if < 100 messages, reuse it
-     * 2. If today's bucket is full → create overflow bucket with timestamp
-     * 3. Check yesterday's bucket → if < 100 messages AND no messages today, reuse it
-     * 4. Default → create today's bucket
-     * <p>
-     * Bucket naming:
-     * - Normal: "20250521"
-     * - Overflow: "20250521_1716300000123"
-     */
-    private String getOrCreateSmartBucket(String chatRoomId) {
-        LocalDate today = LocalDate.now();
-        String todayBucket = formatBucket(today);
-
-        // Step 1: Check today's bucket
-        long todayMessageCount = messageRepository.countMessagesInBucket(chatRoomId, todayBucket);
-
-        if (todayMessageCount > 0 && todayMessageCount < MAX_MESSAGES_PER_BUCKET) {
-            log.info("Reusing today's bucket: {} ({}/100 messages)", todayBucket, todayMessageCount);
-            return todayBucket;
-        }
-
-        if (todayMessageCount >= MAX_MESSAGES_PER_BUCKET) {
-            // Create overflow bucket
-            String overflowBucket = todayBucket + "_" + System.currentTimeMillis();
-            log.info("Today's bucket is full, creating overflow bucket: {}", overflowBucket);
-            return overflowBucket;
-        }
-
-        // Step 2: Check yesterday's bucket (if today has no messages)
-        LocalDate yesterday = today.minusDays(1);
-        String yesterdayBucket = formatBucket(yesterday);
-        long yesterdayMessageCount = messageRepository.countMessagesInBucket(chatRoomId, yesterdayBucket);
-
-        if (yesterdayMessageCount > 0 && yesterdayMessageCount < MAX_MESSAGES_PER_BUCKET) {
-            log.info("Reusing yesterday's bucket: {} ({}/100 messages)",
-                    yesterdayBucket, yesterdayMessageCount);
-            return yesterdayBucket;
-        }
-
-        // Step 3: Default - use today's bucket (new or existing)
-        log.info("Using today's bucket: {} (new or empty)", todayBucket);
-        return todayBucket;
     }
 
     // ========== HELPER METHODS ==========
@@ -408,7 +336,6 @@ public class MessageServiceImpl implements MessageService {
 
     private Message createFileMessage(
             String chatRoomId,
-            String bucketKey,
             String fileUrl,
             MessageType messageType,
             User currentUser) {
@@ -417,17 +344,14 @@ public class MessageServiceImpl implements MessageService {
         Instant now = Instant.now();
         long timestamp = now.toEpochMilli();
 
-        String chatRoomBucket = Message.buildChatRoomBucket(chatRoomId, bucketKey);
         String messageSk = Message.buildMessageSk(timestamp, messageId);
 
         // Build sender information
         SenderInfo senderInfo = buildSenderInfo(currentUser);
 
         return Message.builder()
-                .chatRoomBucket(chatRoomBucket)
                 .messageSk(messageSk)
                 .chatRoomId(chatRoomId)
-                .bucket(bucketKey)
                 .messageId(messageId)
                 .sender(senderInfo)  // NEW: Use embedded sender
                 .content(fileUrl)
@@ -440,10 +364,6 @@ public class MessageServiceImpl implements MessageService {
 
     private String generateMessageId() {
         return "msg_" + UUID.randomUUID().toString().replace("-", "");
-    }
-
-    private String formatBucket(LocalDate date) {
-        return date.format(BUCKET_FORMATTER);
     }
 
     private SenderInfo buildSenderInfo(User user) {
