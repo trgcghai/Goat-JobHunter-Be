@@ -6,6 +6,7 @@ import iuh.fit.goat.dto.request.message.MessageToNewChatRoom;
 import iuh.fit.goat.dto.response.ResultPaginationResponse;
 import iuh.fit.goat.dto.response.chat.ChatRoomResponse;
 import iuh.fit.goat.dto.response.chat.GroupMemberResponse;
+import iuh.fit.goat.dto.response.message.MessageResponse;
 import iuh.fit.goat.entity.ChatMember;
 import iuh.fit.goat.entity.ChatRoom;
 import iuh.fit.goat.entity.Message;
@@ -14,6 +15,7 @@ import iuh.fit.goat.exception.InvalidException;
 import iuh.fit.goat.repository.UserRepository;
 import iuh.fit.goat.service.ChatRoomService;
 import iuh.fit.goat.service.MessageService;
+import iuh.fit.goat.util.MessageMapper;
 import iuh.fit.goat.util.SecurityUtil;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -78,11 +80,12 @@ public class ChatRoomController {
         }
 
         List<Message> messages = chatRoomService.getMessagesInChatRoom(currentUser, id, pageable);
-        return ResponseEntity.ok(messages);
+        List<MessageResponse> response = messages.stream().map(MessageMapper::toResponse).toList();
+        return ResponseEntity.ok(response);
     }
 
     @GetMapping("/{id}/media")
-    public ResponseEntity<List<Message>> getMediaMessagesInChatRoom(
+    public ResponseEntity<List<MessageResponse>> getMediaMessagesInChatRoom(
             @PathVariable Long id,
             Pageable pageable
     ) throws InvalidException {
@@ -94,11 +97,12 @@ public class ChatRoomController {
         }
 
         List<Message> mediaMessages = chatRoomService.getMediaMessagesInChatRoom(currentUser, id, pageable);
-        return ResponseEntity.ok(mediaMessages);
+        List<MessageResponse> response = mediaMessages.stream().map(MessageMapper::toResponse).toList();
+        return ResponseEntity.ok(response);
     }
 
     @GetMapping("/{id}/file")
-    public ResponseEntity<List<Message>> getFileMessagesInChatRoom(
+    public ResponseEntity<List<MessageResponse>> getFileMessagesInChatRoom(
             @PathVariable Long id,
             Pageable pageable
     ) throws InvalidException {
@@ -110,7 +114,8 @@ public class ChatRoomController {
         }
 
         List<Message> fileMessages = chatRoomService.getFileMessagesInChatRoom(currentUser, id, pageable);
-        return ResponseEntity.ok(fileMessages);
+        List<MessageResponse> response = fileMessages.stream().map(MessageMapper::toResponse).toList();
+        return ResponseEntity.ok(response);
     }
 
     @PostMapping("/group")
@@ -268,7 +273,7 @@ public class ChatRoomController {
                     MediaType.APPLICATION_JSON_VALUE
             }
     )
-    public ResponseEntity<List<Message>> sendMessageToExistChatRoom(
+    public ResponseEntity<List<MessageResponse>> sendMessageToExistChatRoom(
             @PathVariable Long id,
             @RequestPart(required = false) List<MultipartFile> files,
             @RequestPart(required = false) @Valid MessageCreateRequest request
@@ -290,7 +295,8 @@ public class ChatRoomController {
             log.info("Sending messages with {} files to chatRoom: {}", files.size(), id);
 
             List<Message> savedMessages = messageService.sendMessagesWithFiles(id, request, files, currentUser);
-            return ResponseEntity.ok(savedMessages);
+            List<MessageResponse> response = savedMessages.stream().map(MessageMapper::toResponse).toList();
+            return ResponseEntity.ok(new ArrayList<>(response));
         }
 
         // Case 2: Text only (JSON - backward compatible)
@@ -300,8 +306,8 @@ public class ChatRoomController {
 
             MessageCreateRequest textRequest = new MessageCreateRequest(request.getContent());
             Message textMessage = messageService.sendMessage(id, textRequest, currentUser);
-
-            return ResponseEntity.ok(new ArrayList<>(Collections.singletonList(textMessage)));
+            MessageResponse response = MessageMapper.toResponse(textMessage);
+            return ResponseEntity.ok(new ArrayList<>(Collections.singletonList(response)));
         }
 
         throw new InvalidException("At least one file or text content is required");
