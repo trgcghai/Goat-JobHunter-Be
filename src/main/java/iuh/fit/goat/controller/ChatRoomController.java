@@ -38,7 +38,6 @@ public class ChatRoomController {
     private final MessageService messageService;
     private final UserRepository userRepository;
 
-
     @GetMapping("/me")
     public ResponseEntity<?> getMyChatRooms(Pageable pageable) throws InvalidException {
         String email = SecurityUtil.getCurrentUserLogin()

@@ -16,52 +16,102 @@ public class PermissionInterceptorConfiguration implements WebMvcConfigurer {
     @Override
     public void addInterceptors(InterceptorRegistry registry) {
         String[] whiteList = {
-                "/ping",                      // Endpoint kiểm tra trạng thái server
-                "/clear-cookies",             // Xóa toàn bộ cookies trên FE – không cần phân quyền
-                "/uuid",                      // Tạo UUID cho user chưa đăng nhập – không cần phân quyền
+//              Các endpoint về tài nguyên tĩnh như swagger có thể public
+                "/storage/**",
+                "/v3/api-docs/**",
+                "/swagger-ui/**",
+                "/swagger-ui.html",
 
-                "/",                                 // Trang gốc – public
-                "/api/v1/auth/**",                   // Các endpoint xác thực (login, refresh token, logout) – phải public
-                "/storage/**",                       // Tải/hiển thị file tĩnh – public
-                "/api/v1/recruiters/**",             // Danh sách/Nội dung nhà tuyển dụng – public
-                "/api/v1/jobs/**",                   // Danh sách/Nội dung công việc – public
-                "/api/v1/skills/**",                 // Dữ liệu kỹ năng tham chiếu – public
-                "/api/v1/files/**",                  // Upload/Download file – không yêu cầu phân quyền
-                "/api/v1/applications/**",           // Ứng tuyển công việc – cho ứng viên sử dụng trực tiếp
-                "/api/v1/careers/**",                // Dữ liệu ngành nghề – public
-                "/api/v1/roles/**",                  // Lấy danh sách role – không cần kiểm tra permission
-                "/api/v1/subscribers/**",            // Đăng ký nhận bản tin – public
-                "/api/v1/dashboard/**",              // Dashboard thống kê public (nếu không yêu cầu phân quyền)
-                "/api/v1/users/me/**",               // Truy vấn, thao tác với resource của chính user đang login, không cần kiểm tra permission
-                "/api/v1/users/update-password",     // Cập nhật mật khẩu bằng token – cần bỏ qua interceptor
-                "/api/v1/users/reset-password",      // Quên mật khẩu / reset mật khẩu – public
-                "/api/v1/users/saved-jobs",          // Danh sách công việc đã lưu – cho phép FE sử dụng
-                "/api/v1/users/followed-recruiters", // Danh sách NTĐ đã theo dõi – cho phép FE sử dụng
-                "/api/v1/users",                     // Đăng ký hoặc truy vấn user – public
-                "/api/v1/comments/**",               // Bình luận (đọc/ghi) – public
-                "/api/v1/blogs/**",                  // Bài viết blog – public
-                "/api/v1/email/**",                  // Gửi email/liên hệ – public
+//              Ai cũng có thể dùng chat
+                "/api/v1/ai/**",
 
-                "/v3/api-docs/**",                   // Tài liệu OpenAPI – public
-                "/swagger-ui/**",                    // Swagger UI – public
-                "/swagger-ui.html",                  // Trang Swagger – public
+//              Số lượng ứng tuyển của công việc, có thể public để hiển thị trên trang chi tiết công việc
+                "/api/v1/applications/count",
 
-                "/api/v1/applicants/me",             // Truy vấn thông tin cá nhân của ứng viên đang đăng nhập – không cần kiểm tra permission
-                "/api/v1/recruiters/me",             // Truy vấn thông tin cá nhân của NTĐ đang đăng nhập – không cần kiểm tra permission
-                "/api/v1/notifications/**",          // Server sent event, nhận thông báo khi comment, reply, like blog
-                "/api/v1/ai/**",                     // Role cũng có thể dùng chat
-                "/api/v1/applications/count",        // Lấy số application mà applicant đã ứng tuyển vào 1 job
+//              Các endpoint xác thực phải public
+                "/api/v1/auth/**",
 
-                "/api/v1/reviews/companies/**",      // Danh sách đánh giá của từng công ty - public
-                "/api/v1/reviews/latest",            // Danh sách đánh giá gần nhất - public
-                "/api/v1/reviews/count",             // Tổng số lượng đánh giá - public
+//              Các endpoint về blog để người dùng có thể xem danh sách bài viết, chi tiết bài viết, bài viết theo tag, nhưng vẫn cho phép người dùng có thể tạo/sửa/xóa bài viết của chính mình
+                "/api/v1/blogs",
+                "/api/v1/blogs/{id}",
+                "/api/v1/blogs/available",
+                "/api/v1/blogs/tags",
 
-                "/api/v1/tickets/**",               // báo cáo bài viết hoặc comment - public
+//              Các endpoint về reaction để người dùng có thể xem danh sách reaction của bài viết, nhưng vẫn cho phép người dùng có thể tạo/xóa reaction của chính mình
+                "/api/v1/reactions/**",
 
-                "/api/v1/resumes/**",                // Resume endpoints - khi login thì chỉ thao tác với resume của chính mình
+//              Dữ liệu ngành nghề phải public
+                "/api/v1/careers/**",
 
-                "/api/v1/companies/**",
-                "/api/v1/evaluations/**"
+//              Các endpoint về chatroom để người dùng có thể xem danh sách phòng chat của chính mình, chi tiết phòng chat của chính mình
+                "/api/v1/chatrooms/**",
+
+//              Các endpoint về comment để người dùng có thể xem danh sách comment của bài viết, chi tiết comment, nhưng vẫn cho phép người dùng có thể tạo/sửa/xóa comment của chính mình
+                "/api/v1/comments/**",
+
+//              Thông tin danh sách công ty và chi tiết công ty có thể public
+                "/api/v1/companies/{id}",
+                "/api/v1/companies/slug/{name}",
+                "/api/v1/companies/{id}/group-addresses",
+                "/api/v1/companies/available",
+                "/api/v1/companies/{companyId}/jobs/skills",
+                "/api/v1/companies/{companyId}/jobs",
+                "/api/v1/companies/name",
+
+//               Thông tin danh sách công việc và chi tiết công việc có thể public
+                "/api/v1/jobs/{id}",
+                "/api/v1/jobs/available",
+                "/api/v1/jobs/companies/count",
+                "/api/v1/jobs/count-applications",
+
+//              Server sent event, nhận thông báo khi comment, reply, like blog
+                "/api/v1/notifications/**",
+
+//              Endpoint kiểm tra trạng thái server
+                "/",
+                "/ping",
+                "/clear-cookies",
+                "/uuid",
+
+//              Các endpoint resumes để người dùng có thể thao tác với resume của chính mình
+                "/api/v1/resumes/**",
+
+//               Các endpoint đánh giá để người dùng có thể thao tác với đánh giá của chính mình
+                "/api/v1/evaluations/**",
+
+//              Các endpoint đánh giá để người dùng có thể thao tác với đánh giá của chính mình, nhưng vẫn cho phép mọi người xem danh sách đánh giá của công ty và đánh giá gần nhất
+                "/api/v1/reviews",
+                "/api/v1/reviews/companies/{name}",
+                "/api/v1/reviews/latest",
+                "/api/v1/reviews/count",
+                "/api/v1/reviews/companies/count",
+                "/api/v1/reviews/companies/ratings/average",
+                "/api/v1/reviews/companies/{companyId}/ratings/summary",
+                "/api/v1/reviews/companies/{companyId}/recommendation-rate",
+
+//              Các endpoint về skill để người dùng có thể xem danh sách kỹ năng và chi tiết kỹ năng
+                "/api/v1/skills/{id}",
+                "/api/v1/skills/all",
+
+//              Các endpoint về file để người dùng có thể tải lên hoặc tải xuống file
+                "/api/v1/files/**",
+
+//              Đăng ký nhận việc làm mới qua email
+                "/api/v1/subscribers/**",
+
+//              Báo cáo bài viết hoặc comment
+                "/api/v1/tickets/**",
+
+//              Các endpoint về user để người dùng có thể thao tác với thông tin của chính mình, nhưng vẫn cho phép mọi người xem thông tin cơ bản của user khác (không bao gồm thông tin nhạy cảm như email, password, vai trò)
+                "/api/v1/users/{id}",
+                "/api/v1/users/search",
+                "/api/v1/users/me/**",
+                "/api/v1/users/update-password",
+                "/api/v1/users/reset-password",
+
+//              Các endpoint về role để người dùng có thể xem danh sách vai trò và chi tiết vai trò
+                "/api/v1/roles/{id}",
+                "/api/v1/roles",
         };
 
         registry.addInterceptor(getPermissionInterceptor())

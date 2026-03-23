@@ -21,7 +21,7 @@ import static jakarta.persistence.FetchType.LAZY;
 @FilterDef(name = "activePermissionFilter")
 public class Permission extends BaseEntity {
     @Id
-    @GeneratedValue(strategy = GenerationType.AUTO)
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private long permissionId;
     @NotBlank(message = "API path is not empty")
     private String apiPath;

@@ -38,10 +38,8 @@ public class PermissionInterceptor implements HandlerInterceptor {
 
                 log.info("Check role of user: {}", role);
 
-                // Check permission
                 if(role != null) {
 
-                    // Allow all if user is admin
                     if (iuh.fit.goat.common.Role.ADMIN.getValue().equalsIgnoreCase(role.getName())) {
                         return true;
                     }
