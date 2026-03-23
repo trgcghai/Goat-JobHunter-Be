@@ -157,7 +157,9 @@ public class UserServiceImpl implements UserService {
             loginResponse.setEmail(res.getEmail());
             loginResponse.setPhone(res.getPhone());
             loginResponse.setType(res instanceof Applicant ? iuh.fit.goat.common.Role.APPLICANT.getValue() : iuh.fit.goat.common.Role.COMPANY.getValue());
-            loginResponse.setRole(res.getRole());
+            loginResponse.setRole(
+                    new LoginResponse.RoleAccount(res.getRole().getRoleId(), res.getRole().getName())
+            );
             loginResponse.setEnabled(res.isEnabled());
 
             String newAccessToken = this.securityUtil.createAccessToken(currentEmail, loginResponse);
@@ -761,11 +763,11 @@ public class UserServiceImpl implements UserService {
         userResponse.setUpdatedAt(user.getUpdatedAt());
 
         if (user.getRole() != null) {
-            UserResponse.RoleUser roleUser = new UserResponse.RoleUser();
-            roleUser.setRoleId(user.getRole().getRoleId());
-            roleUser.setName(user.getRole().getName());
+            UserResponse.RoleAccount roleAccount = new UserResponse.RoleAccount();
+            roleAccount.setRoleId(user.getRole().getRoleId());
+            roleAccount.setName(user.getRole().getName());
 
-            userResponse.setRole(roleUser);
+            userResponse.setRole(roleAccount);
         }
 
         return userResponse;

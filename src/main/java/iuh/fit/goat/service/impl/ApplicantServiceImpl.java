@@ -195,10 +195,10 @@ public class ApplicantServiceImpl implements ApplicantService {
         applicantResponse.setAvailableStatus(applicant.isAvailableStatus());
 
         if (applicant.getRole() != null) {
-            UserResponse.RoleUser roleUser = new UserResponse.RoleUser();
-            roleUser.setRoleId(applicant.getRole().getRoleId());
-            roleUser.setName(applicant.getRole().getName());
-            applicantResponse.setRole(roleUser);
+            UserResponse.RoleAccount roleAccount = new UserResponse.RoleAccount();
+            roleAccount.setRoleId(applicant.getRole().getRoleId());
+            roleAccount.setName(applicant.getRole().getName());
+            applicantResponse.setRole(roleAccount);
         }
 
         return applicantResponse;
