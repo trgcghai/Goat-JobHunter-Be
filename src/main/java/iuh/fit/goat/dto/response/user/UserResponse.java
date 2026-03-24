@@ -31,7 +31,7 @@ public class UserResponse {
     private String coverPhoto;
     private String headline;
     private String bio;
-    private RoleUser role;
+    private RoleAccount role;
     private Instant createdAt;
     private Instant updatedAt;
 
@@ -39,7 +39,7 @@ public class UserResponse {
     @Setter
     @NoArgsConstructor
     @AllArgsConstructor
-    public static class RoleUser {
+    public static class RoleAccount {
         private long roleId;
         private String name;
     }

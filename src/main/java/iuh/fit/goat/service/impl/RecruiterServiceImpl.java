@@ -163,10 +163,10 @@ public class RecruiterServiceImpl implements RecruiterService {
         }
 
         if(recruiter.getRole() != null) {
-            UserResponse.RoleUser roleUser = new UserResponse.RoleUser();
-            roleUser.setRoleId(recruiter.getRole().getRoleId());
-            roleUser.setName(recruiter.getRole().getName());
-            recruiterResponse.setRole(roleUser);
+            UserResponse.RoleAccount roleAccount = new UserResponse.RoleAccount();
+            roleAccount.setRoleId(recruiter.getRole().getRoleId());
+            roleAccount.setName(recruiter.getRole().getName());
+            recruiterResponse.setRole(roleAccount);
         }
 
         return recruiterResponse;

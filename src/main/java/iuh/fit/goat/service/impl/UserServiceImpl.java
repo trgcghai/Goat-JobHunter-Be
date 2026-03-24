@@ -5,6 +5,7 @@ import iuh.fit.goat.dto.response.interview.InterviewResponse;
 import iuh.fit.goat.dto.request.user.ResetPasswordRequest;
 import iuh.fit.goat.dto.response.auth.LoginResponse;
 import iuh.fit.goat.dto.response.ResultPaginationResponse;
+import iuh.fit.goat.dto.response.job.JobResponse;
 import iuh.fit.goat.dto.response.user.UserEnabledResponse;
 import iuh.fit.goat.dto.response.user.UserResponse;
 import iuh.fit.goat.entity.*;
@@ -28,6 +29,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.*;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -41,6 +43,7 @@ public class UserServiceImpl implements UserService {
     private final ResumeService resumeService;
     private final RedisService redisService;
     private final EmailNotificationService emailNotificationService;
+    private final JobService jobService;
 
     private final AccountRepository accountRepository;
     private final UserRepository userRepository;
@@ -154,7 +157,9 @@ public class UserServiceImpl implements UserService {
             loginResponse.setEmail(res.getEmail());
             loginResponse.setPhone(res.getPhone());
             loginResponse.setType(res instanceof Applicant ? iuh.fit.goat.common.Role.APPLICANT.getValue() : iuh.fit.goat.common.Role.COMPANY.getValue());
-            loginResponse.setRole(res.getRole());
+            loginResponse.setRole(
+                    new LoginResponse.RoleAccount(res.getRole().getRoleId(), res.getRole().getName())
+            );
             loginResponse.setEnabled(res.isEnabled());
 
             String newAccessToken = this.securityUtil.createAccessToken(currentEmail, loginResponse);
@@ -222,17 +227,18 @@ public class UserServiceImpl implements UserService {
         }
 
         List<Job> savedJobs = currentUser.getSavedJobs();
-        int total = savedJobs.size();
+        List<JobResponse> jobResponses = savedJobs.stream().map(this.jobService::convertToJobResponse).collect(Collectors.toList());
+        int total = jobResponses.size();
         int pageNumber = pageable.getPageNumber();
         int pageSize = pageable.getPageSize();
         int start = pageNumber * pageSize;
-        List<Job> content;
+        List<JobResponse> content;
 
         if (start >= total || pageSize <= 0) {
             content = new ArrayList<>();
         } else {
             int end = Math.min(start + pageSize, total);
-            content = savedJobs.subList(start, end);
+            content = jobResponses.subList(start, end);
         }
 
         ResultPaginationResponse.Meta meta = new ResultPaginationResponse.Meta();
@@ -240,7 +246,7 @@ public class UserServiceImpl implements UserService {
         meta.setPageSize(pageSize);
         int pages = pageSize > 0 ? (int) Math.ceil((double) total / pageSize) : 0;
         meta.setPages(pages);
-        meta.setTotal((long) total);
+        meta.setTotal(total);
 
         return new ResultPaginationResponse(meta, content);
     }
@@ -757,11 +763,11 @@ public class UserServiceImpl implements UserService {
         userResponse.setUpdatedAt(user.getUpdatedAt());
 
         if (user.getRole() != null) {
-            UserResponse.RoleUser roleUser = new UserResponse.RoleUser();
-            roleUser.setRoleId(user.getRole().getRoleId());
-            roleUser.setName(user.getRole().getName());
+            UserResponse.RoleAccount roleAccount = new UserResponse.RoleAccount();
+            roleAccount.setRoleId(user.getRole().getRoleId());
+            roleAccount.setName(user.getRole().getName());
 
-            userResponse.setRole(roleUser);
+            userResponse.setRole(roleAccount);
         }
 
         return userResponse;

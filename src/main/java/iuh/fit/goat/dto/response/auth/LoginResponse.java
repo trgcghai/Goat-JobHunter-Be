@@ -1,6 +1,7 @@
 package iuh.fit.goat.dto.response.auth;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
+import iuh.fit.goat.dto.response.company.CompanyResponse;
 import iuh.fit.goat.entity.Address;
 import iuh.fit.goat.enumeration.Gender;
 import iuh.fit.goat.entity.Role;
@@ -27,7 +28,7 @@ public class LoginResponse {
     private String avatar;
     private String type;
     private boolean enabled;
-    private Role role;
+    private RoleAccount role;
     private UserCompany company;
 
     @Getter
@@ -37,6 +38,15 @@ public class LoginResponse {
     @Data
     public static class UserCompany {
         private long accountId;
+        private String name;
+    }
+
+    @Getter
+    @Setter
+    @NoArgsConstructor
+    @AllArgsConstructor
+    public static class RoleAccount {
+        private long roleId;
         private String name;
     }
 }

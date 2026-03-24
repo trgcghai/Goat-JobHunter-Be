@@ -69,7 +69,7 @@ public class AuthServiceImpl implements AuthService {
     @Override
     public LoginResponse handleLogin(LoginRequest loginRequest, HttpServletResponse response) throws InvalidException {
 
-        log.info("User: {}", this.userService.handleGetUserByEmail(loginRequest.getEmail()));
+        log.info("User: {}", this.accountRepository.findByEmailAndDeletedAtIsNull(loginRequest.getEmail()));
         log.info("loginRequest: {}", loginRequest);
 
         Authentication authentication = this.authenticationManagerBuilder.getObject()
@@ -247,21 +247,20 @@ public class AuthServiceImpl implements AuthService {
         String email = SecurityUtil.getCurrentUserLogin()
                 .orElseThrow(() -> new InvalidException("User not logged in"));
 
-        User user = this.userService.handleGetUserByEmail(email);
+        Account account = this.accountRepository.findByEmailAndDeletedAtIsNull(email)
+                .orElseThrow(() -> new InvalidException("Account not found"));
 
-        if (user == null) {
-            throw new InvalidException("User not found");
-        }
-
-        // Kiểm tra loại user và trả về response tương ứng
-        if (user instanceof Applicant applicant) {
+        // Kiểm tra loại account và trả về response tương ứng
+        if (account instanceof Applicant applicant) {
             return this.applicantService.convertToApplicantResponse(applicant);
-        } else if (user instanceof Recruiter recruiter) {
+        } else if (account instanceof Recruiter recruiter) {
             return this.recruiterService.convertToRecruiterResponse(recruiter);
+        } else if (account instanceof Company company) {
+            return this.companyService.convertToCompanyResponse(company);
         }
 
-        // Trường hợp là User thông thường
-        return this.userService.convertToUserResponse(user);
+        // Trường hợp là Admin
+        return this.userService.convertToUserResponse((User) account);
     }
 
     @Override
@@ -454,7 +453,9 @@ public class AuthServiceImpl implements AuthService {
         loginResponse.setAddresses(Objects.requireNonNullElse(account.getAddresses(), new ArrayList<>()));
 
         if (account.getRole() != null) {
-            loginResponse.setRole(account.getRole());
+            loginResponse.setRole(
+                    new LoginResponse.RoleAccount(account.getRole().getRoleId(), account.getRole().getName())
+            );
         }
 
         // Thông tin riêng của User

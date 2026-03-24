@@ -3,6 +3,7 @@ package iuh.fit.goat.service.impl;
 import iuh.fit.goat.dto.request.company.CompanyUpdateRequest;
 import iuh.fit.goat.dto.response.ResultPaginationResponse;
 import iuh.fit.goat.dto.response.company.CompanyResponse;
+import iuh.fit.goat.dto.response.user.UserResponse;
 import iuh.fit.goat.entity.*;
 import iuh.fit.goat.repository.AddressRepository;
 import iuh.fit.goat.repository.CompanyRepository;
@@ -232,6 +233,13 @@ public class CompanyServiceImpl implements CompanyService {
                     })
                     .toList();
             companyResponse.setAwards(awards);
+        }
+
+        if(company.getRole() != null) {
+            CompanyResponse.RoleAccount roleAccount = new CompanyResponse.RoleAccount();
+            roleAccount.setRoleId(company.getRole().getRoleId());
+            roleAccount.setName(company.getRole().getName());
+            companyResponse.setRole(roleAccount);
         }
 
         return companyResponse;
