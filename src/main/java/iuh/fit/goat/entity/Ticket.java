@@ -34,11 +34,11 @@ public class Ticket extends BaseEntity{
 
     @ManyToOne(fetch = LAZY)
     @JoinColumn(name = "reporter_id")
-    private User reporter;
+    private Account reporter;
 
     @ManyToOne(fetch = LAZY)
     @JoinColumn(name = "assignee_id")
-    private User assignee;
+    private Account assignee;
 
     @ManyToOne(fetch = LAZY)
     @JoinColumn(name = "blog_id")

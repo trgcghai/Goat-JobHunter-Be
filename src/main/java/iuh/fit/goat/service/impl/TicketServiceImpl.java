@@ -2,10 +2,7 @@ package iuh.fit.goat.service.impl;
 
 import iuh.fit.goat.dto.request.ticket.CreateTicketRequest;
 import iuh.fit.goat.dto.response.ticket.TicketResponse;
-import iuh.fit.goat.entity.Blog;
-import iuh.fit.goat.entity.Comment;
-import iuh.fit.goat.entity.Ticket;
-import iuh.fit.goat.entity.User;
+import iuh.fit.goat.entity.*;
 import iuh.fit.goat.enumeration.Status;
 import iuh.fit.goat.enumeration.TicketType;
 import iuh.fit.goat.exception.InvalidException;
@@ -115,7 +112,7 @@ public class TicketServiceImpl implements TicketService {
 
 
     private TicketResponse mapToResponse(Ticket ticket) {
-        User reporter = ticket.getReporter();
+        Account reporter = ticket.getReporter();
         TicketResponse response = new TicketResponse();
         response.setTicketId(ticket.getTicketId());
         response.setType(ticket.getType());
@@ -123,7 +120,7 @@ public class TicketServiceImpl implements TicketService {
         response.setDescription(ticket.getDescription());
         response.setStatus(ticket.getStatus());
         response.setReporterId(reporter != null ? reporter.getAccountId() : null);
-        response.setReporterName(reporter != null ? reporter.getFullName() : null);
+        response.setReporterName(reporter != null ? reporter.getUsername() : null);
         response.setBlogId(ticket.getBlog() != null ? ticket.getBlog().getBlogId() : null);
         response.setCommentId(ticket.getComment() != null ? ticket.getComment().getCommentId() : null);
         return response;

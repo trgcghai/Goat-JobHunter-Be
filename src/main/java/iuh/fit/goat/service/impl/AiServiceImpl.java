@@ -13,6 +13,7 @@ import iuh.fit.goat.entity.*;
 import iuh.fit.goat.exception.InvalidException;
 import iuh.fit.goat.repository.*;
 import iuh.fit.goat.service.*;
+import iuh.fit.goat.util.BasicUtil;
 import iuh.fit.goat.util.SecurityUtil;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -497,7 +498,7 @@ public class AiServiceImpl implements AiService {
                 Content.builder().parts(
                     List.of(
                         Part.fromText(prompt),
-                        Part.fromUri(resumeUrl, SecurityUtil.detectMimeType(resumeUrl))
+                        Part.fromUri(resumeUrl, BasicUtil.detectMimeType(resumeUrl))
                     )
                 )
                 .build(),
@@ -610,12 +611,15 @@ public class AiServiceImpl implements AiService {
     }
 
     private String formatBlogContext(Blog blog) {
+        String author = blog.getAuthor() instanceof User
+                ? ((User) blog.getAuthor()).getFullName()
+                : ((Company) blog.getAuthor()).getName();
         return String.format(
                 "- [%s](%s/blogs/%d) | Tác giả: %s | Tags: %s | Lượt xem: %d | Likes: %d | Comments: %d | Enabled: %s | Ngày tạo: %s",
                 blog.getContent(),
                 fe,
                 blog.getBlogId(),
-                blog.getAuthor() != null ? blog.getAuthor().getFullName() : "N/A",
+                author,
                 blog.getTags() != null && !blog.getTags().isEmpty()
                         ? String.join(", ", blog.getTags().subList(0, Math.min(3, blog.getTags().size())))
                         : "Không có",

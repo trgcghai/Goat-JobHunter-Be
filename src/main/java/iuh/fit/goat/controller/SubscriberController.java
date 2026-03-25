@@ -8,6 +8,7 @@ import iuh.fit.goat.dto.response.ResultPaginationResponse;
 import iuh.fit.goat.entity.Subscriber;
 import iuh.fit.goat.exception.InvalidException;
 import iuh.fit.goat.service.SubscriberService;
+import iuh.fit.goat.util.BasicUtil;
 import iuh.fit.goat.util.SecurityUtil;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -53,7 +54,7 @@ public class SubscriberController {
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteSubscriber(@PathVariable("id") String id)
             throws InvalidException {
-        if(SecurityUtil.checkValidNumber("id")) {
+        if(BasicUtil.checkValidNumber("id")) {
             Subscriber subscriber = this.subscriberService.handleGetSubscriberById(Long.parseLong(id));
             if(subscriber != null) {
                 this.subscriberService.handleDeleteSubscriber(Long.parseLong(id));
@@ -68,7 +69,7 @@ public class SubscriberController {
 
     @GetMapping("/{id}")
     public ResponseEntity<Subscriber> getSubscriberById(@PathVariable("id") String id) throws InvalidException {
-        if(SecurityUtil.checkValidNumber("id")) {
+        if(BasicUtil.checkValidNumber("id")) {
             Subscriber subscriber = this.subscriberService.handleGetSubscriberById(Long.parseLong(id));
             if(subscriber != null) {
                 return ResponseEntity.status(HttpStatus.OK).body(subscriber);

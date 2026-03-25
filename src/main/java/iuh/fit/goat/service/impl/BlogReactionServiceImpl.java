@@ -48,7 +48,7 @@ public class BlogReactionServiceImpl implements BlogReactionService {
 
         // Check if reaction already exists
         Optional<BlogReaction> existingReaction = this.blogReactionRepository
-                .findByBlog_BlogIdAndUser_AccountId(blog.getBlogId(), currentUser.getAccountId());
+                .findByBlog_BlogIdAndAccount_AccountId(blog.getBlogId(), currentUser.getAccountId());
 
         if (existingReaction.isPresent()) {
             // Update existing reaction
@@ -59,7 +59,7 @@ public class BlogReactionServiceImpl implements BlogReactionService {
             // Create new reaction
             BlogReaction newReaction = new BlogReaction();
             newReaction.setBlog(blog);
-            newReaction.setUser(currentUser);
+            newReaction.setAccount(currentUser);
             newReaction.setType(request.getReactionType());
             this.blogReactionRepository.save(newReaction);
         }
@@ -81,7 +81,7 @@ public class BlogReactionServiceImpl implements BlogReactionService {
         }
 
         // Delete reactions for specified blogs
-        this.blogReactionRepository.deleteByBlog_BlogIdInAndUser_AccountId(blogIds, currentUser.getAccountId());
+        this.blogReactionRepository.deleteByBlog_BlogIdInAndAccount_AccountId(blogIds, currentUser.getAccountId());
 
         return this.userService.convertToUserResponse(currentUser);
     }
@@ -99,7 +99,7 @@ public class BlogReactionServiceImpl implements BlogReactionService {
         }
 
         List<BlogReaction> reactions = this.blogReactionRepository
-                .findByBlog_BlogIdInAndUser_AccountId(blogIds, currentUser.getAccountId());
+                .findByBlog_BlogIdInAndAccount_AccountId(blogIds, currentUser.getAccountId());
 
         return blogIds.stream()
                 .map(blogId -> {

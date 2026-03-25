@@ -12,6 +12,7 @@ import iuh.fit.goat.dto.response.blog.BlogStatusResponse;
 import iuh.fit.goat.dto.response.ResultPaginationResponse;
 import iuh.fit.goat.entity.Blog;
 import iuh.fit.goat.entity.Comment;
+import iuh.fit.goat.entity.Company;
 import iuh.fit.goat.entity.User;
 import iuh.fit.goat.exception.InvalidException;
 import iuh.fit.goat.repository.BlogRepository;
@@ -316,14 +317,20 @@ public class BlogServiceImpl implements BlogService {
         response.setUpdatedAt(blog.getUpdatedAt());
         response.setUpdatedBy(blog.getUpdatedBy());
         if (blog.getAuthor() != null) {
+            String name = blog.getAuthor() instanceof User ? ((User) blog.getAuthor()).getFullName() : ((Company) blog.getAuthor()).getName();
+            String avatar = blog.getAuthor() instanceof User ? ((User) blog.getAuthor()).getAvatar() : ((Company) blog.getAuthor()).getLogo();
+            String bio = blog.getAuthor() instanceof User ? ((User) blog.getAuthor()).getBio() : ((Company) blog.getAuthor()).getDescription();
+            String coverPhoto = blog.getAuthor() instanceof User ? ((User) blog.getAuthor()).getCoverPhoto() : ((Company) blog.getAuthor()).getCoverPhoto();
+            String headline = blog.getAuthor() instanceof User ? ((User) blog.getAuthor()).getHeadline() : ((Company) blog.getAuthor()).getWebsite();
+            
             BlogResponse.BlogAuthor author = new BlogResponse.BlogAuthor(
                     blog.getAuthor().getAccountId(),
-                    blog.getAuthor().getFullName(),
+                    name,
                     blog.getAuthor().getUsername(),
-                    blog.getAuthor().getAvatar(),
-                    blog.getAuthor().getBio(),
-                    blog.getAuthor().getHeadline(),
-                    blog.getAuthor().getCoverPhoto()
+                    avatar,
+                    bio,
+                    headline,
+                    coverPhoto
             );
             response.setAuthor(author);
         } else {

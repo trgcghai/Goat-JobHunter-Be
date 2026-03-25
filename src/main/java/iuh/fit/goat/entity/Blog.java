@@ -19,7 +19,7 @@ import static jakarta.persistence.FetchType.LAZY;
 @Setter
 @AllArgsConstructor
 @NoArgsConstructor
-@ToString(exclude = {"comments", "reactions", "tickets", "notifications", "users"})
+@ToString(exclude = {"comments", "reactions", "tickets", "notifications", "accounts"})
 @FilterDef(name = "activeBlogFilter")
 public class Blog extends BaseEntity {
     @Id
@@ -37,8 +37,8 @@ public class Blog extends BaseEntity {
     private BlogActivity activity = new BlogActivity();
 
     @ManyToOne
-    @JoinColumn(name = "user_id")
-    private User author;
+    @JoinColumn(name = "account_id")
+    private Account author;
 
     @OneToMany(mappedBy = "blog", fetch = LAZY, cascade = {PERSIST, MERGE})
     @JsonIgnore
@@ -74,5 +74,5 @@ public class Blog extends BaseEntity {
             name = "activeAccountFilter",
             condition = "deleted_at IS NULL"
     )
-    private List<User> users = new ArrayList<>();
+    private List<Account> accounts = new ArrayList<>();
 }

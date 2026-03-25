@@ -8,7 +8,7 @@ import iuh.fit.goat.exception.InvalidException;
 import iuh.fit.goat.service.AiService;
 import iuh.fit.goat.service.EvaluationService;
 import iuh.fit.goat.service.ResumeService;
-import iuh.fit.goat.util.SecurityUtil;
+import iuh.fit.goat.util.BasicUtil;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
@@ -36,7 +36,7 @@ public class ResumeEvaluationController {
             @PathVariable("resumeId") String resumeId
     ) throws InvalidException
     {
-        if(!SecurityUtil.checkValidNumber(resumeId)) throw new InvalidException("Invalid resume id");
+        if(!BasicUtil.checkValidNumber(resumeId)) throw new InvalidException("Invalid resume id");
 
         ResultPaginationResponse result = this.resumeService.handleGetAllResumeEvaluationByResume(
                 spec, pageable, Long.parseLong(resumeId)
@@ -46,7 +46,7 @@ public class ResumeEvaluationController {
 
     @GetMapping("/{id}")
     public ResponseEntity<ResumeEvaluationResponse> getResumeEvaluationById(@PathVariable("id") String id) throws InvalidException {
-        if(!SecurityUtil.checkValidNumber(id)) throw new InvalidException("Id is number");
+        if(!BasicUtil.checkValidNumber(id)) throw new InvalidException("Id is number");
 
         ResumeEvaluation resumeEvaluation = this.evaluationService.handleGetResumeEvaluationById(Long.parseLong(id));
         if(resumeEvaluation == null) throw new InvalidException("Evaluation not found");

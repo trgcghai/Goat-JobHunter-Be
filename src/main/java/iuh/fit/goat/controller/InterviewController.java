@@ -10,6 +10,7 @@ import iuh.fit.goat.entity.Recruiter;
 import iuh.fit.goat.exception.InvalidException;
 import iuh.fit.goat.service.InterviewService;
 import iuh.fit.goat.service.RecruiterService;
+import iuh.fit.goat.util.BasicUtil;
 import iuh.fit.goat.util.SecurityUtil;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -88,7 +89,7 @@ public class InterviewController {
             @PathVariable("id") String id
     ) throws InvalidException
     {
-        if(!SecurityUtil.checkValidNumber(id)) throw new InvalidException("Id is number");
+        if(!BasicUtil.checkValidNumber(id)) throw new InvalidException("Id is number");
 
         Interview interview = this.interviewService.handleGetInterviewById(Long.parseLong(id));
         if(interview == null) throw new InvalidException("Interview not found");

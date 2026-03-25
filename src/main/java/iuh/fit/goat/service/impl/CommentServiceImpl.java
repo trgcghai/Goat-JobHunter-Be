@@ -5,6 +5,7 @@ import iuh.fit.goat.dto.response.comment.CommentResponse;
 import iuh.fit.goat.dto.response.ResultPaginationResponse;
 import iuh.fit.goat.entity.Blog;
 import iuh.fit.goat.entity.Comment;
+import iuh.fit.goat.entity.Company;
 import iuh.fit.goat.entity.User;
 import iuh.fit.goat.repository.CommentRepository;
 import iuh.fit.goat.repository.UserRepository;
@@ -146,9 +147,13 @@ public class CommentServiceImpl implements CommentService {
         }
 
         if(comment.getCommentedBy() != null) {
+            String name = comment.getCommentedBy() instanceof User
+                    ? ((User) comment.getCommentedBy()).getFullName()
+                    : ((Company) comment.getCommentedBy()).getName();
+            
             CommentResponse.UserCommented commentedBy = new CommentResponse.UserCommented(
                     comment.getCommentedBy().getAccountId(),
-                    comment.getCommentedBy().getFullName(),
+                   name,
                     comment.getCommentedBy().getUsername(),
                     comment.getCommentedBy().getAvatar()
             );
@@ -156,12 +161,16 @@ public class CommentServiceImpl implements CommentService {
         }
 
         if(comment.getParent() != null) {
+            String name = comment.getParent().getCommentedBy() instanceof User
+                    ? ((User) comment.getParent().getCommentedBy()).getFullName()
+                    : ((Company) comment.getParent().getCommentedBy()).getName();
+
             CommentResponse.ParentComment parent = new CommentResponse.ParentComment(
                     comment.getParent().getCommentId(),
                     comment.getParent().getComment(),
                     new CommentResponse.UserCommented(
                             comment.getParent().getCommentedBy().getAccountId(),
-                            comment.getParent().getCommentedBy().getFullName(),
+                            name,
                             comment.getParent().getCommentedBy().getUsername(),
                             comment.getParent().getCommentedBy().getAvatar()
                     )

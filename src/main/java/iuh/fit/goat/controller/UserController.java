@@ -11,6 +11,7 @@ import iuh.fit.goat.dto.response.user.UserResponse;
 import iuh.fit.goat.entity.*;
 import iuh.fit.goat.exception.InvalidException;
 import iuh.fit.goat.service.*;
+import iuh.fit.goat.util.BasicUtil;
 import iuh.fit.goat.util.SecurityUtil;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -51,7 +52,7 @@ public class UserController {
 
     @GetMapping("/{id}")
     public <T extends UserResponse> ResponseEntity<T> getUserById(@PathVariable("id") String id) throws InvalidException {
-        if(!SecurityUtil.checkValidNumber(id)) throw new InvalidException("User ID must be a valid number");
+        if(!BasicUtil.checkValidNumber(id)) throw new InvalidException("User ID must be a valid number");
         User user = this.userService.handleGetUserById(Long.parseLong(id));
 
         T response;

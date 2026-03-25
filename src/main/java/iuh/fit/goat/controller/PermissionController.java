@@ -5,6 +5,7 @@ import iuh.fit.goat.dto.response.ResultPaginationResponse;
 import iuh.fit.goat.entity.Permission;
 import iuh.fit.goat.exception.InvalidException;
 import iuh.fit.goat.service.PermissionService;
+import iuh.fit.goat.util.BasicUtil;
 import iuh.fit.goat.util.SecurityUtil;
 import iuh.fit.goat.util.annotation.ApiMessage;
 import jakarta.validation.Valid;
@@ -46,7 +47,7 @@ public class PermissionController {
     @DeleteMapping("/{id}")
     @ApiMessage("Delete a permission")
     public ResponseEntity<Void> deletePermission(@PathVariable("id") String id) throws InvalidException {
-        if(!SecurityUtil.checkValidNumber(id)){
+        if(!BasicUtil.checkValidNumber(id)){
             throw new InvalidException("Id is number");
         }
         if(this.permissionService.handleGetPermissionById(Long.parseLong(id)) == null){

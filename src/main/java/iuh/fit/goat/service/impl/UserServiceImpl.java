@@ -12,6 +12,7 @@ import iuh.fit.goat.entity.*;
 import iuh.fit.goat.exception.InvalidException;
 import iuh.fit.goat.repository.*;
 import iuh.fit.goat.service.*;
+import iuh.fit.goat.util.BasicUtil;
 import iuh.fit.goat.util.SecurityUtil;
 import jakarta.persistence.criteria.Join;
 import lombok.RequiredArgsConstructor;
@@ -191,7 +192,7 @@ public class UserServiceImpl implements UserService {
             user.setEnabled(false);
             this.userRepository.save(user);
 
-            String verificationCode = SecurityUtil.generateVerificationCode();
+            String verificationCode = BasicUtil.generateVerificationCode();
             this.redisService.saveWithTTL(
                     user.getEmail(),
                     verificationCode,

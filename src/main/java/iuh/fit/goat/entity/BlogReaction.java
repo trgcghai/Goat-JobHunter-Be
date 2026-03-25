@@ -17,7 +17,7 @@ import static jakarta.persistence.FetchType.LAZY;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-@ToString(exclude = {"user", "blog"})
+@ToString(exclude = {"account", "blog"})
 public class BlogReaction extends BaseEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "blog_reaction_gen")
@@ -27,8 +27,8 @@ public class BlogReaction extends BaseEntity {
     private ReactionType type;
 
     @ManyToOne(fetch = LAZY)
-    @JoinColumn(name = "user_id")
-    private User user;
+    @JoinColumn(name = "account_id")
+    private Account account;
 
     @ManyToOne(fetch = LAZY)
     @JoinColumn(name = "blog_id")
