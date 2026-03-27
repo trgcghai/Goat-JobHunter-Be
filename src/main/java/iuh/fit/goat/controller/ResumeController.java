@@ -7,7 +7,7 @@ import iuh.fit.goat.dto.response.resume.ResumeStatusResponse;
 import iuh.fit.goat.entity.Resume;
 import iuh.fit.goat.exception.InvalidException;
 import iuh.fit.goat.service.ResumeService;
-import iuh.fit.goat.util.SecurityUtil;
+import iuh.fit.goat.util.BasicUtil;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.core.io.InputStreamResource;
@@ -38,7 +38,7 @@ public class ResumeController {
 
     @DeleteMapping
     public ResponseEntity<Void> deleteResume(@RequestParam("resumeId") String resumeId) throws InvalidException {
-        if(!SecurityUtil.checkValidNumber(resumeId)) throw new InvalidException("Invalid resume id");
+        if(!BasicUtil.checkValidNumber(resumeId)) throw new InvalidException("Invalid resume id");
 
         this.resumeService.handleDeleteResume(Long.parseLong(resumeId));
         return ResponseEntity.status(HttpStatus.OK).body(null);
@@ -46,7 +46,7 @@ public class ResumeController {
 
     @PutMapping("/default")
     public ResponseEntity<ResumeStatusResponse> defaultResume(@RequestParam("resumeId") String resumeId) throws InvalidException {
-        if(!SecurityUtil.checkValidNumber(resumeId)) throw new InvalidException("Invalid resume id");
+        if(!BasicUtil.checkValidNumber(resumeId)) throw new InvalidException("Invalid resume id");
 
         ResumeStatusResponse response = this.resumeService.handleDefaultResume(Long.parseLong(resumeId));
         return ResponseEntity.status(HttpStatus.OK).body(response);
@@ -54,7 +54,7 @@ public class ResumeController {
 
     @DeleteMapping("/default")
     public ResponseEntity<ResumeStatusResponse> unDefaultResume(@RequestParam("resumeId") String resumeId) throws InvalidException {
-        if(!SecurityUtil.checkValidNumber(resumeId)) throw new InvalidException("Invalid resume id");
+        if(!BasicUtil.checkValidNumber(resumeId)) throw new InvalidException("Invalid resume id");
 
         ResumeStatusResponse response = this.resumeService.handleUnDefaultResume(Long.parseLong(resumeId));
         return ResponseEntity.status(HttpStatus.OK).body(response);
@@ -62,7 +62,7 @@ public class ResumeController {
 
     @PutMapping("/public")
     public ResponseEntity<ResumeStatusResponse> publicResume(@RequestParam("resumeId") String resumeId) throws InvalidException {
-        if(!SecurityUtil.checkValidNumber(resumeId)) throw new InvalidException("Invalid resume id");
+        if(!BasicUtil.checkValidNumber(resumeId)) throw new InvalidException("Invalid resume id");
 
         ResumeStatusResponse response = this.resumeService.handlePublicResume(Long.parseLong(resumeId));
         return ResponseEntity.status(HttpStatus.OK).body(response);
@@ -70,7 +70,7 @@ public class ResumeController {
 
     @DeleteMapping("/public")
     public ResponseEntity<ResumeStatusResponse> privateResume(@RequestParam("resumeId") String resumeId) throws InvalidException {
-        if(!SecurityUtil.checkValidNumber(resumeId)) throw new InvalidException("Invalid resume id");
+        if(!BasicUtil.checkValidNumber(resumeId)) throw new InvalidException("Invalid resume id");
 
         ResumeStatusResponse response = this.resumeService.handlePrivateResume(Long.parseLong(resumeId));
         return ResponseEntity.status(HttpStatus.OK).body(response);
@@ -81,7 +81,7 @@ public class ResumeController {
             @PathVariable("id") String id
     ) throws InvalidException, IOException, URISyntaxException
     {
-        if(!SecurityUtil.checkValidNumber(id)) throw new InvalidException("Invalid resume id");
+        if(!BasicUtil.checkValidNumber(id)) throw new InvalidException("Invalid resume id");
 
         Resume resume = this.resumeService.handleGetResumeById(Long.parseLong(id));
         if(resume == null) throw new InvalidException("Resume not found");

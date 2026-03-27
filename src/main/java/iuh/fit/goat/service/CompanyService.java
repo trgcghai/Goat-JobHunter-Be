@@ -4,6 +4,7 @@ import iuh.fit.goat.dto.request.company.CompanyUpdateRequest;
 import iuh.fit.goat.dto.response.ResultPaginationResponse;
 import iuh.fit.goat.dto.response.company.CompanyResponse;
 import iuh.fit.goat.entity.Company;
+import iuh.fit.goat.exception.InvalidException;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 
@@ -13,7 +14,7 @@ import java.util.Map;
 public interface CompanyService {
     Company handleCreateCompany(Company company);
 
-    Company handleUpdateCompany(CompanyUpdateRequest request);
+    Company handleUpdateCompany(CompanyUpdateRequest request) throws InvalidException;
 
     void handleDeleteCompany(long id);
 

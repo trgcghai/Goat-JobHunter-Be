@@ -65,7 +65,7 @@ public class Company extends Account {
             name = "activeAccountFilter",
             condition = "deleted_at IS NULL"
     )
-    private List<User> followers = new ArrayList<>();
+    private List<Account> followers = new ArrayList<>();
 
     @OneToMany(mappedBy = "company", fetch = LAZY, cascade = {PERSIST, MERGE})
     @JsonIgnore

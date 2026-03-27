@@ -15,6 +15,7 @@ import iuh.fit.goat.entity.Job;
 import iuh.fit.goat.entity.Resume;
 import iuh.fit.goat.exception.InvalidException;
 import iuh.fit.goat.service.JobService;
+import iuh.fit.goat.util.BasicUtil;
 import iuh.fit.goat.util.SecurityUtil;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -72,7 +73,7 @@ public class JobController {
 
     @GetMapping("/{id}")
     public ResponseEntity<JobResponse> getJobById(@PathVariable("id") String id) throws InvalidException {
-        if(!SecurityUtil.checkValidNumber(id)){
+        if(!BasicUtil.checkValidNumber(id)){
             throw new InvalidException("Id is number");
         }
 
@@ -149,7 +150,7 @@ public class JobController {
             @Filter Specification<Resume> spec, Pageable pageable,
             @PathVariable("jobId") String jobId
     ) throws InvalidException {
-        if(!SecurityUtil.checkValidNumber(jobId)) throw new InvalidException("Job id must be number");
+        if(!BasicUtil.checkValidNumber(jobId)) throw new InvalidException("Job id must be number");
 
         Job currentJob = this.jobService.handleGetJobById(Long.parseLong(jobId));
         if (currentJob == null) throw new InvalidException("Job doesn't exist");

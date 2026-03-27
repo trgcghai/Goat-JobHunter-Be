@@ -28,5 +28,8 @@
     <include file="db.changelog/schema/2026-02-14/init-resume-evaluations.xml"/>
     <include file="db.changelog/schema/2026-02-18/modify-resume-evaluations.xml"/>
     <include file="db.changelog/data/2026-03-23/init-permissions.xml"/>
+    <include file="db.changelog/schema/2026-03-25/change-relation-account.xml"/>
+    <include file="db.changelog/schema/2026-03-25/collection-blog-tags.xml"/>
+    <include file="db.changelog/schema/2026-03-25/change-auto-id.xml"/>
 
 </databaseChangeLog>

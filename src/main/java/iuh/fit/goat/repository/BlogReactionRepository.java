@@ -9,9 +9,9 @@ import java.util.Optional;
 
 @Repository
 public interface BlogReactionRepository extends JpaRepository<BlogReaction, Long> {
-    Optional<BlogReaction> findByBlog_BlogIdAndUser_AccountId(Long blogId, Long accountId);
+    Optional<BlogReaction> findByBlog_BlogIdAndAccount_AccountId(Long blogId, Long accountId);
 
-    List<BlogReaction> findByBlog_BlogIdInAndUser_AccountId(List<Long> blogIds, Long accountId);
+    List<BlogReaction> findByBlog_BlogIdInAndAccount_AccountId(List<Long> blogIds, Long accountId);
 
-    void deleteByBlog_BlogIdInAndUser_AccountId(List<Long> blogIds, Long accountId);
+    void deleteByBlog_BlogIdInAndAccount_AccountId(List<Long> blogIds, Long accountId);
 }

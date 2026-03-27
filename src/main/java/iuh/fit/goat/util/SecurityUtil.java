@@ -4,6 +4,7 @@ import com.nimbusds.jose.util.Base64;
 import iuh.fit.goat.dto.response.StorageResponse;
 import iuh.fit.goat.dto.response.auth.LoginResponse;
 import iuh.fit.goat.exception.InvalidException;
+import iuh.fit.goat.repository.AccountRepository;
 import iuh.fit.goat.service.StorageService;
 import iuh.fit.goat.service.impl.StorageServiceImpl;
 import lombok.RequiredArgsConstructor;
@@ -39,7 +40,6 @@ public class SecurityUtil {
     @Value("${minhdat.jwt.refresh-token-validity-in-seconds}")
     private long jwtRefreshToken;
 
-    private static final SecureRandom secureRandom = new SecureRandom();
     private final JwtEncoder jwtEncoder;
 
     public SecurityUtil(JwtEncoder jwtEncoder) {
@@ -56,7 +56,6 @@ public class SecurityUtil {
                 .subject(email)
                 .claim("accountId", loginResponse.getAccountId())
                 .claim("email", loginResponse.getEmail())
-                .claim("fullName", loginResponse.getFullName())
                 .claim("type", loginResponse.getType())
                 .claim("role", loginResponse.getRole().getName())
                 .build();
@@ -141,50 +140,5 @@ public class SecurityUtil {
         }
         return null;
     }
-
-    public static String generateVerificationCode() {
-        int code = secureRandom.nextInt(900_000) + 100_000;
-        return String.valueOf(code);
-    }
-
-    public static boolean checkValidNumber(String str) {
-        Pattern pattern = Pattern.compile("^\\d+$");
-        return pattern.matcher(str).matches();
-    }
-
-    public static String uploadImage(MultipartFile file, String folder, StorageService storageService) throws InvalidException {
-        StorageResponse response = storageService.handleUploadFile(file, folder);
-        if (response == null || response.getUrl() == null) {
-            throw new InvalidException("Failed to upload file");
-        }
-        return response.getUrl();
-    }
-
-    public static String detectMimeType(String url) throws InvalidException {
-        String lower = url.toLowerCase();
-
-        if (lower.endsWith(".pdf")) {
-            return "application/pdf";
-        }
-
-        if (lower.endsWith(".docx")) {
-            return "application/vnd.openxmlformats-officedocument.wordprocessingml.document";
-        }
-
-        if (lower.endsWith(".doc")) {
-            return "application/msword";
-        }
-
-        if (lower.endsWith(".jpg") || lower.endsWith(".jpeg")) {
-            return "image/jpeg";
-        }
-
-        if (lower.endsWith(".png")) {
-            return "image/png";
-        }
-
-        throw new InvalidException("Unsupported file type");
-    }
-
 
 }

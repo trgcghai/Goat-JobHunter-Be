@@ -17,7 +17,7 @@ import static jakarta.persistence.FetchType.LAZY;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-@ToString(exclude = {"user", "comment"})
+@ToString(exclude = {"account", "comment"})
 public class CommentReaction extends BaseEntity{
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
@@ -26,8 +26,8 @@ public class CommentReaction extends BaseEntity{
     private ReactionType type;
 
     @ManyToOne(fetch = LAZY)
-    @JoinColumn(name = "user_id")
-    private User user;
+    @JoinColumn(name = "account_id")
+    private Account account;
 
     @ManyToOne(fetch = LAZY)
     @JoinColumn(name = "comment_id")

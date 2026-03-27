@@ -70,7 +70,7 @@ public class NotificationServiceImpl implements NotificationService {
         User actor = this.handleGetCurrentUser();
         if (actor == null) return;
 
-        User recipient = blog.getAuthor();
+        Account recipient = blog.getAuthor();
         if (actor.getAccountId() == recipient.getAccountId()) return;
 
         String redisKey = String.format("notification:%d:blog:%d:recipient:%d",
@@ -117,7 +117,7 @@ public class NotificationServiceImpl implements NotificationService {
         User actor = this.handleGetCurrentUser();
         if (actor == null) return;
 
-        User recipient = parent.getCommentedBy();
+        Account recipient = parent.getCommentedBy();
         if (actor.getAccountId() == recipient.getAccountId()) return;
 
         String redisKey = String.format("notification:%d:comment:%d:recipient:%d",
@@ -163,7 +163,7 @@ public class NotificationServiceImpl implements NotificationService {
         User actor = this.handleGetCurrentUser();
         if (actor == null || blog == null || blog.getAuthor() == null) return;
 
-        User recipient = blog.getAuthor();
+        Account recipient = blog.getAuthor();
         if (actor.getAccountId() == recipient.getAccountId()) return;
 
         String redisKey = String.format("notification:%d:blog:%d:recipient:%d",

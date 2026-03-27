@@ -6,13 +6,14 @@ import iuh.fit.goat.dto.response.job.EmailJobResponse;
 import iuh.fit.goat.dto.response.ResultPaginationResponse;
 import iuh.fit.goat.entity.Job;
 import iuh.fit.goat.entity.Subscriber;
+import iuh.fit.goat.exception.InvalidException;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 
 import java.time.Instant;
 
 public interface SubscriberService {
-    Subscriber handleCreateSubscriber(SubscriberCreateDto subscriber);
+    Subscriber handleCreateSubscriber(SubscriberCreateDto subscriber) throws InvalidException;
 
     Subscriber handleUpdateSubscriber(SubscriberUpdateDto subscriber);
 

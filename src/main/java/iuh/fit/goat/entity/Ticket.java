@@ -19,7 +19,7 @@ import static jakarta.persistence.FetchType.LAZY;
 @FilterDef(name = "activeTicketFilter")
 public class Ticket extends BaseEntity{
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @GeneratedValue(strategy = GenerationType.AUTO)
     private long ticketId;
     @Enumerated(EnumType.STRING)
     private TicketType type;
@@ -34,11 +34,11 @@ public class Ticket extends BaseEntity{
 
     @ManyToOne(fetch = LAZY)
     @JoinColumn(name = "reporter_id")
-    private User reporter;
+    private Account reporter;
 
     @ManyToOne(fetch = LAZY)
     @JoinColumn(name = "assignee_id")
-    private User assignee;
+    private Account assignee;
 
     @ManyToOne(fetch = LAZY)
     @JoinColumn(name = "blog_id")

@@ -25,16 +25,7 @@ import static jakarta.persistence.FetchType.LAZY;
 @ToString(callSuper = true, exclude = {
         "sentFriendRequests",
         "receivedFriendRequests",
-        "savedJobs",
-        "savedBlogs",
-        "followedCompanies",
-        "blogs",
-        "comments",
         "memberships",
-        "blogReactions",
-        "commentReactions",
-        "reportedTickets",
-        "assignedTickets",
         "reviews"}
 )
 @JsonTypeInfo(
@@ -73,61 +64,6 @@ public class User extends Account {
     )
     private List<Friendship> receivedFriendRequests = new ArrayList<>();
 
-    @ManyToMany(fetch = LAZY)
-    @JoinTable(
-            name = "user_saved_job",
-            joinColumns = @JoinColumn(name = "user_id"),
-            inverseJoinColumns = @JoinColumn(name = "job_id")
-    )
-    @JsonIgnore
-    @Filter(
-            name = "activeJobFilter",
-            condition = "deleted_at IS NULL"
-    )
-    private List<Job> savedJobs = new ArrayList<>();
-
-    @ManyToMany(fetch = LAZY)
-    @JoinTable(
-            name = "user_saved_blog",
-            joinColumns = @JoinColumn(name = "user_id"),
-            inverseJoinColumns = @JoinColumn(name = "blog_id")
-    )
-    @JsonIgnore
-    @Filter(
-            name = "activeBlogFilter",
-            condition = "deleted_at IS NULL"
-    )
-    private List<Blog> savedBlogs = new ArrayList<>();
-
-    @ManyToMany(fetch = LAZY)
-    @JoinTable(
-            name = "user_followed_company",
-            joinColumns = @JoinColumn(name = "user_id"),
-            inverseJoinColumns = @JoinColumn(name = "company_id")
-    )
-    @JsonIgnore
-    @Filter(
-            name = "activeAccountFilter",
-            condition = "deleted_at IS NULL"
-    )
-    private List<Company> followedCompanies = new ArrayList<>();
-
-    @OneToMany(mappedBy = "author", fetch = LAZY, cascade = {PERSIST, MERGE})
-    @JsonIgnore
-    @Filter(
-            name = "activeBlogFilter",
-            condition = "deleted_at IS NULL"
-    )
-    private List<Blog> blogs = new ArrayList<>();
-
-    @OneToMany(mappedBy = "commentedBy", fetch = LAZY, cascade = {PERSIST, MERGE})
-    @JsonIgnore
-    @Filter(
-            name = "activeCommentFilter",
-            condition = "deleted_at IS NULL"
-    )
-    private List<Comment> comments = new ArrayList<>();
-
     @OneToMany(mappedBy = "user", fetch = LAZY, cascade = {PERSIST, MERGE})
     @JsonIgnore
     @Filter(
@@ -135,30 +71,6 @@ public class User extends Account {
             condition = "deleted_at IS NULL"
     )
     private List<ChatMember> memberships = new ArrayList<>();
-
-    @OneToMany(mappedBy = "user", fetch = LAZY, cascade = {PERSIST, MERGE}, orphanRemoval = true)
-    @JsonIgnore
-    private List<BlogReaction> blogReactions = new ArrayList<>();
-
-    @OneToMany(mappedBy = "user", fetch = LAZY, cascade = {PERSIST, MERGE}, orphanRemoval = true)
-    @JsonIgnore
-    private List<CommentReaction> commentReactions = new ArrayList<>();
-
-    @OneToMany(mappedBy = "reporter", fetch = LAZY, cascade = {PERSIST, MERGE})
-    @JsonIgnore
-    @Filter(
-            name = "activeTicketFilter",
-            condition = "deleted_at IS NULL"
-    )
-    private List<Ticket> reportedTickets = new ArrayList<>();
-
-    @OneToMany(mappedBy = "assignee", fetch = LAZY, cascade = {PERSIST, MERGE})
-    @JsonIgnore
-    @Filter(
-            name = "activeTicketFilter",
-            condition = "deleted_at IS NULL"
-    )
-    private List<Ticket> assignedTickets = new ArrayList<>();
 
     @OneToMany(mappedBy = "user", fetch = LAZY, cascade = {PERSIST, MERGE})
     @JsonIgnore

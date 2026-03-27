@@ -92,7 +92,7 @@ public class BlogController {
     }
 
     @GetMapping("/tags")
-    public ResponseEntity<List<Object[]>> getAllTags(String keyword) {
+    public ResponseEntity<List<Object[]>> getAllTags(@RequestParam String keyword) {
         List<Object[]> res = this.blogService.handleGetPopularTags(keyword);
         return ResponseEntity.status(HttpStatus.OK).body(res);
     }

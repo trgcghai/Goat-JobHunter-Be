@@ -3,9 +3,8 @@ package iuh.fit.goat.service.impl;
 import iuh.fit.goat.dto.request.CreateCommentRequest;
 import iuh.fit.goat.dto.response.comment.CommentResponse;
 import iuh.fit.goat.dto.response.ResultPaginationResponse;
-import iuh.fit.goat.entity.Blog;
-import iuh.fit.goat.entity.Comment;
-import iuh.fit.goat.entity.User;
+import iuh.fit.goat.entity.*;
+import iuh.fit.goat.repository.AccountRepository;
 import iuh.fit.goat.repository.CommentRepository;
 import iuh.fit.goat.repository.UserRepository;
 import iuh.fit.goat.service.BlogService;
@@ -28,17 +27,18 @@ public class CommentServiceImpl implements CommentService {
     private final NotificationService notificationService;
     private final CommentRepository commentRepository;
     private final UserRepository userRepository;
+    private final AccountRepository accountRepository;
 
     @Override
     public Comment handleCreateComment(CreateCommentRequest request) {
         String email = SecurityUtil.getCurrentUserLogin().isPresent() ? SecurityUtil.getCurrentUserLogin().get() : "";
-        User currentUser = this.userRepository.findByEmail(email);
+        Account currentAccount = this.accountRepository.findByEmailAndDeletedAtIsNull(email).orElse(null);
 
         Blog blog = this.blogService.handleGetBlogById(request.getBlogId());
 
         Comment comment = new Comment();
         comment.setComment(request.getComment());
-        comment.setCommentedBy(currentUser);
+        comment.setCommentedBy(currentAccount);
         comment.setBlog(blog);
 
         if(request.getReplyTo() != null) {
@@ -139,31 +139,46 @@ public class CommentServiceImpl implements CommentService {
 
         if(comment.getBlog() != null) {
             CommentResponse.BlogComment blog = new CommentResponse.BlogComment(
-                    comment.getBlog().getBlogId(),
-                    "bài viết của bạn"
+                    comment.getBlog().getBlogId()
             );
             commentResponse.setBlog(blog);
         }
 
         if(comment.getCommentedBy() != null) {
+            String name = comment.getCommentedBy() instanceof User
+                    ? ((User) comment.getCommentedBy()).getFullName()
+                    : ((Company) comment.getCommentedBy()).getName();
+
+            String avatar = comment.getCommentedBy() instanceof User
+                    ? ((User) comment.getCommentedBy()).getAvatar()
+                    : ((Company) comment.getCommentedBy()).getLogo();
+            
             CommentResponse.UserCommented commentedBy = new CommentResponse.UserCommented(
                     comment.getCommentedBy().getAccountId(),
-                    comment.getCommentedBy().getFullName(),
+                    name,
                     comment.getCommentedBy().getUsername(),
-                    comment.getCommentedBy().getAvatar()
+                    avatar
             );
             commentResponse.setCommentedBy(commentedBy);
         }
 
         if(comment.getParent() != null) {
+            String name = comment.getParent().getCommentedBy() instanceof User
+                    ? ((User) comment.getParent().getCommentedBy()).getFullName()
+                    : ((Company) comment.getParent().getCommentedBy()).getName();
+
+            String avatar = comment.getParent().getCommentedBy() instanceof User
+                    ? ((User) comment.getParent().getCommentedBy()).getAvatar()
+                    : ((Company) comment.getParent().getCommentedBy()).getLogo();
+
             CommentResponse.ParentComment parent = new CommentResponse.ParentComment(
                     comment.getParent().getCommentId(),
                     comment.getParent().getComment(),
                     new CommentResponse.UserCommented(
                             comment.getParent().getCommentedBy().getAccountId(),
-                            comment.getParent().getCommentedBy().getFullName(),
+                            name,
                             comment.getParent().getCommentedBy().getUsername(),
-                            comment.getParent().getCommentedBy().getAvatar()
+                            avatar
                     )
             );
             commentResponse.setParent(parent);

@@ -11,10 +11,12 @@ import iuh.fit.goat.dto.request.auth.RegisterUserRequest;
 import iuh.fit.goat.dto.request.auth.VerifyAccountRequest;
 import iuh.fit.goat.dto.response.StorageResponse;
 import iuh.fit.goat.dto.response.auth.LoginResponse;
+import iuh.fit.goat.dto.response.company.CompanyResponse;
 import iuh.fit.goat.entity.*;
 import iuh.fit.goat.exception.InvalidException;
 import iuh.fit.goat.repository.AccountRepository;
 import iuh.fit.goat.service.*;
+import iuh.fit.goat.util.BasicUtil;
 import iuh.fit.goat.util.FileUploadUtil;
 import iuh.fit.goat.util.SecurityUtil;
 import jakarta.servlet.http.HttpServletResponse;
@@ -289,7 +291,7 @@ public class AuthServiceImpl implements AuthService {
             Applicant newApplicant = this.applicantService.handleCreateApplicant(applicant);
 
             // create verification code
-            String verificationCode = SecurityUtil.generateVerificationCode();
+            String verificationCode = BasicUtil.generateVerificationCode();
 
             // save verification code to redis
             this.redisService.saveWithTTL(
@@ -322,7 +324,7 @@ public class AuthServiceImpl implements AuthService {
             Recruiter newRecruiter = this.recruiterService.handleCreateRecruiter(recruiter);
 
             // create verification code
-            String verificationCode = SecurityUtil.generateVerificationCode();
+            String verificationCode = BasicUtil.generateVerificationCode();
 
             // save verification code to redis
             this.redisService.saveWithTTL(
@@ -356,8 +358,8 @@ public class AuthServiceImpl implements AuthService {
         FileUploadUtil.assertAllowed(request.getLogo());
         FileUploadUtil.assertAllowed(request.getCoverPhoto());
 
-        String logoUrl = SecurityUtil.uploadImage(request.getLogo(), "company-logos", storageService);
-        String coverPhotoUrl = SecurityUtil.uploadImage(request.getCoverPhoto(), "company-cover-photos", storageService);
+        String logoUrl = BasicUtil.uploadImage(request.getLogo(), "company-logos", storageService);
+        String coverPhotoUrl = BasicUtil.uploadImage(request.getCoverPhoto(), "company-cover-photos", storageService);
         String hashPassword = this.passwordEncoder.encode(request.getPassword());
 
         List<Address> addressList;
@@ -389,7 +391,7 @@ public class AuthServiceImpl implements AuthService {
 
         Company newCompany = this.companyService.handleCreateCompany(company);
 
-        String verificationCode = SecurityUtil.generateVerificationCode();
+        String verificationCode = BasicUtil.generateVerificationCode();
         this.redisService.saveWithTTL(
                 newCompany.getEmail(),
                 verificationCode,
@@ -430,7 +432,7 @@ public class AuthServiceImpl implements AuthService {
         }
 
         String key = account.getEmail();
-        String verificationCode = SecurityUtil.generateVerificationCode();
+        String verificationCode = BasicUtil.generateVerificationCode();
         this.redisService.replaceKey(
                 key,
                 key,
@@ -480,8 +482,18 @@ public class AuthServiceImpl implements AuthService {
         else if (account instanceof Company company) {
             loginResponse.setPhone(company.getPhone());
             loginResponse.setAddresses(company.getAddresses());
-            loginResponse.setFullName(Objects.requireNonNullElse(company.getName(), ""));
+            loginResponse.setName(Objects.requireNonNullElse(company.getName(), ""));
             loginResponse.setType(Role.COMPANY.getValue());
+            loginResponse.setDescription(company.getDescription());
+            loginResponse.setLogo(company.getLogo());
+            loginResponse.setCoverPhoto(company.getCoverPhoto());
+            loginResponse.setWebsite(company.getWebsite());
+            loginResponse.setSize(company.getSize());
+            loginResponse.setVerified(company.isVerified());
+            loginResponse.setCountry(company.getCountry());
+            loginResponse.setIndustry(company.getIndustry());
+            loginResponse.setWorkingDays(company.getWorkingDays());
+            loginResponse.setOvertimePolicy(company.getOvertimePolicy());
         }
 
         return loginResponse;

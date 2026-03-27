@@ -14,6 +14,7 @@ import iuh.fit.goat.repository.ResumeRepository;
 import iuh.fit.goat.service.EvaluationService;
 import iuh.fit.goat.service.ResumeService;
 import iuh.fit.goat.service.StorageService;
+import iuh.fit.goat.util.BasicUtil;
 import iuh.fit.goat.util.FileUploadUtil;
 import iuh.fit.goat.util.SecurityUtil;
 import lombok.RequiredArgsConstructor;
@@ -47,7 +48,7 @@ public class ResumeServiceImpl implements ResumeService {
 
         FileUploadUtil.assertAllowed(request.getFileUrl());
 
-        String fileUrl = SecurityUtil.uploadImage(request.getFileUrl(), "resumes", storageService);
+        String fileUrl = BasicUtil.uploadImage(request.getFileUrl(), "resumes", storageService);
         String fileName = FileUploadUtil.getFileName(applicant.getFullName());
 
         Resume resume = new Resume();

@@ -28,7 +28,6 @@ public class CommentResponse {
     @AllArgsConstructor
     public static class BlogComment {
         private long blogId;
-        private String title;
     }
 
     @Getter

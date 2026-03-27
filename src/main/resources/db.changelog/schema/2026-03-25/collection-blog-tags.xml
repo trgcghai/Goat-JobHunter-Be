@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+                      http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-5.0.xsd"
+        objectQuotingStrategy="QUOTE_ONLY_RESERVED_WORDS">
+    <changeSet id="1774411630136-5" author="minhdat">
+        <dropForeignKeyConstraint baseTableName="blog_tags" constraintName="fk_blog_tags_on_blog"/>
+    </changeSet>
+    <changeSet id="1774411630136-1" author="minhdat">
+        <addColumn tableName="blog_tags">
+            <column name="blog_id" type="BIGINT"/>
+            <column name="tag" type="TEXT"/>
+        </addColumn>
+    </changeSet>
+    <changeSet id="1774411630136-2" author="minhdat">
+        <addNotNullConstraint columnName="blog_id" tableName="blog_tags"/>
+    </changeSet>
+    <changeSet id="1774411630136-4" author="minhdat">
+        <addForeignKeyConstraint baseColumnNames="blog_id" baseTableName="blog_tags"
+                                 constraintName="fk_blog_tags_on_blog" referencedColumnNames="blog_id"
+                                 referencedTableName="blogs"/>
+    </changeSet>
+    <changeSet id="1774411630136-6" author="minhdat">
+        <dropColumn columnName="blog_blog_id" tableName="blog_tags"/>
+
+        <dropColumn columnName="tags" tableName="blog_tags"/>
+    </changeSet>
+
+</databaseChangeLog>
