@@ -11,6 +11,7 @@ import iuh.fit.goat.dto.request.auth.RegisterUserRequest;
 import iuh.fit.goat.dto.request.auth.VerifyAccountRequest;
 import iuh.fit.goat.dto.response.StorageResponse;
 import iuh.fit.goat.dto.response.auth.LoginResponse;
+import iuh.fit.goat.dto.response.company.CompanyResponse;
 import iuh.fit.goat.entity.*;
 import iuh.fit.goat.exception.InvalidException;
 import iuh.fit.goat.repository.AccountRepository;
@@ -481,8 +482,18 @@ public class AuthServiceImpl implements AuthService {
         else if (account instanceof Company company) {
             loginResponse.setPhone(company.getPhone());
             loginResponse.setAddresses(company.getAddresses());
-            loginResponse.setFullName(Objects.requireNonNullElse(company.getName(), ""));
+            loginResponse.setName(Objects.requireNonNullElse(company.getName(), ""));
             loginResponse.setType(Role.COMPANY.getValue());
+            loginResponse.setDescription(company.getDescription());
+            loginResponse.setLogo(company.getLogo());
+            loginResponse.setCoverPhoto(company.getCoverPhoto());
+            loginResponse.setWebsite(company.getWebsite());
+            loginResponse.setSize(company.getSize());
+            loginResponse.setVerified(company.isVerified());
+            loginResponse.setCountry(company.getCountry());
+            loginResponse.setIndustry(company.getIndustry());
+            loginResponse.setWorkingDays(company.getWorkingDays());
+            loginResponse.setOvertimePolicy(company.getOvertimePolicy());
         }
 
         return loginResponse;

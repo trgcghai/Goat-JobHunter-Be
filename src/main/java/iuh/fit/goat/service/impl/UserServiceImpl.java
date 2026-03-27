@@ -1,6 +1,7 @@
 package iuh.fit.goat.service.impl;
 
 import iuh.fit.goat.dto.response.blog.BlogResponse;
+import iuh.fit.goat.dto.response.company.CompanyResponse;
 import iuh.fit.goat.dto.response.interview.InterviewResponse;
 import iuh.fit.goat.dto.request.user.ResetPasswordRequest;
 import iuh.fit.goat.dto.response.auth.LoginResponse;
@@ -45,6 +46,7 @@ public class UserServiceImpl implements UserService {
     private final RedisService redisService;
     private final EmailNotificationService emailNotificationService;
     private final JobService jobService;
+    private final CompanyService companyService;
 
     private final AccountRepository accountRepository;
     private final UserRepository userRepository;
@@ -130,38 +132,77 @@ public class UserServiceImpl implements UserService {
                 SecurityUtil.getCurrentUserLogin().get() : "";
 
         if (!currentEmail.isEmpty()) {
-            User currentUser = this.handleGetUserByEmail(currentEmail);
-            return this.passwordEncoder.matches(currentPassword, currentUser.getPassword());
+            Account currentAccount = this.accountRepository.findByEmailAndDeletedAtIsNull(currentEmail).orElse(null);
+            assert currentAccount != null;
+            return this.passwordEncoder.matches(currentPassword, currentAccount.getPassword());
         }
 
         return false;
     }
 
     @Override
-    public Map<String, Object> handleUpdatePassword(String newPassword, String refreshToken) {
+    public Map<String, Object> handleUpdatePassword(String newPassword, String refreshToken) throws InvalidException {
         String currentEmail = SecurityUtil.getCurrentUserLogin().isPresent() ?
                 SecurityUtil.getCurrentUserLogin().get() : "";
 
         if (!currentEmail.isEmpty()) {
-            User currentUser = this.handleGetUserByEmail(currentEmail);
+            Account currentAccount = this.accountRepository.findByEmailAndDeletedAtIsNull(currentEmail)
+                    .orElseThrow(() -> new InvalidException("User not found"));
             String hashedPassword = this.passwordEncoder.encode(newPassword);
-            currentUser.setPassword(hashedPassword);
-            User res = this.userRepository.save(currentUser);
+            currentAccount.setPassword(hashedPassword);
+            Account res = this.accountRepository.save(currentAccount);
 
             LoginResponse loginResponse = new LoginResponse();
 
+            // Thông tin chung của Account
             loginResponse.setAccountId(res.getAccountId());
-            loginResponse.setDob(res.getDob());
-            loginResponse.setGender(res.getGender());
-            loginResponse.setFullName(res.getFullName());
-            loginResponse.setUsername(res.getUsername());
             loginResponse.setEmail(res.getEmail());
-            loginResponse.setPhone(res.getPhone());
-            loginResponse.setType(res instanceof Applicant ? iuh.fit.goat.common.Role.APPLICANT.getValue() : iuh.fit.goat.common.Role.COMPANY.getValue());
-            loginResponse.setRole(
-                    new LoginResponse.RoleAccount(res.getRole().getRoleId(), res.getRole().getName())
-            );
+            loginResponse.setUsername(Objects.requireNonNullElse(res.getUsername(), ""));
+            loginResponse.setAvatar(Objects.requireNonNullElse(res.getAvatar(), ""));
             loginResponse.setEnabled(res.isEnabled());
+            loginResponse.setAddresses(Objects.requireNonNullElse(res.getAddresses(), new ArrayList<>()));
+
+            if (res.getRole() != null) {
+                loginResponse.setRole(
+                        new LoginResponse.RoleAccount(res.getRole().getRoleId(), res.getRole().getName())
+                );
+            }
+
+            // Thông tin riêng của User
+            if (res instanceof User user) {
+                loginResponse.setPhone(user.getPhone());
+                loginResponse.setDob(user.getDob());
+                loginResponse.setAddresses(user.getAddresses());
+                loginResponse.setGender(user.getGender());
+                loginResponse.setFullName(Objects.requireNonNullElse(user.getFullName(), ""));
+                loginResponse.setType(user instanceof Applicant ? iuh.fit.goat.common.Role.APPLICANT.getValue() : iuh.fit.goat.common.Role.RECRUITER.getValue());
+
+                // Nếu như là Recruiter thì mới có company
+                if (user instanceof Recruiter recruiter) {
+                    LoginResponse.UserCompany userCompany = new LoginResponse.UserCompany(
+                            recruiter.getCompany().getAccountId(),
+                            recruiter.getCompany().getName()
+                    );
+                    loginResponse.setCompany(userCompany);
+                }
+            }
+            // Thông tin riêng của Company
+            else if (res instanceof Company company) {
+                loginResponse.setPhone(company.getPhone());
+                loginResponse.setAddresses(company.getAddresses());
+                loginResponse.setName(Objects.requireNonNullElse(company.getName(), ""));
+                loginResponse.setType(iuh.fit.goat.common.Role.COMPANY.getValue());
+                loginResponse.setDescription(company.getDescription());
+                loginResponse.setLogo(company.getLogo());
+                loginResponse.setCoverPhoto(company.getCoverPhoto());
+                loginResponse.setWebsite(company.getWebsite());
+                loginResponse.setSize(company.getSize());
+                loginResponse.setVerified(company.isVerified());
+                loginResponse.setCountry(company.getCountry());
+                loginResponse.setIndustry(company.getIndustry());
+                loginResponse.setWorkingDays(company.getWorkingDays());
+                loginResponse.setOvertimePolicy(company.getOvertimePolicy());
+            }
 
             String newAccessToken = this.securityUtil.createAccessToken(currentEmail, loginResponse);
             String newRefreshToken = this.securityUtil.createRefreshToken(currentEmail, loginResponse);
@@ -209,7 +250,7 @@ public class UserServiceImpl implements UserService {
     /*     ========================= Saved Job Related Methods =========================  */
 
     @Override
-    public ResultPaginationResponse handleGetCurrentUserSavedJobs(Pageable pageable) {
+    public ResultPaginationResponse handleGetCurrentAccountSavedJobs(Pageable pageable) {
         String currentEmail = SecurityUtil.getCurrentUserEmail();
 
         if (currentEmail.isEmpty()) {
@@ -219,15 +260,15 @@ public class UserServiceImpl implements UserService {
             );
         }
 
-        User currentUser = this.handleGetUserByEmail(currentEmail);
-        if (currentUser == null || currentUser.getSavedJobs() == null) {
+        Account currentAccount = this.accountRepository.findByEmailAndDeletedAtIsNull(currentEmail).orElse(null);
+        if (currentAccount == null || currentAccount.getSavedJobs() == null) {
             return new ResultPaginationResponse(
                     new ResultPaginationResponse.Meta(0, 0, 0, 0L),
                     new ArrayList<>()
             );
         }
 
-        List<Job> savedJobs = currentUser.getSavedJobs();
+        List<Job> savedJobs = currentAccount.getSavedJobs();
         List<JobResponse> jobResponses = savedJobs.stream().map(this.jobService::convertToJobResponse).collect(Collectors.toList());
         int total = jobResponses.size();
         int pageNumber = pageable.getPageNumber();
@@ -260,9 +301,10 @@ public class UserServiceImpl implements UserService {
             return new ArrayList<>();
         }
 
-        User currentUser = this.handleGetUserByEmail(currentEmail);
-        List<Long> savedJobIds = currentUser.getSavedJobs() != null
-                ? currentUser.getSavedJobs().stream().map(Job::getJobId).toList()
+        Account currentAccount = this.accountRepository.findByEmailAndDeletedAtIsNull(currentEmail).orElse(null);
+        assert currentAccount != null;
+        List<Long> savedJobIds = currentAccount.getSavedJobs() != null
+                ? currentAccount.getSavedJobs().stream().map(Job::getJobId).toList()
                 : new ArrayList<>();
 
         return jobIds.stream()
@@ -276,20 +318,20 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public UserResponse handleSaveJobsForCurrentUser(List<Long> jobIds) {
+    public Object handleSaveJobsForCurrentAccount(List<Long> jobIds) {
         String currentEmail = SecurityUtil.getCurrentUserEmail();
 
         if (currentEmail.isEmpty()) {
             return null;
         }
 
-        User currentUser = this.handleGetUserByEmail(currentEmail);
-        if (currentUser == null) {
+        Account currentAccount = this.accountRepository.findByEmailAndDeletedAtIsNull(currentEmail).orElse(null);
+        if (currentAccount == null) {
             return null;
         }
 
-        List<Job> currentSavedJobs = currentUser.getSavedJobs() != null
-                ? new ArrayList<>(currentUser.getSavedJobs())
+        List<Job> currentSavedJobs = currentAccount.getSavedJobs() != null
+                ? new ArrayList<>(currentAccount.getSavedJobs())
                 : new ArrayList<>();
 
         List<Job> jobsToAdd = this.jobRepository.findByJobIdIn(jobIds);
@@ -300,42 +342,46 @@ public class UserServiceImpl implements UserService {
             }
         }
 
-        currentUser.setSavedJobs(currentSavedJobs);
-        this.userRepository.save(currentUser);
+        currentAccount.setSavedJobs(currentSavedJobs);
+        this.accountRepository.save(currentAccount);
 
-        return this.convertToUserResponse(currentUser);
+        return currentAccount instanceof Company
+                ? this.companyService.convertToCompanyResponse((Company) currentAccount)
+                : this.convertToUserResponse((User) currentAccount);
     }
 
     @Override
-    public UserResponse handleUnsaveJobsForCurrentUser(List<Long> jobIds) {
+    public Object handleUnsaveJobsForCurrentAccount(List<Long> jobIds) {
         String currentEmail = SecurityUtil.getCurrentUserEmail();
 
         if (currentEmail.isEmpty()) {
             return null;
         }
 
-        User currentUser = this.handleGetUserByEmail(currentEmail);
-        if (currentUser == null) {
+        Account currentAccount = this.accountRepository.findByEmailAndDeletedAtIsNull(currentEmail).orElse(null);
+        if (currentAccount == null) {
             return null;
         }
 
-        List<Job> currentSavedJobs = currentUser.getSavedJobs() != null
-                ? new ArrayList<>(currentUser.getSavedJobs())
+        List<Job> currentSavedJobs = currentAccount.getSavedJobs() != null
+                ? new ArrayList<>(currentAccount.getSavedJobs())
                 : new ArrayList<>();
 
         currentSavedJobs.removeIf(job -> jobIds.contains(job.getJobId()));
 
-        currentUser.setSavedJobs(currentSavedJobs);
-        this.userRepository.save(currentUser);
+        currentAccount.setSavedJobs(currentSavedJobs);
+        this.accountRepository.save(currentAccount);
 
-        return this.convertToUserResponse(currentUser);
+        return currentAccount instanceof Company
+                ? this.companyService.convertToCompanyResponse((Company) currentAccount)
+                : this.convertToUserResponse((User) currentAccount);
     }
 
     /*     ========================= ========================= =========================  */
 
     /*     ========================= Saved Blogs Related Methods =========================  */
     @Override
-    public ResultPaginationResponse handleGetCurrentUserSavedBlogs(Specification<Blog> spec, Pageable pageable) {
+    public ResultPaginationResponse handleGetCurrentAccountSavedBlogs(Specification<Blog> spec, Pageable pageable) {
         String currentEmail = SecurityUtil.getCurrentUserEmail();
 
         if (currentEmail.isEmpty()) {
@@ -345,8 +391,8 @@ public class UserServiceImpl implements UserService {
             );
         }
 
-        User currentUser = this.handleGetUserByEmail(currentEmail);
-        if (currentUser == null) {
+        Account currentAccount = this.accountRepository.findByEmailAndDeletedAtIsNull(currentEmail).orElse(null);
+        if (currentAccount == null) {
             return new ResultPaginationResponse(
                     new ResultPaginationResponse.Meta(0, 0, 0, 0L),
                     new ArrayList<>()
@@ -354,11 +400,11 @@ public class UserServiceImpl implements UserService {
         }
 
         // Create specification to filter blogs saved by user
-        Specification<Blog> userSavedSpec = (root, query, cb) ->
-                cb.isMember(currentUser, root.get("users"));
+        Specification<Blog> accountSavedSpec = (root, query, cb) ->
+                cb.isMember(currentAccount, root.get("accounts"));
 
         // Combine with spec from request
-        Specification<Blog> finalSpec = spec == null ? userSavedSpec : spec.and(userSavedSpec);
+        Specification<Blog> finalSpec = spec == null ? accountSavedSpec : spec.and(accountSavedSpec);
 
         Page<Blog> page = this.blogRepository.findAll(finalSpec, pageable);
 
@@ -383,7 +429,11 @@ public class UserServiceImpl implements UserService {
             return new ArrayList<>();
         }
 
-        User currentUser = this.handleGetUserByEmail(currentEmail);
+        Account currentUser = this.accountRepository.findByEmailWithRole(currentEmail).orElse(null);
+        if(currentUser == null) {
+            return new ArrayList<>();
+        }
+
         List<Long> savedBlogIds = currentUser.getSavedBlogs() != null
                 ? currentUser.getSavedBlogs().stream().map(Blog::getBlogId).toList()
                 : new ArrayList<>();
@@ -400,26 +450,28 @@ public class UserServiceImpl implements UserService {
 
     @Override
     @Transactional
-    public UserResponse handleSaveBlogsForCurrentUser(List<Long> blogIds) {
+    public Object handleSaveBlogsForCurrentAccount(List<Long> blogIds) {
         String currentEmail = SecurityUtil.getCurrentUserEmail();
 
         if (currentEmail.isEmpty()) {
             return null;
         }
 
-        User currentUser = this.handleGetUserByEmail(currentEmail);
-        if (currentUser == null) {
+        Account currentAccount = this.accountRepository.findByEmailWithRole(currentEmail).orElse(null);
+        if (currentAccount == null) {
             return null;
         }
 
         List<Blog> blogsToAdd = this.blogRepository.findByBlogIdIn((blogIds));
 
         if (blogsToAdd.isEmpty()) {
-            return this.convertToUserResponse(currentUser);
+            return currentAccount instanceof Company
+                    ? this.companyService.convertToCompanyResponse((Company) currentAccount)
+                    : this.convertToUserResponse((User) currentAccount);
         }
 
-        List<Blog> currentSavedBlogs = currentUser.getSavedBlogs() != null
-                ? new ArrayList<>(currentUser.getSavedBlogs())
+        List<Blog> currentSavedBlogs = currentAccount.getSavedBlogs() != null
+                ? new ArrayList<>(currentAccount.getSavedBlogs())
                 : new ArrayList<>();
 
 
@@ -429,35 +481,39 @@ public class UserServiceImpl implements UserService {
             }
         }
 
-        currentUser.setSavedBlogs(currentSavedBlogs);
-        this.userRepository.save(currentUser);
+        currentAccount.setSavedBlogs(currentSavedBlogs);
+        this.accountRepository.save(currentAccount);
 
-        return this.convertToUserResponse(currentUser);
+        return currentAccount instanceof Company
+                ? this.companyService.convertToCompanyResponse((Company) currentAccount)
+                : this.convertToUserResponse((User) currentAccount);
     }
 
     @Override
-    public UserResponse handleUnsaveBlogsForCurrentUser(List<Long> blogIds) {
+    public Object handleUnsaveBlogsForCurrentAccount(List<Long> blogIds) {
         String currentEmail = SecurityUtil.getCurrentUserEmail();
 
         if (currentEmail.isEmpty()) {
             return null;
         }
 
-        User currentUser = this.handleGetUserByEmail(currentEmail);
-        if (currentUser == null) {
+        Account currentAccount = this.accountRepository.findByEmailWithRole(currentEmail).orElse(null);
+        if (currentAccount == null) {
             return null;
         }
 
-        List<Blog> currentSavedBlogs = currentUser.getSavedBlogs() != null
-                ? new ArrayList<>(currentUser.getSavedBlogs())
+        List<Blog> currentSavedBlogs = currentAccount.getSavedBlogs() != null
+                ? new ArrayList<>(currentAccount.getSavedBlogs())
                 : new ArrayList<>();
 
         currentSavedBlogs.removeIf(blog -> blogIds.contains(blog.getBlogId()));
 
-        currentUser.setSavedBlogs(currentSavedBlogs);
-        this.userRepository.save(currentUser);
+        currentAccount.setSavedBlogs(currentSavedBlogs);
+        this.accountRepository.save(currentAccount);
 
-        return this.convertToUserResponse(currentUser);
+        return currentAccount instanceof Company
+                ? this.companyService.convertToCompanyResponse((Company) currentAccount)
+                : this.convertToUserResponse((User) currentAccount);
     }
 
     /*     ========================= ========================= =========================  */
@@ -476,8 +532,8 @@ public class UserServiceImpl implements UserService {
             );
         }
 
-        User currentUser = this.handleGetUserByEmail(currentEmail);
-        if (currentUser == null) {
+        Account currentAccount = this.accountRepository.findByEmailAndDeletedAtIsNull(currentEmail).orElse(null);
+        if (currentAccount == null) {
             return new ResultPaginationResponse(
                     new ResultPaginationResponse.Meta(0, 0, 0, 0L),
                     new ArrayList<>()
@@ -485,7 +541,7 @@ public class UserServiceImpl implements UserService {
         }
 
         Page<Notification> page = this.notificationRepository
-                .findByRecipient_AccountId(currentUser.getAccountId(), pageable);
+                .findByRecipient_AccountId(currentAccount.getAccountId(), pageable);
 
         ResultPaginationResponse.Meta meta = new ResultPaginationResponse.Meta();
         meta.setPage(pageable.getPageNumber() + 1);
@@ -505,8 +561,8 @@ public class UserServiceImpl implements UserService {
             return new ArrayList<>();
         }
 
-        User currentUser = this.handleGetUserByEmail(currentEmail);
-        if (currentUser == null) {
+        Account currentAccount = this.accountRepository.findByEmailAndDeletedAtIsNull(currentEmail).orElse(null);
+        if (currentAccount == null) {
             return new ArrayList<>();
         }
 
@@ -517,7 +573,7 @@ public class UserServiceImpl implements UserService {
         );
 
         return this.notificationRepository
-                .findByRecipient_AccountId(currentUser.getAccountId(), pageRequest)
+                .findByRecipient_AccountId(currentAccount.getAccountId(), pageRequest)
                 .getContent();
     }
 
@@ -544,19 +600,19 @@ public class UserServiceImpl implements UserService {
 
     /*     ========================= Followed Companies Related Endpoints =========================  */
     @Override
-    public List<Company> handleGetCurrentUserFollowedCompanies() {
+    public List<CompanyResponse> handleGetCurrentAccountFollowedCompanies() {
         String currentEmail = SecurityUtil.getCurrentUserEmail();
 
         if (currentEmail.isEmpty()) {
             return new ArrayList<>();
         }
 
-        User currentUser = this.handleGetUserByEmail(currentEmail);
-        if (currentUser == null || currentUser.getFollowedCompanies() == null) {
+        Account currentAccount = this.accountRepository.findByEmailAndDeletedAtIsNull(currentEmail).orElse(null);
+        if (currentAccount == null || currentAccount.getFollowedCompanies() == null) {
             return new ArrayList<>();
         }
 
-        return currentUser.getFollowedCompanies();
+        return currentAccount.getFollowedCompanies().stream().map(this.companyService::convertToCompanyResponse).collect(Collectors.toList());
     }
 
     @Override
@@ -567,9 +623,10 @@ public class UserServiceImpl implements UserService {
             return new ArrayList<>();
         }
 
-        User currentUser = this.handleGetUserByEmail(currentEmail);
-        List<Long> followedIds = currentUser.getFollowedCompanies() != null
-                ? currentUser.getFollowedCompanies().stream().map(Company::getAccountId).toList()
+        Account currentAccount = this.accountRepository.findByEmailAndDeletedAtIsNull(currentEmail).orElse(null);
+        assert currentAccount != null;
+        List<Long> followedIds = currentAccount.getFollowedCompanies() != null
+                ? currentAccount.getFollowedCompanies().stream().map(Company::getAccountId).toList()
                 : new ArrayList<>();
 
         return companyIds.stream()
@@ -591,12 +648,12 @@ public class UserServiceImpl implements UserService {
             return false;
         }
 
-        User currentUser = this.handleGetUserByEmail(currentEmail);
-        if (currentUser == null) {
+        Account currentAccount = this.accountRepository.findByEmailAndDeletedAtIsNull(currentEmail).orElse(null);
+        if (currentAccount == null) {
             return false;
         }
 
-        int result = this.userRepository.followCompanies(currentUser.getAccountId(), companyIds);
+        int result = this.accountRepository.followCompanies(currentAccount.getAccountId(), companyIds);
 
         return result > 0;
     }
@@ -610,12 +667,12 @@ public class UserServiceImpl implements UserService {
             return false;
         }
 
-        User currentUser = this.handleGetUserByEmail(currentEmail);
-        if (currentUser == null) {
+        Account currentAccount = this.accountRepository.findByEmailAndDeletedAtIsNull(currentEmail).orElse(null);
+        if (currentAccount == null) {
             return false;
         }
 
-        int result = this.userRepository.unfollowCompanies(currentUser.getAccountId(), companyIds);
+        int result = this.accountRepository.unfollowCompanies(currentAccount.getAccountId(), companyIds);
 
         return result > 0;
     }

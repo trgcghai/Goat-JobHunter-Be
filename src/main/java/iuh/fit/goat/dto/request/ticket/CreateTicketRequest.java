@@ -6,13 +6,10 @@ import lombok.Data;
 
 @Data
 public class CreateTicketRequest {
-
     @NotNull
-    private long targetId; // id of comment or blog
-
+    private long targetId;
     @NotNull
     private ReportReason reason;
-
     private String description;
 
 }

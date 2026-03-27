@@ -19,7 +19,7 @@ import static jakarta.persistence.FetchType.LAZY;
 @FilterDef(name = "activeTicketFilter")
 public class Ticket extends BaseEntity{
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @GeneratedValue(strategy = GenerationType.AUTO)
     private long ticketId;
     @Enumerated(EnumType.STRING)
     private TicketType type;

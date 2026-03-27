@@ -10,11 +10,9 @@ import iuh.fit.goat.dto.response.StorageResponse;
 import iuh.fit.goat.dto.response.blog.BlogResponse;
 import iuh.fit.goat.dto.response.blog.BlogStatusResponse;
 import iuh.fit.goat.dto.response.ResultPaginationResponse;
-import iuh.fit.goat.entity.Blog;
-import iuh.fit.goat.entity.Comment;
-import iuh.fit.goat.entity.Company;
-import iuh.fit.goat.entity.User;
+import iuh.fit.goat.entity.*;
 import iuh.fit.goat.exception.InvalidException;
+import iuh.fit.goat.repository.AccountRepository;
 import iuh.fit.goat.repository.BlogRepository;
 import iuh.fit.goat.repository.UserRepository;
 import iuh.fit.goat.service.*;
@@ -60,10 +58,12 @@ public class BlogServiceImpl implements BlogService {
     private final UserRepository userRepository;
     private final StorageService storageService;
 
+    private final AccountRepository accountRepository;
+
     @Override
     public Blog handleCreateBlog(BlogCreateRequest request) throws InvalidException {
         String email = SecurityUtil.getCurrentUserLogin().isPresent() ? SecurityUtil.getCurrentUserLogin().get() : "";
-        User currentUser = this.userRepository.findByEmail(email);
+        Account currentAccount = this.accountRepository.findByEmailAndDeletedAtIsNull(email).orElse(null);
 
         // Handle file uploads
         List<String> imageUrls = new ArrayList<>();
@@ -84,7 +84,7 @@ public class BlogServiceImpl implements BlogService {
         blog.setImages(imageUrls);
         blog.setContent(request.getContent());
         blog.setTags(tags);
-        blog.setAuthor(currentUser);
+        blog.setAuthor(currentAccount);
         blog.setEnabled(true);
 
         return this.blogRepository.save(blog);
@@ -273,15 +273,13 @@ public class BlogServiceImpl implements BlogService {
     @Override
     public ResultPaginationResponse handleGetBlogsByCurrentUser(Specification<Blog> spec, Pageable pageable) throws InvalidException {
         String email = SecurityUtil.getCurrentUserLogin()
-                .orElseThrow(() -> new InvalidException("User not authenticated"));
+                .orElseThrow(() -> new InvalidException("Account not authenticated"));
 
-        User currentUser = this.userRepository.findByEmail(email);
-        if (currentUser == null) {
-            throw new InvalidException("User not found");
-        }
+        Account currentAccount = this.accountRepository.findByEmailAndDeletedAtIsNull(email)
+                .orElseThrow(() -> new InvalidException("Account not found"));
 
         Specification<Blog> authorSpec = (root, query, criteriaBuilder) ->
-                criteriaBuilder.equal(root.get("author"), currentUser);
+                criteriaBuilder.equal(root.get("author"), currentAccount);
 
         Specification<Blog> combinedSpec = spec != null
                 ? spec.and(authorSpec)

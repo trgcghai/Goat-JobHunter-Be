@@ -1,10 +1,9 @@
 package iuh.fit.goat.dto.response.auth;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
-import iuh.fit.goat.dto.response.company.CompanyResponse;
 import iuh.fit.goat.entity.Address;
+import iuh.fit.goat.enumeration.CompanySize;
 import iuh.fit.goat.enumeration.Gender;
-import iuh.fit.goat.entity.Role;
 import lombok.*;
 
 import java.time.LocalDate;
@@ -30,6 +29,18 @@ public class LoginResponse {
     private boolean enabled;
     private RoleAccount role;
     private UserCompany company;
+
+    private String name;
+    private String description;
+    private String logo;
+    private String coverPhoto;
+    private String website;
+    private CompanySize size;
+    private boolean verified;
+    private String country;
+    private String industry;
+    private String workingDays;
+    private String overtimePolicy;
 
     @Getter
     @Setter

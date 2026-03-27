@@ -29,8 +29,12 @@ public class Blog extends BaseEntity {
     private List<String> images;
     @Column(columnDefinition = "TEXT")
     private String content;
-    @ElementCollection
-    @Column(columnDefinition = "TEXT")
+    @ElementCollection(fetch = LAZY)
+    @CollectionTable(
+            name = "blog_tags",
+            joinColumns = @JoinColumn(name = "blog_id")
+    )
+    @Column(name = "tag", columnDefinition = "TEXT")
     private List<String> tags;
     private boolean enabled = false;
     @Embedded

@@ -3,12 +3,12 @@ package iuh.fit.goat.service.impl;
 import iuh.fit.goat.dto.request.blog.ReactionBlogRequest;
 import iuh.fit.goat.dto.response.blog.BlogReactionCheckResponse;
 import iuh.fit.goat.dto.response.user.UserResponse;
-import iuh.fit.goat.entity.Blog;
-import iuh.fit.goat.entity.BlogReaction;
-import iuh.fit.goat.entity.User;
+import iuh.fit.goat.entity.*;
+import iuh.fit.goat.repository.AccountRepository;
 import iuh.fit.goat.repository.BlogReactionRepository;
 import iuh.fit.goat.repository.BlogRepository;
 import iuh.fit.goat.service.BlogReactionService;
+import iuh.fit.goat.service.CompanyService;
 import iuh.fit.goat.service.UserService;
 import iuh.fit.goat.util.SecurityUtil;
 import lombok.RequiredArgsConstructor;
@@ -22,20 +22,23 @@ import java.util.Optional;
 @Service
 @RequiredArgsConstructor
 public class BlogReactionServiceImpl implements BlogReactionService {
+    private final UserService userService;
+    private final CompanyService companyService;
+
     private final BlogReactionRepository blogReactionRepository;
     private final BlogRepository blogRepository;
-    private final UserService userService;
+    private final AccountRepository accountRepository;
 
     @Override
     @Transactional
-    public UserResponse handleReactToBlog(ReactionBlogRequest request) {
+    public Object handleReactToBlog(ReactionBlogRequest request) {
         String currentEmail = SecurityUtil.getCurrentUserLogin().orElse("");
         if (currentEmail.isEmpty()) {
             return null;
         }
 
-        User currentUser = this.userService.handleGetUserByEmail(currentEmail);
-        if (currentUser == null) {
+        Account currentAccount = this.accountRepository.findByEmailWithRole(currentEmail).orElse(null);
+        if (currentAccount == null) {
             return null;
         }
 
@@ -48,7 +51,7 @@ public class BlogReactionServiceImpl implements BlogReactionService {
 
         // Check if reaction already exists
         Optional<BlogReaction> existingReaction = this.blogReactionRepository
-                .findByBlog_BlogIdAndAccount_AccountId(blog.getBlogId(), currentUser.getAccountId());
+                .findByBlog_BlogIdAndAccount_AccountId(blog.getBlogId(), currentAccount.getAccountId());
 
         if (existingReaction.isPresent()) {
             // Update existing reaction
@@ -59,31 +62,35 @@ public class BlogReactionServiceImpl implements BlogReactionService {
             // Create new reaction
             BlogReaction newReaction = new BlogReaction();
             newReaction.setBlog(blog);
-            newReaction.setAccount(currentUser);
+            newReaction.setAccount(currentAccount);
             newReaction.setType(request.getReactionType());
             this.blogReactionRepository.save(newReaction);
         }
 
-        return this.userService.convertToUserResponse(currentUser);
+        return currentAccount instanceof Company
+                ? this.companyService.convertToCompanyResponse((Company) currentAccount)
+                : this.userService.convertToUserResponse((User) currentAccount);
     }
 
     @Override
     @Transactional
-    public UserResponse handleUnreactToBlogs(List<Long> blogIds) {
+    public Object handleUnreactToBlogs(List<Long> blogIds) {
         String currentEmail = SecurityUtil.getCurrentUserLogin().orElse("");
         if (currentEmail.isEmpty()) {
             return null;
         }
 
-        User currentUser = this.userService.handleGetUserByEmail(currentEmail);
-        if (currentUser == null) {
+        Account currentAccount = this.accountRepository.findByEmailWithRole(currentEmail).orElse(null);
+        if (currentAccount == null) {
             return null;
         }
 
         // Delete reactions for specified blogs
-        this.blogReactionRepository.deleteByBlog_BlogIdInAndAccount_AccountId(blogIds, currentUser.getAccountId());
+        this.blogReactionRepository.deleteByBlog_BlogIdInAndAccount_AccountId(blogIds, currentAccount.getAccountId());
 
-        return this.userService.convertToUserResponse(currentUser);
+        return currentAccount instanceof Company
+                ? this.companyService.convertToCompanyResponse((Company) currentAccount)
+                : this.userService.convertToUserResponse((User) currentAccount);
     }
 
     @Override
@@ -93,13 +100,13 @@ public class BlogReactionServiceImpl implements BlogReactionService {
             return new ArrayList<>();
         }
 
-        User currentUser = this.userService.handleGetUserByEmail(currentEmail);
-        if (currentUser == null) {
-            return new ArrayList<>();
+        Account currentAccount = this.accountRepository.findByEmailWithRole(currentEmail).orElse(null);
+        if (currentAccount == null) {
+            return null;
         }
 
         List<BlogReaction> reactions = this.blogReactionRepository
-                .findByBlog_BlogIdInAndAccount_AccountId(blogIds, currentUser.getAccountId());
+                .findByBlog_BlogIdInAndAccount_AccountId(blogIds, currentAccount.getAccountId());
 
         return blogIds.stream()
                 .map(blogId -> {

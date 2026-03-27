@@ -2,6 +2,7 @@ package iuh.fit.goat.service;
 
 import iuh.fit.goat.dto.request.user.ResetPasswordRequest;
 import iuh.fit.goat.dto.response.ResultPaginationResponse;
+import iuh.fit.goat.dto.response.company.CompanyResponse;
 import iuh.fit.goat.dto.response.user.UserEnabledResponse;
 import iuh.fit.goat.dto.response.user.UserResponse;
 import iuh.fit.goat.entity.*;
@@ -25,7 +26,7 @@ public interface UserService {
 
     boolean handleCheckCurrentPassword(String currentPassword);
 
-    Map<String, Object> handleUpdatePassword(String newPassword, String refreshToken);
+    Map<String, Object> handleUpdatePassword(String newPassword, String refreshToken) throws InvalidException;
 
     void handleResetPassword(ResetPasswordRequest resetPasswordRequest) throws InvalidException;
 
@@ -33,25 +34,25 @@ public interface UserService {
 
     /*     ========================= Saved Job Related Methods =========================  */
 
-    ResultPaginationResponse handleGetCurrentUserSavedJobs(Pageable pageable);
+    ResultPaginationResponse handleGetCurrentAccountSavedJobs(Pageable pageable);
 
     List<Map<String, Object>> handleCheckJobsSaved(List<Long> jobIds);
 
-    UserResponse handleSaveJobsForCurrentUser(List<Long> jobIds);
+    Object handleSaveJobsForCurrentAccount(List<Long> jobIds);
 
-    UserResponse handleUnsaveJobsForCurrentUser(List<Long> jobIds);
+    Object handleUnsaveJobsForCurrentAccount(List<Long> jobIds);
 
     /*     ========================= ========================= =========================  */
 
     /*     ========================= Saved Blogs Related Methods =========================  */
 
-    ResultPaginationResponse handleGetCurrentUserSavedBlogs(Specification<Blog> spec, Pageable pageable);
+    ResultPaginationResponse handleGetCurrentAccountSavedBlogs(Specification<Blog> spec, Pageable pageable);
 
     List<Map<String, Object>> handleCheckBlogsSaved(List<Long> blogIds);
 
-    UserResponse handleSaveBlogsForCurrentUser(List<Long> blogIds);
+    Object handleSaveBlogsForCurrentAccount(List<Long> blogIds);
 
-    UserResponse handleUnsaveBlogsForCurrentUser(List<Long> blogIds);
+    Object handleUnsaveBlogsForCurrentAccount(List<Long> blogIds);
 
     /*     ========================= ========================= =========================  */
 
@@ -63,7 +64,7 @@ public interface UserService {
     void handleMarkNotificationsAsSeen(List<Long> notificationIds);
 
     /*     ========================= Followed Companies Related Endpoints =========================  */
-    List<Company> handleGetCurrentUserFollowedCompanies();
+    List<CompanyResponse> handleGetCurrentAccountFollowedCompanies();
 
     List<Map<String, Object>> handleCheckCompaniesFollowed(List<Long> companyIds);
 

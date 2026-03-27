@@ -6,6 +6,7 @@ import iuh.fit.goat.dto.request.user.UpdatePasswordRequest;
 import iuh.fit.goat.dto.request.user.UserEnabledRequest;
 import iuh.fit.goat.dto.response.auth.LoginResponse;
 import iuh.fit.goat.dto.response.ResultPaginationResponse;
+import iuh.fit.goat.dto.response.company.CompanyResponse;
 import iuh.fit.goat.dto.response.user.UserEnabledResponse;
 import iuh.fit.goat.dto.response.user.UserResponse;
 import iuh.fit.goat.entity.*;
@@ -77,10 +78,10 @@ public class UserController {
     }
 
     @GetMapping("/me")
-    public <T extends User> ResponseEntity<T> getCurrentUserByEmail() {
+    public <T extends Account> ResponseEntity<T> getCurrentUserByEmail() {
         String email = SecurityUtil.getCurrentUserLogin().isPresent() ? SecurityUtil.getCurrentUserLogin().get() : null;
-        User user = this.userService.handleGetUserByEmail(email);
-        return ResponseEntity.status(HttpStatus.OK).body((T) user);
+        Account account = this.userService.handleGetUserByEmail(email);
+        return ResponseEntity.status(HttpStatus.OK).body((T) account);
     }
 
     @PutMapping("/update-password")
@@ -137,8 +138,8 @@ public class UserController {
     /*     ========================= Job Related Endpoints =========================  */
 
     @GetMapping("/me/saved-jobs")
-    public ResponseEntity<ResultPaginationResponse> getCurrentUserSavedJobs(Pageable pageable) {
-        ResultPaginationResponse result = this.userService.handleGetCurrentUserSavedJobs(pageable);
+    public ResponseEntity<ResultPaginationResponse> getCurrentAccountSavedJobs(Pageable pageable) {
+        ResultPaginationResponse result = this.userService.handleGetCurrentAccountSavedJobs(pageable);
         return ResponseEntity.status(HttpStatus.OK).body(result);
     }
 
@@ -149,35 +150,35 @@ public class UserController {
     }
 
     @PutMapping("/me/saved-jobs")
-    public ResponseEntity<UserResponse> saveJobsForCurrentUser(@RequestBody Map<String, List<Long>> request)
+    public ResponseEntity<Object> saveJobsForCurrentAccount(@RequestBody Map<String, List<Long>> request)
             throws InvalidException {
         List<Long> jobIds = request.get("jobIds");
         if (jobIds == null || jobIds.isEmpty()) {
             throw new InvalidException("Job IDs list cannot be empty");
         }
 
-        UserResponse userResponse = this.userService.handleSaveJobsForCurrentUser(jobIds);
-        if (userResponse == null) {
+        Object response = this.userService.handleSaveJobsForCurrentAccount(jobIds);
+        if (response == null) {
             throw new InvalidException("Failed to save jobs");
         }
 
-        return ResponseEntity.status(HttpStatus.OK).body(userResponse);
+        return ResponseEntity.status(HttpStatus.OK).body(response);
     }
 
     @DeleteMapping("/me/saved-jobs")
-    public ResponseEntity<UserResponse> unsaveJobsForCurrentUser(@RequestBody Map<String, List<Long>> request)
+    public ResponseEntity<Object> unsaveJobsForCurrentAccount(@RequestBody Map<String, List<Long>> request)
             throws InvalidException {
         List<Long> jobIds = request.get("jobIds");
         if (jobIds == null || jobIds.isEmpty()) {
             throw new InvalidException("Job IDs list cannot be empty");
         }
 
-        UserResponse userResponse = this.userService.handleUnsaveJobsForCurrentUser(jobIds);
-        if (userResponse == null) {
+        Object response = this.userService.handleUnsaveJobsForCurrentAccount(jobIds);
+        if (response == null) {
             throw new InvalidException("Failed to unsave jobs");
         }
 
-        return ResponseEntity.status(HttpStatus.OK).body(userResponse);
+        return ResponseEntity.status(HttpStatus.OK).body(response);
     }
 
     @GetMapping("/me/jobs/subscribers")
@@ -199,11 +200,11 @@ public class UserController {
 
     /*     ========================= Saved Blog Related Endpoints =========================  */
     @GetMapping("/me/saved-blogs")
-    public ResponseEntity<ResultPaginationResponse> getCurrentUserSavedBlogs(
+    public ResponseEntity<ResultPaginationResponse> getCurrentAccountSavedBlogs(
             @Filter Specification<Blog> spec,
             Pageable pageable
     ) {
-        ResultPaginationResponse result = this.userService.handleGetCurrentUserSavedBlogs(spec, pageable);
+        ResultPaginationResponse result = this.userService.handleGetCurrentAccountSavedBlogs(spec, pageable);
         return ResponseEntity.status(HttpStatus.OK).body(result);
     }
 
@@ -214,35 +215,35 @@ public class UserController {
     }
 
     @PutMapping("/me/saved-blogs")
-    public ResponseEntity<UserResponse> saveBlogsForCurrentUser(@RequestBody Map<String, List<Long>> request)
+    public ResponseEntity<Object> saveBlogsForCurrentAccount(@RequestBody Map<String, List<Long>> request)
             throws InvalidException {
         List<Long> blogIds = request.get("blogIds");
         if (blogIds == null || blogIds.isEmpty()) {
             throw new InvalidException("Blog IDs list cannot be empty");
         }
 
-        UserResponse userResponse = this.userService.handleSaveBlogsForCurrentUser(blogIds);
-        if (userResponse == null) {
+        Object response = this.userService.handleSaveBlogsForCurrentAccount(blogIds);
+        if (response == null) {
             throw new InvalidException("Failed to save blogs");
         }
 
-        return ResponseEntity.status(HttpStatus.OK).body(userResponse);
+        return ResponseEntity.status(HttpStatus.OK).body(response);
     }
 
     @DeleteMapping("/me/saved-blogs")
-    public ResponseEntity<UserResponse> unsaveBlogsForCurrentUser(@RequestBody Map<String, List<Long>> request)
+    public ResponseEntity<Object> unsaveBlogsForCurrentAccount(@RequestBody Map<String, List<Long>> request)
             throws InvalidException {
         List<Long> blogIds = request.get("blogIds");
         if (blogIds == null || blogIds.isEmpty()) {
             throw new InvalidException("Blog IDs list cannot be empty");
         }
 
-        UserResponse userResponse = this.userService.handleUnsaveBlogsForCurrentUser(blogIds);
-        if (userResponse == null) {
+        Object response = this.userService.handleUnsaveBlogsForCurrentAccount(blogIds);
+        if (response == null) {
             throw new InvalidException("Failed to unsave blogs");
         }
 
-        return ResponseEntity.status(HttpStatus.OK).body(userResponse);
+        return ResponseEntity.status(HttpStatus.OK).body(response);
     }
     /*     ========================= ========================= =========================  */
 
@@ -281,8 +282,8 @@ public class UserController {
 
     /*     ========================= Followed Companies Related Endpoints =========================  */
     @GetMapping("/me/followed-companies")
-    public ResponseEntity<List<Company>> getCurrentUserFollowedCompanies() {
-        List<Company> followed = this.userService.handleGetCurrentUserFollowedCompanies();
+    public ResponseEntity<List<CompanyResponse>> getCurrentAccountFollowedCompanies() {
+        List<CompanyResponse> followed = this.userService.handleGetCurrentAccountFollowedCompanies();
         return ResponseEntity.status(HttpStatus.OK).body(followed);
     }
 

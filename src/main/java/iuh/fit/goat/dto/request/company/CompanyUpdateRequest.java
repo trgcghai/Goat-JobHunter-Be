@@ -5,6 +5,7 @@ import iuh.fit.goat.entity.Address;
 import iuh.fit.goat.enumeration.CompanySize;
 import jakarta.validation.constraints.NotNull;
 import lombok.Data;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 
@@ -14,11 +15,11 @@ public class CompanyUpdateRequest {
     @NotNull(message = "Account ID is required")
     private Long accountId;
     private String username;
-    private List<Address> addresses;
+    private String addresses;
     private String name;
     private String description;
-    private String logo;
-    private String coverPhoto;
+    private MultipartFile logo;
+    private MultipartFile coverPhoto;
     private String website;
     private String phone;
     private CompanySize size;

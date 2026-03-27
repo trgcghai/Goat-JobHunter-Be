@@ -4,6 +4,7 @@ import com.nimbusds.jose.util.Base64;
 import iuh.fit.goat.dto.response.StorageResponse;
 import iuh.fit.goat.dto.response.auth.LoginResponse;
 import iuh.fit.goat.exception.InvalidException;
+import iuh.fit.goat.repository.AccountRepository;
 import iuh.fit.goat.service.StorageService;
 import iuh.fit.goat.service.impl.StorageServiceImpl;
 import lombok.RequiredArgsConstructor;
@@ -55,7 +56,6 @@ public class SecurityUtil {
                 .subject(email)
                 .claim("accountId", loginResponse.getAccountId())
                 .claim("email", loginResponse.getEmail())
-                .claim("fullName", loginResponse.getFullName())
                 .claim("type", loginResponse.getType())
                 .claim("role", loginResponse.getRole().getName())
                 .build();
