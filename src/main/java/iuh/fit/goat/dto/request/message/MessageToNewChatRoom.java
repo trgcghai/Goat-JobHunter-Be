@@ -11,7 +11,6 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class MessageToNewChatRoom {
     private String content;
-
     @NotNull(message = "AccountId is not null")
     private Long accountId;
 }

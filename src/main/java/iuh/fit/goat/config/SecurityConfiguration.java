@@ -144,6 +144,7 @@ public class SecurityConfiguration {
                 "/api/v1/companies/name",
 
 //              Thông tin danh sách công việc và chi tiết công việc có thể public
+                "/api/v1/jobs/related",
                 "/api/v1/jobs/{id}",
                 "/api/v1/jobs/available",
                 "/api/v1/jobs/companies/count",

@@ -5,10 +5,7 @@ import iuh.fit.goat.dto.request.message.MessageToNewChatRoom;
 import iuh.fit.goat.dto.response.ResultPaginationResponse;
 import iuh.fit.goat.dto.response.chat.ChatRoomResponse;
 import iuh.fit.goat.dto.response.chat.GroupMemberResponse;
-import iuh.fit.goat.entity.ChatMember;
-import iuh.fit.goat.entity.ChatRoom;
-import iuh.fit.goat.entity.Message;
-import iuh.fit.goat.entity.User;
+import iuh.fit.goat.entity.*;
 import iuh.fit.goat.exception.InvalidException;
 import org.springframework.data.domain.Pageable;
 import org.springframework.web.multipart.MultipartFile;
@@ -18,35 +15,35 @@ import java.util.List;
 public interface ChatRoomService {
     ResultPaginationResponse getMyChatRooms(Long accountId, Pageable pageable);
 
-    ChatRoomResponse getDetailChatRoomInformation(User currentUser, Long chatRoomId) throws InvalidException;
+    ChatRoomResponse getDetailChatRoomInformation(Account currentAccount, Long chatRoomId) throws InvalidException;
 
-    List<Message> getMessagesInChatRoom(User user, Long chatRoomId, Pageable pageable) throws InvalidException;
+    List<Message> getMessagesInChatRoom(Account account, Long chatRoomId, Pageable pageable) throws InvalidException;
 
     boolean isUserInChatRoom(ChatRoom chatRoom, Long accountId);
 
     boolean isUserInChatRoom(Long chatRoomId, Long accountId) throws InvalidException;
 
-    ChatRoom createNewSingleChatRoom(User currentUser, MessageToNewChatRoom request) throws InvalidException;
+    ChatRoom createNewSingleChatRoom(Account currentAccount, MessageToNewChatRoom request) throws InvalidException;
 
-    ChatRoom createNewSingleChatRoomWithFiles(User currentUser, MessageToNewChatRoom request, List<MultipartFile> files) throws InvalidException;
+    ChatRoom createNewSingleChatRoomWithFiles(Account currentAccount, MessageToNewChatRoom request, List<MultipartFile> files) throws InvalidException;
 
     ChatRoom existsDirectChatRoom(Long currentUserId, Long otherUserId);
 
-    List<Message> getMediaMessagesInChatRoom(User user, Long chatRoomId, Pageable pageable) throws InvalidException;
+    List<Message> getMediaMessagesInChatRoom(Account account, Long chatRoomId, Pageable pageable) throws InvalidException;
 
-    List<Message> getFileMessagesInChatRoom(User user, Long chatRoomId, Pageable pageable) throws InvalidException;
+    List<Message> getFileMessagesInChatRoom(Account account, Long chatRoomId, Pageable pageable) throws InvalidException;
 
-    ChatRoom createGroupChat(User currentUser, CreateGroupChatRequest request) throws InvalidException;
+    ChatRoom createGroupChat(Account currentAccount, CreateGroupChatRequest request) throws InvalidException;
 
-    ChatRoom updateGroupInfo(User currentUser, Long chatRoomId, UpdateGroupInfoRequest request) throws InvalidException;
+    ChatRoom updateGroupInfo(Account currentAccount, Long chatRoomId, UpdateGroupInfoRequest request) throws InvalidException;
 
-    void leaveGroupChat(User currentUser, Long chatRoomId) throws InvalidException;
+    void leaveGroupChat(Account currentAccount, Long chatRoomId) throws InvalidException;
 
-    ChatMember addMemberToGroup(User currentUser, Long chatRoomId, AddMemberRequest request) throws InvalidException;
+    ChatMember addMemberToGroup(Account currentAccount, Long chatRoomId, AddMemberRequest request) throws InvalidException;
 
-    void removeMemberFromGroup(User currentUser, Long chatRoomId, Long chatMemberId) throws InvalidException;
+    void removeMemberFromGroup(Account currentAccount, Long chatRoomId, Long chatMemberId) throws InvalidException;
 
-    ChatMember updateMemberRole(User currentUser, Long chatRoomId, Long chatMemberId, UpdateMemberRoleRequest request) throws InvalidException;
+    ChatMember updateMemberRole(Account currentAccount, Long chatRoomId, Long chatMemberId, UpdateMemberRoleRequest request) throws InvalidException;
 
-    List<GroupMemberResponse> getGroupMembers(User currentUser, Long chatRoomId) throws InvalidException;
+    List<GroupMemberResponse> getGroupMembers(Account currentAccount, Long chatRoomId) throws InvalidException;
 }

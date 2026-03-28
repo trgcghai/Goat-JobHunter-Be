@@ -158,17 +158,17 @@ public class AuthServiceImpl implements AuthService {
         Jwt jwt = this.securityUtil.checkValidToken(refreshToken);
         String email = jwt.getSubject();
 
-        User currentUser = this.userService.handleGetUserByEmail(email);
-        if(currentUser == null){
+        Account currentAccount = this.accountRepository.findByEmailAndDeletedAtIsNull(email).orElse(null);
+        if(currentAccount == null){
             throw new InvalidException("User not found");
         }
-        if(!currentUser.isEnabled()) {
+        if(!currentAccount.isEnabled()) {
             throw new InvalidException("Account is locked");
         }
 
         UserDetails userDetails = new org.springframework.security.core.userdetails.User(
-                currentUser.getEmail(),
-                currentUser.getPassword(),
+                currentAccount.getEmail(),
+                currentAccount.getPassword(),
                 Collections.singletonList(new SimpleGrantedAuthority("ROLE_USER"))
         );
         Authentication authentication = new UsernamePasswordAuthenticationToken(
@@ -176,7 +176,7 @@ public class AuthServiceImpl implements AuthService {
         );
         SecurityContextHolder.getContext().setAuthentication(authentication);
 
-        LoginResponse loginResponse = createLoginResponse(currentUser);
+        LoginResponse loginResponse = createLoginResponse(currentAccount);
 
         String newAccessToken = this.securityUtil.createAccessToken(email, loginResponse);
         String newRefreshToken = this.securityUtil.createRefreshToken(email, loginResponse);
@@ -184,7 +184,7 @@ public class AuthServiceImpl implements AuthService {
         this.redisService.replaceKey(
                 "refresh:" + refreshToken,
                 "refresh:" + newRefreshToken,
-                currentUser.getEmail(),
+                currentAccount.getEmail(),
                 jwtRefreshToken,
                 TimeUnit.SECONDS
         );
@@ -405,7 +405,7 @@ public class AuthServiceImpl implements AuthService {
 
     @Override
     public void handleVerifyAccount(VerifyAccountRequest verifyAccount) throws InvalidException {
-        Account account = this.accountService.handleGetAccountByEmail(verifyAccount.getEmail());
+        Account account = this.accountRepository.findByEmailAndDeletedAtIsNull(verifyAccount.getEmail()).orElse(null);
         if(account == null) {
             throw new InvalidException("Account not found");
         }
@@ -426,7 +426,7 @@ public class AuthServiceImpl implements AuthService {
 
     @Override
     public void handleResendCode(String email) throws InvalidException {
-        Account account = this.accountService.handleGetAccountByEmail(email);
+        Account account = this.accountRepository.findByEmailAndDeletedAtIsNull(email).orElse(null);
         if(account == null) {
             throw new InvalidException("Account not found");
         }

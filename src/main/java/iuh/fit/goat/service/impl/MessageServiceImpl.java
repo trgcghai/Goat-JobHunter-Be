@@ -4,6 +4,8 @@ import iuh.fit.goat.common.MessageEvent;
 import iuh.fit.goat.dto.request.message.MessageCreateRequest;
 import iuh.fit.goat.dto.response.message.MessageResponse;
 import iuh.fit.goat.dto.response.StorageResponse;
+import iuh.fit.goat.entity.Account;
+import iuh.fit.goat.entity.Company;
 import iuh.fit.goat.entity.Message;
 import iuh.fit.goat.entity.User;
 import iuh.fit.goat.entity.embeddable.SenderInfo;
@@ -29,12 +31,12 @@ import java.util.*;
 @Slf4j
 @RequiredArgsConstructor
 public class MessageServiceImpl implements MessageService {
-
-    private static final long MAX_FILE_SIZE = 20 * 1024 * 1024; // 20MB
+    private final StorageService storageService;
 
     private final MessageRepository messageRepository;
     private final ChatRoomRepository chatRoomRepository;
-    private final StorageService storageService;
+
+    private static final long MAX_FILE_SIZE = 20 * 1024 * 1024; // 20MB
     private final SimpMessagingTemplate messagingTemplate;
 
     // ========== PUBLIC API METHODS ==========
@@ -48,9 +50,9 @@ public class MessageServiceImpl implements MessageService {
             throw new InvalidException("Chat room ID cannot be null");
         }
 
-        chatRoomRepository.findById(chatRoomId).orElseThrow(() -> new InvalidException("Chat Room not found"));
+        this.chatRoomRepository.findById(chatRoomId).orElseThrow(() -> new InvalidException("Chat Room not found"));
 
-        Optional<Message> lastMessage = messageRepository
+        Optional<Message> lastMessage = this.messageRepository
                 .findLastMessageByConversation(chatRoomId.toString());
 
         if (lastMessage.isEmpty()) {
@@ -88,11 +90,9 @@ public class MessageServiceImpl implements MessageService {
     * Send text message.
      */
     @Override
-    public Message sendMessage(Long chatRoomId, MessageCreateRequest request, User currentUser)
-            throws InvalidException {
-
-        chatRoomRepository.findById(chatRoomId)
-                .orElseThrow(() -> new InvalidException("Chat Room not found"));
+    public Message sendMessage(Long chatRoomId, MessageCreateRequest request, Account currentAccount) throws InvalidException
+    {
+        this.chatRoomRepository.findById(chatRoomId).orElseThrow(() -> new InvalidException("Chat Room not found"));
 
         String messageId = generateMessageId();
         Instant now = Instant.now();
@@ -101,7 +101,7 @@ public class MessageServiceImpl implements MessageService {
         String messageSk = Message.buildMessageSk(timestamp, messageId);
 
         // Build sender information
-        SenderInfo senderInfo = buildSenderInfo(currentUser);
+        SenderInfo senderInfo = buildSenderInfo(currentAccount);
 
         Message message = Message.builder()
                 .messageSk(messageSk)
@@ -135,12 +135,11 @@ public class MessageServiceImpl implements MessageService {
             Long chatRoomId,
             MessageCreateRequest request,
             List<MultipartFile> files,
-            User currentUser) throws InvalidException {
-
-        chatRoomRepository.findById(chatRoomId).orElseThrow(() -> new InvalidException("Chat Room not found"));
+            Account currentAccount
+    ) throws InvalidException {
+        this.chatRoomRepository.findById(chatRoomId).orElseThrow(() -> new InvalidException("Chat Room not found"));
 
         List<Message> createdMessages = new ArrayList<>();
-
         try {
             // Process files first
             if (files != null && !files.isEmpty()) {
@@ -158,7 +157,7 @@ public class MessageServiceImpl implements MessageService {
                             chatRoomId.toString(),
                             fileUrl,
                             messageType,
-                            currentUser
+                            currentAccount
                     );
 
                     Message savedMessage = messageRepository.saveMessage(fileMessage);
@@ -173,7 +172,7 @@ public class MessageServiceImpl implements MessageService {
             // Process text content
             if (request != null && request.getContent() != null && !request.getContent().isBlank()) {
                 MessageCreateRequest textRequest = new MessageCreateRequest(request.getContent());
-                Message textMessage = sendMessage(chatRoomId, textRequest, currentUser);
+                Message textMessage = sendMessage(chatRoomId, textRequest, currentAccount);
                 createdMessages.add(textMessage);
             }
 
@@ -260,9 +259,9 @@ public class MessageServiceImpl implements MessageService {
     public Message createAndSendSystemMessage(
             Long chatRoomId,
             MessageEvent type,
-            User actor,
-            Object... params) {
-
+            Account actor,
+            Object... params
+    ) {
         String content = MessageHelper.generateSystemMessage(type, actor, params);
         String messageId = generateMessageId();
         Instant now = Instant.now();
@@ -338,8 +337,8 @@ public class MessageServiceImpl implements MessageService {
             String chatRoomId,
             String fileUrl,
             MessageType messageType,
-            User currentUser) {
-
+            Account currentAccount
+    ) {
         String messageId = generateMessageId();
         Instant now = Instant.now();
         long timestamp = now.toEpochMilli();
@@ -347,7 +346,7 @@ public class MessageServiceImpl implements MessageService {
         String messageSk = Message.buildMessageSk(timestamp, messageId);
 
         // Build sender information
-        SenderInfo senderInfo = buildSenderInfo(currentUser);
+        SenderInfo senderInfo = buildSenderInfo(currentAccount);
 
         return Message.builder()
                 .messageSk(messageSk)
@@ -366,13 +365,19 @@ public class MessageServiceImpl implements MessageService {
         return "msg_" + UUID.randomUUID().toString().replace("-", "");
     }
 
-    private SenderInfo buildSenderInfo(User user) {
+    private SenderInfo buildSenderInfo(Account account) {
+        String fullName = account instanceof Company ? ((Company) account).getName()
+                : ((User) account).getFullName();
+
+        String avatar = account instanceof Company ? ((Company) account).getLogo()
+                : ((User) account).getAvatar();
+
         return SenderInfo.builder()
-                .accountId(user.getAccountId())
-                .fullName(user.getFullName())
-                .username(user.getUsername())
-                .email(user.getEmail())
-                .avatar(user.getAvatar())
+                .accountId(account.getAccountId())
+                .fullName(fullName)
+                .username(account.getUsername())
+                .email(account.getEmail())
+                .avatar(avatar)
                 .build();
     }
 }
