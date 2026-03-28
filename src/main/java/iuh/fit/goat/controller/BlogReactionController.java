@@ -21,23 +21,23 @@ public class BlogReactionController {
     private final BlogReactionService blogReactionService;
 
     @PostMapping("/blogs")
-    public ResponseEntity<UserResponse> reactToBlog(@Valid @RequestBody ReactionBlogRequest request)
+    public ResponseEntity<Object> reactToBlog(@Valid @RequestBody ReactionBlogRequest request)
             throws InvalidException {
-        UserResponse userResponse = this.blogReactionService.handleReactToBlog(request);
-        if (userResponse == null) {
+        Object response = this.blogReactionService.handleReactToBlog(request);
+        if (response == null) {
             throw new InvalidException("Failed to react to blog");
         }
-        return ResponseEntity.status(HttpStatus.OK).body(userResponse);
+        return ResponseEntity.status(HttpStatus.OK).body(response);
     }
 
     @DeleteMapping("/blogs")
-    public ResponseEntity<UserResponse> unreactToBlogs(@Valid @RequestBody UnreactBlogRequest request)
+    public ResponseEntity<Object> unreactToBlogs(@Valid @RequestBody UnreactBlogRequest request)
             throws InvalidException {
-        UserResponse userResponse = this.blogReactionService.handleUnreactToBlogs(request.getBlogIds());
-        if (userResponse == null) {
+        Object response = this.blogReactionService.handleUnreactToBlogs(request.getBlogIds());
+        if (response == null) {
             throw new InvalidException("Failed to unreact to blogs");
         }
-        return ResponseEntity.status(HttpStatus.OK).body(userResponse);
+        return ResponseEntity.status(HttpStatus.OK).body(response);
     }
 
     @GetMapping("/blogs")

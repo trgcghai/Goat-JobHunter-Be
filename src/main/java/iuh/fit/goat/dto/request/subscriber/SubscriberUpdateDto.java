@@ -16,11 +16,5 @@ import java.util.List;
 public class SubscriberUpdateDto {
     @NotNull(message = "Subscriber ID is required")
     private Long subscriberId;
-
-    private String name;
-
-    @Email(message = "Email is not valid")
-    private String email;
-
     private List<Long> skillIds;
 }

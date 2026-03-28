@@ -1,6 +1,8 @@
 package iuh.fit.goat.dto.response.message;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
+import iuh.fit.goat.entity.embeddable.SenderInfo;
+import iuh.fit.goat.enumeration.MessageType;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -14,7 +16,13 @@ import java.time.Instant;
 @AllArgsConstructor
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class MessageResponse {
-    private Long messageId;
+    private String messageId;
+    private String chatRoomId;
+    private SenderInfo sender;
     private String content;
+    private MessageType messageType;
+    private String replyTo;
+    private Boolean isHidden;
     private Instant createdAt;
+    private Instant updatedAt;
 }

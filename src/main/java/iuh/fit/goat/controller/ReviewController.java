@@ -14,6 +14,7 @@ import iuh.fit.goat.exception.InvalidException;
 import iuh.fit.goat.service.CompanyService;
 import iuh.fit.goat.service.ReviewService;
 import iuh.fit.goat.service.UserService;
+import iuh.fit.goat.util.BasicUtil;
 import iuh.fit.goat.util.SecurityUtil;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -153,7 +154,7 @@ public class ReviewController {
     public ResponseEntity<RatingResponse> getRatingByCompany(@PathVariable("companyId") String companyId)
             throws InvalidException
     {
-        if (!SecurityUtil.checkValidNumber(companyId)) throw new InvalidException("Id is number");
+        if (!BasicUtil.checkValidNumber(companyId)) throw new InvalidException("Id is number");
 
         Company company = this.companyService.handleGetCompanyById(Long.parseLong(companyId));
         if (company == null) throw new InvalidException("Company not found");
@@ -167,7 +168,7 @@ public class ReviewController {
     public ResponseEntity<Double> calculateRecommendedPercentageByCompany(@PathVariable("companyId") String companyId)
             throws InvalidException
     {
-        if (!SecurityUtil.checkValidNumber(companyId)) throw new InvalidException("Id is number");
+        if (!BasicUtil.checkValidNumber(companyId)) throw new InvalidException("Id is number");
 
         Company company = this.companyService.handleGetCompanyById(Long.parseLong(companyId));
         if (company == null) throw new InvalidException("Company not found");

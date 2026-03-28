@@ -1,0 +1,63 @@
+name,api_path,method,module
+Create permission,/api/v1/permissions,POST,PERMISSIONS
+Update permission,/api/v1/permissions,PUT,PERMISSIONS
+Delete permission,/api/v1/permissions/{id},DELETE,PERMISSIONS
+Get permission by id,/api/v1/permissions/{id},GET,PERMISSIONS
+Get all permission,/api/v1/permissions,GET,PERMISSIONS
+Get all users,/api/v1/users,GET,USERS
+Activate user,/api/v1/users/activate,PUT,USERS
+Deactivate user,/api/v1/users/deactivate,PUT,USERS
+Update applicant,/api/v1/applicants,PUT,APPLICANTS
+Toggle available status,/api/v1/applicants/availableStatus,PUT,APPLICANTS
+Update recruiter,/api/v1/recruiters,PUT,RECRUITERS
+Create job,/api/v1/jobs,POST,JOBS
+Update job,/api/v1/jobs,PUT,JOBS
+Activate job,/api/v1/jobs/activate,PUT,JOBS
+Deactivate job,/api/v1/jobs/deactivate,PUT,JOBS
+Delete job,/api/v1/jobs,DELETE,JOBS
+Get all jobs,/api/v1/jobs,GET,JOBS
+Get suitable resumes for job,/api/v1/jobs/{jobId}/resumes,GET,JOBS
+Enable job,/api/v1/jobs/enabled,PUT,JOBS
+Disable job,/api/v1/jobs/disabled,PUT,JOBS
+Get all blogs,/api/v1/blogs,GET,BLOGS
+Accept blog,/api/v1/blogs/enabled,PUT,BLOGS
+Reject blog,/api/v1/blogs/disabled,PUT,BLOGS
+Create company,/api/v1/companies,POST,COMPANIES
+Update company,/api/v1/companies,PUT,COMPANIES
+Delete company,/api/v1/companies/{id},DELETE,COMPANIES
+Get all companies,/api/v1/companies,GET,COMPANIES
+Create interview,/api/v1/interviews,POST,INTERVIEWS
+Complete interview,/api/v1/interviews/completed,PUT,INTERVIEWS
+Cancel interview,/api/v1/interviews/canceled,PUT,INTERVIEWS
+Reschedule interview,/api/v1/interviews/rescheduled,PUT,INTERVIEWS
+Feedback interview,/api/v1/interviews/feedback,PUT,INTERVIEWS
+Get interview by id,/api/v1/interviews/{id},GET,INTERVIEWS
+Send job invitation,/api/v1/email/jobs,POST,EMAIL
+Create application,/api/v1/applications,POST,APPLICATIONS
+Reject application,/api/v1/applications/rejected,PUT,APPLICATIONS
+Delete application,/api/v1/applications/{id},DELETE,APPLICATIONS
+Get application by id,/api/v1/applications/{id},GET,APPLICATIONS
+Get all applications,/api/v1/applications/all-applications,GET,APPLICATIONS
+Get all applications by recruiter,/api/v1/applications,GET,APPLICATIONS
+Get all applications by applicant,/api/v1/applications/by-applicant,GET,APPLICATIONS
+Get all applications by applicantId,/api/v1/applications/by-applicant/{applicantId},GET,APPLICATIONS
+Create skill,/api/v1/skills,POST,SKILLS
+Update skill,/api/v1/skills,PUT,SKILLS
+Delete skill,/api/v1/skills/{id},DELETE,SKILLS
+GET SKILLS /api/v1/skills,/api/v1/skills,GET,SKILLS
+Statistic user,/api/v1/dashboard/users,GET,DASHBOARD
+Statistic job,/api/v1/dashboard/jobs,GET,DASHBOARD
+Statistic application,/api/v1/dashboard/applications,GET,DASHBOARD
+Statistic application by year,/api/v1/dashboard/applications-year,GET,DASHBOARD
+Get total statistics,/api/v1/dashboard/total,GET,DASHBOARD
+Get applications by year,/api/v1/dashboard/applications/year,GET,DASHBOARD
+Get top 10 blogs,/api/v1/dashboard/blogs/top10,GET,DASHBOARD
+Create role,/api/v1/roles,POST,ROLES
+Update role,/api/v1/roles,PUT,ROLES
+Activate role,/api/v1/roles/{id}/activate,PUT,ROLES
+Deactivate role,/api/v1/roles/{id}/deactivate,PUT,ROLES
+Verify review,/api/v1/reviews/verified,PUT,REVIEWS
+Unverify review,/api/v1/reviews/unverified,PUT,REVIEWS
+Enable review,/api/v1/reviews/enabled,PUT,REVIEWS
+Disable review,/api/v1/reviews/disabled,PUT,REVIEWS
+Get all reviews,/api/v1/reviews,GET,REVIEWS

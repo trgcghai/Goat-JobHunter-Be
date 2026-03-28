@@ -18,7 +18,7 @@ public interface BlogRepository extends JpaRepository<Blog, Long>, JpaSpecificat
     @Query("""
         select t as tag, count(t) as count
         from Blog b join b.tags t
-        where (:keyword is null or lower(t) like lower(concat('%', :keyword, '%')))
+        where (:keyword is null or lower(t) like lower(concat('%',:keyword,'%')))
         group by t
         order by count(t) desc
         limit 15

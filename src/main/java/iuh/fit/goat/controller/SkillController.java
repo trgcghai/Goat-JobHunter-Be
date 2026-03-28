@@ -2,7 +2,7 @@ package iuh.fit.goat.controller;
 
 import com.turkraft.springfilter.boot.Filter;
 import iuh.fit.goat.dto.response.ResultPaginationResponse;
-import iuh.fit.goat.util.SecurityUtil;
+import iuh.fit.goat.util.BasicUtil;
 import iuh.fit.goat.util.annotation.ApiMessage;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -14,8 +14,6 @@ import org.springframework.web.bind.annotation.*;
 import iuh.fit.goat.exception.*;
 import iuh.fit.goat.entity.*;
 import iuh.fit.goat.service.*;
-
-import java.util.regex.Pattern;
 
 @RestController
 @RequestMapping("/api/v1/skills")
@@ -50,7 +48,7 @@ public class SkillController {
     @DeleteMapping("/{id}")
     @ApiMessage("Delete skill by id")
     public ResponseEntity<Void> deleteSkill(@PathVariable("id") String id) throws InvalidException {
-        if(SecurityUtil.checkValidNumber("id")) {
+        if(BasicUtil.checkValidNumber("id")) {
             Skill skill = this.skillService.handGetSkillById(Long.parseLong(id));
             if(skill != null) {
                 this.skillService.handleDeleteSkill(Long.parseLong(id));
@@ -65,7 +63,7 @@ public class SkillController {
 
     @GetMapping("/{id}")
     public ResponseEntity<Skill> getSkillById(@PathVariable("id") String id) throws InvalidException {
-        if(SecurityUtil.checkValidNumber("id")) {
+        if(BasicUtil.checkValidNumber("id")) {
             Skill skill = this.skillService.handGetSkillById(Long.parseLong(id));
             if(skill != null) {
                 return ResponseEntity.status(HttpStatus.OK).body(skill);

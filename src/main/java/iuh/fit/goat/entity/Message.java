@@ -14,10 +14,8 @@ import java.time.Instant;
 @Builder
 public class Message {
 
-    private String chatRoomBucket;
     private String messageSk;
     private String chatRoomId;
-    private String bucket;
     private String messageId;
 
     // NEW: Embedded sender information
@@ -34,26 +32,16 @@ public class Message {
     private Instant createdAt;
     private Instant updatedAt;
 
-    @DynamoDbPartitionKey
-    @DynamoDbAttribute("chatRoomBucket")
-    public String getChatRoomBucket() {
-        return chatRoomBucket;
-    }
-
     @DynamoDbSortKey
     @DynamoDbAttribute("messageSk")
     public String getMessageSk() {
         return messageSk;
     }
 
+    @DynamoDbPartitionKey
     @DynamoDbAttribute("chatRoomId")
     public String getChatRoomId() {
         return chatRoomId;
-    }
-
-    @DynamoDbAttribute("bucket")
-    public String getBucket() {
-        return bucket;
     }
 
     @DynamoDbAttribute("messageId")
@@ -100,10 +88,6 @@ public class Message {
     @DynamoDbAttribute("updatedAt")
     public Instant getUpdatedAt() {
         return updatedAt;
-    }
-
-    public static String buildChatRoomBucket(String chatRoomId, String bucket) {
-        return chatRoomId + "#" + bucket;
     }
 
     public static String buildMessageSk(Long timestamp, String messageId) {

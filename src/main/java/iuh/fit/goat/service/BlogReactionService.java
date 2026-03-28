@@ -7,9 +7,9 @@ import iuh.fit.goat.dto.response.user.UserResponse;
 import java.util.List;
 
 public interface BlogReactionService {
-    UserResponse handleReactToBlog(ReactionBlogRequest request);
+    Object handleReactToBlog(ReactionBlogRequest request);
 
-    UserResponse handleUnreactToBlogs(List<Long> blogIds);
+    Object handleUnreactToBlogs(List<Long> blogIds);
 
     List<BlogReactionCheckResponse> handleCheckBlogReactions(List<Long> blogIds);
 }

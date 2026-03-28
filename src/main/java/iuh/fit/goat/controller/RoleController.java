@@ -6,6 +6,7 @@ import iuh.fit.goat.dto.response.ResultPaginationResponse;
 import iuh.fit.goat.entity.Role;
 import iuh.fit.goat.exception.InvalidException;
 import iuh.fit.goat.service.RoleService;
+import iuh.fit.goat.util.BasicUtil;
 import iuh.fit.goat.util.SecurityUtil;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -40,7 +41,7 @@ public class RoleController {
 
     @PutMapping("/{id}/activate")
     public ResponseEntity<Role> activateRole(@PathVariable("id") String id) throws InvalidException {
-        if(!SecurityUtil.checkValidNumber("id")){
+        if(!BasicUtil.checkValidNumber("id")){
             throw new InvalidException("Id is number");
         }
         Role res = this.roleService.handleActivateRole(Long.parseLong(id));
@@ -49,7 +50,7 @@ public class RoleController {
 
     @PutMapping("/{id}/deactivate")
     public ResponseEntity<Role> deactivateRole(@PathVariable("id") String id) throws InvalidException {
-        if(!SecurityUtil.checkValidNumber("id")){
+        if(!BasicUtil.checkValidNumber("id")){
             throw new InvalidException("Id is number");
         }
         Role res = this.roleService.handleDeactivateRole(Long.parseLong(id));

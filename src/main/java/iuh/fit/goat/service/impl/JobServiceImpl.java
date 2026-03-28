@@ -494,7 +494,7 @@ public class JobServiceImpl implements JobService {
             );
         }
 
-        Subscriber subscriber = this.subscriberRepository.findByEmail(currentEmail).orElse(null);
+        Subscriber subscriber = this.subscriberRepository.findByEmailAndDeletedAtIsNull(currentEmail).orElse(null);
         if(subscriber == null) {
             return new ResultPaginationResponse(
                     new ResultPaginationResponse.Meta(0, 0, 0, 0L),

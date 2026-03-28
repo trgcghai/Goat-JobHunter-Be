@@ -5,10 +5,8 @@ import iuh.fit.goat.dto.request.subscriber.SubscriberUpdateDto;
 import iuh.fit.goat.dto.response.job.EmailJobResponse;
 import iuh.fit.goat.dto.response.ResultPaginationResponse;
 import iuh.fit.goat.entity.*;
-import iuh.fit.goat.repository.JobRepository;
-import iuh.fit.goat.repository.SkillRepository;
-import iuh.fit.goat.repository.SubscriberRepository;
-import iuh.fit.goat.repository.UserRepository;
+import iuh.fit.goat.exception.InvalidException;
+import iuh.fit.goat.repository.*;
 import iuh.fit.goat.service.EmailNotificationService;
 import iuh.fit.goat.service.SubscriberService;
 import iuh.fit.goat.util.SecurityUtil;
@@ -34,16 +32,18 @@ public class SubscriberServiceImpl implements SubscriberService {
     private final SkillRepository skillRepository;
     private final JobRepository jobRepository;
     private final UserRepository userRepository;
+    private final AccountRepository accountRepository;
 
     @Override
-    public Subscriber handleCreateSubscriber(SubscriberCreateDto dto) {
+    public Subscriber handleCreateSubscriber(SubscriberCreateDto dto) throws InvalidException {
         String currentEmail = SecurityUtil.getCurrentUserEmail();
         if(currentEmail.isEmpty()) return null;
 
-        User user = this.userRepository.findByEmail(currentEmail);
+        Account account = this.accountRepository.findByEmailAndDeletedAtIsNull(currentEmail)
+                .orElseThrow(() -> new InvalidException("Account not found"));
         Subscriber subscriber = new Subscriber();
-        subscriber.setName(user.getFullName());
-        subscriber.setEmail(user.getEmail());
+        subscriber.setName(account instanceof Company ? ((Company) account).getName() : ((User) account).getFullName());
+        subscriber.setEmail(account.getEmail());
 
         if (dto.getSkillIds() != null && !dto.getSkillIds().isEmpty()) {
             List<Skill> skills = this.skillRepository.findBySkillIdIn(dto.getSkillIds());
@@ -56,14 +56,6 @@ public class SubscriberServiceImpl implements SubscriberService {
     @Override
     public Subscriber handleUpdateSubscriber(SubscriberUpdateDto dto) {
         Subscriber currentSubscriber = this.handleGetSubscriberById(dto.getSubscriberId());
-
-        if (dto.getName() != null) {
-            currentSubscriber.setName(dto.getName());
-        }
-
-        if (dto.getEmail() != null) {
-            currentSubscriber.setEmail(dto.getEmail());
-        }
 
         if (dto.getSkillIds() != null) {
             List<Skill> skills = this.skillRepository.findBySkillIdIn(dto.getSkillIds());
@@ -99,13 +91,13 @@ public class SubscriberServiceImpl implements SubscriberService {
 
     @Override
     public Subscriber handleGetSubscribersSkill(String email) {
-        return this.subscriberRepository.findByEmail(email).orElse(null);
+        return this.subscriberRepository.findByEmailAndDeletedAtIsNull(email).orElse(null);
     }
 
     @Override
     public Subscriber handleGetSubscriberByEmail() {
         String email = SecurityUtil.getCurrentUserEmail();
-        return this.subscriberRepository.findByEmail(email).orElse(null);
+        return this.subscriberRepository.findByEmailAndDeletedAtIsNull(email).orElse(null);
     }
 
     @Override

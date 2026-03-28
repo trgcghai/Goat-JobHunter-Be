@@ -11,7 +11,7 @@ import java.util.Set;
 
 @Repository
 public interface SubscriberRepository extends JpaRepository<Subscriber, Long>, JpaSpecificationExecutor<Subscriber> {
-    Optional<Subscriber> findByEmail(String email);
+    Optional<Subscriber> findByEmailAndDeletedAtIsNull(String email);
 
     List<Subscriber> findByEmailIn(Set<String> emails);
 }

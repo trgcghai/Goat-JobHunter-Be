@@ -1,6 +1,7 @@
 package iuh.fit.goat.dto.response.company;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
+import iuh.fit.goat.dto.response.user.UserResponse;
 import iuh.fit.goat.enumeration.CompanySize;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -32,6 +33,7 @@ public class CompanyResponse {
     private String workingDays;
     private String overtimePolicy;
     private List<CompanyAward> awards;
+    private RoleAccount role;
     private Instant createdAt;
     private Instant updatedAt;
 
@@ -53,5 +55,14 @@ public class CompanyResponse {
         private long companyAwardId;
         private String type;
         private int year;
+    }
+
+    @Getter
+    @Setter
+    @NoArgsConstructor
+    @AllArgsConstructor
+    public static class RoleAccount {
+        private long roleId;
+        private String name;
     }
 }

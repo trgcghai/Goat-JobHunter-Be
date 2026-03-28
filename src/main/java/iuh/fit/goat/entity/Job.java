@@ -23,7 +23,7 @@ import static jakarta.persistence.FetchType.LAZY;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-@ToString(exclude = {"company", "skills", "applications", "career", "users"})
+@ToString(exclude = {"company", "skills", "applications", "career", "accounts"})
 @FilterDef(name = "activeJobFilter")
 public class Job extends BaseEntity {
     @Id
@@ -82,5 +82,5 @@ public class Job extends BaseEntity {
             name = "activeAccountFilter",
             condition = "deleted_at IS NULL"
     )
-    private List<User> users = new ArrayList<>();
+    private List<Account> accounts = new ArrayList<>();
 }
