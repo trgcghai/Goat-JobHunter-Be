@@ -65,8 +65,8 @@ public class UserServiceImpl implements UserService {
     private long validityInSeconds;
 
     @Override
-    public User handleGetUserByEmail(String email) {
-        return this.userRepository.findByEmailWithRole(email).orElse(null);
+    public Account handleGetAccountByEmail(String email) {
+        return this.accountRepository.findByEmailWithRole(email).orElse(null);
     }
 
     @Override
@@ -226,21 +226,21 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public void handleResetPassword(ResetPasswordRequest resetPasswordRequest) throws InvalidException {
-        User user = this.handleGetUserByEmail(resetPasswordRequest.getEmail());
-        if (user != null) {
+        Account account = this.handleGetAccountByEmail(resetPasswordRequest.getEmail());
+        if (account != null) {
             String hashedPassword = this.passwordEncoder.encode(resetPasswordRequest.getNewPassword());
-            user.setPassword(hashedPassword);
-            user.setEnabled(false);
-            this.userRepository.save(user);
+            account.setPassword(hashedPassword);
+            account.setEnabled(false);
+            this.accountRepository.save(account);
 
             String verificationCode = BasicUtil.generateVerificationCode();
             this.redisService.saveWithTTL(
-                    user.getEmail(),
+                    account.getEmail(),
                     verificationCode,
                     validityInSeconds,
                     TimeUnit.SECONDS
             );
-            this.emailNotificationService.handleSendVerificationEmail(user.getEmail(), verificationCode);
+            this.emailNotificationService.handleSendVerificationEmail(account.getEmail(), verificationCode);
         } else {
             throw new InvalidException("User not found");
         }
@@ -586,13 +586,13 @@ public class UserServiceImpl implements UserService {
             return;
         }
 
-        User currentUser = this.handleGetUserByEmail(currentEmail);
-        if (currentUser == null) {
+        Account currentAccount = this.handleGetAccountByEmail(currentEmail);
+        if (currentAccount == null) {
             return;
         }
 
         List<Notification> notifications = this.notificationRepository
-                .findByNotificationIdInAndRecipient_AccountId(notificationIds, currentUser.getAccountId());
+                .findByNotificationIdInAndRecipient_AccountId(notificationIds, currentAccount.getAccountId());
 
         notifications.forEach(notification -> notification.setSeen(true));
         this.notificationRepository.saveAll(notifications);
@@ -687,8 +687,11 @@ public class UserServiceImpl implements UserService {
             return new ArrayList<>();
         }
 
-        User currentUser = this.handleGetUserByEmail(currentEmail);
-        List<Long> reviewedIds = Optional.ofNullable(currentUser.getReviews())
+        Account currentAccount = this.handleGetAccountByEmail(currentEmail);
+        if(currentAccount instanceof Company) {
+            return new ArrayList<>();
+        }
+        List<Long> reviewedIds = Optional.ofNullable(((User)currentAccount).getReviews())
                 .orElse(new ArrayList<>())
                 .stream()
                 .map(review -> review.getCompany().getAccountId())

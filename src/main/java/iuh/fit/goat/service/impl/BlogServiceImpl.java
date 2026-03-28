@@ -118,14 +118,14 @@ public class BlogServiceImpl implements BlogService {
         String currentEmail = SecurityUtil.getCurrentUserLogin().isPresent()
                 ? SecurityUtil.getCurrentUserLogin().get()
                 : "";
-        User currentUser = this.userService.handleGetUserByEmail(currentEmail);
-        if (currentUser == null) return;
+        Account currentAccount = this.userService.handleGetAccountByEmail(currentEmail);
+        if (currentAccount == null) return;
 
-        if (!currentUser.isEnabled() || !currentUser.getRole().isActive()) return;
+        if (!currentAccount.isEnabled() || !currentAccount.getRole().isActive()) return;
 
         this.blogRepository.deleteAllById(request.getBlogIds());
 
-        if (currentUser.getRole().getName().equalsIgnoreCase(Role.ADMIN.getValue())) {
+        if (currentAccount.getRole().getName().equalsIgnoreCase(Role.ADMIN.getValue())) {
             Map<String, List<Blog>> blogByEmail = blogs.stream()
                     .collect(Collectors.groupingBy(blog -> blog.getAuthor().getEmail()));
 
@@ -189,9 +189,9 @@ public class BlogServiceImpl implements BlogService {
     public void handleIncrementTotalReadValue(Long blogId, String guestId) {
         String currentEmail = SecurityUtil.getCurrentUserLogin().isPresent()
                 ? SecurityUtil.getCurrentUserLogin().get() : "";
-        User currentUser = this.userService.handleGetUserByEmail(currentEmail);
+        Account currentAccount = this.userService.handleGetAccountByEmail(currentEmail);
 
-        String viewer = currentUser != null ? "User" + currentUser.getAccountId() : "Guest" + guestId;
+        String viewer = currentAccount != null ? "User" + currentAccount.getAccountId() : "Guest" + guestId;
         String key = "view:blog:" + blogId + ":" + viewer;
 
         if (this.redisService.hasKey(key)) return;

@@ -7,6 +7,7 @@ import iuh.fit.goat.dto.response.ResultPaginationResponse;
 import iuh.fit.goat.dto.response.review.RatingResponse;
 import iuh.fit.goat.dto.response.review.ReviewResponse;
 import iuh.fit.goat.dto.response.review.ReviewStatusResponse;
+import iuh.fit.goat.entity.Account;
 import iuh.fit.goat.entity.Company;
 import iuh.fit.goat.entity.Review;
 import iuh.fit.goat.entity.User;
@@ -77,12 +78,12 @@ public class ReviewController {
         }
 
         String email = SecurityUtil.getCurrentUserLogin().isPresent() ? SecurityUtil.getCurrentUserLogin().get() : "";
-        User user = this.userService.handleGetUserByEmail(email);
-        if(user == null) {
+        Account account = this.userService.handleGetAccountByEmail(email);
+        if(account == null) {
             throw new InvalidException("User not found");
         }
 
-        Review existingReview = this.reviewService.findByUserAndCompany(user.getAccountId(), companyId);
+        Review existingReview = this.reviewService.findByUserAndCompany(account.getAccountId(), companyId);
         if(existingReview != null) {
             throw new InvalidException("You have already reviewed this company");
         }

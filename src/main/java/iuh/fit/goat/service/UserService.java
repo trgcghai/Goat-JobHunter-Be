@@ -14,7 +14,7 @@ import java.util.List;
 import java.util.Map;
 
 public interface UserService {
-    User handleGetUserByEmail(String email);
+    Account handleGetAccountByEmail(String email);
 
     boolean handleExistsByEmail(String email);
 

@@ -81,22 +81,10 @@ public class AuthServiceImpl implements AuthService {
 
         SecurityContextHolder.getContext().setAuthentication(authentication);
 
-        // Thử get User trước
-        User user = this.userService.handleGetUserByEmail(loginRequest.getEmail());
-        Company company = null;
-
-        // Nếu không phải User thì thử get Company
-        if (user == null) {
-            company = this.companyService.handleGetCompanyByEmail(loginRequest.getEmail());
-        }
-
-        // Kiểm tra tồn tại
-        if (user == null && company == null) {
+        Account account = this.userService.handleGetAccountByEmail(loginRequest.getEmail());
+        if (account == null) {
             throw new InvalidException("Invalid account");
         }
-
-        // Kiểm tra enabled
-        Account account = user != null ? user : company;
         if (!account.isEnabled()) {
             throw new InvalidException("Account is locked");
         }
