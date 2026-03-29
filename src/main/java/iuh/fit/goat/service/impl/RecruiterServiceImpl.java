@@ -30,7 +30,6 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class RecruiterServiceImpl implements RecruiterService {
     private final StorageService storageService;
-    private final RoleService roleService;
 
     private final RecruiterRepository recruiterRepository;
     private final AddressRepository addressRepository;
