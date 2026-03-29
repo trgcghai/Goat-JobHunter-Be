@@ -15,6 +15,5 @@ import org.springframework.web.multipart.MultipartFile;
 public class BlogCreateRequest {
     @NotBlank(message = "Nội dung không được để trống")
     private String content;
-
     private MultipartFile[] files;
 }

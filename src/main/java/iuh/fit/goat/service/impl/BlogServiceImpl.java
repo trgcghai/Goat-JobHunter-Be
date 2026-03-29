@@ -16,6 +16,7 @@ import iuh.fit.goat.repository.AccountRepository;
 import iuh.fit.goat.repository.BlogRepository;
 import iuh.fit.goat.repository.UserRepository;
 import iuh.fit.goat.service.*;
+import iuh.fit.goat.util.EntityUtil;
 import iuh.fit.goat.util.FileUploadUtil;
 import iuh.fit.goat.util.SecurityUtil;
 import lombok.RequiredArgsConstructor;
@@ -55,7 +56,6 @@ public class BlogServiceImpl implements BlogService {
     private final EmailNotificationService emailNotificationService;
     private final NotificationService notificationService;
     private final BlogRepository blogRepository;
-    private final UserRepository userRepository;
     private final StorageService storageService;
 
     private final AccountRepository accountRepository;
@@ -70,7 +70,6 @@ public class BlogServiceImpl implements BlogService {
         if (request.getFiles() != null) {
             for (MultipartFile file : request.getFiles()) {
                 if (file.isEmpty()) continue;
-
                 FileUploadUtil.assertAllowed(file);
                 StorageResponse response = this.storageService.handleUploadFile(file, "blogs");
                 imageUrls.add(response.getUrl());
@@ -315,21 +314,7 @@ public class BlogServiceImpl implements BlogService {
         response.setUpdatedAt(blog.getUpdatedAt());
         response.setUpdatedBy(blog.getUpdatedBy());
         if (blog.getAuthor() != null) {
-            String name = blog.getAuthor() instanceof User ? ((User) blog.getAuthor()).getFullName() : ((Company) blog.getAuthor()).getName();
-            String avatar = blog.getAuthor() instanceof User ? ((User) blog.getAuthor()).getAvatar() : ((Company) blog.getAuthor()).getLogo();
-            String bio = blog.getAuthor() instanceof User ? ((User) blog.getAuthor()).getBio() : ((Company) blog.getAuthor()).getDescription();
-            String coverPhoto = blog.getAuthor() instanceof User ? ((User) blog.getAuthor()).getCoverPhoto() : ((Company) blog.getAuthor()).getCoverPhoto();
-            String headline = blog.getAuthor() instanceof User ? ((User) blog.getAuthor()).getHeadline() : ((Company) blog.getAuthor()).getWebsite();
-            
-            BlogResponse.BlogAuthor author = new BlogResponse.BlogAuthor(
-                    blog.getAuthor().getAccountId(),
-                    name,
-                    blog.getAuthor().getUsername(),
-                    avatar,
-                    bio,
-                    headline,
-                    coverPhoto
-            );
+            BlogResponse.BlogAuthor author = getBlogAuthor(blog);
             response.setAuthor(author);
         } else {
             BlogResponse.BlogAuthor anonymous = new BlogResponse.BlogAuthor();
@@ -337,5 +322,24 @@ public class BlogServiceImpl implements BlogService {
             response.setAuthor(anonymous);
         }
         return response;
+    }
+
+    private static BlogResponse.BlogAuthor getBlogAuthor(Blog blog) {
+        Account realAccount = EntityUtil.unproxy(blog.getAuthor());
+        String name = realAccount instanceof Company ? ((Company) realAccount).getName() : ((User) realAccount).getFullName();
+        String avatar = realAccount instanceof Company ? ((Company) realAccount).getLogo() : ((User) realAccount).getAvatar();
+        String bio = realAccount instanceof Company ? ((Company) realAccount).getDescription() : ((User) realAccount).getBio();
+        String coverPhoto = realAccount instanceof Company ? ((Company) realAccount).getCoverPhoto() : ((User) realAccount).getCoverPhoto();
+        String headline = realAccount instanceof Company ? ((Company) realAccount).getWebsite() : ((User) realAccount).getHeadline();
+
+        return new BlogResponse.BlogAuthor(
+                blog.getAuthor().getAccountId(),
+                name,
+                blog.getAuthor().getUsername(),
+                avatar,
+                bio,
+                headline,
+                coverPhoto
+        );
     }
 }
