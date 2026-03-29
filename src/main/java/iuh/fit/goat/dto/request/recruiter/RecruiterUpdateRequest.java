@@ -6,6 +6,7 @@ import iuh.fit.goat.enumeration.Gender;
 import iuh.fit.goat.entity.embeddable.Contact;
 import jakarta.validation.constraints.NotNull;
 import lombok.Data;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -15,14 +16,16 @@ import java.util.List;
 public class RecruiterUpdateRequest {
     @NotNull(message = "Account ID is required")
     private Long accountId;
-
     private String username;
     private String fullName;
     private String email;
     private String phone;
-    private List<Address> addresses;
+    private String addresses;
     private LocalDate dob;
     private Gender gender;
+    private String headline;
+    private String bio;
     private String position;
-    private String avatar;
+    private MultipartFile avatar;
+    private MultipartFile coverPhoto;
 }

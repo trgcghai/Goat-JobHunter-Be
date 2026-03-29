@@ -42,7 +42,6 @@ public class UserServiceImpl implements UserService {
     @Autowired
     private final BlogService blogService;
     private final InterviewService interviewService;
-    private final ResumeService resumeService;
     private final RedisService redisService;
     private final EmailNotificationService emailNotificationService;
     private final JobService jobService;

@@ -273,6 +273,7 @@ public class AuthServiceImpl implements AuthService {
             applicant.setEmail(request.getEmail());
             applicant.setPassword(hashPassword);
             applicant.setPhone(request.getPhone());
+            applicant.setGender(request.getGender());
             applicant.setRole(this.roleService.handleGetRoleByName(Role.APPLICANT.getValue()));
 
             // create applicant to save to database
@@ -306,6 +307,7 @@ public class AuthServiceImpl implements AuthService {
             recruiter.setPassword(hashPassword);
             recruiter.setPhone(request.getPhone());
             recruiter.setCompany(company);
+            recruiter.setGender(request.getGender());
             recruiter.setRole(this.roleService.handleGetRoleByName(Role.RECRUITER.getValue()));
 
             // create recruiter to save to database
@@ -346,8 +348,8 @@ public class AuthServiceImpl implements AuthService {
         FileUploadUtil.assertAllowed(request.getLogo());
         FileUploadUtil.assertAllowed(request.getCoverPhoto());
 
-        String logoUrl = BasicUtil.uploadImage(request.getLogo(), "company-logos", storageService);
-        String coverPhotoUrl = BasicUtil.uploadImage(request.getCoverPhoto(), "company-cover-photos", storageService);
+        String logoUrl = BasicUtil.uploadImage(request.getLogo(), "company-logos", this.storageService);
+        String coverPhotoUrl = BasicUtil.uploadImage(request.getCoverPhoto(), "company-cover-photos", this.storageService);
         String hashPassword = this.passwordEncoder.encode(request.getPassword());
 
         List<Address> addressList;

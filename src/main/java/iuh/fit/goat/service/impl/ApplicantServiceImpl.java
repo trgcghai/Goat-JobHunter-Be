@@ -4,9 +4,11 @@ import iuh.fit.goat.dto.request.applicant.ApplicantUpdateRequest;
 import iuh.fit.goat.dto.response.applicant.ApplicantResponse;
 import iuh.fit.goat.dto.response.ResultPaginationResponse;
 import iuh.fit.goat.dto.response.user.UserResponse;
+import iuh.fit.goat.enumeration.Gender;
 import iuh.fit.goat.exception.InvalidException;
 import iuh.fit.goat.service.ApplicantService;
 import iuh.fit.goat.service.RoleService;
+import iuh.fit.goat.service.StorageService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -15,7 +17,10 @@ import org.springframework.stereotype.Service;
 import iuh.fit.goat.entity.*;
 import iuh.fit.goat.repository.*;
 import iuh.fit.goat.util.*;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.File;
+import java.io.IOException;
 import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -23,24 +28,27 @@ import java.util.stream.Collectors;
 @Service
 @RequiredArgsConstructor
 public class ApplicantServiceImpl implements ApplicantService {
+    private final StorageService storageService;
+    private final RoleService roleService;
+
     private final ApplicantRepository applicantRepository;
     private final AddressRepository addressRepository;
-    private final RoleService roleService;
+
     private final String applicantRole = "APPLICANT";
 
     @Override
-    public Applicant handleCreateApplicant(Applicant applicant) {
-        Role role;
-        if (applicant.getRole() != null) {
-            role = this.roleService.handleGetRoleById(applicant.getRole().getRoleId());
-        } else {
-            role = this.roleService.handleGetRoleByName(applicantRole);
-        }
-        applicant.setRole(role);
+    public Applicant handleCreateApplicant(Applicant applicant) throws InvalidException {
         applicant.setEnabled(false);
-
         if (applicant.getAvatar() == null) {
-            applicant.setAvatar(FileUploadUtil.AVATAR + applicant.getUsername());
+            try {
+                MultipartFile multipartFile = BasicUtil.convertToMultipartFile(
+                        applicant.getGender() == Gender.MALE ? FileUploadUtil.AVATAR_MALE : FileUploadUtil.AVATAR_FEMALE
+                );
+                String avatarUrl = BasicUtil.uploadImage(multipartFile, "avatars", this.storageService);
+                applicant.setAvatar(avatarUrl);
+            } catch (IOException | InvalidException e) {
+                throw new InvalidException("Failed to set default avatar");
+            }
         }
 
         return this.applicantRepository.save(applicant);
