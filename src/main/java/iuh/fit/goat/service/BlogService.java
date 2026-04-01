@@ -30,7 +30,7 @@ public interface BlogService {
 
     void handleIncrementTotalCommentValue(Comment comment);
 
-    void handleIncrementTotalLikeValue(LikeBlogRequest likeBlogRequest);
+    void handleIncrementTotalLikeValue(Long blogId, boolean liked);
 
     void handleIncrementTotalReadValue(Long blogId, String guestId);
 

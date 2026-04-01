@@ -3,7 +3,7 @@ package iuh.fit.goat.util.validation;
 import iuh.fit.goat.common.ActionType;
 import iuh.fit.goat.common.Role;
 import iuh.fit.goat.dto.request.blog.BlogIdsRequest;
-import iuh.fit.goat.entity.User;
+import iuh.fit.goat.entity.Account;
 import iuh.fit.goat.service.UserService;
 import iuh.fit.goat.util.SecurityUtil;
 import iuh.fit.goat.util.annotation.RequireReasonIfAdmin;
@@ -24,10 +24,10 @@ public class RequireBlogReasonIfAdminValidator implements ConstraintValidator<Re
         String currentEmail = SecurityUtil.getCurrentUserLogin().orElse(null);
         if (currentEmail == null) return true;
 
-        User currentUser = this.userService.handleGetUserByEmail(currentEmail);
-        if (currentUser == null) return true;
+        Account currentAccount = this.userService.handleGetAccountByEmail(currentEmail);
+        if (currentAccount == null) return true;
 
-        boolean isAdmin = currentUser.getRole().getName().equalsIgnoreCase(Role.ADMIN.getValue());
+        boolean isAdmin = currentAccount.getRole().getName().equalsIgnoreCase(Role.ADMIN.getValue());
         ActionType mode = request.getMode();
 
         if (!isAdmin) {

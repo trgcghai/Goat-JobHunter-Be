@@ -8,6 +8,7 @@ import iuh.fit.goat.service.RecruiterService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -17,9 +18,9 @@ import org.springframework.web.bind.annotation.*;
 public class RecruiterController {
     private final RecruiterService recruiterService;
 
-    @PutMapping
+    @PutMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<RecruiterResponse> updateRecruiter(
-            @Valid @RequestBody RecruiterUpdateRequest updateRequest
+            @Valid @ModelAttribute RecruiterUpdateRequest updateRequest
     ) throws InvalidException {
 
         Recruiter updatedRecruiter = this.recruiterService.handleUpdateRecruiter(updateRequest);

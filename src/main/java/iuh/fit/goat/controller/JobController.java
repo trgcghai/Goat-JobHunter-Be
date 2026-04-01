@@ -93,6 +93,14 @@ public class JobController {
         return ResponseEntity.status(HttpStatus.OK).body(result);
     }
 
+    @GetMapping("/related")
+    public ResponseEntity<ResultPaginationResponse> getAllRelatedJobs(
+            @Filter Specification<Job> spec, Pageable pageable
+    ) {
+        ResultPaginationResponse result = this.jobService.handleGetAllJobs(spec, pageable);
+        return ResponseEntity.status(HttpStatus.OK).body(result);
+    }
+
     @GetMapping("/available")
     public ResponseEntity<ResultPaginationResponse> getAllAvailableJobs(
             @Filter Specification<Job> spec, Pageable pageable

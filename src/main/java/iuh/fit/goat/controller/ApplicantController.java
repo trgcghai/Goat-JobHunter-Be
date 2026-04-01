@@ -6,6 +6,7 @@ import iuh.fit.goat.util.SecurityUtil;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -19,9 +20,9 @@ import iuh.fit.goat.service.*;
 public class ApplicantController {
     private final ApplicantService applicantService;
 
-    @PutMapping
+    @PutMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<ApplicantResponse> updateApplicant(
-            @Valid @RequestBody ApplicantUpdateRequest updateRequest
+            @Valid @ModelAttribute ApplicantUpdateRequest updateRequest
     ) throws InvalidException
     {
         Applicant updatedApplicant = this.applicantService.handleUpdateApplicant(updateRequest);

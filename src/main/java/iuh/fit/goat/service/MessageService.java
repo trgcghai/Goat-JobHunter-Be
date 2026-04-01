@@ -2,8 +2,8 @@ package iuh.fit.goat.service;
 
 import iuh.fit.goat.common.MessageEvent;
 import iuh.fit.goat.dto.request.message.MessageCreateRequest;
+import iuh.fit.goat.entity.Account;
 import iuh.fit.goat.entity.Message;
-import iuh.fit.goat.entity.User;
 import iuh.fit.goat.exception.InvalidException;
 import org.springframework.data.domain.Pageable;
 import org.springframework.web.multipart.MultipartFile;
@@ -16,9 +16,9 @@ public interface  MessageService {
 
     List<Message> getMessagesByChatRoom(Long chatRoomId, Pageable pageable);
 
-    Message sendMessage(Long chatRoomId, MessageCreateRequest request, User currentUser) throws InvalidException;
+    Message sendMessage(Long chatRoomId, MessageCreateRequest request, Account currentAccount) throws InvalidException;
 
-    List<Message> sendMessagesWithFiles(Long chatRoomId, MessageCreateRequest request, List<MultipartFile> files, User currentUser) throws InvalidException;
+    List<Message> sendMessagesWithFiles(Long chatRoomId, MessageCreateRequest request, List<MultipartFile> files, Account currentAccount) throws InvalidException;
 
     void sendMessageToUsers(Long chatRoomId, Message message);
 
@@ -26,5 +26,5 @@ public interface  MessageService {
 
     List<Message> getFileMessagesByChatRoom(Long chatRoomId, Pageable pageable) throws InvalidException;
 
-    Message createAndSendSystemMessage(Long chatRoomId, MessageEvent type, User actor, Object... params);
+    Message createAndSendSystemMessage(Long chatRoomId, MessageEvent type, Account actor, Object... params);
 }

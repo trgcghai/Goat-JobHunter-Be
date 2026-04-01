@@ -9,9 +9,9 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 
 public interface ApplicantService {
-    Applicant handleCreateApplicant(Applicant applicant);
+    Applicant handleCreateApplicant(Applicant applicant) throws InvalidException;
 
-    Applicant handleUpdateApplicant(ApplicantUpdateRequest updateRequest);
+    Applicant handleUpdateApplicant(ApplicantUpdateRequest updateRequest) throws InvalidException;
 
     Applicant handleGetApplicantById(long id);
 

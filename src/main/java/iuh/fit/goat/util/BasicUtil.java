@@ -3,8 +3,11 @@ package iuh.fit.goat.util;
 import iuh.fit.goat.dto.response.StorageResponse;
 import iuh.fit.goat.exception.InvalidException;
 import iuh.fit.goat.service.StorageService;
+import org.springframework.core.io.ClassPathResource;
+import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
 import java.security.SecureRandom;
 import java.util.regex.Pattern;
 
@@ -27,6 +30,16 @@ public class BasicUtil {
             throw new InvalidException("Failed to upload file");
         }
         return response.getUrl();
+    }
+
+    public static MultipartFile convertToMultipartFile(String image) throws IOException {
+        ClassPathResource resource = new ClassPathResource("images/" + image);
+        return new MockMultipartFile(
+                "file",
+                image,
+                "image/png",
+                resource.getInputStream()
+        );
     }
 
     public static String detectMimeType(String url) throws InvalidException {

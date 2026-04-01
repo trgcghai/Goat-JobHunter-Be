@@ -10,6 +10,7 @@ import iuh.fit.goat.repository.UserRepository;
 import iuh.fit.goat.service.BlogService;
 import iuh.fit.goat.service.CommentService;
 import iuh.fit.goat.service.NotificationService;
+import iuh.fit.goat.util.EntityUtil;
 import iuh.fit.goat.util.SecurityUtil;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -145,13 +146,14 @@ public class CommentServiceImpl implements CommentService {
         }
 
         if(comment.getCommentedBy() != null) {
-            String name = comment.getCommentedBy() instanceof User
-                    ? ((User) comment.getCommentedBy()).getFullName()
-                    : ((Company) comment.getCommentedBy()).getName();
+            Account realAccount = EntityUtil.unproxy(comment.getCommentedBy());
+            String name = realAccount instanceof Company
+                    ? ((Company) realAccount).getName()
+                    : ((User) realAccount).getFullName();
 
-            String avatar = comment.getCommentedBy() instanceof User
-                    ? ((User) comment.getCommentedBy()).getAvatar()
-                    : ((Company) comment.getCommentedBy()).getLogo();
+            String avatar = realAccount instanceof Company
+                    ? ((Company) realAccount).getLogo()
+                    : ((User) realAccount).getAvatar();
             
             CommentResponse.UserCommented commentedBy = new CommentResponse.UserCommented(
                     comment.getCommentedBy().getAccountId(),
@@ -163,13 +165,14 @@ public class CommentServiceImpl implements CommentService {
         }
 
         if(comment.getParent() != null) {
-            String name = comment.getParent().getCommentedBy() instanceof User
-                    ? ((User) comment.getParent().getCommentedBy()).getFullName()
-                    : ((Company) comment.getParent().getCommentedBy()).getName();
+            Account realAccount = EntityUtil.unproxy( comment.getParent().getCommentedBy());
+            String name = realAccount instanceof Company
+                    ? ((Company) realAccount).getName()
+                    : ((User) realAccount).getFullName();
 
-            String avatar = comment.getParent().getCommentedBy() instanceof User
-                    ? ((User) comment.getParent().getCommentedBy()).getAvatar()
-                    : ((Company) comment.getParent().getCommentedBy()).getLogo();
+            String avatar = realAccount instanceof Company
+                    ? ((Company) realAccount).getLogo()
+                    : ((User) realAccount).getAvatar();
 
             CommentResponse.ParentComment parent = new CommentResponse.ParentComment(
                     comment.getParent().getCommentId(),

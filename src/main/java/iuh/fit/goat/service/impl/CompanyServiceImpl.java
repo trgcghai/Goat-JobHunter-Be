@@ -69,7 +69,7 @@ public class CompanyServiceImpl implements CompanyService {
         if(request.getOvertimePolicy() != null) company.setOvertimePolicy(request.getOvertimePolicy());
 
         if(request.getLogo() != null) {
-            String logoUrl = BasicUtil.uploadImage(request.getLogo(), "company-logos", storageService);
+            String logoUrl = BasicUtil.uploadImage(request.getLogo(), "company-logos", this.storageService);
 
             if(company.getLogo() != null) {
                 String oldKey = company.getLogo().split(".amazonaws.com/")[1];
@@ -229,6 +229,7 @@ public class CompanyServiceImpl implements CompanyService {
         companyResponse.setAccountId(company.getAccountId());
         companyResponse.setEmail(company.getEmail());
         companyResponse.setName(company.getName());
+        companyResponse.setUsername(company.getUsername());
         companyResponse.setDescription(company.getDescription());
         companyResponse.setLogo(company.getLogo());
         companyResponse.setCoverPhoto(company.getCoverPhoto());

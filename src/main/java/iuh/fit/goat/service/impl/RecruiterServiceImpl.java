@@ -1,18 +1,27 @@
 package iuh.fit.goat.service.impl;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import iuh.fit.goat.dto.request.recruiter.RecruiterUpdateRequest;
 import iuh.fit.goat.dto.response.recruiter.RecruiterResponse;
 import iuh.fit.goat.dto.response.user.UserResponse;
 import iuh.fit.goat.entity.Address;
 import iuh.fit.goat.entity.Recruiter;
 import iuh.fit.goat.entity.Role;
+import iuh.fit.goat.enumeration.Gender;
+import iuh.fit.goat.exception.InvalidException;
 import iuh.fit.goat.repository.*;
 import iuh.fit.goat.service.RecruiterService;
 import iuh.fit.goat.service.RoleService;
+import iuh.fit.goat.service.StorageService;
+import iuh.fit.goat.util.BasicUtil;
 import iuh.fit.goat.util.FileUploadUtil;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
 import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -20,66 +29,86 @@ import java.util.stream.Collectors;
 @Service
 @RequiredArgsConstructor
 public class RecruiterServiceImpl implements RecruiterService {
+    private final StorageService storageService;
+
     private final RecruiterRepository recruiterRepository;
     private final AddressRepository addressRepository;
-    private final RoleService roleService;
+
+    private final ObjectMapper mapper;
     private final String HR = "HR";
 
     @Override
-    public Recruiter handleCreateRecruiter(Recruiter recruiter) {
-        Role role;
-        if(recruiter.getRole() != null) {
-            role = this.roleService.handleGetRoleById(recruiter.getRole().getRoleId());
-        } else {
-            role = this.roleService.handleGetRoleByName(HR);
-        }
-        recruiter.setRole(role);
+    public Recruiter handleCreateRecruiter(Recruiter recruiter) throws InvalidException {
         recruiter.setEnabled(false);
-
-        if(recruiter.getAvatar() == null) {
-            recruiter.setAvatar(FileUploadUtil.AVATAR + recruiter.getUsername());
+        if (recruiter.getAvatar() == null) {
+            try {
+                MultipartFile multipartFile = BasicUtil.convertToMultipartFile(
+                        recruiter.getGender() == Gender.MALE ? FileUploadUtil.AVATAR_MALE : FileUploadUtil.AVATAR_FEMALE
+                );
+                String avatarUrl = BasicUtil.uploadImage(multipartFile, "avatars", this.storageService);
+                recruiter.setAvatar(avatarUrl);
+            } catch (IOException | InvalidException e) {
+                throw new InvalidException("Failed to set default avatar");
+            }
         }
 
         return this.recruiterRepository.save(recruiter);
     }
 
     @Override
-    public Recruiter handleUpdateRecruiter(RecruiterUpdateRequest updateRequest) {
+    public Recruiter handleUpdateRecruiter(RecruiterUpdateRequest updateRequest) throws InvalidException {
         Recruiter currentRecruiter = this.handleGetRecruiterById(updateRequest.getAccountId());
+        if (currentRecruiter == null) return null;
 
-        if (currentRecruiter == null) {
-            return null;
+        if (updateRequest.getUsername() != null) currentRecruiter.setUsername(updateRequest.getUsername());
+        if (updateRequest.getFullName() != null) currentRecruiter.setFullName(updateRequest.getFullName());
+        if (updateRequest.getEmail() != null) currentRecruiter.setEmail(updateRequest.getEmail());
+        if (updateRequest.getPhone() != null) currentRecruiter.setPhone(updateRequest.getPhone());
+        if (updateRequest.getDob() != null) currentRecruiter.setDob(updateRequest.getDob());
+        if (updateRequest.getGender() != null) currentRecruiter.setGender(updateRequest.getGender());
+        if (updateRequest.getHeadline() != null) currentRecruiter.setHeadline(updateRequest.getHeadline());
+        if (updateRequest.getBio() != null) currentRecruiter.setBio(updateRequest.getBio());
+        if (updateRequest.getPosition() != null) currentRecruiter.setPosition(updateRequest.getPosition());
+
+        if(updateRequest.getAvatar() != null) {
+            String avatarUrl = BasicUtil.uploadImage(updateRequest.getAvatar(), "avatars", this.storageService);
+            if(currentRecruiter.getAvatar() != null) {
+                String oldKey = currentRecruiter.getAvatar().split(".amazonaws.com/")[1];
+                this.storageService.handleDeleteFile(oldKey);
+            }
+            currentRecruiter.setAvatar(avatarUrl);
+        }
+        if(updateRequest.getCoverPhoto() != null) {
+            String coverPhotoUrl = BasicUtil.uploadImage(updateRequest.getCoverPhoto(), "user-cover-photos", this.storageService);
+            if(currentRecruiter.getCoverPhoto() != null) {
+                String oldKey = currentRecruiter.getCoverPhoto().split(".amazonaws.com/")[1];
+                this.storageService.handleDeleteFile(oldKey);
+            }
+            currentRecruiter.setCoverPhoto(coverPhotoUrl);
         }
 
-        if (updateRequest.getUsername() != null) {
-            currentRecruiter.setUsername(updateRequest.getUsername());
-        }
-        if (updateRequest.getFullName() != null) {
-            currentRecruiter.setFullName(updateRequest.getFullName());
-        }
-        if (updateRequest.getEmail() != null) {
-            currentRecruiter.setEmail(updateRequest.getEmail());
-        }
-        if (updateRequest.getPhone() != null) {
-            currentRecruiter.setPhone(updateRequest.getPhone());
-        }
-        // Handle addresses
-        if (updateRequest.getAddresses() != null) {
-            List<Address> currentAddresses = currentRecruiter.getAddresses();
-            List<Address> requestAddresses = updateRequest.getAddresses();
+        if(updateRequest.getAddresses() != null) {
+            List<Address> addressList;
+            try {
+                addressList = this.mapper.readValue(
+                        updateRequest.getAddresses(),
+                        new TypeReference<List<Address>>() {}
+                );
+            } catch (JsonProcessingException e) {
+                throw new InvalidException("Invalid address format");
+            }
 
-            // Map current address theo addressId
-            Map<Long, Address> currentMap = currentAddresses.stream()
+            List<Address> addresses = currentRecruiter.getAddresses();
+            Map<Long, Address> currentMap = addresses.stream()
                     .collect(Collectors.toMap(Address::getAddressId, Function.identity()));
 
-            // Lấy danh sách addressId từ request
-            Set<Long> requestIds = requestAddresses.stream()
+            Set<Long> requestIds = addressList.stream()
                     .map(Address::getAddressId)
                     .filter(id -> id > 0)
                     .collect(Collectors.toSet());
 
             /* ================= DELETE ================= */
-            Iterator<Address> iterator = currentAddresses.iterator();
+            Iterator<Address> iterator = addresses.iterator();
             while (iterator.hasNext()) {
                 Address addr = iterator.next();
                 if (!requestIds.contains(addr.getAddressId())) {
@@ -89,7 +118,7 @@ public class RecruiterServiceImpl implements RecruiterService {
             }
 
             /* ================= UPDATE & CREATE ================= */
-            for (Address reqAddr : requestAddresses) {
+            for (Address reqAddr : addressList) {
                 // ===== UPDATE =====
                 if (reqAddr.getAddressId() > 0 && currentMap.containsKey(reqAddr.getAddressId())) {
                     Address currentAddr = currentMap.get(reqAddr.getAddressId());
@@ -100,27 +129,16 @@ public class RecruiterServiceImpl implements RecruiterService {
                         currentAddr.setFullAddress(reqAddr.getFullAddress());
                     }
                 }
+
                 // ===== CREATE =====
                 else if (reqAddr.getProvince() != null && reqAddr.getFullAddress() != null) {
                     Address newAddress = new Address();
                     newAddress.setProvince(reqAddr.getProvince());
                     newAddress.setFullAddress(reqAddr.getFullAddress());
                     newAddress.setAccount(currentRecruiter);
-                    currentAddresses.add(newAddress);
+                    addresses.add(newAddress);
                 }
             }
-        }
-        if (updateRequest.getDob() != null) {
-            currentRecruiter.setDob(updateRequest.getDob());
-        }
-        if (updateRequest.getGender() != null) {
-            currentRecruiter.setGender(updateRequest.getGender());
-        }
-        if (updateRequest.getPosition() != null) {
-            currentRecruiter.setPosition(updateRequest.getPosition());
-        }
-        if (updateRequest.getAvatar() != null) {
-            currentRecruiter.setAvatar(updateRequest.getAvatar());
         }
 
         return this.recruiterRepository.save(currentRecruiter);

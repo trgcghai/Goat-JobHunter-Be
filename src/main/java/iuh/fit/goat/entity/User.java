@@ -25,7 +25,6 @@ import static jakarta.persistence.FetchType.LAZY;
 @ToString(callSuper = true, exclude = {
         "sentFriendRequests",
         "receivedFriendRequests",
-        "memberships",
         "reviews"}
 )
 @JsonTypeInfo(
@@ -63,14 +62,6 @@ public class User extends Account {
             condition = "deleted_at IS NULL"
     )
     private List<Friendship> receivedFriendRequests = new ArrayList<>();
-
-    @OneToMany(mappedBy = "user", fetch = LAZY, cascade = {PERSIST, MERGE})
-    @JsonIgnore
-    @Filter(
-            name = "activeChatMemberFilter",
-            condition = "deleted_at IS NULL"
-    )
-    private List<ChatMember> memberships = new ArrayList<>();
 
     @OneToMany(mappedBy = "user", fetch = LAZY, cascade = {PERSIST, MERGE})
     @JsonIgnore

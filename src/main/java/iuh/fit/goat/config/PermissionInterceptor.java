@@ -1,5 +1,6 @@
 package iuh.fit.goat.config;
 
+import iuh.fit.goat.entity.Account;
 import iuh.fit.goat.entity.Permission;
 import iuh.fit.goat.entity.Role;
 import iuh.fit.goat.entity.User;
@@ -32,9 +33,9 @@ public class PermissionInterceptor implements HandlerInterceptor {
 
         String email = SecurityUtil.getCurrentUserLogin().isPresent() ? SecurityUtil.getCurrentUserLogin().get() : "";
         if(!email.isEmpty()) {
-            User user = this.userService.handleGetUserByEmail(email);
-            if(user != null) {
-                Role role = user.getRole();
+            Account account = this.userService.handleGetAccountByEmail(email);
+            if(account != null) {
+                Role role = account.getRole();
 
                 log.info("Check role of user: {}", role);
 
@@ -44,7 +45,7 @@ public class PermissionInterceptor implements HandlerInterceptor {
                         return true;
                     }
 
-                    List<Permission> permissions = user.getRole().getPermissions();
+                    List<Permission> permissions = account.getRole().getPermissions();
                     boolean hasPermission = permissions.stream().anyMatch(
                             p -> p.getApiPath().equals(path) && p.getMethod().equals(method)
                     );

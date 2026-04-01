@@ -11,9 +11,17 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
+import java.util.Optional;
 
 @Repository
 public interface BlogRepository extends JpaRepository<Blog, Long>, JpaSpecificationExecutor<Blog> {
+
+    Optional<Blog> findByBlogIdAndDeletedAtIsNull(Long blogId);
+
+    List<Blog> findByBlogIdIn(List<Long> blogIds);
+
+    @Query("SELECT b FROM Blog b LEFT JOIN FETCH b.author WHERE b.enabled = true")
+    Page<Blog> findAllAvailableWithAuthor(Specification<Blog> spec, Pageable pageable);
 
     @Query("""
         select t as tag, count(t) as count
@@ -24,9 +32,4 @@ public interface BlogRepository extends JpaRepository<Blog, Long>, JpaSpecificat
         limit 15
     """)
     List<Object[]> findAllTags(@Param("keyword") String keyword);
-
-    List<Blog> findByBlogIdIn(List<Long> blogIds);
-
-    @Query("SELECT b FROM Blog b LEFT JOIN FETCH b.author WHERE b.enabled = true")
-    Page<Blog> findAllAvailableWithAuthor(Specification<Blog> spec, Pageable pageable);
 }
