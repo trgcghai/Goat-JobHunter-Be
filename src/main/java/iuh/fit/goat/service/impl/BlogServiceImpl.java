@@ -172,14 +172,14 @@ public class BlogServiceImpl implements BlogService {
     }
 
     @Override
-    public void handleIncrementTotalLikeValue(LikeBlogRequest likeBlogRequest) {
-        int incrementVal = likeBlogRequest.isLiked() ? 1 : -1;
-        Blog blog = this.handleGetBlogById(likeBlogRequest.getBlogId());
+    public void handleIncrementTotalLikeValue(Long blogId, boolean liked) {
+        int incrementVal = liked ? 1 : -1;
+        Blog blog = this.handleGetBlogById(blogId);
         long newTotalLikes = blog.getActivity().getTotalLikes() + incrementVal;
         blog.getActivity().setTotalLikes(Math.max(newTotalLikes, 0));
         Blog updatedBlog = this.blogRepository.save(blog);
 
-        if (likeBlogRequest.isLiked()) {
+        if (liked) {
             this.notificationService.handleNotifyLikeBlog(updatedBlog);
         }
     }
@@ -188,7 +188,7 @@ public class BlogServiceImpl implements BlogService {
     public void handleIncrementTotalReadValue(Long blogId, String guestId) {
         String currentEmail = SecurityUtil.getCurrentUserLogin().isPresent()
                 ? SecurityUtil.getCurrentUserLogin().get() : "";
-        Account currentAccount = this.userService.handleGetAccountByEmail(currentEmail);
+        Account currentAccount = this.accountRepository.findByEmailAndDeletedAtIsNull(currentEmail).orElse(null);
 
         String viewer = currentAccount != null ? "User" + currentAccount.getAccountId() : "Guest" + guestId;
         String key = "view:blog:" + blogId + ":" + viewer;
