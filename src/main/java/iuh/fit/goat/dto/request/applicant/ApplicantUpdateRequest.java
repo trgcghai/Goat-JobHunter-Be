@@ -27,7 +27,7 @@ public class ApplicantUpdateRequest {
     private Gender gender;
     private Education education;
     private Level level;
-    private boolean availableStatus;
+    private Boolean availableStatus;
     private String headline;
     private String bio;
     private MultipartFile avatar;

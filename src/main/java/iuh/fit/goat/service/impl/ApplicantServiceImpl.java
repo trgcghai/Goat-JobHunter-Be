@@ -70,7 +70,7 @@ public class ApplicantServiceImpl implements ApplicantService {
         if (updateRequest.getGender() != null)  currentApplicant.setGender(updateRequest.getGender());
         if (updateRequest.getEducation() != null) currentApplicant.setEducation(updateRequest.getEducation());
         if (updateRequest.getLevel() != null) currentApplicant.setLevel(updateRequest.getLevel());
-        if (updateRequest.isAvailableStatus() != currentApplicant.isAvailableStatus()) currentApplicant.setAvailableStatus(updateRequest.isAvailableStatus());
+        if (updateRequest.getAvailableStatus() != null) currentApplicant.setAvailableStatus(updateRequest.getAvailableStatus());
         if (updateRequest.getHeadline() != null) currentApplicant.setHeadline(updateRequest.getHeadline());
         if (updateRequest.getBio() != null) currentApplicant.setBio(updateRequest.getBio());
 
