@@ -20,6 +20,7 @@ public class CompanyResponse {
     private long accountId;
     private String email;
     private String name;
+    private String username;
     private String description;
     private String logo;
     private String coverPhoto;

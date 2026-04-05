@@ -80,7 +80,7 @@ public class UserController {
     @GetMapping("/me")
     public <T extends Account> ResponseEntity<T> getCurrentUserByEmail() {
         String email = SecurityUtil.getCurrentUserLogin().isPresent() ? SecurityUtil.getCurrentUserLogin().get() : null;
-        Account account = this.userService.handleGetUserByEmail(email);
+        Account account = this.userService.handleGetAccountByEmail(email);
         return ResponseEntity.status(HttpStatus.OK).body((T) account);
     }
 

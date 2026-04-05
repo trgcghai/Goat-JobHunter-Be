@@ -23,20 +23,12 @@ public class UserDetailCustom implements UserDetailsService {
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
         // Thử tìm User trước
-        User user = this.userService.handleGetUserByEmail(username);
+        Account account = this.userService.handleGetAccountByEmail(username);
         Company company = null;
 
-        // Nếu không phải User thì thử tìm Company
-        if (user == null) {
-            company = this.companyService.handleGetCompanyByEmail(username);
-        }
-
-        // Kiểm tra tồn tại
-        if (user == null && company == null) {
+        if (account == null) {
             throw new UsernameNotFoundException("Account not found: " + username);
         }
-
-        Account account = user != null ? user : company;
 
         return new org.springframework.security.core.userdetails.User(
                 account.getEmail(),
