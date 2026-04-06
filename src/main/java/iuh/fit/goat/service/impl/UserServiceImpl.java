@@ -127,101 +127,101 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public boolean handleCheckCurrentPassword(String currentPassword) {
-        String currentEmail = SecurityUtil.getCurrentUserLogin().isPresent() ?
-                SecurityUtil.getCurrentUserLogin().get() : "";
-
-        if (!currentEmail.isEmpty()) {
-            Account currentAccount = this.accountRepository.findByEmailAndDeletedAtIsNull(currentEmail).orElse(null);
-            assert currentAccount != null;
-            return this.passwordEncoder.matches(currentPassword, currentAccount.getPassword());
+        String currentEmail = SecurityUtil.getCurrentUserEmail();
+        if (currentEmail.isEmpty()) {
+            return false;
         }
 
-        return false;
+        Account currentAccount = this.accountRepository.findByEmailAndDeletedAtIsNull(currentEmail).orElse(null);
+        if (currentAccount == null) {
+            return false;
+        }
+
+        return this.passwordEncoder.matches(currentPassword, currentAccount.getPassword());
     }
 
     @Override
     public Map<String, Object> handleUpdatePassword(String newPassword, String refreshToken) throws InvalidException {
-        String currentEmail = SecurityUtil.getCurrentUserLogin().isPresent() ?
-                SecurityUtil.getCurrentUserLogin().get() : "";
-
-        if (!currentEmail.isEmpty()) {
-            Account currentAccount = this.accountRepository.findByEmailAndDeletedAtIsNull(currentEmail)
-                    .orElseThrow(() -> new InvalidException("User not found"));
-            String hashedPassword = this.passwordEncoder.encode(newPassword);
-            currentAccount.setPassword(hashedPassword);
-            Account res = this.accountRepository.save(currentAccount);
-
-            LoginResponse loginResponse = new LoginResponse();
-
-            // Thông tin chung của Account
-            loginResponse.setAccountId(res.getAccountId());
-            loginResponse.setEmail(res.getEmail());
-            loginResponse.setUsername(Objects.requireNonNullElse(res.getUsername(), ""));
-            loginResponse.setAvatar(Objects.requireNonNullElse(res.getAvatar(), ""));
-            loginResponse.setEnabled(res.isEnabled());
-            loginResponse.setAddresses(Objects.requireNonNullElse(res.getAddresses(), new ArrayList<>()));
-
-            if (res.getRole() != null) {
-                loginResponse.setRole(
-                        new LoginResponse.RoleAccount(res.getRole().getRoleId(), res.getRole().getName())
-                );
-            }
-
-            // Thông tin riêng của User
-            if (res instanceof User user) {
-                loginResponse.setPhone(user.getPhone());
-                loginResponse.setDob(user.getDob());
-                loginResponse.setAddresses(user.getAddresses());
-                loginResponse.setGender(user.getGender());
-                loginResponse.setFullName(Objects.requireNonNullElse(user.getFullName(), ""));
-                loginResponse.setType(user instanceof Applicant ? iuh.fit.goat.common.Role.APPLICANT.getValue() : iuh.fit.goat.common.Role.RECRUITER.getValue());
-
-                // Nếu như là Recruiter thì mới có company
-                if (user instanceof Recruiter recruiter) {
-                    LoginResponse.UserCompany userCompany = new LoginResponse.UserCompany(
-                            recruiter.getCompany().getAccountId(),
-                            recruiter.getCompany().getName()
-                    );
-                    loginResponse.setCompany(userCompany);
-                }
-            }
-            // Thông tin riêng của Company
-            else if (res instanceof Company company) {
-                loginResponse.setPhone(company.getPhone());
-                loginResponse.setAddresses(company.getAddresses());
-                loginResponse.setName(Objects.requireNonNullElse(company.getName(), ""));
-                loginResponse.setType(iuh.fit.goat.common.Role.COMPANY.getValue());
-                loginResponse.setDescription(company.getDescription());
-                loginResponse.setLogo(company.getLogo());
-                loginResponse.setCoverPhoto(company.getCoverPhoto());
-                loginResponse.setWebsite(company.getWebsite());
-                loginResponse.setSize(company.getSize());
-                loginResponse.setVerified(company.isVerified());
-                loginResponse.setCountry(company.getCountry());
-                loginResponse.setIndustry(company.getIndustry());
-                loginResponse.setWorkingDays(company.getWorkingDays());
-                loginResponse.setOvertimePolicy(company.getOvertimePolicy());
-            }
-
-            String newAccessToken = this.securityUtil.createAccessToken(currentEmail, loginResponse);
-            String newRefreshToken = this.securityUtil.createRefreshToken(currentEmail, loginResponse);
-            this.redisService.replaceKey(
-                    "refresh:" + refreshToken,
-                    "refresh:" + newRefreshToken,
-                    currentEmail, jwtRefreshToken, TimeUnit.SECONDS
-
-            );
-
-            Map<String, Object> response = new HashMap<>();
-            response.put("loginResponse", loginResponse);
-            response.put("refreshToken", newRefreshToken);
-            response.put("accessToken", newAccessToken);
-
-            return response;
+        String currentEmail = SecurityUtil.getCurrentUserEmail();
+        if (currentEmail.isEmpty()) {
+            throw new InvalidException("User not authenticated");
         }
 
-        return null;
+        Account currentAccount = this.accountRepository.findByEmailAndDeletedAtIsNull(currentEmail)
+                .orElseThrow(() -> new InvalidException("User not found"));
+        String hashedPassword = this.passwordEncoder.encode(newPassword);
+        currentAccount.setPassword(hashedPassword);
+        Account res = this.accountRepository.save(currentAccount);
+
+        LoginResponse loginResponse = new LoginResponse();
+
+        // Thông tin chung của Account
+        loginResponse.setAccountId(res.getAccountId());
+        loginResponse.setEmail(res.getEmail());
+        loginResponse.setUsername(Objects.requireNonNullElse(res.getUsername(), ""));
+        loginResponse.setAvatar(Objects.requireNonNullElse(res.getAvatar(), ""));
+        loginResponse.setEnabled(res.isEnabled());
+        loginResponse.setAddresses(Objects.requireNonNullElse(res.getAddresses(), new ArrayList<>()));
+
+        if (res.getRole() != null) {
+            loginResponse.setRole(
+                    new LoginResponse.RoleAccount(res.getRole().getRoleId(), res.getRole().getName())
+            );
+        }
+
+        // Thông tin riêng của User
+        if (res instanceof User user) {
+            loginResponse.setPhone(user.getPhone());
+            loginResponse.setDob(user.getDob());
+            loginResponse.setAddresses(user.getAddresses());
+            loginResponse.setGender(user.getGender());
+            loginResponse.setFullName(Objects.requireNonNullElse(user.getFullName(), ""));
+            loginResponse.setType(user instanceof Applicant ? iuh.fit.goat.common.Role.APPLICANT.getValue() : iuh.fit.goat.common.Role.RECRUITER.getValue());
+
+            // Nếu như là Recruiter thì mới có company
+            if (user instanceof Recruiter recruiter) {
+                LoginResponse.UserCompany userCompany = new LoginResponse.UserCompany(
+                        recruiter.getCompany().getAccountId(),
+                        recruiter.getCompany().getName()
+                );
+                loginResponse.setCompany(userCompany);
+            }
+        }
+        // Thông tin riêng của Company
+        else if (res instanceof Company company) {
+            loginResponse.setPhone(company.getPhone());
+            loginResponse.setAddresses(company.getAddresses());
+            loginResponse.setName(Objects.requireNonNullElse(company.getName(), ""));
+            loginResponse.setType(iuh.fit.goat.common.Role.COMPANY.getValue());
+            loginResponse.setDescription(company.getDescription());
+            loginResponse.setLogo(company.getLogo());
+            loginResponse.setCoverPhoto(company.getCoverPhoto());
+            loginResponse.setWebsite(company.getWebsite());
+            loginResponse.setSize(company.getSize());
+            loginResponse.setVerified(company.isVerified());
+            loginResponse.setCountry(company.getCountry());
+            loginResponse.setIndustry(company.getIndustry());
+            loginResponse.setWorkingDays(company.getWorkingDays());
+            loginResponse.setOvertimePolicy(company.getOvertimePolicy());
+        }
+
+        String newAccessToken = this.securityUtil.createAccessToken(currentEmail, loginResponse);
+        String newRefreshToken = this.securityUtil.createRefreshToken(currentEmail, loginResponse);
+        this.redisService.replaceKey(
+                "refresh:" + refreshToken,
+                "refresh:" + newRefreshToken,
+                currentEmail, jwtRefreshToken, TimeUnit.SECONDS
+
+        );
+
+        Map<String, Object> response = new HashMap<>();
+        response.put("loginResponse", loginResponse);
+        response.put("refreshToken", newRefreshToken);
+        response.put("accessToken", newAccessToken);
+
+        return response;
     }
+
 
     @Override
     public void handleResetPassword(ResetPasswordRequest resetPasswordRequest) throws InvalidException {
