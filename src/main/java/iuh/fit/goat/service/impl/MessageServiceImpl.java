@@ -2,11 +2,16 @@ package iuh.fit.goat.service.impl;
 
 import iuh.fit.goat.common.Role;
 import iuh.fit.goat.common.MessageEvent;
+import iuh.fit.goat.dto.request.message.ForwardMessageRequest;
 import iuh.fit.goat.dto.request.message.MessageCreateRequest;
+import iuh.fit.goat.dto.response.message.ForwardMessageFailureResponse;
+import iuh.fit.goat.dto.response.message.ForwardMessageResponse;
+import iuh.fit.goat.dto.response.message.ForwardMessageSuccessResponse;
 import iuh.fit.goat.dto.response.message.MessageDeletedEventResponse;
 import iuh.fit.goat.dto.response.message.MessageResponse;
 import iuh.fit.goat.dto.response.StorageResponse;
 import iuh.fit.goat.entity.Account;
+import iuh.fit.goat.entity.ChatMember;
 import iuh.fit.goat.entity.Company;
 import iuh.fit.goat.entity.Message;
 import iuh.fit.goat.entity.User;
@@ -16,6 +21,7 @@ import iuh.fit.goat.exception.ConflictException;
 import iuh.fit.goat.exception.InvalidException;
 import iuh.fit.goat.exception.NotFoundException;
 import iuh.fit.goat.exception.PermissionException;
+import iuh.fit.goat.repository.ChatMemberRepository;
 import iuh.fit.goat.repository.ChatRoomRepository;
 import iuh.fit.goat.repository.MessageRepository;
 import iuh.fit.goat.service.MessageService;
@@ -42,8 +48,10 @@ public class MessageServiceImpl implements MessageService {
 
     private final MessageRepository messageRepository;
     private final ChatRoomRepository chatRoomRepository;
+    private final ChatMemberRepository chatMemberRepository;
 
     private static final long MAX_FILE_SIZE = 20 * 1024 * 1024; // 20MB
+    private static final int MAX_FORWARD_TARGETS = 20;
     private static final String MESSAGE_DELETED_EVENT = "MESSAGE_DELETED";
     private final SimpMessagingTemplate messagingTemplate;
 
@@ -119,6 +127,8 @@ public class MessageServiceImpl implements MessageService {
                 .content(request.getContent())
                 .messageType(MessageType.TEXT)
                 .isHidden(false)
+                .isForwarded(false)
+                .originalMessageId(null)
                 .createdAt(now)
                 .updatedAt(now)
                 .build();
@@ -310,6 +320,102 @@ public class MessageServiceImpl implements MessageService {
     }
 
     @Override
+    public ForwardMessageResponse forwardMessage(
+            Long sourceChatRoomId,
+            String messageId,
+            ForwardMessageRequest request,
+            Account currentAccount
+    ) throws InvalidException, NotFoundException, PermissionException {
+        if (sourceChatRoomId == null) {
+            throw new InvalidException("Source chat room ID cannot be null");
+        }
+        if (messageId == null || messageId.isBlank()) {
+            throw new InvalidException("Message ID cannot be blank");
+        }
+        if (currentAccount == null) {
+            throw new InvalidException("Current account is invalid");
+        }
+
+        List<Long> targetChatRoomIds = normalizeTargetChatRoomIds(request);
+
+        this.chatRoomRepository.findById(sourceChatRoomId)
+                .orElseThrow(() -> new NotFoundException("Source chat room not found"));
+
+        if (!isUserInChatRoom(sourceChatRoomId, currentAccount.getAccountId())) {
+            throw new PermissionException("Current user is not a member of source chat room");
+        }
+
+        Message sourceMessage = this.messageRepository
+                .findByChatRoomIdAndMessageId(sourceChatRoomId.toString(), messageId)
+                .orElseThrow(() -> new NotFoundException("Source message not found"));
+
+        validateForwardableSourceMessage(sourceMessage);
+
+        List<ForwardMessageSuccessResponse> successes = new ArrayList<>();
+        List<ForwardMessageFailureResponse> failures = new ArrayList<>();
+
+        for (Long targetChatRoomId : targetChatRoomIds) {
+            if (Objects.equals(targetChatRoomId, sourceChatRoomId)) {
+                failures.add(buildForwardFailure(
+                        targetChatRoomId,
+                        "TARGET_EQUALS_SOURCE",
+                        "Cannot forward message to source chat room"
+                ));
+                continue;
+            }
+
+            if (this.chatRoomRepository.findById(targetChatRoomId).isEmpty()) {
+                failures.add(buildForwardFailure(
+                        targetChatRoomId,
+                        "TARGET_NOT_FOUND",
+                        "Target chat room not found"
+                ));
+                continue;
+            }
+
+            if (!isUserInChatRoom(targetChatRoomId, currentAccount.getAccountId())) {
+                failures.add(buildForwardFailure(
+                        targetChatRoomId,
+                        "TARGET_FORBIDDEN",
+                        "Current user is not a member of target chat room"
+                ));
+                continue;
+            }
+
+            try {
+                Message forwardedMessage = createForwardedMessage(sourceMessage, targetChatRoomId, currentAccount);
+                Message savedMessage = this.messageRepository.saveMessage(forwardedMessage);
+                sendMessageToUsers(targetChatRoomId, savedMessage);
+
+                successes.add(ForwardMessageSuccessResponse.builder()
+                        .targetChatRoomId(targetChatRoomId)
+                        .message(MessageMapper.toResponse(savedMessage))
+                        .build());
+            } catch (RuntimeException e) {
+                log.error("Failed to forward messageId={} to chatRoomId={}", messageId, targetChatRoomId, e);
+                failures.add(buildForwardFailure(
+                        targetChatRoomId,
+                        "FORWARD_FAILED",
+                        "Failed to forward message"
+                ));
+            }
+        }
+
+        log.info("Forward message completed: sourceChatRoomId={}, messageId={}, success={}, failed={}",
+                sourceChatRoomId, messageId, successes.size(), failures.size());
+
+        return ForwardMessageResponse.builder()
+                .sourceChatRoomId(sourceChatRoomId)
+                .sourceMessageId(messageId)
+                .totalTargets(targetChatRoomIds.size())
+                .successCount(successes.size())
+                .failedCount(failures.size())
+                .successes(successes)
+                .failures(failures)
+                .build();
+    }
+
+    @Override
     public MessageDeletedEventResponse deleteMessagePermanently(Long chatRoomId, String messageId, Account currentAccount)
             throws InvalidException, NotFoundException, PermissionException {
         if (chatRoomId == null) {
@@ -387,6 +493,8 @@ public class MessageServiceImpl implements MessageService {
                 .content(content)
                 .messageType(MessageType.SYSTEM)
                 .isHidden(false)
+                .isForwarded(false)
+                .originalMessageId(null)
                 .createdAt(now)
                 .updatedAt(now)
                 .build();
@@ -464,6 +572,29 @@ public class MessageServiceImpl implements MessageService {
                 .content(fileUrl)
                 .messageType(messageType)
                 .isHidden(false)
+                .isForwarded(false)
+                .originalMessageId(null)
+                .createdAt(now)
+                .updatedAt(now)
+                .build();
+    }
+
+    private Message createForwardedMessage(Message sourceMessage, Long targetChatRoomId, Account currentAccount) {
+        String forwardedMessageId = generateMessageId();
+        Instant now = Instant.now();
+        long timestamp = now.toEpochMilli();
+
+        return Message.builder()
+                .messageSk(Message.buildMessageSk(timestamp, forwardedMessageId))
+                .chatRoomId(targetChatRoomId.toString())
+                .messageId(forwardedMessageId)
+                .sender(buildSenderInfo(currentAccount))
+                .content(sourceMessage.getContent())
+                .messageType(sourceMessage.getMessageType())
+                .replyTo(null)
+                .isHidden(false)
+                .isForwarded(true)
+                .originalMessageId(sourceMessage.getMessageId())
                 .createdAt(now)
                 .updatedAt(now)
                 .build();
@@ -516,6 +647,58 @@ public class MessageServiceImpl implements MessageService {
                 || messageType == MessageType.VIDEO
                 || messageType == MessageType.AUDIO
                 || messageType == MessageType.FILE;
+    }
+
+    private boolean isUserInChatRoom(Long chatRoomId, Long accountId) {
+        List<ChatMember> members = this.chatMemberRepository.findByRoomRoomIdAndDeletedAtIsNull(chatRoomId);
+        return members.stream()
+                .anyMatch(member -> member.getAccount() != null
+                        && Objects.equals(member.getAccount().getAccountId(), accountId));
+    }
+
+    private List<Long> normalizeTargetChatRoomIds(ForwardMessageRequest request) throws InvalidException {
+        if (request == null || request.getTargetChatRoomIds() == null || request.getTargetChatRoomIds().isEmpty()) {
+            throw new InvalidException("At least one target chat room ID is required");
+        }
+
+        LinkedHashSet<Long> deduplicated = new LinkedHashSet<>();
+        for (Long chatRoomId : request.getTargetChatRoomIds()) {
+            if (chatRoomId != null) {
+                deduplicated.add(chatRoomId);
+            }
+        }
+
+        if (deduplicated.isEmpty()) {
+            throw new InvalidException("At least one valid target chat room ID is required");
+        }
+
+        if (deduplicated.size() > MAX_FORWARD_TARGETS) {
+            throw new InvalidException("Cannot forward to more than " + MAX_FORWARD_TARGETS + " chat rooms at once");
+        }
+
+        return new ArrayList<>(deduplicated);
+    }
+
+    private void validateForwardableSourceMessage(Message sourceMessage) throws InvalidException {
+        if (Boolean.TRUE.equals(sourceMessage.getIsHidden())) {
+            throw new InvalidException("Cannot forward a revoked message");
+        }
+
+        if (sourceMessage.getMessageType() == MessageType.SYSTEM) {
+            throw new InvalidException("System messages cannot be forwarded");
+        }
+
+        if (sourceMessage.getContent() == null || sourceMessage.getContent().isBlank()) {
+            throw new InvalidException("Cannot forward an empty message");
+        }
+    }
+
+    private ForwardMessageFailureResponse buildForwardFailure(Long targetChatRoomId, String code, String message) {
+        return ForwardMessageFailureResponse.builder()
+                .targetChatRoomId(targetChatRoomId)
+                .code(code)
+                .message(message)
+                .build();
     }
 
     private String extractStorageKey(String content) {

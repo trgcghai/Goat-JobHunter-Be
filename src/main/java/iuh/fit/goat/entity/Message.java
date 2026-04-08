@@ -29,6 +29,8 @@ public class Message {
     private MessageType messageType;
     private String replyTo;
     private Boolean isHidden;
+    private Boolean isForwarded;
+    private String originalMessageId;
     private Instant createdAt;
     private Instant updatedAt;
 
@@ -78,6 +80,16 @@ public class Message {
     @DynamoDbAttribute("isHidden")
     public Boolean getIsHidden() {
         return isHidden;
+    }
+
+    @DynamoDbAttribute("isForwarded")
+    public Boolean getIsForwarded() {
+        return isForwarded;
+    }
+
+    @DynamoDbAttribute("originalMessageId")
+    public String getOriginalMessageId() {
+        return originalMessageId;
     }
 
     @DynamoDbAttribute("createdAt")
