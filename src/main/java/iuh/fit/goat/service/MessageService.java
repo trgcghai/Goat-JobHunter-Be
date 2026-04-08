@@ -2,6 +2,7 @@ package iuh.fit.goat.service;
 
 import iuh.fit.goat.common.MessageEvent;
 import iuh.fit.goat.dto.request.message.MessageCreateRequest;
+import iuh.fit.goat.dto.response.message.MessageDeletedEventResponse;
 import iuh.fit.goat.entity.Account;
 import iuh.fit.goat.entity.Message;
 import iuh.fit.goat.exception.ConflictException;
@@ -31,6 +32,9 @@ public interface  MessageService {
 
     Message revokeMessage(Long chatRoomId, String messageId, Account currentAccount)
             throws InvalidException, NotFoundException, ConflictException, PermissionException;
+
+    MessageDeletedEventResponse deleteMessagePermanently(Long chatRoomId, String messageId, Account currentAccount)
+            throws InvalidException, NotFoundException, PermissionException;
 
     Message createAndSendSystemMessage(Long chatRoomId, MessageEvent type, Account actor, Object... params);
 }
