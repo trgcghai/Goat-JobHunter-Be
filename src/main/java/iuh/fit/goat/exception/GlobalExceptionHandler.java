@@ -73,6 +73,26 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
     }
 
+    @ExceptionHandler(NotFoundException.class)
+    ResponseEntity<RestResponse<Object>> handleNotFoundException(NotFoundException e) {
+        RestResponse<Object> response = new RestResponse<Object>();
+        response.setStatusCode(HttpStatus.NOT_FOUND.value());
+        response.setMessage(e.getMessage());
+        response.setError("Not Found");
+
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
+    }
+
+    @ExceptionHandler(ConflictException.class)
+    ResponseEntity<RestResponse<Object>> handleConflictException(ConflictException e) {
+        RestResponse<Object> response = new RestResponse<Object>();
+        response.setStatusCode(HttpStatus.CONFLICT.value());
+        response.setMessage(e.getMessage());
+        response.setError("Conflict");
+
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(response);
+    }
+
     @ExceptionHandler(StorageException.class)
     ResponseEntity<RestResponse<Object>> handleUploadFileException(StorageException e){
         RestResponse<Object> response = new RestResponse<Object>();

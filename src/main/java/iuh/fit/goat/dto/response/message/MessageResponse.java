@@ -14,7 +14,6 @@ import java.time.Instant;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-@JsonInclude(JsonInclude.Include.NON_NULL)
 public class MessageResponse {
     private String messageId;
     private String chatRoomId;

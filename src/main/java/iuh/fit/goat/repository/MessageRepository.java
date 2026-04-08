@@ -118,6 +118,35 @@ public class MessageRepository {
         return Optional.empty();
     }
 
+    /**
+     * Find a message by chat room and message ID.
+     */
+    public Optional<Message> findByChatRoomIdAndMessageId(String chatRoomId, String messageId) {
+        if (chatRoomId == null || chatRoomId.isBlank() || messageId == null || messageId.isBlank()) {
+            return Optional.empty();
+        }
+
+        QueryConditional queryConditional = QueryConditional
+                .keyEqualTo(Key.builder()
+                        .partitionValue(chatRoomId)
+                        .build());
+
+        QueryEnhancedRequest queryRequest = QueryEnhancedRequest.builder()
+                .queryConditional(queryConditional)
+                .scanIndexForward(false)
+                .build();
+
+        Iterator<Message> results = messageTable.query(queryRequest).items().iterator();
+        while (results.hasNext()) {
+            Message message = results.next();
+            if (messageId.equals(message.getMessageId())) {
+                return Optional.of(message);
+            }
+        }
+
+        return Optional.empty();
+    }
+
     // ========== Message Operations ==========
 
     public Message saveMessage(Message message) {

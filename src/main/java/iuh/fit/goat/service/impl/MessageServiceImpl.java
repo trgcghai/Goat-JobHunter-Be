@@ -10,7 +10,10 @@ import iuh.fit.goat.entity.Message;
 import iuh.fit.goat.entity.User;
 import iuh.fit.goat.entity.embeddable.SenderInfo;
 import iuh.fit.goat.enumeration.MessageType;
+import iuh.fit.goat.exception.ConflictException;
 import iuh.fit.goat.exception.InvalidException;
+import iuh.fit.goat.exception.NotFoundException;
+import iuh.fit.goat.exception.PermissionException;
 import iuh.fit.goat.repository.ChatRoomRepository;
 import iuh.fit.goat.repository.MessageRepository;
 import iuh.fit.goat.service.MessageService;
@@ -78,7 +81,7 @@ public class MessageServiceImpl implements MessageService {
         List<Message> messages = messageRepository.findMessagesByChatRoom(
                 chatRoomId.toString(),
                 requestedSize,
-                false // Don't include hidden messages
+                true // include hidden messages
         );
 
         log.info("Retrieved {} messages for chatRoom: {}", messages.size(), chatRoomId);
@@ -256,6 +259,42 @@ public class MessageServiceImpl implements MessageService {
     }
 
     @Override
+    public Message revokeMessage(Long chatRoomId, String messageId, Account currentAccount)
+            throws InvalidException, NotFoundException, ConflictException, PermissionException {
+        this.chatRoomRepository.findById(chatRoomId)
+                .orElseThrow(() -> new NotFoundException("Chat room not found"));
+
+        Message message = this.messageRepository
+                .findByChatRoomIdAndMessageId(chatRoomId.toString(), messageId)
+                .orElseThrow(() -> new NotFoundException("Message not found"));
+
+        if (Boolean.TRUE.equals(message.getIsHidden())) {
+            throw new ConflictException("Message has already been revoked");
+        }
+
+        Long senderAccountId = extractSenderAccountId(message);
+        if (senderAccountId == null) {
+            throw new InvalidException("Message sender information is missing");
+        }
+
+        if (!Objects.equals(senderAccountId, currentAccount.getAccountId())) {
+            throw new PermissionException("Only sender can revoke this message");
+        }
+
+        message.setIsHidden(true);
+        message.setContent(null);
+        message.setUpdatedAt(Instant.now());
+
+        Message revokedMessage = this.messageRepository.saveMessage(message);
+        sendMessageToUsers(chatRoomId, revokedMessage);
+
+        log.info("Message revoked: messageId={}, chatRoomId={}, byAccountId={}",
+                messageId, chatRoomId, currentAccount.getAccountId());
+
+        return revokedMessage;
+    }
+
+    @Override
     public Message createAndSendSystemMessage(
             Long chatRoomId,
             MessageEvent type,
@@ -363,6 +402,23 @@ public class MessageServiceImpl implements MessageService {
 
     private String generateMessageId() {
         return "msg_" + UUID.randomUUID().toString().replace("-", "");
+    }
+
+    private Long extractSenderAccountId(Message message) {
+        if (message.getSender() != null && message.getSender().getAccountId() != null) {
+            return message.getSender().getAccountId();
+        }
+
+        String senderId = message.getSenderId();
+        if (senderId == null || senderId.isBlank()) {
+            return null;
+        }
+
+        try {
+            return Long.parseLong(senderId);
+        } catch (NumberFormatException e) {
+            return null;
+        }
     }
 
     private SenderInfo buildSenderInfo(Account account) {
