@@ -775,16 +775,16 @@ public class ChatRoomServiceImpl implements ChatRoomService {
             return new LastMessageInfo("", null, false);
         }
 
-        String content = resolveMessageContent(lastMessage);
+        String content = resolveMessageContent(lastMessage, currentUserEmail);
         LocalDateTime time = convertToLocalDateTime(lastMessage.getCreatedAt());
         boolean isCurrentUserSender = isMessageFromCurrentUser(lastMessage, currentUserEmail);
 
         return new LastMessageInfo(content, time, isCurrentUserSender);
     }
 
-    private String resolveMessageContent(Message message) {
-        if (message.getIsHidden()) {
-            return "Tin nhắn đã được ẩn.";
+    private String resolveMessageContent(Message message, String currentUserEmail) {
+        if (Boolean.TRUE.equals(message.getIsHidden())) {
+            return "Tin nhắn đã được thu hồi";
         }
         return formatMessageContent(message);
     }
