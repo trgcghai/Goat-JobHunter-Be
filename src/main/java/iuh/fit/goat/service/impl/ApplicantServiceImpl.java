@@ -10,6 +10,7 @@ import iuh.fit.goat.dto.response.user.UserResponse;
 import iuh.fit.goat.enumeration.Gender;
 import iuh.fit.goat.exception.InvalidException;
 import iuh.fit.goat.service.ApplicantService;
+import iuh.fit.goat.service.ProfileRealtimeService;
 import iuh.fit.goat.service.RoleService;
 import iuh.fit.goat.service.StorageService;
 import lombok.RequiredArgsConstructor;
@@ -32,6 +33,7 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class ApplicantServiceImpl implements ApplicantService {
     private final StorageService storageService;
+    private final ProfileRealtimeService profileRealtimeService;
 
     private final ApplicantRepository applicantRepository;
     private final AddressRepository addressRepository;
@@ -145,7 +147,16 @@ public class ApplicantServiceImpl implements ApplicantService {
             }
         }
 
-        return this.applicantRepository.save(currentApplicant);
+        Applicant savedApplicant = this.applicantRepository.save(currentApplicant);
+        Applicant latestApplicant = this.applicantRepository.findById(savedApplicant.getAccountId()).orElse(savedApplicant);
+
+        String currentEmail = SecurityUtil.getCurrentUserEmail();
+        if (currentEmail != null && !currentEmail.isBlank()) {
+            ApplicantResponse payload = this.convertToApplicantResponse(latestApplicant);
+            this.profileRealtimeService.emitUserProfileUpdated(currentEmail, "APPLICANT", payload);
+        }
+
+        return latestApplicant;
     }
 
     @Override
