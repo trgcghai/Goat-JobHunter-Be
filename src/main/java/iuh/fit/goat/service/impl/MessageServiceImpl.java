@@ -1,7 +1,9 @@
 package iuh.fit.goat.service.impl;
 
+import iuh.fit.goat.common.Role;
 import iuh.fit.goat.common.MessageEvent;
 import iuh.fit.goat.dto.request.message.MessageCreateRequest;
+import iuh.fit.goat.dto.response.message.MessageDeletedEventResponse;
 import iuh.fit.goat.dto.response.message.MessageResponse;
 import iuh.fit.goat.dto.response.StorageResponse;
 import iuh.fit.goat.entity.Account;
@@ -27,6 +29,8 @@ import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.time.Instant;
 import java.util.*;
 
@@ -40,6 +44,7 @@ public class MessageServiceImpl implements MessageService {
     private final ChatRoomRepository chatRoomRepository;
 
     private static final long MAX_FILE_SIZE = 20 * 1024 * 1024; // 20MB
+    private static final String MESSAGE_DELETED_EVENT = "MESSAGE_DELETED";
     private final SimpMessagingTemplate messagingTemplate;
 
     // ========== PUBLIC API METHODS ==========
@@ -261,6 +266,16 @@ public class MessageServiceImpl implements MessageService {
     @Override
     public Message revokeMessage(Long chatRoomId, String messageId, Account currentAccount)
             throws InvalidException, NotFoundException, ConflictException, PermissionException {
+        if (chatRoomId == null) {
+            throw new InvalidException("Chat room ID cannot be null");
+        }
+        if (messageId == null || messageId.isBlank()) {
+            throw new InvalidException("Message ID cannot be blank");
+        }
+        if (currentAccount == null) {
+            throw new InvalidException("Current account is invalid");
+        }
+
         this.chatRoomRepository.findById(chatRoomId)
                 .orElseThrow(() -> new NotFoundException("Chat room not found"));
 
@@ -292,6 +307,60 @@ public class MessageServiceImpl implements MessageService {
                 messageId, chatRoomId, currentAccount.getAccountId());
 
         return revokedMessage;
+    }
+
+    @Override
+    public MessageDeletedEventResponse deleteMessagePermanently(Long chatRoomId, String messageId, Account currentAccount)
+            throws InvalidException, NotFoundException, PermissionException {
+        if (chatRoomId == null) {
+            throw new InvalidException("Chat room ID cannot be null");
+        }
+        if (messageId == null || messageId.isBlank()) {
+            throw new InvalidException("Message ID cannot be blank");
+        }
+        if (currentAccount == null) {
+            throw new InvalidException("Current account is invalid");
+        }
+
+        this.chatRoomRepository.findById(chatRoomId)
+                .orElseThrow(() -> new NotFoundException("Chat room not found"));
+
+        Message message = this.messageRepository
+                .findByChatRoomIdAndMessageId(chatRoomId.toString(), messageId)
+                .orElseThrow(() -> new NotFoundException("Message not found or already permanently deleted"));
+
+        Long senderAccountId = extractSenderAccountId(message);
+        boolean canDeleteAsAdmin = isSuperAdmin(currentAccount);
+        boolean canDeleteAsSender = senderAccountId != null && Objects.equals(senderAccountId, currentAccount.getAccountId());
+
+        if (!canDeleteAsAdmin && !canDeleteAsSender) {
+            throw new PermissionException("Only sender or super admin can permanently delete this message");
+        }
+
+        cleanupMessageBinaryContent(message);
+
+        try {
+            this.messageRepository.deletePinnedMessage(chatRoomId.toString(), messageId);
+            this.messageRepository.deleteMessage(chatRoomId.toString(), message.getMessageSk());
+        } catch (RuntimeException e) {
+            log.error("Failed to permanently delete message: messageId={}, chatRoomId={}", messageId, chatRoomId, e);
+            throw new InvalidException("Failed to permanently delete message");
+        }
+
+        MessageDeletedEventResponse event = MessageDeletedEventResponse.builder()
+                .eventType(MESSAGE_DELETED_EVENT)
+                .chatRoomId(chatRoomId.toString())
+                .messageId(messageId)
+                .deletedByAccountId(currentAccount.getAccountId())
+                .deletedAt(Instant.now())
+                .build();
+
+        sendMessageDeletedEvent(chatRoomId, event);
+
+        log.info("Message permanently deleted: messageId={}, chatRoomId={}, byAccountId={}",
+                messageId, chatRoomId, currentAccount.getAccountId());
+
+        return event;
     }
 
     @Override
@@ -402,6 +471,69 @@ public class MessageServiceImpl implements MessageService {
 
     private String generateMessageId() {
         return "msg_" + UUID.randomUUID().toString().replace("-", "");
+    }
+
+    private void sendMessageDeletedEvent(Long chatRoomId, MessageDeletedEventResponse event) {
+        log.debug("Sending delete event to chatRoom: {}", chatRoomId);
+        messagingTemplate.convertAndSend("/topic/chatrooms/" + chatRoomId, event);
+    }
+
+    private boolean isSuperAdmin(Account account) {
+        return account.getRole() != null
+                && account.getRole().getName() != null
+                && Role.ADMIN.getValue().equalsIgnoreCase(account.getRole().getName());
+    }
+
+    private void cleanupMessageBinaryContent(Message message) throws InvalidException {
+        if (message == null || message.getMessageType() == null) {
+            return;
+        }
+
+        if (!isBinaryMessageType(message.getMessageType())) {
+            return;
+        }
+
+        String content = message.getContent();
+        if (content == null || content.isBlank()) {
+            return;
+        }
+
+        String key = extractStorageKey(content);
+        if (key == null || key.isBlank()) {
+            throw new InvalidException("Cannot determine storage key for deleting message content");
+        }
+
+        try {
+            this.storageService.handleDeleteFile(key);
+        } catch (Exception e) {
+            log.error("Failed to delete storage object for messageId={}", message.getMessageId(), e);
+            throw new InvalidException("Failed to delete message file from storage");
+        }
+    }
+
+    private boolean isBinaryMessageType(MessageType messageType) {
+        return messageType == MessageType.IMAGE
+                || messageType == MessageType.VIDEO
+                || messageType == MessageType.AUDIO
+                || messageType == MessageType.FILE;
+    }
+
+    private String extractStorageKey(String content) {
+        String trimmed = content.trim();
+        if (!(trimmed.startsWith("http://") || trimmed.startsWith("https://"))) {
+            return trimmed.startsWith("/") ? trimmed.substring(1) : trimmed;
+        }
+
+        try {
+            URI uri = new URI(trimmed);
+            String path = uri.getPath();
+            if (path == null || path.isBlank()) {
+                return null;
+            }
+            return path.startsWith("/") ? path.substring(1) : path;
+        } catch (URISyntaxException e) {
+            return null;
+        }
     }
 
     private Long extractSenderAccountId(Message message) {

@@ -6,6 +6,7 @@ import iuh.fit.goat.dto.request.message.MessageToNewChatRoom;
 import iuh.fit.goat.dto.response.ResultPaginationResponse;
 import iuh.fit.goat.dto.response.chat.ChatRoomResponse;
 import iuh.fit.goat.dto.response.chat.GroupMemberResponse;
+import iuh.fit.goat.dto.response.message.MessageDeletedEventResponse;
 import iuh.fit.goat.dto.response.message.MessageResponse;
 import iuh.fit.goat.entity.*;
 import iuh.fit.goat.exception.ConflictException;
@@ -320,6 +321,17 @@ public class ChatRoomController {
         Account currentAccount = getCurrentAccount();
         Message revokedMessage = this.messageService.revokeMessage(chatRoomId, messageId, currentAccount);
         return ResponseEntity.ok(MessageMapper.toResponse(revokedMessage));
+    }
+
+    @DeleteMapping("/{chatRoomId}/messages/{messageId}/permanent")
+    public ResponseEntity<MessageDeletedEventResponse> permanentlyDeleteMessage(
+            @PathVariable Long chatRoomId,
+            @PathVariable String messageId
+    ) throws InvalidException, NotFoundException, PermissionException {
+        Account currentAccount = getCurrentAccount();
+        MessageDeletedEventResponse response = this.messageService
+                .deleteMessagePermanently(chatRoomId, messageId, currentAccount);
+        return ResponseEntity.ok(response);
     }
 
     @GetMapping("/direct/exists")

@@ -161,4 +161,42 @@ public class MessageRepository {
             throw new RuntimeException("Failed to save message", e);
         }
     }
+
+    public void deleteMessage(String chatRoomId, String messageSk) {
+        if (chatRoomId == null || chatRoomId.isBlank() || messageSk == null || messageSk.isBlank()) {
+            throw new IllegalArgumentException("chatRoomId and messageSk are required");
+        }
+
+        try {
+            Key key = Key.builder()
+                    .partitionValue(chatRoomId)
+                    .sortValue(messageSk)
+                    .build();
+
+            messageTable.deleteItem(key);
+            log.info("Message deleted successfully: chatRoomId={}, SK={}", chatRoomId, messageSk);
+        } catch (Exception e) {
+            log.error("Error deleting message: chatRoomId={}, SK={}", chatRoomId, messageSk, e);
+            throw new RuntimeException("Failed to delete message", e);
+        }
+    }
+
+    public void deletePinnedMessage(String chatRoomId, String messageId) {
+        if (chatRoomId == null || chatRoomId.isBlank() || messageId == null || messageId.isBlank()) {
+            return;
+        }
+
+        try {
+            Key key = Key.builder()
+                    .partitionValue(chatRoomId)
+                    .sortValue(messageId)
+                    .build();
+
+            pinnedMessageTable.deleteItem(key);
+            log.debug("Pinned message cleaned up: chatRoomId={}, messageId={}", chatRoomId, messageId);
+        } catch (Exception e) {
+            log.error("Error cleaning pinned message: chatRoomId={}, messageId={}", chatRoomId, messageId, e);
+            throw new RuntimeException("Failed to cleanup pinned message", e);
+        }
+    }
 }
