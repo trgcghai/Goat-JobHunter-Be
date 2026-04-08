@@ -77,7 +77,7 @@ public class MessageRepository {
     }
 
     /**
-     * Find the last (newest) visible message in a chat room.
+     * Find the last (newest) non-system message in a chat room.
      */
     public Optional<Message> findLastMessageByConversation(String chatRoomId) {
         try {
@@ -102,15 +102,44 @@ public class MessageRepository {
         QueryEnhancedRequest queryRequest = QueryEnhancedRequest.builder()
                 .queryConditional(queryConditional)
                 .scanIndexForward(false)
-                .limit(5) // Get top 5 to skip hidden messages
+            .limit(10) // Get enough rows to skip system messages
                 .build();
 
         Iterator<Message> results = messageTable.query(queryRequest).items().iterator();
 
         while (results.hasNext()) {
             Message message = results.next();
-            // Skip hidden messages
-            if (!Boolean.TRUE.equals(message.getIsHidden()) && message.getMessageType() != MessageType.SYSTEM) {
+            // Keep hidden (revoked) messages for preview, skip system messages only
+            if (message.getMessageType() != MessageType.SYSTEM) {
+                return Optional.of(message);
+            }
+        }
+
+        return Optional.empty();
+    }
+
+    /**
+     * Find a message by chat room and message ID.
+     */
+    public Optional<Message> findByChatRoomIdAndMessageId(String chatRoomId, String messageId) {
+        if (chatRoomId == null || chatRoomId.isBlank() || messageId == null || messageId.isBlank()) {
+            return Optional.empty();
+        }
+
+        QueryConditional queryConditional = QueryConditional
+                .keyEqualTo(Key.builder()
+                        .partitionValue(chatRoomId)
+                        .build());
+
+        QueryEnhancedRequest queryRequest = QueryEnhancedRequest.builder()
+                .queryConditional(queryConditional)
+                .scanIndexForward(false)
+                .build();
+
+        Iterator<Message> results = messageTable.query(queryRequest).items().iterator();
+        while (results.hasNext()) {
+            Message message = results.next();
+            if (messageId.equals(message.getMessageId())) {
                 return Optional.of(message);
             }
         }

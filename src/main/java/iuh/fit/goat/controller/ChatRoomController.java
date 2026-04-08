@@ -8,7 +8,10 @@ import iuh.fit.goat.dto.response.chat.ChatRoomResponse;
 import iuh.fit.goat.dto.response.chat.GroupMemberResponse;
 import iuh.fit.goat.dto.response.message.MessageResponse;
 import iuh.fit.goat.entity.*;
+import iuh.fit.goat.exception.ConflictException;
 import iuh.fit.goat.exception.InvalidException;
+import iuh.fit.goat.exception.NotFoundException;
+import iuh.fit.goat.exception.PermissionException;
 import iuh.fit.goat.service.AccountService;
 import iuh.fit.goat.service.ChatRoomService;
 import iuh.fit.goat.service.MessageService;
@@ -307,6 +310,16 @@ public class ChatRoomController {
 
         throw new InvalidException("At least one file or text content is required");
 //        return this.messageService.sendMessage(id, request, currentUser);
+    }
+
+    @DeleteMapping("/{chatRoomId}/messages/{messageId}")
+    public ResponseEntity<MessageResponse> revokeMessage(
+            @PathVariable Long chatRoomId,
+            @PathVariable String messageId
+    ) throws InvalidException, NotFoundException, ConflictException, PermissionException {
+        Account currentAccount = getCurrentAccount();
+        Message revokedMessage = this.messageService.revokeMessage(chatRoomId, messageId, currentAccount);
+        return ResponseEntity.ok(MessageMapper.toResponse(revokedMessage));
     }
 
     @GetMapping("/direct/exists")
