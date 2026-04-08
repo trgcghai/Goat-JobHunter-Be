@@ -5,9 +5,11 @@ import iuh.fit.goat.dto.request.company.CompanyUpdateRequest;
 import iuh.fit.goat.dto.response.ResultPaginationResponse;
 import iuh.fit.goat.dto.response.company.CompanyResponse;
 import iuh.fit.goat.dto.response.job.JobResponse;
+import iuh.fit.goat.entity.Account;
 import iuh.fit.goat.entity.Company;
 import iuh.fit.goat.entity.Job;
 import iuh.fit.goat.exception.InvalidException;
+import iuh.fit.goat.exception.PermissionException;
 import iuh.fit.goat.service.CompanyService;
 import iuh.fit.goat.service.JobService;
 import iuh.fit.goat.service.UserService;
@@ -26,6 +28,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.regex.Pattern;
 
 @RestController
@@ -60,16 +63,29 @@ public class CompanyController {
     @PutMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<CompanyResponse> updateCompany(
             @Valid @ModelAttribute CompanyUpdateRequest request
-    ) throws InvalidException {
+    ) throws InvalidException, PermissionException {
+
+        String currentEmail = SecurityUtil.getCurrentUserEmail();
+        if (currentEmail == null || currentEmail.isBlank()) {
+            throw new PermissionException("User not authenticated");
+        }
+
+        Account currentAccount = this.userService.handleGetAccountByEmail(currentEmail);
+        if (currentAccount == null) {
+            throw new PermissionException("User not authenticated");
+        }
+        if (!Objects.equals(currentAccount.getAccountId(), request.getAccountId())) {
+            throw new PermissionException("You can only update your own profile");
+        }
 
         Company updatedCompany = this.companyService.handleUpdateCompany(request);
-
-        if (updatedCompany != null) {
-            CompanyResponse response = this.companyService.convertToCompanyResponse(updatedCompany);
-            return ResponseEntity.status(HttpStatus.OK).body(response);
-        } else {
+        if (updatedCompany == null) {
             throw new InvalidException("Company not found");
         }
+
+        CompanyResponse response = this.companyService.convertToCompanyResponse(updatedCompany);
+
+        return ResponseEntity.status(HttpStatus.OK).body(response);
     }
 
     @DeleteMapping("/{id}")

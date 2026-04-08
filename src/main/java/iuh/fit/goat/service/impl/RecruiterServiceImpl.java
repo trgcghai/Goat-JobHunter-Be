@@ -12,11 +12,13 @@ import iuh.fit.goat.entity.Role;
 import iuh.fit.goat.enumeration.Gender;
 import iuh.fit.goat.exception.InvalidException;
 import iuh.fit.goat.repository.*;
+import iuh.fit.goat.service.ProfileRealtimeService;
 import iuh.fit.goat.service.RecruiterService;
 import iuh.fit.goat.service.RoleService;
 import iuh.fit.goat.service.StorageService;
 import iuh.fit.goat.util.BasicUtil;
 import iuh.fit.goat.util.FileUploadUtil;
+import iuh.fit.goat.util.SecurityUtil;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
@@ -30,6 +32,7 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class RecruiterServiceImpl implements RecruiterService {
     private final StorageService storageService;
+    private final ProfileRealtimeService profileRealtimeService;
 
     private final RecruiterRepository recruiterRepository;
     private final AddressRepository addressRepository;
@@ -141,7 +144,16 @@ public class RecruiterServiceImpl implements RecruiterService {
             }
         }
 
-        return this.recruiterRepository.save(currentRecruiter);
+        Recruiter savedRecruiter = this.recruiterRepository.save(currentRecruiter);
+        Recruiter latestRecruiter = this.recruiterRepository.findById(savedRecruiter.getAccountId()).orElse(savedRecruiter);
+
+        String currentEmail = SecurityUtil.getCurrentUserEmail();
+        if (currentEmail != null && !currentEmail.isBlank()) {
+            RecruiterResponse payload = this.convertToRecruiterResponse(latestRecruiter);
+            this.profileRealtimeService.emitUserProfileUpdated(currentEmail, "RECRUITER", payload);
+        }
+
+        return latestRecruiter;
     }
 
 
