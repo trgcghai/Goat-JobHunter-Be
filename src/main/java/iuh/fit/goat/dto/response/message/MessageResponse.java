@@ -1,6 +1,5 @@
 package iuh.fit.goat.dto.response.message;
 
-import com.fasterxml.jackson.annotation.JsonInclude;
 import iuh.fit.goat.entity.embeddable.SenderInfo;
 import iuh.fit.goat.enumeration.MessageType;
 import lombok.AllArgsConstructor;
@@ -22,6 +21,8 @@ public class MessageResponse {
     private MessageType messageType;
     private String replyTo;
     private Boolean isHidden;
+    private Boolean isForwarded;
+    private String originalMessageId;
     private Instant createdAt;
     private Instant updatedAt;
 }

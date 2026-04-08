@@ -1,11 +1,13 @@
 package iuh.fit.goat.controller;
 
 import iuh.fit.goat.dto.request.chat.*;
+import iuh.fit.goat.dto.request.message.ForwardMessageRequest;
 import iuh.fit.goat.dto.request.message.MessageCreateRequest;
 import iuh.fit.goat.dto.request.message.MessageToNewChatRoom;
 import iuh.fit.goat.dto.response.ResultPaginationResponse;
 import iuh.fit.goat.dto.response.chat.ChatRoomResponse;
 import iuh.fit.goat.dto.response.chat.GroupMemberResponse;
+import iuh.fit.goat.dto.response.message.ForwardMessageResponse;
 import iuh.fit.goat.dto.response.message.MessageDeletedEventResponse;
 import iuh.fit.goat.dto.response.message.MessageResponse;
 import iuh.fit.goat.entity.*;
@@ -331,6 +333,18 @@ public class ChatRoomController {
         Account currentAccount = getCurrentAccount();
         MessageDeletedEventResponse response = this.messageService
                 .deleteMessagePermanently(chatRoomId, messageId, currentAccount);
+        return ResponseEntity.ok(response);
+    }
+
+    @PostMapping("/{chatRoomId}/messages/{messageId}/forward")
+    public ResponseEntity<ForwardMessageResponse> forwardMessage(
+            @PathVariable Long chatRoomId,
+            @PathVariable String messageId,
+            @Valid @RequestBody ForwardMessageRequest request
+    ) throws InvalidException, NotFoundException, PermissionException {
+        Account currentAccount = getCurrentAccount();
+        ForwardMessageResponse response = this.messageService
+                .forwardMessage(chatRoomId, messageId, request, currentAccount);
         return ResponseEntity.ok(response);
     }
 
