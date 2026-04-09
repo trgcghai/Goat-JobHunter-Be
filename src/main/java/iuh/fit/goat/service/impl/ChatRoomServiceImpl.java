@@ -10,6 +10,8 @@ import iuh.fit.goat.dto.response.chat.GroupMemberResponse;
 import iuh.fit.goat.entity.*;
 import iuh.fit.goat.enumeration.ChatRole;
 import iuh.fit.goat.enumeration.ChatRoomType;
+import iuh.fit.goat.enumeration.Visibility;
+import iuh.fit.goat.exception.AccountPrivateException;
 import iuh.fit.goat.exception.InvalidException;
 import iuh.fit.goat.repository.AccountRepository;
 import iuh.fit.goat.repository.ChatMemberRepository;
@@ -147,6 +149,8 @@ public class ChatRoomServiceImpl implements ChatRoomService {
             return existingRoom.orElse(null);
         }
 
+        validateReceiverVisibilityForNewDirectChat(uReceiver);
+
         // Create and save chat room first (no members yet) to avoid transient reference
         ChatRoom chatRoom = new ChatRoom();
         chatRoom.setType(ChatRoomType.DIRECT);
@@ -207,6 +211,8 @@ public class ChatRoomServiceImpl implements ChatRoomService {
 
             return existingRoom.get();
         }
+
+        validateReceiverVisibilityForNewDirectChat(uReceiver);
 
         // Create new chat room
         ChatRoom chatRoom = new ChatRoom();
@@ -676,8 +682,25 @@ public class ChatRoomServiceImpl implements ChatRoomService {
         return account.getUsername();
     }
 
+    private void validateReceiverVisibilityForNewDirectChat(Account receiver) throws AccountPrivateException {
+        if (Visibility.PRIVATE.equals(receiver.getVisibility())) {
+            throw new AccountPrivateException("Cannot start a new conversation: receiver account is private");
+        }
+    }
+
     private Optional<ChatRoom> findExistingDirectChatRoom(Long userId1, Long userId2) {
-        return chatRoomRepository.findDirectChatRoomBetweenUsers(userId1, userId2);
+        List<ChatRoom> directRooms = this.chatRoomRepository
+                .findDirectChatRoomsBetweenUsersOrderByLatest(userId1, userId2);
+
+        if (directRooms.size() > 1) {
+            log.warn("Detected {} direct chat rooms between accounts {} and {}. Returning latest room {}",
+                    directRooms.size(),
+                    userId1,
+                    userId2,
+                    directRooms.get(0).getRoomId());
+        }
+
+        return directRooms.stream().findFirst();
     }
 
     private ChatRoomResponse mapToChatRoomResponse(ChatRoom chatRoom) {

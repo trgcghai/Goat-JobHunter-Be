@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import iuh.fit.goat.entity.Address;
 import iuh.fit.goat.enumeration.CompanySize;
 import iuh.fit.goat.enumeration.Gender;
+import iuh.fit.goat.enumeration.Visibility;
 import lombok.*;
 
 import java.time.LocalDate;
@@ -27,6 +28,7 @@ public class LoginResponse {
     private String avatar;
     private String type;
     private boolean enabled;
+    private Visibility visibility;
     private RoleAccount role;
     private UserCompany company;
 

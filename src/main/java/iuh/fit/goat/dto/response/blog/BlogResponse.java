@@ -2,6 +2,7 @@ package iuh.fit.goat.dto.response.blog;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import iuh.fit.goat.entity.embeddable.BlogActivity;
+import iuh.fit.goat.enumeration.Visibility;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -40,5 +41,6 @@ public class BlogResponse {
         private String bio;
         private String headline;
         private String coverPhoto;
+        private Visibility visibility;
     }
 }

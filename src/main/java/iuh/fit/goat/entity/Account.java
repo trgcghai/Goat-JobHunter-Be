@@ -1,6 +1,7 @@
 package iuh.fit.goat.entity;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import iuh.fit.goat.enumeration.Visibility;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
 import lombok.*;
@@ -45,6 +46,8 @@ public abstract class Account extends BaseEntity {
     protected String password;
     protected String avatar;
     protected boolean enabled = false;
+    @Enumerated(EnumType.STRING)
+    protected Visibility visibility = Visibility.PUBLIC;
 
     @ManyToOne(fetch = LAZY)
     @JoinColumn(name = "role_id")
@@ -162,3 +165,4 @@ public abstract class Account extends BaseEntity {
         address.setAccount(this);
     }
 }
+

@@ -339,7 +339,8 @@ public class BlogServiceImpl implements BlogService {
                 avatar,
                 bio,
                 headline,
-                coverPhoto
+                coverPhoto,
+                realAccount.getVisibility()
         );
     }
 }

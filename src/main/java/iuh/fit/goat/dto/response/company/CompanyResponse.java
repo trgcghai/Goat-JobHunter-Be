@@ -3,6 +3,7 @@ package iuh.fit.goat.dto.response.company;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import iuh.fit.goat.dto.response.user.UserResponse;
 import iuh.fit.goat.enumeration.CompanySize;
+import iuh.fit.goat.enumeration.Visibility;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -29,6 +30,7 @@ public class CompanyResponse {
     private String phone;
     private CompanySize size;
     private boolean verified;
+    private Visibility visibility;
     private String country;
     private String industry;
     private String workingDays;

@@ -249,6 +249,7 @@ public class CompanyServiceImpl implements CompanyService {
         companyResponse.setPhone(company.getPhone());
         companyResponse.setSize(company.getSize());
         companyResponse.setVerified(company.isVerified());
+        companyResponse.setVisibility(company.getVisibility());
         companyResponse.setCountry(company.getCountry());
         companyResponse.setIndustry(company.getIndustry());
         companyResponse.setWorkingDays(company.getWorkingDays());

@@ -29,6 +29,16 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
     }
 
+    @ExceptionHandler(AccountPrivateException.class)
+    ResponseEntity<RestResponse<Object>> handleAccountPrivateException(AccountPrivateException e){
+        RestResponse<Object> response = new RestResponse<Object>();
+        response.setStatusCode(HttpStatus.FORBIDDEN.value());
+        response.setMessage(e.getMessage());
+        response.setError(AccountPrivateException.ERROR_CODE);
+
+        return ResponseEntity.status(HttpStatus.FORBIDDEN).body(response);
+    }
+
     @ExceptionHandler(value = {
             InvalidException.class,
             BadCredentialsException.class,
