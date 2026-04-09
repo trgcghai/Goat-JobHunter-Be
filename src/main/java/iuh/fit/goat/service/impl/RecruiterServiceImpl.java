@@ -178,6 +178,7 @@ public class RecruiterServiceImpl implements RecruiterService {
         recruiterResponse.setGender(recruiter.getGender());
         recruiterResponse.setDob(recruiter.getDob());
         recruiterResponse.setEnabled(recruiter.isEnabled());
+        recruiterResponse.setVisibility(recruiter.getVisibility());
         recruiterResponse.setCoverPhoto(recruiter.getCoverPhoto());
         recruiterResponse.setHeadline(recruiter.getHeadline());
         recruiterResponse.setBio(recruiter.getBio());

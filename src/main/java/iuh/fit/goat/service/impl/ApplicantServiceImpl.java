@@ -207,6 +207,7 @@ public class ApplicantServiceImpl implements ApplicantService {
         applicantResponse.setGender(applicant.getGender());
         applicantResponse.setDob(applicant.getDob());
         applicantResponse.setEnabled(applicant.isEnabled());
+        applicantResponse.setVisibility(applicant.getVisibility());
         applicantResponse.setCoverPhoto(applicant.getCoverPhoto());
         applicantResponse.setHeadline(applicant.getHeadline());
         applicantResponse.setBio(applicant.getBio());

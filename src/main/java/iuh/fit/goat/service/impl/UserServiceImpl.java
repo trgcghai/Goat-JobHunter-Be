@@ -9,7 +9,9 @@ import iuh.fit.goat.dto.response.ResultPaginationResponse;
 import iuh.fit.goat.dto.response.job.JobResponse;
 import iuh.fit.goat.dto.response.user.UserEnabledResponse;
 import iuh.fit.goat.dto.response.user.UserResponse;
+import iuh.fit.goat.dto.response.user.UserVisibilityResponse;
 import iuh.fit.goat.entity.*;
+import iuh.fit.goat.enumeration.Visibility;
 import iuh.fit.goat.exception.InvalidException;
 import iuh.fit.goat.repository.*;
 import iuh.fit.goat.service.*;
@@ -779,6 +781,54 @@ public class UserServiceImpl implements UserService {
         return this.setUsersEnabled(userIds, false);
     }
 
+    @Override
+    @Transactional
+    public UserVisibilityResponse handleUpdateMyVisibility(Visibility visibility) throws InvalidException {
+        String currentEmail = SecurityUtil.getCurrentUserEmail();
+        if (currentEmail == null || currentEmail.isBlank()) {
+            throw new InvalidException("User not authenticated");
+        }
+
+        Account account = this.accountRepository.findByEmailAndDeletedAtIsNull(currentEmail)
+                .orElseThrow(() -> new InvalidException("Account not found"));
+
+        account.setVisibility(visibility);
+        Account savedAccount = this.accountRepository.save(account);
+
+        return new UserVisibilityResponse(savedAccount.getAccountId(), savedAccount.getVisibility());
+    }
+
+    @Override
+    @Transactional
+    public List<UserVisibilityResponse> handleUpdateUsersVisibility(List<Long> accountIds, Visibility visibility)
+            throws InvalidException {
+        if (accountIds == null || accountIds.isEmpty()) {
+            throw new InvalidException("Account IDs list cannot be empty");
+        }
+
+        List<Long> uniqueAccountIds = accountIds.stream().distinct().toList();
+        List<Account> accounts = this.accountRepository.findAllByAccountIdInAndDeletedAtIsNull(uniqueAccountIds);
+
+        if (accounts.size() != uniqueAccountIds.size()) {
+            Set<Long> foundIds = accounts.stream()
+                    .map(Account::getAccountId)
+                    .collect(Collectors.toSet());
+
+            List<Long> missingIds = uniqueAccountIds.stream()
+                    .filter(id -> !foundIds.contains(id))
+                    .toList();
+
+            throw new InvalidException("Accounts not found: " + missingIds);
+        }
+
+        accounts.forEach(account -> account.setVisibility(visibility));
+        List<Account> savedAccounts = this.accountRepository.saveAll(accounts);
+
+        return savedAccounts.stream()
+                .map(account -> new UserVisibilityResponse(account.getAccountId(), account.getVisibility()))
+                .toList();
+    }
+
     private List<UserEnabledResponse> setUsersEnabled(List<Long> userIds, boolean enabled) {
         if (userIds == null || userIds.isEmpty()) {
             return new ArrayList<>();
@@ -816,6 +866,7 @@ public class UserServiceImpl implements UserService {
         userResponse.setGender(user.getGender());
         userResponse.setDob(user.getDob());
         userResponse.setEnabled(user.isEnabled());
+        userResponse.setVisibility(user.getVisibility());
         userResponse.setCoverPhoto(user.getCoverPhoto());
         userResponse.setHeadline(user.getHeadline());
         userResponse.setBio(user.getBio());

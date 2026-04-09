@@ -193,6 +193,7 @@ public class SecurityConfiguration {
                                 .requestMatchers(HttpMethod.DELETE, "/api/v1/careers").hasRole("SUPER_ADMIN")
                                 .requestMatchers(HttpMethod.POST, "/api/v1/roles").hasRole("SUPER_ADMIN")
                                 .requestMatchers(HttpMethod.PUT, "/api/v1/roles").hasRole("SUPER_ADMIN")
+                                .requestMatchers(HttpMethod.PUT, "/api/v1/users/visibility").hasRole("SUPER_ADMIN")
                                 .requestMatchers(HttpMethod.GET, "/api/v1/reviews").hasRole("SUPER_ADMIN")
                                 .requestMatchers(HttpMethod.POST, "/api/v1/reviews").authenticated()
                                 .requestMatchers(HttpMethod.GET, "/api/v1/comments/**").permitAll()

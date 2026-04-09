@@ -442,6 +442,7 @@ public class AuthServiceImpl implements AuthService {
         loginResponse.setUsername(Objects.requireNonNullElse(account.getUsername(), ""));
         loginResponse.setAvatar(Objects.requireNonNullElse(account.getAvatar(), ""));
         loginResponse.setEnabled(account.isEnabled());
+        loginResponse.setVisibility(account.getVisibility());
         loginResponse.setAddresses(Objects.requireNonNullElse(account.getAddresses(), new ArrayList<>()));
 
         if (account.getRole() != null) {

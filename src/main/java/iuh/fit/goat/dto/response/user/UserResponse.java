@@ -3,6 +3,7 @@ package iuh.fit.goat.dto.response.user;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import iuh.fit.goat.entity.Address;
 import iuh.fit.goat.enumeration.Gender;
+import iuh.fit.goat.enumeration.Visibility;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -28,6 +29,7 @@ public class UserResponse {
     private Gender gender;
     private LocalDate dob;
     private boolean enabled;
+    private Visibility visibility;
     private String coverPhoto;
     private String headline;
     private String bio;
