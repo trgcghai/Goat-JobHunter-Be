@@ -8,6 +8,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import java.util.List;
 import java.util.Optional;
 
 @Repository
@@ -40,4 +41,27 @@ public interface ChatRoomRepository extends JpaRepository<ChatRoom, Long> {
             @Param("userId1") Long userId1,
             @Param("userId2") Long userId2
     );
+
+        @Query("""
+                SELECT cr FROM ChatRoom cr
+                WHERE cr.type = 'DIRECT'
+                AND cr.deletedAt IS NULL
+                AND EXISTS (
+                        SELECT 1 FROM ChatMember cm1
+                        WHERE cm1.room = cr
+                        AND cm1.account.accountId = :userId1
+                        AND cm1.deletedAt IS NULL
+                )
+                AND EXISTS (
+                        SELECT 1 FROM ChatMember cm2
+                        WHERE cm2.room = cr
+                        AND cm2.account.accountId = :userId2
+                        AND cm2.deletedAt IS NULL
+                )
+                ORDER BY COALESCE(cr.updatedAt, cr.createdAt) DESC, cr.roomId DESC
+        """)
+        List<ChatRoom> findDirectChatRoomsBetweenUsersOrderByLatest(
+                        @Param("userId1") Long userId1,
+                        @Param("userId2") Long userId2
+        );
 }

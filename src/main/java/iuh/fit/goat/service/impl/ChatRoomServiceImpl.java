@@ -250,7 +250,22 @@ public class ChatRoomServiceImpl implements ChatRoomService {
     @Override
     @Transactional(readOnly = true)
     public ChatRoom existsDirectChatRoom(Long currentUserId, Long otherUserId) {
-        return findExistingDirectChatRoom(currentUserId, otherUserId).orElse(null);
+        List<ChatRoom> directRooms = this.chatRoomRepository
+                .findDirectChatRoomsBetweenUsersOrderByLatest(currentUserId, otherUserId);
+
+        if (directRooms.isEmpty()) {
+            return null;
+        }
+
+        if (directRooms.size() > 1) {
+            log.warn("Detected {} direct chat rooms between accounts {} and {}. Returning latest room {}",
+                    directRooms.size(),
+                    currentUserId,
+                    otherUserId,
+                    directRooms.get(0).getRoomId());
+        }
+
+        return directRooms.get(0);
     }
 
     @Override
