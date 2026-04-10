@@ -5,7 +5,9 @@ import iuh.fit.goat.dto.response.ResultPaginationResponse;
 import iuh.fit.goat.dto.response.company.CompanyResponse;
 import iuh.fit.goat.dto.response.user.UserEnabledResponse;
 import iuh.fit.goat.dto.response.user.UserResponse;
+import iuh.fit.goat.dto.response.user.UserVisibilityResponse;
 import iuh.fit.goat.entity.*;
+import iuh.fit.goat.enumeration.Visibility;
 import iuh.fit.goat.exception.InvalidException;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
@@ -14,7 +16,7 @@ import java.util.List;
 import java.util.Map;
 
 public interface UserService {
-    User handleGetUserByEmail(String email);
+    Account handleGetAccountByEmail(String email);
 
     boolean handleExistsByEmail(String email);
 
@@ -85,5 +87,9 @@ public interface UserService {
     List<UserEnabledResponse> handleActivateUsers(List<Long> userIds);
 
     List<UserEnabledResponse> handleDeactivateUsers(List<Long> userIds);
+
+    UserVisibilityResponse handleUpdateMyVisibility(Visibility visibility) throws InvalidException;
+
+    List<UserVisibilityResponse> handleUpdateUsersVisibility(List<Long> accountIds, Visibility visibility) throws InvalidException;
 
 }

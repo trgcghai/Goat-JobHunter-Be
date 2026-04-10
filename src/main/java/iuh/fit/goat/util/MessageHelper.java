@@ -1,6 +1,8 @@
 package iuh.fit.goat.util;
 
 import iuh.fit.goat.common.MessageEvent;
+import iuh.fit.goat.entity.Account;
+import iuh.fit.goat.entity.Company;
 import iuh.fit.goat.entity.User;
 import iuh.fit.goat.enumeration.ChatRole;
 import lombok.experimental.UtilityClass;
@@ -8,7 +10,7 @@ import lombok.experimental.UtilityClass;
 @UtilityClass
 public class MessageHelper {
 
-    public static String generateSystemMessage(MessageEvent type, User actor, Object... params) {
+    public static String generateSystemMessage(MessageEvent type, Account actor, Object... params) {
         String actorName = getDisplayName(actor);
 
         return switch (type) {
@@ -44,11 +46,13 @@ public class MessageHelper {
         };
     }
 
-    private static String getDisplayName(User user) {
-        if (user.getFullName() != null && !user.getFullName().isBlank()) {
-            return user.getFullName();
-        }
-        return user.getUsername();
+    private static String getDisplayName(Account account) {
+        String fullName = account instanceof Company ? ((Company) account).getName()
+                : ((User) account).getFullName();
+
+        if (fullName.isBlank()) return fullName;
+
+        return account.getUsername();
     }
 
     private static String getRoleText(ChatRole role) {

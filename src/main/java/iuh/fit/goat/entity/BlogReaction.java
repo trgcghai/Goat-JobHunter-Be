@@ -10,7 +10,7 @@ import static jakarta.persistence.FetchType.LAZY;
 @Table(
         name = "blog_reactions",
         uniqueConstraints = {
-                @UniqueConstraint(columnNames = {"blog_id", "user_id"})
+                @UniqueConstraint(columnNames = {"blog_id", "account_id"})
         }
 )
 @Getter

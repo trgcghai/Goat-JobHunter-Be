@@ -1,18 +1,21 @@
 package iuh.fit.goat.controller;
 
 import iuh.fit.goat.dto.request.chat.*;
+import iuh.fit.goat.dto.request.message.ForwardMessageRequest;
 import iuh.fit.goat.dto.request.message.MessageCreateRequest;
 import iuh.fit.goat.dto.request.message.MessageToNewChatRoom;
 import iuh.fit.goat.dto.response.ResultPaginationResponse;
 import iuh.fit.goat.dto.response.chat.ChatRoomResponse;
 import iuh.fit.goat.dto.response.chat.GroupMemberResponse;
+import iuh.fit.goat.dto.response.message.ForwardMessageResponse;
+import iuh.fit.goat.dto.response.message.MessageDeletedEventResponse;
 import iuh.fit.goat.dto.response.message.MessageResponse;
-import iuh.fit.goat.entity.ChatMember;
-import iuh.fit.goat.entity.ChatRoom;
-import iuh.fit.goat.entity.Message;
-import iuh.fit.goat.entity.User;
+import iuh.fit.goat.entity.*;
+import iuh.fit.goat.exception.ConflictException;
 import iuh.fit.goat.exception.InvalidException;
-import iuh.fit.goat.repository.UserRepository;
+import iuh.fit.goat.exception.NotFoundException;
+import iuh.fit.goat.exception.PermissionException;
+import iuh.fit.goat.service.AccountService;
 import iuh.fit.goat.service.ChatRoomService;
 import iuh.fit.goat.service.MessageService;
 import iuh.fit.goat.util.MessageMapper;
@@ -38,19 +41,19 @@ public class ChatRoomController {
 
     private final ChatRoomService chatRoomService;
     private final MessageService messageService;
-    private final UserRepository userRepository;
+    private final AccountService accountService;
 
     @GetMapping("/me")
     public ResponseEntity<?> getMyChatRooms(Pageable pageable) throws InvalidException {
         String email = SecurityUtil.getCurrentUserLogin()
                 .orElseThrow(() -> new InvalidException("User not authenticated"));
 
-        User currentUser = userRepository.findByEmail(email);
-        if (currentUser == null) {
+        Account currentAccount = this.accountService.handleGetAccountByEmail(email);
+        if (currentAccount == null) {
             throw new InvalidException("User not found");
         }
 
-        ResultPaginationResponse response = chatRoomService.getMyChatRooms(currentUser.getAccountId(), pageable);
+        ResultPaginationResponse response = this.chatRoomService.getMyChatRooms(currentAccount.getAccountId(), pageable);
         return ResponseEntity.ok(response);
     }
 
@@ -59,12 +62,12 @@ public class ChatRoomController {
         String email = SecurityUtil.getCurrentUserLogin()
                 .orElseThrow(() -> new InvalidException("User not authenticated"));
 
-        User currentUser = userRepository.findByEmail(email);
-        if (currentUser == null) {
+        Account currentAccount = this.accountService.handleGetAccountByEmail(email);
+        if (currentAccount == null) {
             throw new InvalidException("User not found");
         }
 
-        ChatRoomResponse response = chatRoomService.getDetailChatRoomInformation(currentUser, id);
+        ChatRoomResponse response = this.chatRoomService.getDetailChatRoomInformation(currentAccount, id);
         return ResponseEntity.ok(response);
     }
 
@@ -73,12 +76,12 @@ public class ChatRoomController {
         String email = SecurityUtil.getCurrentUserLogin()
                 .orElseThrow(() -> new InvalidException("User not authenticated"));
 
-        User currentUser = userRepository.findByEmail(email);
-        if (currentUser == null) {
+        Account currentAccount = this.accountService.handleGetAccountByEmail(email);
+        if (currentAccount == null) {
             throw new InvalidException("User not found");
         }
 
-        List<Message> messages = chatRoomService.getMessagesInChatRoom(currentUser, id, pageable);
+        List<Message> messages = this.chatRoomService.getMessagesInChatRoom(currentAccount, id, pageable);
         List<MessageResponse> response = messages.stream().map(MessageMapper::toResponse).toList();
         return ResponseEntity.ok(response);
     }
@@ -90,12 +93,12 @@ public class ChatRoomController {
     ) throws InvalidException {
         String email = SecurityUtil.getCurrentUserLogin().orElseThrow(() -> new InvalidException("User not authenticated"));
 
-        User currentUser = userRepository.findByEmail(email);
-        if (currentUser == null) {
+        Account currentAccount = this.accountService.handleGetAccountByEmail(email);
+        if (currentAccount == null) {
             throw new InvalidException("User not found");
         }
 
-        List<Message> mediaMessages = chatRoomService.getMediaMessagesInChatRoom(currentUser, id, pageable);
+        List<Message> mediaMessages = this.chatRoomService.getMediaMessagesInChatRoom(currentAccount, id, pageable);
         List<MessageResponse> response = mediaMessages.stream().map(MessageMapper::toResponse).toList();
         return ResponseEntity.ok(response);
     }
@@ -107,12 +110,12 @@ public class ChatRoomController {
     ) throws InvalidException {
         String email = SecurityUtil.getCurrentUserLogin().orElseThrow(() -> new InvalidException("User not authenticated"));
 
-        User currentUser = userRepository.findByEmail(email);
-        if (currentUser == null) {
+        Account currentAccount = this.accountService.handleGetAccountByEmail(email);
+        if (currentAccount == null) {
             throw new InvalidException("User not found");
         }
 
-        List<Message> fileMessages = chatRoomService.getFileMessagesInChatRoom(currentUser, id, pageable);
+        List<Message> fileMessages = this.chatRoomService.getFileMessagesInChatRoom(currentAccount, id, pageable);
         List<MessageResponse> response = fileMessages.stream().map(MessageMapper::toResponse).toList();
         return ResponseEntity.ok(response);
     }
@@ -121,8 +124,8 @@ public class ChatRoomController {
     public ResponseEntity<ChatRoom> createGroupChat(
             @Valid @RequestBody CreateGroupChatRequest request
     ) throws InvalidException {
-        User currentUser = getCurrentUser();
-        ChatRoom groupChat = chatRoomService.createGroupChat(currentUser, request);
+        Account currentAccount = getCurrentAccount();
+        ChatRoom groupChat = this.chatRoomService.createGroupChat(currentAccount, request);
         return ResponseEntity.ok(groupChat);
     }
 
@@ -130,8 +133,8 @@ public class ChatRoomController {
     public ResponseEntity<List<GroupMemberResponse>> getGroupMembers(
             @PathVariable Long groupId
     ) throws InvalidException {
-        User currentUser = getCurrentUser();
-        List<GroupMemberResponse> members = chatRoomService.getGroupMembers(currentUser, groupId);
+        Account currentAccount = getCurrentAccount();
+        List<GroupMemberResponse> members = this.chatRoomService.getGroupMembers(currentAccount, groupId);
         return ResponseEntity.ok(members);
     }
 
@@ -140,8 +143,8 @@ public class ChatRoomController {
             @PathVariable Long chatRoomId,
             @Valid @RequestBody UpdateGroupInfoRequest request
     ) throws InvalidException {
-        User currentUser = getCurrentUser();
-        ChatRoom updatedChatRoom = chatRoomService.updateGroupInfo(currentUser, chatRoomId, request);
+        Account currentAccount = getCurrentAccount();
+        ChatRoom updatedChatRoom = this.chatRoomService.updateGroupInfo(currentAccount, chatRoomId, request);
         return ResponseEntity.ok(updatedChatRoom);
     }
 
@@ -149,8 +152,8 @@ public class ChatRoomController {
     public ResponseEntity<Void> leaveGroupChat(
             @PathVariable Long chatRoomId
     ) throws InvalidException {
-        User currentUser = getCurrentUser();
-        chatRoomService.leaveGroupChat(currentUser, chatRoomId);
+        Account currentAccount = getCurrentAccount();
+        this.chatRoomService.leaveGroupChat(currentAccount, chatRoomId);
         return ResponseEntity.ok().build();
     }
 
@@ -159,8 +162,8 @@ public class ChatRoomController {
             @PathVariable Long chatRoomId,
             @Valid @RequestBody AddMemberRequest request
     ) throws InvalidException {
-        User currentUser = getCurrentUser();
-        ChatMember newMember = chatRoomService.addMemberToGroup(currentUser, chatRoomId, request);
+        Account currentAccount = getCurrentAccount();
+        ChatMember newMember = this.chatRoomService.addMemberToGroup(currentAccount, chatRoomId, request);
         return ResponseEntity.ok(newMember);
     }
 
@@ -169,8 +172,8 @@ public class ChatRoomController {
             @PathVariable Long chatRoomId,
             @PathVariable Long chatMemberId
     ) throws InvalidException {
-        User currentUser = getCurrentUser();
-        chatRoomService.removeMemberFromGroup(currentUser, chatRoomId, chatMemberId);
+        Account currentAccount = getCurrentAccount();
+        this.chatRoomService.removeMemberFromGroup(currentAccount, chatRoomId, chatMemberId);
         return ResponseEntity.ok().build();
     }
 
@@ -180,21 +183,21 @@ public class ChatRoomController {
             @PathVariable Long chatMemberId,
             @Valid @RequestBody UpdateMemberRoleRequest request
     ) throws InvalidException {
-        User currentUser = getCurrentUser();
-        ChatMember updatedMember = chatRoomService.updateMemberRole(
-                currentUser, chatRoomId, chatMemberId, request);
+        Account currentAccount = getCurrentAccount();
+        ChatMember updatedMember = this.chatRoomService.updateMemberRole(
+                currentAccount, chatRoomId, chatMemberId, request);
         return ResponseEntity.ok(updatedMember);
     }
 
-    private User getCurrentUser() throws InvalidException {
+    private Account getCurrentAccount() throws InvalidException {
         String email = SecurityUtil.getCurrentUserLogin()
                 .orElseThrow(() -> new InvalidException("User not authenticated"));
 
-        User currentUser = userRepository.findByEmail(email);
-        if (currentUser == null) {
+        Account currentAccount = this.accountService.handleGetAccountByEmail(email);
+        if (currentAccount == null) {
             throw new InvalidException("User not found");
         }
-        return currentUser;
+        return currentAccount;
     }
 
     /**
@@ -218,8 +221,8 @@ public class ChatRoomController {
         String email = SecurityUtil.getCurrentUserLogin()
                 .orElseThrow(() -> new InvalidException("User not authenticated"));
 
-        User currentUser = userRepository.findByEmail(email);
-        if (currentUser == null) {
+        Account currentAccount = this.accountService.handleGetAccountByEmail(email);
+        if (currentAccount == null) {
             throw new InvalidException("User not found");
         }
 
@@ -232,8 +235,8 @@ public class ChatRoomController {
             log.info("Creating new chatRoom with {} files to receiver: {}",
                     files.size(), request.getAccountId());
 
-            ChatRoom chatRoom = chatRoomService.createNewSingleChatRoomWithFiles(
-                    currentUser,
+            ChatRoom chatRoom = this.chatRoomService.createNewSingleChatRoomWithFiles(
+                    currentAccount,
                     request,
                     files
             );
@@ -242,7 +245,6 @@ public class ChatRoomController {
 
         // Case 2: Text only (JSON - backward compatible)
         if (request.getContent() != null && !request.getContent().isBlank()) {
-
             log.info("Creating new chatRoom with text to receiver: {}",
                     request.getAccountId());
 
@@ -250,11 +252,11 @@ public class ChatRoomController {
                     request.getContent(), request.getAccountId());
 
             ChatRoom chatRoom = chatRoomService.createNewSingleChatRoom(
-                    currentUser, textRequest);
+                    currentAccount, textRequest);
             return ResponseEntity.ok(chatRoom);
         }
 
-        ChatRoom chatRoom = this.chatRoomService.createNewSingleChatRoom(currentUser, request);
+        ChatRoom chatRoom = this.chatRoomService.createNewSingleChatRoom(currentAccount, request);
         return ResponseEntity.ok(chatRoom);
     }
 
@@ -280,12 +282,12 @@ public class ChatRoomController {
         String email = SecurityUtil.getCurrentUserLogin()
                 .orElseThrow(() -> new InvalidException("User not authenticated"));
 
-        User currentUser = userRepository.findByEmail(email);
-        if (currentUser == null) {
+        Account currentAccount = this.accountService.handleGetAccountByEmail(email);
+        if (currentAccount == null) {
             throw new InvalidException("User not found");
         }
 
-        if (!this.chatRoomService.isUserInChatRoom(id, currentUser.getAccountId())) {
+        if (!this.chatRoomService.isUserInChatRoom(id, currentAccount.getAccountId())) {
             throw new InvalidException("User is not belong to this chat room");
         }
 
@@ -293,7 +295,7 @@ public class ChatRoomController {
         if (files != null && !files.isEmpty()) {
             log.info("Sending messages with {} files to chatRoom: {}", files.size(), id);
 
-            List<Message> savedMessages = messageService.sendMessagesWithFiles(id, request, files, currentUser);
+            List<Message> savedMessages = this.messageService.sendMessagesWithFiles(id, request, files, currentAccount);
             List<MessageResponse> response = savedMessages.stream().map(MessageMapper::toResponse).toList();
             return ResponseEntity.ok(new ArrayList<>(response));
         }
@@ -304,7 +306,7 @@ public class ChatRoomController {
             log.info("Sending text-only message to chatRoom: {}", id);
 
             MessageCreateRequest textRequest = new MessageCreateRequest(request.getContent());
-            Message textMessage = messageService.sendMessage(id, textRequest, currentUser);
+            Message textMessage = messageService.sendMessage(id, textRequest, currentAccount);
             MessageResponse response = MessageMapper.toResponse(textMessage);
             return ResponseEntity.ok(new ArrayList<>(Collections.singletonList(response)));
         }
@@ -313,17 +315,50 @@ public class ChatRoomController {
 //        return this.messageService.sendMessage(id, request, currentUser);
     }
 
+    @DeleteMapping("/{chatRoomId}/messages/{messageId}")
+    public ResponseEntity<MessageResponse> revokeMessage(
+            @PathVariable Long chatRoomId,
+            @PathVariable String messageId
+    ) throws InvalidException, NotFoundException, ConflictException, PermissionException {
+        Account currentAccount = getCurrentAccount();
+        Message revokedMessage = this.messageService.revokeMessage(chatRoomId, messageId, currentAccount);
+        return ResponseEntity.ok(MessageMapper.toResponse(revokedMessage));
+    }
+
+    @DeleteMapping("/{chatRoomId}/messages/{messageId}/permanent")
+    public ResponseEntity<MessageDeletedEventResponse> permanentlyDeleteMessage(
+            @PathVariable Long chatRoomId,
+            @PathVariable String messageId
+    ) throws InvalidException, NotFoundException, PermissionException {
+        Account currentAccount = getCurrentAccount();
+        MessageDeletedEventResponse response = this.messageService
+                .deleteMessagePermanently(chatRoomId, messageId, currentAccount);
+        return ResponseEntity.ok(response);
+    }
+
+    @PostMapping("/{chatRoomId}/messages/{messageId}/forward")
+    public ResponseEntity<ForwardMessageResponse> forwardMessage(
+            @PathVariable Long chatRoomId,
+            @PathVariable String messageId,
+            @Valid @RequestBody ForwardMessageRequest request
+    ) throws InvalidException, NotFoundException, PermissionException {
+        Account currentAccount = getCurrentAccount();
+        ForwardMessageResponse response = this.messageService
+                .forwardMessage(chatRoomId, messageId, request, currentAccount);
+        return ResponseEntity.ok(response);
+    }
+
     @GetMapping("/direct/exists")
     public ResponseEntity<ChatRoom> checkDirectChatRoomExists(@RequestParam Long accountId) throws InvalidException {
         String email = SecurityUtil.getCurrentUserLogin()
                 .orElseThrow(() -> new InvalidException("User not authenticated"));
 
-        User currentUser = userRepository.findByEmail(email);
-        if (currentUser == null) {
+        Account currentAccount = this.accountService.handleGetAccountByEmail(email);
+        if (currentAccount == null) {
             throw new InvalidException("User not found");
         }
 
-        ChatRoom chatRoom = chatRoomService.existsDirectChatRoom(currentUser.getAccountId(), accountId);
+        ChatRoom chatRoom = this.chatRoomService.existsDirectChatRoom(currentAccount.getAccountId(), accountId);
         return ResponseEntity.ok(chatRoom);
     }
 }

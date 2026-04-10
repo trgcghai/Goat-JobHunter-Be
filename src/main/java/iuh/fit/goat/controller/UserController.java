@@ -2,13 +2,16 @@ package iuh.fit.goat.controller;
 
 import com.turkraft.springfilter.boot.Filter;
 import iuh.fit.goat.dto.request.user.ResetPasswordRequest;
+import iuh.fit.goat.dto.request.user.UpdateMyVisibilityRequest;
 import iuh.fit.goat.dto.request.user.UpdatePasswordRequest;
 import iuh.fit.goat.dto.request.user.UserEnabledRequest;
+import iuh.fit.goat.dto.request.user.UsersVisibilityRequest;
 import iuh.fit.goat.dto.response.auth.LoginResponse;
 import iuh.fit.goat.dto.response.ResultPaginationResponse;
 import iuh.fit.goat.dto.response.company.CompanyResponse;
 import iuh.fit.goat.dto.response.user.UserEnabledResponse;
 import iuh.fit.goat.dto.response.user.UserResponse;
+import iuh.fit.goat.dto.response.user.UserVisibilityResponse;
 import iuh.fit.goat.entity.*;
 import iuh.fit.goat.exception.InvalidException;
 import iuh.fit.goat.service.*;
@@ -80,7 +83,7 @@ public class UserController {
     @GetMapping("/me")
     public <T extends Account> ResponseEntity<T> getCurrentUserByEmail() {
         String email = SecurityUtil.getCurrentUserLogin().isPresent() ? SecurityUtil.getCurrentUserLogin().get() : null;
-        Account account = this.userService.handleGetUserByEmail(email);
+        Account account = this.userService.handleGetAccountByEmail(email);
         return ResponseEntity.status(HttpStatus.OK).body((T) account);
     }
 
@@ -377,5 +380,22 @@ public class UserController {
         }
         List<UserEnabledResponse> res = this.userService.handleDeactivateUsers(userIds);
         return ResponseEntity.status(HttpStatus.OK).body(res);
+    }
+
+    @PutMapping("/me/visibility")
+    public ResponseEntity<UserVisibilityResponse> updateMyVisibility(
+            @Valid @RequestBody UpdateMyVisibilityRequest request
+    ) throws InvalidException {
+        UserVisibilityResponse response = this.userService.handleUpdateMyVisibility(request.getVisibility());
+        return ResponseEntity.status(HttpStatus.OK).body(response);
+    }
+
+    @PutMapping("/visibility")
+    public ResponseEntity<List<UserVisibilityResponse>> updateUsersVisibility(
+            @Valid @RequestBody UsersVisibilityRequest request
+    ) throws InvalidException {
+        List<UserVisibilityResponse> responses = this.userService
+                .handleUpdateUsersVisibility(request.getAccountIds(), request.getVisibility());
+        return ResponseEntity.status(HttpStatus.OK).body(responses);
     }
 }

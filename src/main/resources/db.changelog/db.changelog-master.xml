@@ -8,8 +8,7 @@
 
     <include file="db.changelog/schema/2026-03-18/create-citext.xml"/>
     <include file="db.changelog/schema/2026-01-16/initial.xml"/>
-    <include file="db.changelog/data/2026-01-16/init-permissions.xml"/>
-    <include file="db.changelog/data/2026-01-16/init-role.xml"/>
+    <include file="db.changelog/data/2026-03-23/init-permissions.xml"/>
     <include file="db.changelog/data/2026-01-16/init-account.xml"/>
     <include file="db.changelog/data/2026-01-16/init-companies.xml"/>
     <include file="db.changelog/data/2026-01-16/init-addresses-for-companies.xml"/>
@@ -27,9 +26,11 @@
     <include file="db.changelog/schema/2026-01-24/drop-summary-resumes.xml"/>
     <include file="db.changelog/schema/2026-02-14/init-resume-evaluations.xml"/>
     <include file="db.changelog/schema/2026-02-18/modify-resume-evaluations.xml"/>
-    <include file="db.changelog/data/2026-03-23/init-permissions.xml"/>
     <include file="db.changelog/schema/2026-03-25/change-relation-account.xml"/>
     <include file="db.changelog/schema/2026-03-25/collection-blog-tags.xml"/>
     <include file="db.changelog/schema/2026-03-25/change-auto-id.xml"/>
+    <include file="db.changelog/schema/2026-03-28/change-relation-account.xml"/>
+    <include file="db.changelog/schema/2026-03-28/unique-constraint-blog-reaction.xml"/>
+    <include file="db.changelog/schema/2026-04-09/add-account-visibility.xml"/>
 
 </databaseChangeLog>

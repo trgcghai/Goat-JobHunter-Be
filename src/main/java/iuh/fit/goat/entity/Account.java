@@ -1,6 +1,7 @@
 package iuh.fit.goat.entity;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import iuh.fit.goat.enumeration.Visibility;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
 import lombok.*;
@@ -29,7 +30,8 @@ import static jakarta.persistence.FetchType.LAZY;
 @ToString(exclude = {
         "role", "addresses", "actorNotifications", "recipientNotifications",
         "savedJobs", "savedBlogs", "followedCompanies", "blogs", "comments",
-        "blogReactions", "commentReactions", "reportedTickets", "assignedTickets"
+        "blogReactions", "commentReactions", "reportedTickets", "assignedTickets",
+        "memberships"
 })
 @FilterDef(name = "activeAccountFilter")
 public abstract class Account extends BaseEntity {
@@ -44,6 +46,8 @@ public abstract class Account extends BaseEntity {
     protected String password;
     protected String avatar;
     protected boolean enabled = false;
+    @Enumerated(EnumType.STRING)
+    protected Visibility visibility = Visibility.PUBLIC;
 
     @ManyToOne(fetch = LAZY)
     @JoinColumn(name = "role_id")
@@ -148,8 +152,17 @@ public abstract class Account extends BaseEntity {
     )
     private List<Ticket> assignedTickets = new ArrayList<>();
 
+    @OneToMany(mappedBy = "account", fetch = LAZY, cascade = {PERSIST, MERGE})
+    @JsonIgnore
+    @Filter(
+            name = "activeChatMemberFilter",
+            condition = "deleted_at IS NULL"
+    )
+    private List<ChatMember> memberships = new ArrayList<>();
+
     public void addAddress(Address address) {
         this.addresses.add(address);
         address.setAccount(this);
     }
 }
+

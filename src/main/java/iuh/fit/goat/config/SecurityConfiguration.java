@@ -144,6 +144,7 @@ public class SecurityConfiguration {
                 "/api/v1/companies/name",
 
 //              Thông tin danh sách công việc và chi tiết công việc có thể public
+                "/api/v1/jobs/related",
                 "/api/v1/jobs/{id}",
                 "/api/v1/jobs/available",
                 "/api/v1/jobs/companies/count",
@@ -192,6 +193,7 @@ public class SecurityConfiguration {
                                 .requestMatchers(HttpMethod.DELETE, "/api/v1/careers").hasRole("SUPER_ADMIN")
                                 .requestMatchers(HttpMethod.POST, "/api/v1/roles").hasRole("SUPER_ADMIN")
                                 .requestMatchers(HttpMethod.PUT, "/api/v1/roles").hasRole("SUPER_ADMIN")
+                                .requestMatchers(HttpMethod.PUT, "/api/v1/users/visibility").hasRole("SUPER_ADMIN")
                                 .requestMatchers(HttpMethod.GET, "/api/v1/reviews").hasRole("SUPER_ADMIN")
                                 .requestMatchers(HttpMethod.POST, "/api/v1/reviews").authenticated()
                                 .requestMatchers(HttpMethod.GET, "/api/v1/comments/**").permitAll()

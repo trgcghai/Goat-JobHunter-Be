@@ -9,7 +9,9 @@ import iuh.fit.goat.dto.response.ResultPaginationResponse;
 import iuh.fit.goat.dto.response.job.JobResponse;
 import iuh.fit.goat.dto.response.user.UserEnabledResponse;
 import iuh.fit.goat.dto.response.user.UserResponse;
+import iuh.fit.goat.dto.response.user.UserVisibilityResponse;
 import iuh.fit.goat.entity.*;
+import iuh.fit.goat.enumeration.Visibility;
 import iuh.fit.goat.exception.InvalidException;
 import iuh.fit.goat.repository.*;
 import iuh.fit.goat.service.*;
@@ -42,7 +44,6 @@ public class UserServiceImpl implements UserService {
     @Autowired
     private final BlogService blogService;
     private final InterviewService interviewService;
-    private final ResumeService resumeService;
     private final RedisService redisService;
     private final EmailNotificationService emailNotificationService;
     private final JobService jobService;
@@ -65,8 +66,8 @@ public class UserServiceImpl implements UserService {
     private long validityInSeconds;
 
     @Override
-    public User handleGetUserByEmail(String email) {
-        return this.userRepository.findByEmailWithRole(email).orElse(null);
+    public Account handleGetAccountByEmail(String email) {
+        return this.accountRepository.findByEmailWithRole(email).orElse(null);
     }
 
     @Override
@@ -128,119 +129,119 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public boolean handleCheckCurrentPassword(String currentPassword) {
-        String currentEmail = SecurityUtil.getCurrentUserLogin().isPresent() ?
-                SecurityUtil.getCurrentUserLogin().get() : "";
-
-        if (!currentEmail.isEmpty()) {
-            Account currentAccount = this.accountRepository.findByEmailAndDeletedAtIsNull(currentEmail).orElse(null);
-            assert currentAccount != null;
-            return this.passwordEncoder.matches(currentPassword, currentAccount.getPassword());
+        String currentEmail = SecurityUtil.getCurrentUserEmail();
+        if (currentEmail.isEmpty()) {
+            return false;
         }
 
-        return false;
+        Account currentAccount = this.accountRepository.findByEmailAndDeletedAtIsNull(currentEmail).orElse(null);
+        if (currentAccount == null) {
+            return false;
+        }
+
+        return this.passwordEncoder.matches(currentPassword, currentAccount.getPassword());
     }
 
     @Override
     public Map<String, Object> handleUpdatePassword(String newPassword, String refreshToken) throws InvalidException {
-        String currentEmail = SecurityUtil.getCurrentUserLogin().isPresent() ?
-                SecurityUtil.getCurrentUserLogin().get() : "";
-
-        if (!currentEmail.isEmpty()) {
-            Account currentAccount = this.accountRepository.findByEmailAndDeletedAtIsNull(currentEmail)
-                    .orElseThrow(() -> new InvalidException("User not found"));
-            String hashedPassword = this.passwordEncoder.encode(newPassword);
-            currentAccount.setPassword(hashedPassword);
-            Account res = this.accountRepository.save(currentAccount);
-
-            LoginResponse loginResponse = new LoginResponse();
-
-            // Thông tin chung của Account
-            loginResponse.setAccountId(res.getAccountId());
-            loginResponse.setEmail(res.getEmail());
-            loginResponse.setUsername(Objects.requireNonNullElse(res.getUsername(), ""));
-            loginResponse.setAvatar(Objects.requireNonNullElse(res.getAvatar(), ""));
-            loginResponse.setEnabled(res.isEnabled());
-            loginResponse.setAddresses(Objects.requireNonNullElse(res.getAddresses(), new ArrayList<>()));
-
-            if (res.getRole() != null) {
-                loginResponse.setRole(
-                        new LoginResponse.RoleAccount(res.getRole().getRoleId(), res.getRole().getName())
-                );
-            }
-
-            // Thông tin riêng của User
-            if (res instanceof User user) {
-                loginResponse.setPhone(user.getPhone());
-                loginResponse.setDob(user.getDob());
-                loginResponse.setAddresses(user.getAddresses());
-                loginResponse.setGender(user.getGender());
-                loginResponse.setFullName(Objects.requireNonNullElse(user.getFullName(), ""));
-                loginResponse.setType(user instanceof Applicant ? iuh.fit.goat.common.Role.APPLICANT.getValue() : iuh.fit.goat.common.Role.RECRUITER.getValue());
-
-                // Nếu như là Recruiter thì mới có company
-                if (user instanceof Recruiter recruiter) {
-                    LoginResponse.UserCompany userCompany = new LoginResponse.UserCompany(
-                            recruiter.getCompany().getAccountId(),
-                            recruiter.getCompany().getName()
-                    );
-                    loginResponse.setCompany(userCompany);
-                }
-            }
-            // Thông tin riêng của Company
-            else if (res instanceof Company company) {
-                loginResponse.setPhone(company.getPhone());
-                loginResponse.setAddresses(company.getAddresses());
-                loginResponse.setName(Objects.requireNonNullElse(company.getName(), ""));
-                loginResponse.setType(iuh.fit.goat.common.Role.COMPANY.getValue());
-                loginResponse.setDescription(company.getDescription());
-                loginResponse.setLogo(company.getLogo());
-                loginResponse.setCoverPhoto(company.getCoverPhoto());
-                loginResponse.setWebsite(company.getWebsite());
-                loginResponse.setSize(company.getSize());
-                loginResponse.setVerified(company.isVerified());
-                loginResponse.setCountry(company.getCountry());
-                loginResponse.setIndustry(company.getIndustry());
-                loginResponse.setWorkingDays(company.getWorkingDays());
-                loginResponse.setOvertimePolicy(company.getOvertimePolicy());
-            }
-
-            String newAccessToken = this.securityUtil.createAccessToken(currentEmail, loginResponse);
-            String newRefreshToken = this.securityUtil.createRefreshToken(currentEmail, loginResponse);
-            this.redisService.replaceKey(
-                    "refresh:" + refreshToken,
-                    "refresh:" + newRefreshToken,
-                    currentEmail, jwtRefreshToken, TimeUnit.SECONDS
-
-            );
-
-            Map<String, Object> response = new HashMap<>();
-            response.put("loginResponse", loginResponse);
-            response.put("refreshToken", newRefreshToken);
-            response.put("accessToken", newAccessToken);
-
-            return response;
+        String currentEmail = SecurityUtil.getCurrentUserEmail();
+        if (currentEmail.isEmpty()) {
+            throw new InvalidException("User not authenticated");
         }
 
-        return null;
+        Account currentAccount = this.accountRepository.findByEmailAndDeletedAtIsNull(currentEmail)
+                .orElseThrow(() -> new InvalidException("User not found"));
+        String hashedPassword = this.passwordEncoder.encode(newPassword);
+        currentAccount.setPassword(hashedPassword);
+        Account res = this.accountRepository.save(currentAccount);
+
+        LoginResponse loginResponse = new LoginResponse();
+
+        // Thông tin chung của Account
+        loginResponse.setAccountId(res.getAccountId());
+        loginResponse.setEmail(res.getEmail());
+        loginResponse.setUsername(Objects.requireNonNullElse(res.getUsername(), ""));
+        loginResponse.setAvatar(Objects.requireNonNullElse(res.getAvatar(), ""));
+        loginResponse.setEnabled(res.isEnabled());
+        loginResponse.setAddresses(Objects.requireNonNullElse(res.getAddresses(), new ArrayList<>()));
+
+        if (res.getRole() != null) {
+            loginResponse.setRole(
+                    new LoginResponse.RoleAccount(res.getRole().getRoleId(), res.getRole().getName())
+            );
+        }
+
+        // Thông tin riêng của User
+        if (res instanceof User user) {
+            loginResponse.setPhone(user.getPhone());
+            loginResponse.setDob(user.getDob());
+            loginResponse.setAddresses(user.getAddresses());
+            loginResponse.setGender(user.getGender());
+            loginResponse.setFullName(Objects.requireNonNullElse(user.getFullName(), ""));
+            loginResponse.setType(user instanceof Applicant ? iuh.fit.goat.common.Role.APPLICANT.getValue() : iuh.fit.goat.common.Role.RECRUITER.getValue());
+
+            // Nếu như là Recruiter thì mới có company
+            if (user instanceof Recruiter recruiter) {
+                LoginResponse.UserCompany userCompany = new LoginResponse.UserCompany(
+                        recruiter.getCompany().getAccountId(),
+                        recruiter.getCompany().getName()
+                );
+                loginResponse.setCompany(userCompany);
+            }
+        }
+        // Thông tin riêng của Company
+        else if (res instanceof Company company) {
+            loginResponse.setPhone(company.getPhone());
+            loginResponse.setAddresses(company.getAddresses());
+            loginResponse.setName(Objects.requireNonNullElse(company.getName(), ""));
+            loginResponse.setType(iuh.fit.goat.common.Role.COMPANY.getValue());
+            loginResponse.setDescription(company.getDescription());
+            loginResponse.setLogo(company.getLogo());
+            loginResponse.setCoverPhoto(company.getCoverPhoto());
+            loginResponse.setWebsite(company.getWebsite());
+            loginResponse.setSize(company.getSize());
+            loginResponse.setVerified(company.isVerified());
+            loginResponse.setCountry(company.getCountry());
+            loginResponse.setIndustry(company.getIndustry());
+            loginResponse.setWorkingDays(company.getWorkingDays());
+            loginResponse.setOvertimePolicy(company.getOvertimePolicy());
+        }
+
+        String newAccessToken = this.securityUtil.createAccessToken(currentEmail, loginResponse);
+        String newRefreshToken = this.securityUtil.createRefreshToken(currentEmail, loginResponse);
+        this.redisService.replaceKey(
+                "refresh:" + refreshToken,
+                "refresh:" + newRefreshToken,
+                currentEmail, jwtRefreshToken, TimeUnit.SECONDS
+
+        );
+
+        Map<String, Object> response = new HashMap<>();
+        response.put("loginResponse", loginResponse);
+        response.put("refreshToken", newRefreshToken);
+        response.put("accessToken", newAccessToken);
+
+        return response;
     }
+
 
     @Override
     public void handleResetPassword(ResetPasswordRequest resetPasswordRequest) throws InvalidException {
-        User user = this.handleGetUserByEmail(resetPasswordRequest.getEmail());
-        if (user != null) {
+        Account account = this.handleGetAccountByEmail(resetPasswordRequest.getEmail());
+        if (account != null) {
             String hashedPassword = this.passwordEncoder.encode(resetPasswordRequest.getNewPassword());
-            user.setPassword(hashedPassword);
-            user.setEnabled(false);
-            this.userRepository.save(user);
+            account.setPassword(hashedPassword);
+            account.setEnabled(false);
+            this.accountRepository.save(account);
 
             String verificationCode = BasicUtil.generateVerificationCode();
             this.redisService.saveWithTTL(
-                    user.getEmail(),
+                    account.getEmail(),
                     verificationCode,
                     validityInSeconds,
                     TimeUnit.SECONDS
             );
-            this.emailNotificationService.handleSendVerificationEmail(user.getEmail(), verificationCode);
+            this.emailNotificationService.handleSendVerificationEmail(account.getEmail(), verificationCode);
         } else {
             throw new InvalidException("User not found");
         }
@@ -586,13 +587,13 @@ public class UserServiceImpl implements UserService {
             return;
         }
 
-        User currentUser = this.handleGetUserByEmail(currentEmail);
-        if (currentUser == null) {
+        Account currentAccount = this.handleGetAccountByEmail(currentEmail);
+        if (currentAccount == null) {
             return;
         }
 
         List<Notification> notifications = this.notificationRepository
-                .findByNotificationIdInAndRecipient_AccountId(notificationIds, currentUser.getAccountId());
+                .findByNotificationIdInAndRecipient_AccountId(notificationIds, currentAccount.getAccountId());
 
         notifications.forEach(notification -> notification.setSeen(true));
         this.notificationRepository.saveAll(notifications);
@@ -687,8 +688,11 @@ public class UserServiceImpl implements UserService {
             return new ArrayList<>();
         }
 
-        User currentUser = this.handleGetUserByEmail(currentEmail);
-        List<Long> reviewedIds = Optional.ofNullable(currentUser.getReviews())
+        Account currentAccount = this.handleGetAccountByEmail(currentEmail);
+        if(currentAccount instanceof Company) {
+            return new ArrayList<>();
+        }
+        List<Long> reviewedIds = Optional.ofNullable(((User)currentAccount).getReviews())
                 .orElse(new ArrayList<>())
                 .stream()
                 .map(review -> review.getCompany().getAccountId())
@@ -777,6 +781,54 @@ public class UserServiceImpl implements UserService {
         return this.setUsersEnabled(userIds, false);
     }
 
+    @Override
+    @Transactional
+    public UserVisibilityResponse handleUpdateMyVisibility(Visibility visibility) throws InvalidException {
+        String currentEmail = SecurityUtil.getCurrentUserEmail();
+        if (currentEmail == null || currentEmail.isBlank()) {
+            throw new InvalidException("User not authenticated");
+        }
+
+        Account account = this.accountRepository.findByEmailAndDeletedAtIsNull(currentEmail)
+                .orElseThrow(() -> new InvalidException("Account not found"));
+
+        account.setVisibility(visibility);
+        Account savedAccount = this.accountRepository.save(account);
+
+        return new UserVisibilityResponse(savedAccount.getAccountId(), savedAccount.getVisibility());
+    }
+
+    @Override
+    @Transactional
+    public List<UserVisibilityResponse> handleUpdateUsersVisibility(List<Long> accountIds, Visibility visibility)
+            throws InvalidException {
+        if (accountIds == null || accountIds.isEmpty()) {
+            throw new InvalidException("Account IDs list cannot be empty");
+        }
+
+        List<Long> uniqueAccountIds = accountIds.stream().distinct().toList();
+        List<Account> accounts = this.accountRepository.findAllByAccountIdInAndDeletedAtIsNull(uniqueAccountIds);
+
+        if (accounts.size() != uniqueAccountIds.size()) {
+            Set<Long> foundIds = accounts.stream()
+                    .map(Account::getAccountId)
+                    .collect(Collectors.toSet());
+
+            List<Long> missingIds = uniqueAccountIds.stream()
+                    .filter(id -> !foundIds.contains(id))
+                    .toList();
+
+            throw new InvalidException("Accounts not found: " + missingIds);
+        }
+
+        accounts.forEach(account -> account.setVisibility(visibility));
+        List<Account> savedAccounts = this.accountRepository.saveAll(accounts);
+
+        return savedAccounts.stream()
+                .map(account -> new UserVisibilityResponse(account.getAccountId(), account.getVisibility()))
+                .toList();
+    }
+
     private List<UserEnabledResponse> setUsersEnabled(List<Long> userIds, boolean enabled) {
         if (userIds == null || userIds.isEmpty()) {
             return new ArrayList<>();
@@ -814,6 +866,7 @@ public class UserServiceImpl implements UserService {
         userResponse.setGender(user.getGender());
         userResponse.setDob(user.getDob());
         userResponse.setEnabled(user.isEnabled());
+        userResponse.setVisibility(user.getVisibility());
         userResponse.setCoverPhoto(user.getCoverPhoto());
         userResponse.setHeadline(user.getHeadline());
         userResponse.setBio(user.getBio());

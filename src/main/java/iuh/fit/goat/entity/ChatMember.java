@@ -13,7 +13,7 @@ import static jakarta.persistence.FetchType.LAZY;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-@ToString(exclude = {"room", "user"})
+@ToString(exclude = {"room", "account"})
 @FilterDef(name = "activeChatMemberFilter")
 public class ChatMember extends BaseEntity {
     @Id
@@ -27,6 +27,6 @@ public class ChatMember extends BaseEntity {
     private ChatRoom room;
 
     @ManyToOne(fetch = LAZY)
-    @JoinColumn(name = "user_id")
-    private User user;
+    @JoinColumn(name = "account_id")
+    private Account account;
 }

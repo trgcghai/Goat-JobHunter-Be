@@ -21,6 +21,8 @@ public final class MessageMapper {
                 message.getMessageType(),
                 message.getReplyTo(),
                 message.getIsHidden(),
+                Boolean.TRUE.equals(message.getIsForwarded()),
+                message.getOriginalMessageId(),
                 message.getCreatedAt(),
                 message.getUpdatedAt()
         );

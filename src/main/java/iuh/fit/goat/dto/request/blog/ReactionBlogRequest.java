@@ -14,7 +14,6 @@ import lombok.Setter;
 public class ReactionBlogRequest {
     @NotNull(message = "Blog ID cannot be null")
     private Long blogId;
-
     @NotNull(message = "Reaction type cannot be null")
     private ReactionType reactionType;
 }

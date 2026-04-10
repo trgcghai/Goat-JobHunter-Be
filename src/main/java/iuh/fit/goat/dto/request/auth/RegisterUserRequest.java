@@ -1,5 +1,6 @@
 package iuh.fit.goat.dto.request.auth;
 
+import iuh.fit.goat.enumeration.Gender;
 import iuh.fit.goat.util.annotation.RequireCompanyNameIfRecruiter;
 import jakarta.validation.constraints.*;
 import lombok.AllArgsConstructor;
@@ -44,6 +45,9 @@ public class RegisterUserRequest {
             message = "Loại người dùng phải là applicant hoặc recruiter"
     )
     private String type;
+
+    @NotNull(message = "Giới tính không được để trống")
+    private Gender gender;
 
     private String companyName;
 

@@ -81,22 +81,10 @@ public class AuthServiceImpl implements AuthService {
 
         SecurityContextHolder.getContext().setAuthentication(authentication);
 
-        // Thử get User trước
-        User user = this.userService.handleGetUserByEmail(loginRequest.getEmail());
-        Company company = null;
-
-        // Nếu không phải User thì thử get Company
-        if (user == null) {
-            company = this.companyService.handleGetCompanyByEmail(loginRequest.getEmail());
-        }
-
-        // Kiểm tra tồn tại
-        if (user == null && company == null) {
+        Account account = this.userService.handleGetAccountByEmail(loginRequest.getEmail());
+        if (account == null) {
             throw new InvalidException("Invalid account");
         }
-
-        // Kiểm tra enabled
-        Account account = user != null ? user : company;
         if (!account.isEnabled()) {
             throw new InvalidException("Account is locked");
         }
@@ -158,17 +146,17 @@ public class AuthServiceImpl implements AuthService {
         Jwt jwt = this.securityUtil.checkValidToken(refreshToken);
         String email = jwt.getSubject();
 
-        User currentUser = this.userService.handleGetUserByEmail(email);
-        if(currentUser == null){
+        Account currentAccount = this.accountRepository.findByEmailAndDeletedAtIsNull(email).orElse(null);
+        if(currentAccount == null){
             throw new InvalidException("User not found");
         }
-        if(!currentUser.isEnabled()) {
+        if(!currentAccount.isEnabled()) {
             throw new InvalidException("Account is locked");
         }
 
         UserDetails userDetails = new org.springframework.security.core.userdetails.User(
-                currentUser.getEmail(),
-                currentUser.getPassword(),
+                currentAccount.getEmail(),
+                currentAccount.getPassword(),
                 Collections.singletonList(new SimpleGrantedAuthority("ROLE_USER"))
         );
         Authentication authentication = new UsernamePasswordAuthenticationToken(
@@ -176,7 +164,7 @@ public class AuthServiceImpl implements AuthService {
         );
         SecurityContextHolder.getContext().setAuthentication(authentication);
 
-        LoginResponse loginResponse = createLoginResponse(currentUser);
+        LoginResponse loginResponse = createLoginResponse(currentAccount);
 
         String newAccessToken = this.securityUtil.createAccessToken(email, loginResponse);
         String newRefreshToken = this.securityUtil.createRefreshToken(email, loginResponse);
@@ -184,7 +172,7 @@ public class AuthServiceImpl implements AuthService {
         this.redisService.replaceKey(
                 "refresh:" + refreshToken,
                 "refresh:" + newRefreshToken,
-                currentUser.getEmail(),
+                currentAccount.getEmail(),
                 jwtRefreshToken,
                 TimeUnit.SECONDS
         );
@@ -285,6 +273,7 @@ public class AuthServiceImpl implements AuthService {
             applicant.setEmail(request.getEmail());
             applicant.setPassword(hashPassword);
             applicant.setPhone(request.getPhone());
+            applicant.setGender(request.getGender());
             applicant.setRole(this.roleService.handleGetRoleByName(Role.APPLICANT.getValue()));
 
             // create applicant to save to database
@@ -318,6 +307,7 @@ public class AuthServiceImpl implements AuthService {
             recruiter.setPassword(hashPassword);
             recruiter.setPhone(request.getPhone());
             recruiter.setCompany(company);
+            recruiter.setGender(request.getGender());
             recruiter.setRole(this.roleService.handleGetRoleByName(Role.RECRUITER.getValue()));
 
             // create recruiter to save to database
@@ -358,8 +348,8 @@ public class AuthServiceImpl implements AuthService {
         FileUploadUtil.assertAllowed(request.getLogo());
         FileUploadUtil.assertAllowed(request.getCoverPhoto());
 
-        String logoUrl = BasicUtil.uploadImage(request.getLogo(), "company-logos", storageService);
-        String coverPhotoUrl = BasicUtil.uploadImage(request.getCoverPhoto(), "company-cover-photos", storageService);
+        String logoUrl = BasicUtil.uploadImage(request.getLogo(), "company-logos", this.storageService);
+        String coverPhotoUrl = BasicUtil.uploadImage(request.getCoverPhoto(), "company-cover-photos", this.storageService);
         String hashPassword = this.passwordEncoder.encode(request.getPassword());
 
         List<Address> addressList;
@@ -405,7 +395,7 @@ public class AuthServiceImpl implements AuthService {
 
     @Override
     public void handleVerifyAccount(VerifyAccountRequest verifyAccount) throws InvalidException {
-        Account account = this.accountService.handleGetAccountByEmail(verifyAccount.getEmail());
+        Account account = this.accountRepository.findByEmailAndDeletedAtIsNull(verifyAccount.getEmail()).orElse(null);
         if(account == null) {
             throw new InvalidException("Account not found");
         }
@@ -426,7 +416,7 @@ public class AuthServiceImpl implements AuthService {
 
     @Override
     public void handleResendCode(String email) throws InvalidException {
-        Account account = this.accountService.handleGetAccountByEmail(email);
+        Account account = this.accountRepository.findByEmailAndDeletedAtIsNull(email).orElse(null);
         if(account == null) {
             throw new InvalidException("Account not found");
         }
@@ -452,6 +442,7 @@ public class AuthServiceImpl implements AuthService {
         loginResponse.setUsername(Objects.requireNonNullElse(account.getUsername(), ""));
         loginResponse.setAvatar(Objects.requireNonNullElse(account.getAvatar(), ""));
         loginResponse.setEnabled(account.isEnabled());
+        loginResponse.setVisibility(account.getVisibility());
         loginResponse.setAddresses(Objects.requireNonNullElse(account.getAddresses(), new ArrayList<>()));
 
         if (account.getRole() != null) {

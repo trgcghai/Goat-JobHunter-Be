@@ -8,6 +8,7 @@ import iuh.fit.goat.repository.AccountRepository;
 import iuh.fit.goat.repository.BlogReactionRepository;
 import iuh.fit.goat.repository.BlogRepository;
 import iuh.fit.goat.service.BlogReactionService;
+import iuh.fit.goat.service.BlogService;
 import iuh.fit.goat.service.CompanyService;
 import iuh.fit.goat.service.UserService;
 import iuh.fit.goat.util.SecurityUtil;
@@ -24,6 +25,7 @@ import java.util.Optional;
 public class BlogReactionServiceImpl implements BlogReactionService {
     private final UserService userService;
     private final CompanyService companyService;
+    private final BlogService blogService;
 
     private final BlogReactionRepository blogReactionRepository;
     private final BlogRepository blogRepository;
@@ -33,21 +35,13 @@ public class BlogReactionServiceImpl implements BlogReactionService {
     @Transactional
     public Object handleReactToBlog(ReactionBlogRequest request) {
         String currentEmail = SecurityUtil.getCurrentUserLogin().orElse("");
-        if (currentEmail.isEmpty()) {
-            return null;
-        }
+        if (currentEmail.isEmpty()) return null;
 
         Account currentAccount = this.accountRepository.findByEmailWithRole(currentEmail).orElse(null);
-        if (currentAccount == null) {
-            return null;
-        }
+        if (currentAccount == null) return null;
 
-        Optional<Blog> blogOpt = this.blogRepository.findById(request.getBlogId());
-        if (blogOpt.isEmpty()) {
-            return null;
-        }
-
-        Blog blog = blogOpt.get();
+        Blog blog = this.blogRepository.findByBlogIdAndDeletedAtIsNull(request.getBlogId()).orElse(null);
+        if (blog == null) return null;
 
         // Check if reaction already exists
         Optional<BlogReaction> existingReaction = this.blogReactionRepository
@@ -67,6 +61,8 @@ public class BlogReactionServiceImpl implements BlogReactionService {
             this.blogReactionRepository.save(newReaction);
         }
 
+        this.blogService.handleIncrementTotalLikeValue(blog.getBlogId(), true);
+
         return currentAccount instanceof Company
                 ? this.companyService.convertToCompanyResponse((Company) currentAccount)
                 : this.userService.convertToUserResponse((User) currentAccount);
@@ -76,17 +72,13 @@ public class BlogReactionServiceImpl implements BlogReactionService {
     @Transactional
     public Object handleUnreactToBlogs(List<Long> blogIds) {
         String currentEmail = SecurityUtil.getCurrentUserLogin().orElse("");
-        if (currentEmail.isEmpty()) {
-            return null;
-        }
+        if (currentEmail.isEmpty()) return null;
 
         Account currentAccount = this.accountRepository.findByEmailWithRole(currentEmail).orElse(null);
-        if (currentAccount == null) {
-            return null;
-        }
+        if (currentAccount == null) return null;
 
-        // Delete reactions for specified blogs
         this.blogReactionRepository.deleteByBlog_BlogIdInAndAccount_AccountId(blogIds, currentAccount.getAccountId());
+        blogIds.forEach(blogId -> this.blogService.handleIncrementTotalLikeValue(blogId, false));
 
         return currentAccount instanceof Company
                 ? this.companyService.convertToCompanyResponse((Company) currentAccount)

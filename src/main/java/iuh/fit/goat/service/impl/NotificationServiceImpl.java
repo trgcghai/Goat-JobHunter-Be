@@ -33,9 +33,9 @@ public class NotificationServiceImpl implements NotificationService {
     private final RedisService redisService;
     private final ObjectMapper objectMapper;
 
-    private User handleGetCurrentUser() {
+    private Account handleGetCurrentAccount() {
         String currentEmail = SecurityUtil.getCurrentUserEmail();
-        return this.userRepository.findByEmail(currentEmail);
+        return this.accountRepository.findByEmailAndDeletedAtIsNull(currentEmail).orElse(null);
     }
 
     @Override
@@ -45,21 +45,21 @@ public class NotificationServiceImpl implements NotificationService {
 
     @Override
     public List<Notification> handleGetAllNotifications() {
-        User currentUser = this.handleGetCurrentUser();
-        if (currentUser == null) return Collections.emptyList();
+        Account currentAccount = this.handleGetCurrentAccount();
+        if (currentAccount == null) return Collections.emptyList();
 
         return this.notificationRepository
-                .findByRecipient_AccountIdOrderByCreatedAtDesc(currentUser.getAccountId());
+                .findByRecipient_AccountIdOrderByCreatedAtDesc(currentAccount.getAccountId());
     }
 
     @Override
     @Transactional
     public void handleMarkNotificationsAsSeen(List<Long> notificationIds) {
-        User currentUser = this.handleGetCurrentUser();
-        if (currentUser == null) return;
+        Account currentAccount = this.handleGetCurrentAccount();
+        if (currentAccount == null) return;
 
         List<Notification> notifications = this.notificationRepository
-                .findByNotificationIdInAndRecipient_AccountId(notificationIds, currentUser.getAccountId());
+                .findByNotificationIdInAndRecipient_AccountId(notificationIds, currentAccount.getAccountId());
 
         notifications.forEach(n -> n.setSeen(true));
         this.notificationRepository.saveAll(notifications);
@@ -67,7 +67,7 @@ public class NotificationServiceImpl implements NotificationService {
 
     @Override
     public void handleNotifyCommentBlog(Blog blog, Comment comment) {
-        User actor = this.handleGetCurrentUser();
+        Account actor = this.handleGetCurrentAccount();
         if (actor == null) return;
 
         Account recipient = blog.getAuthor();
@@ -77,10 +77,10 @@ public class NotificationServiceImpl implements NotificationService {
                 NotificationType.COMMENT.ordinal(), blog.getBlogId(), recipient.getAccountId());
 
         try {
-            if (redisService.hasKey(redisKey)) {
-                String existingPayload = redisService.getValue(redisKey);
+            if (this.redisService.hasKey(redisKey)) {
+                String existingPayload = this.redisService.getValue(redisKey);
                 @SuppressWarnings("unchecked")
-                Map<String, Object> existingData = objectMapper.readValue(existingPayload, Map.class);
+                Map<String, Object> existingData = this.objectMapper.readValue(existingPayload, Map.class);
 
                 @SuppressWarnings("unchecked")
                 List<Number> actorIds = (List<Number>) existingData.get("actorIds");
@@ -95,8 +95,8 @@ public class NotificationServiceImpl implements NotificationService {
                 existingData.put("actorIds", newActorIds);
                 existingData.put("commentId", comment.getCommentId());
 
-                String updatedPayload = objectMapper.writeValueAsString(existingData);
-                redisService.updateValue(redisKey, updatedPayload);
+                String updatedPayload = this.objectMapper.writeValueAsString(existingData);
+                this.redisService.updateValue(redisKey, updatedPayload);
             } else {
                 Notification notification = new Notification();
                 notification.setType(NotificationType.COMMENT);
@@ -114,7 +114,7 @@ public class NotificationServiceImpl implements NotificationService {
 
     @Override
     public void handleNotifyReplyComment(Comment parent, Comment reply) {
-        User actor = this.handleGetCurrentUser();
+        Account actor = this.handleGetCurrentAccount();
         if (actor == null) return;
 
         Account recipient = parent.getCommentedBy();
@@ -124,10 +124,10 @@ public class NotificationServiceImpl implements NotificationService {
                 NotificationType.REPLY.ordinal(), parent.getCommentId(), recipient.getAccountId());
 
         try {
-            if (redisService.hasKey(redisKey)) {
-                String existingPayload = redisService.getValue(redisKey);
+            if (this.redisService.hasKey(redisKey)) {
+                String existingPayload = this.redisService.getValue(redisKey);
                 @SuppressWarnings("unchecked")
-                Map<String, Object> existingData = objectMapper.readValue(existingPayload, Map.class);
+                Map<String, Object> existingData = this.objectMapper.readValue(existingPayload, Map.class);
 
                 @SuppressWarnings("unchecked")
                 List<Number> actorIds = (List<Number>) existingData.get("actorIds");
@@ -142,8 +142,8 @@ public class NotificationServiceImpl implements NotificationService {
                 existingData.put("actorIds", newActorIds);
                 existingData.put("replyId", reply.getCommentId());
 
-                String updatedPayload = objectMapper.writeValueAsString(existingData);
-                redisService.updateValue(redisKey, updatedPayload);
+                String updatedPayload = this.objectMapper.writeValueAsString(existingData);
+                this.redisService.updateValue(redisKey, updatedPayload);
             } else {
                 Notification notification = new Notification();
                 notification.setType(NotificationType.REPLY);
@@ -160,7 +160,7 @@ public class NotificationServiceImpl implements NotificationService {
 
     @Override
     public void handleNotifyLikeBlog(Blog blog) {
-        User actor = this.handleGetCurrentUser();
+        Account actor = this.handleGetCurrentAccount();
         if (actor == null || blog == null || blog.getAuthor() == null) return;
 
         Account recipient = blog.getAuthor();
@@ -171,11 +171,11 @@ public class NotificationServiceImpl implements NotificationService {
 
         try {
             // Check if notification exists in Redis
-            if (redisService.hasKey(redisKey)) {
+            if (this.redisService.hasKey(redisKey)) {
                 // Get existing data, add actor to list
-                String existingPayload = redisService.getValue(redisKey);
+                String existingPayload = this.redisService.getValue(redisKey);
                 @SuppressWarnings("unchecked")
-                Map<String, Object> existingData = objectMapper.readValue(existingPayload, Map.class);
+                Map<String, Object> existingData = this.objectMapper.readValue(existingPayload, Map.class);
 
                 @SuppressWarnings("unchecked")
                 List<Number> actorIds = (List<Number>) existingData.get("actorIds");
@@ -185,8 +185,8 @@ public class NotificationServiceImpl implements NotificationService {
                     actorIds.add(actorId);
                     existingData.put("actorIds", actorIds);
 
-                    String updatedPayload = objectMapper.writeValueAsString(existingData);
-                    redisService.updateValue(redisKey, updatedPayload);
+                    String updatedPayload = this.objectMapper.writeValueAsString(existingData);
+                    this.redisService.updateValue(redisKey, updatedPayload);
                 }
             } else {
                 // Create new notification in Redis
@@ -205,7 +205,7 @@ public class NotificationServiceImpl implements NotificationService {
 
     @Override
     public void handleNotifyFollowCompany(Company company) {
-        User actor = this.handleGetCurrentUser();
+        Account actor = this.handleGetCurrentAccount();
         if (actor == null || company == null) return;
 
         if (actor.getAccountId() == company.getAccountId()) return;
@@ -311,7 +311,7 @@ public class NotificationServiceImpl implements NotificationService {
         notification.setSeen(false);
 
         Long recipientId = ((Number) data.get("recipientId")).longValue();
-        User recipient = this.userRepository.findById(recipientId)
+        Account recipient = this.accountRepository.findById(recipientId)
                 .orElseThrow(() -> new IllegalArgumentException("Recipient not found"));
         notification.setRecipient(recipient);
 

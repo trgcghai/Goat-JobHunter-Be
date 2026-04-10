@@ -52,6 +52,7 @@ dependencies {
 	implementation("io.awspring.cloud:spring-cloud-starter-aws-secrets-manager-config:2.4.4")
     implementation("software.amazon.awssdk:dynamodb")
     implementation("software.amazon.awssdk:dynamodb-enhanced")
+	implementation("org.springframework:spring-test:7.0.6")
 
 	implementation("commons-io:commons-io:2.19.0")
 	implementation("commons-net:commons-net:3.12.0")
@@ -61,6 +62,7 @@ dependencies {
 
 	testImplementation("org.springframework.boot:spring-boot-starter-test")
 	testImplementation("org.springframework.security:spring-security-test")
+	testImplementation("org.springframework:spring-test:7.0.6")
 	testRuntimeOnly("org.junit.platform:junit-platform-launcher")
 }
 

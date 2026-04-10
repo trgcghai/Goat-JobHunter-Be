@@ -12,9 +12,11 @@ import iuh.fit.goat.exception.InvalidException;
 import iuh.fit.goat.repository.AddressRepository;
 import iuh.fit.goat.repository.CompanyRepository;
 import iuh.fit.goat.service.CompanyService;
+import iuh.fit.goat.service.ProfileRealtimeService;
 import iuh.fit.goat.service.RoleService;
 import iuh.fit.goat.service.StorageService;
 import iuh.fit.goat.util.BasicUtil;
+import iuh.fit.goat.util.SecurityUtil;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -31,6 +33,7 @@ import java.util.stream.Collectors;
 public class CompanyServiceImpl implements CompanyService {
     private final RoleService roleService;
     private final StorageService storageService;
+    private final ProfileRealtimeService profileRealtimeService;
 
     private final CompanyRepository companyRepository;
     private final AddressRepository addressRepository;
@@ -69,7 +72,7 @@ public class CompanyServiceImpl implements CompanyService {
         if(request.getOvertimePolicy() != null) company.setOvertimePolicy(request.getOvertimePolicy());
 
         if(request.getLogo() != null) {
-            String logoUrl = BasicUtil.uploadImage(request.getLogo(), "company-logos", storageService);
+            String logoUrl = BasicUtil.uploadImage(request.getLogo(), "company-logos", this.storageService);
 
             if(company.getLogo() != null) {
                 String oldKey = company.getLogo().split(".amazonaws.com/")[1];
@@ -144,7 +147,16 @@ public class CompanyServiceImpl implements CompanyService {
             }
         }
 
-        return this.companyRepository.save(company);
+        Company savedCompany = this.companyRepository.save(company);
+        Company latestCompany = this.companyRepository.findById(savedCompany.getAccountId()).orElse(savedCompany);
+
+        String currentEmail = SecurityUtil.getCurrentUserEmail();
+        if (currentEmail != null && !currentEmail.isBlank()) {
+            CompanyResponse payload = this.convertToCompanyResponse(latestCompany);
+            this.profileRealtimeService.emitUserProfileUpdated(currentEmail, "COMPANY", payload);
+        }
+
+        return latestCompany;
     }
 
     @Transactional
@@ -229,6 +241,7 @@ public class CompanyServiceImpl implements CompanyService {
         companyResponse.setAccountId(company.getAccountId());
         companyResponse.setEmail(company.getEmail());
         companyResponse.setName(company.getName());
+        companyResponse.setUsername(company.getUsername());
         companyResponse.setDescription(company.getDescription());
         companyResponse.setLogo(company.getLogo());
         companyResponse.setCoverPhoto(company.getCoverPhoto());
@@ -236,6 +249,7 @@ public class CompanyServiceImpl implements CompanyService {
         companyResponse.setPhone(company.getPhone());
         companyResponse.setSize(company.getSize());
         companyResponse.setVerified(company.isVerified());
+        companyResponse.setVisibility(company.getVisibility());
         companyResponse.setCountry(company.getCountry());
         companyResponse.setIndustry(company.getIndustry());
         companyResponse.setWorkingDays(company.getWorkingDays());
