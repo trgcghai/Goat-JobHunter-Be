@@ -12,6 +12,7 @@ import iuh.fit.goat.dto.request.auth.VerifyAccountRequest;
 import iuh.fit.goat.dto.response.StorageResponse;
 import iuh.fit.goat.dto.response.auth.LoginResponse;
 import iuh.fit.goat.dto.response.company.CompanyResponse;
+import iuh.fit.goat.dto.response.notification.DeviceNotificationResponse;
 import iuh.fit.goat.entity.*;
 import iuh.fit.goat.exception.InvalidException;
 import iuh.fit.goat.repository.AccountRepository;
@@ -19,6 +20,7 @@ import iuh.fit.goat.service.*;
 import iuh.fit.goat.util.BasicUtil;
 import iuh.fit.goat.util.FileUploadUtil;
 import iuh.fit.goat.util.SecurityUtil;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -37,6 +39,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 
+import java.time.Instant;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
 
@@ -58,6 +61,8 @@ public class AuthServiceImpl implements AuthService {
     private final CompanyService companyService;
     private final RoleService roleService;
     private final StorageService storageService;
+    private final NotificationService notificationService;
+    private final DeviceInfoService deviceInfoService;
 
     private final AccountRepository accountRepository;
 
@@ -69,7 +74,9 @@ public class AuthServiceImpl implements AuthService {
     private long validityInSeconds;
 
     @Override
-    public LoginResponse handleLogin(LoginRequest loginRequest, HttpServletResponse response) throws InvalidException {
+    public LoginResponse handleLogin(
+            LoginRequest loginRequest, HttpServletResponse response, HttpServletRequest request
+    ) throws InvalidException {
 
         log.info("User: {}", this.accountRepository.findByEmailAndDeletedAtIsNull(loginRequest.getEmail()));
         log.info("loginRequest: {}", loginRequest);
@@ -95,16 +102,30 @@ public class AuthServiceImpl implements AuthService {
 
         log.info("loginResponse logged in: {}", loginResponse);
 
-        // Tạo token và lưu vào Redis
+//        Kiểm tra nếu đã có refresh token trong Redis thì xóa đi để tạo mới và các thiết bị khác sẽ đăng xuất
+        String oldRefreshToken = this.redisService.getValue("account:" + account.getEmail() + ":refresh");
+        if(oldRefreshToken != null) {
+            String deviceName = this.deviceInfoService.getDeviceName(request);
+            this.notificationService.handleForceLogout(
+                    account.getEmail(),
+                    new DeviceNotificationResponse(
+                            "Tài khoản của bạn đang được đăng nhập: " + deviceName,
+                            deviceName,
+                            Instant.now()
+                    )
+            );
+            this.redisService.deleteKey("account:" + account.getEmail() + ":refresh");
+        }
+
+        // Tạo token mới và lưu vào Redis
         String accessToken = this.securityUtil.createAccessToken(account.getEmail(), loginResponse);
         String refreshToken = this.securityUtil.createRefreshToken(account.getEmail(), loginResponse);
 
         log.info("Refresh Token Created in Login: {}", refreshToken);
 
-        // Lưu refresh token vào Redis
         this.redisService.saveWithTTL(
-                "refresh:" + refreshToken,
-                account.getEmail(),
+                "account:" + account.getEmail() + ":refresh",
+                refreshToken,
                 jwtRefreshToken,
                 TimeUnit.SECONDS
         );
@@ -135,16 +156,17 @@ public class AuthServiceImpl implements AuthService {
 
     @Override
     public LoginResponse handleRefreshToken(String refreshToken, HttpServletResponse response) throws InvalidException {
+        Jwt jwt = this.securityUtil.checkValidToken(refreshToken);
+        String email = jwt.getSubject();
+
         if(refreshToken.equalsIgnoreCase("missingValue")) {
             throw new InvalidException("You don't have a refresh token at cookie");
         }
-        log.info("Refresh Token in Redis: " + refreshToken);
-        if (!this.redisService.hasKey("refresh:" + refreshToken)) {
+        if (!this.redisService.hasKey("account:" + email + ":refresh")
+                || !this.redisService.getValue("account:" + email + ":refresh").equalsIgnoreCase(refreshToken)
+        ) {
             throw new InvalidException("Invalid or expired refresh token");
         }
-
-        Jwt jwt = this.securityUtil.checkValidToken(refreshToken);
-        String email = jwt.getSubject();
 
         Account currentAccount = this.accountRepository.findByEmailAndDeletedAtIsNull(email).orElse(null);
         if(currentAccount == null){
@@ -169,12 +191,20 @@ public class AuthServiceImpl implements AuthService {
         String newAccessToken = this.securityUtil.createAccessToken(email, loginResponse);
         String newRefreshToken = this.securityUtil.createRefreshToken(email, loginResponse);
 
+//        this.redisService.replaceKey(
+//                "refresh:" + refreshToken,
+//                "refresh:" + newRefreshToken,
+//                currentAccount.getEmail(),
+//                jwtRefreshToken,
+//                TimeUnit.SECONDS
+//        );
+
         this.redisService.replaceKey(
-                "refresh:" + refreshToken,
-                "refresh:" + newRefreshToken,
-                currentAccount.getEmail(),
-                jwtRefreshToken,
-                TimeUnit.SECONDS
+            "account:" + email + ":refresh",
+            "account:" + email + ":refresh",
+            newRefreshToken,
+            jwtRefreshToken,
+            TimeUnit.SECONDS
         );
 
         ResponseCookie newAccessCookie = ResponseCookie
@@ -203,7 +233,11 @@ public class AuthServiceImpl implements AuthService {
 
     @Override
     public void handleLogout(String accessToken, String refreshToken, HttpServletResponse response) {
-        this.redisService.deleteKey("refresh:" + refreshToken);
+        Jwt jwt = this.securityUtil.checkValidToken(refreshToken);
+        String email = jwt.getSubject();
+        if(email == null || email.isEmpty()) return;
+
+        this.redisService.deleteKey("account:" + email + ":refresh");
         this.redisService.saveWithTTL(
                 "blacklist:" + accessToken,
                 "revoked",

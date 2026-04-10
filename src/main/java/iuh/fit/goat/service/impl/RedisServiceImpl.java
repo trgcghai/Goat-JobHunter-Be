@@ -8,6 +8,7 @@ import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.data.redis.core.types.Expiration;
 import org.springframework.stereotype.Service;
 
+import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
 @Service
@@ -52,5 +53,13 @@ public class RedisServiceImpl implements RedisService {
             );
             return null;
         });
+    }
+
+    @Override
+    public void deleteByPattern(String pattern) {
+        Set<String> keys = this.redisTemplate.keys(pattern);
+        if (!keys.isEmpty()) {
+            this.redisTemplate.delete(keys);
+        }
     }
 }
