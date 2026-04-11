@@ -13,7 +13,6 @@ public enum SoftDeleteFilter {
     CAREER("activeCareerFilter"),
     SUBSCRIBER("activeSubscriberFilter"),
     INTERVIEW("activeInterviewFilter"),
-    FRIENDSHIP("activeFriendshipFilter"),
     FRIEND_REQUEST("activeFriendRequestFilter"),
     USER_RELATIONSHIP("activeUserRelationshipFilter"),
     JOB("activeJobFilter"),

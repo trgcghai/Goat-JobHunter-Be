@@ -54,7 +54,7 @@ public class FriendRequestServiceImpl implements FriendRequestService {
         User receiver = this.userRepository.findByAccountIdAndDeletedAtIsNull(request.getTargetUserId())
                 .orElseThrow(() -> new NotFoundException("Target user doesn't exist"));
 
-        UserPair pair = UserPair.of(sender.getAccountId(), receiver.getAccountId());
+        UserPair pair = UserPair.of(sender, receiver);
 
         Optional<UserRelationship> existingRelationship = this.userRelationshipRepository
                 .findByPairForUpdate(pair.pairLowId(), pair.pairHighId());
@@ -69,7 +69,7 @@ public class FriendRequestServiceImpl implements FriendRequestService {
         }
 
         boolean hasPending = this.friendRequestRepository
-                .existsByPairLowIdAndPairHighIdAndStatusAndDeletedAtIsNull(
+            .existsByPairLowUser_AccountIdAndPairHighUser_AccountIdAndStatusAndDeletedAtIsNull(
                         pair.pairLowId(),
                         pair.pairHighId(),
                         FriendRequestStatus.PENDING
@@ -82,8 +82,8 @@ public class FriendRequestServiceImpl implements FriendRequestService {
         FriendRequest entity = new FriendRequest();
         entity.setSender(sender);
         entity.setReceiver(receiver);
-        entity.setPairLowId(pair.pairLowId());
-        entity.setPairHighId(pair.pairHighId());
+        entity.setPairLowUser(pair.pairLowUser());
+        entity.setPairHighUser(pair.pairHighUser());
         entity.setStatus(FriendRequestStatus.PENDING);
         entity.setRequestedAt(now);
 
@@ -118,7 +118,7 @@ public class FriendRequestServiceImpl implements FriendRequestService {
             throw new InvalidException("Only the receiver can accept this friend request");
         }
 
-        UserPair pair = UserPair.of(request.getSender().getAccountId(), request.getReceiver().getAccountId());
+        UserPair pair = UserPair.of(request.getSender(), request.getReceiver());
 
         Optional<UserRelationship> existingRelationship = this.userRelationshipRepository
                 .findByPairForUpdate(pair.pairLowId(), pair.pairHighId());
@@ -288,11 +288,19 @@ public class FriendRequestServiceImpl implements FriendRequestService {
         );
     }
 
-    private record UserPair(Long pairLowId, Long pairHighId) {
-        private static UserPair of(Long firstUserId, Long secondUserId) {
-            return firstUserId <= secondUserId
-                    ? new UserPair(firstUserId, secondUserId)
-                    : new UserPair(secondUserId, firstUserId);
+    private record UserPair(User pairLowUser, User pairHighUser) {
+        private static UserPair of(User firstUser, User secondUser) {
+            return firstUser.getAccountId() <= secondUser.getAccountId()
+                    ? new UserPair(firstUser, secondUser)
+                    : new UserPair(secondUser, firstUser);
+        }
+
+        private Long pairLowId() {
+            return this.pairLowUser.getAccountId();
+        }
+
+        private Long pairHighId() {
+            return this.pairHighUser.getAccountId();
         }
     }
 }

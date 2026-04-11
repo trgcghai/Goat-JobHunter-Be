@@ -32,5 +32,6 @@
     <include file="db.changelog/schema/2026-03-28/change-relation-account.xml"/>
     <include file="db.changelog/schema/2026-03-28/unique-constraint-blog-reaction.xml"/>
     <include file="db.changelog/schema/2026-04-09/add-account-visibility.xml"/>
+    <include file="db.changelog/schema/2026-04-12/create-friend-request-and-user-relationship.xml"/>
 
 </databaseChangeLog>

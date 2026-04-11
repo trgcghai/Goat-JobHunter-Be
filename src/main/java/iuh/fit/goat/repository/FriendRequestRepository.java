@@ -15,7 +15,7 @@ import java.util.Optional;
 
 @Repository
 public interface FriendRequestRepository extends JpaRepository<FriendRequest, Long> {
-    boolean existsByPairLowIdAndPairHighIdAndStatusAndDeletedAtIsNull(
+        boolean existsByPairLowUser_AccountIdAndPairHighUser_AccountIdAndStatusAndDeletedAtIsNull(
             Long pairLowId,
             Long pairHighId,
             FriendRequestStatus status
@@ -30,8 +30,8 @@ public interface FriendRequestRepository extends JpaRepository<FriendRequest, Lo
             UPDATE FriendRequest fr
             SET fr.status = :newStatus,
                 fr.respondedAt = :respondedAt
-            WHERE fr.pairLowId = :pairLowId
-              AND fr.pairHighId = :pairHighId
+                                                WHERE fr.pairLowUser.accountId = :pairLowId
+                                                        AND fr.pairHighUser.accountId = :pairHighId
               AND fr.status = :currentStatus
               AND fr.requestId <> :excludedRequestId
               AND fr.deletedAt IS NULL

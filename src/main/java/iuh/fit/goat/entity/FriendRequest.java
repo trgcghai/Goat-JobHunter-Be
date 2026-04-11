@@ -26,7 +26,7 @@ import static jakarta.persistence.FetchType.LAZY;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-@ToString(exclude = {"sender", "receiver"})
+@ToString(exclude = {"sender", "receiver", "pairLowUser", "pairHighUser"})
 @FilterDef(name = "activeFriendRequestFilter")
 public class FriendRequest extends BaseEntity {
     @Id
@@ -34,11 +34,13 @@ public class FriendRequest extends BaseEntity {
     @SequenceGenerator(name = "friend_request_gen", sequenceName = "friend_requests_seq", allocationSize = 50)
     private long requestId;
 
-    @Column(name = "pair_low_id", nullable = false)
-    private Long pairLowId;
+        @ManyToOne(fetch = LAZY)
+        @JoinColumn(name = "pair_low_id", nullable = false)
+        private User pairLowUser;
 
-    @Column(name = "pair_high_id", nullable = false)
-    private Long pairHighId;
+        @ManyToOne(fetch = LAZY)
+        @JoinColumn(name = "pair_high_id", nullable = false)
+        private User pairHighUser;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)

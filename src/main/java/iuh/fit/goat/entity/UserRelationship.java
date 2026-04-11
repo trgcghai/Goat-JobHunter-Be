@@ -6,9 +6,12 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import lombok.ToString;
 import org.hibernate.annotations.FilterDef;
 
 import java.time.Instant;
+
+import static jakarta.persistence.FetchType.LAZY;
 
 @Entity
 @Table(
@@ -24,6 +27,7 @@ import java.time.Instant;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
+@ToString(exclude = {"pairLowUser", "pairHighUser", "blockedBy"})
 @FilterDef(name = "activeUserRelationshipFilter")
 public class UserRelationship extends BaseEntity {
     @Id
@@ -31,11 +35,13 @@ public class UserRelationship extends BaseEntity {
     @SequenceGenerator(name = "user_relationship_gen", sequenceName = "user_relationships_seq", allocationSize = 50)
     private long relationshipId;
 
-    @Column(name = "pair_low_id", nullable = false)
-    private Long pairLowId;
+        @ManyToOne(fetch = LAZY)
+        @JoinColumn(name = "pair_low_id", nullable = false)
+        private User pairLowUser;
 
-    @Column(name = "pair_high_id", nullable = false)
-    private Long pairHighId;
+        @ManyToOne(fetch = LAZY)
+        @JoinColumn(name = "pair_high_id", nullable = false)
+        private User pairHighUser;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "relationship_state", nullable = false)
@@ -45,5 +51,7 @@ public class UserRelationship extends BaseEntity {
 
     private Instant blockedSince;
 
-    private Long blockedById;
+        @ManyToOne(fetch = LAZY)
+        @JoinColumn(name = "blocked_by_id")
+        private User blockedBy;
 }

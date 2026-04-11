@@ -15,18 +15,18 @@ import java.util.Optional;
 
 @Repository
 public interface UserRelationshipRepository extends JpaRepository<UserRelationship, Long> {
-    Optional<UserRelationship> findByPairLowIdAndPairHighIdAndDeletedAtIsNull(Long pairLowId, Long pairHighId);
+    Optional<UserRelationship> findByPairLowUser_AccountIdAndPairHighUser_AccountIdAndDeletedAtIsNull(Long pairLowId, Long pairHighId);
 
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("""
             SELECT ur FROM UserRelationship ur
-            WHERE ur.pairLowId = :pairLowId
-              AND ur.pairHighId = :pairHighId
+                        WHERE ur.pairLowUser.accountId = :pairLowId
+                            AND ur.pairHighUser.accountId = :pairHighId
               AND ur.deletedAt IS NULL
             """)
     Optional<UserRelationship> findByPairForUpdate(@Param("pairLowId") Long pairLowId, @Param("pairHighId") Long pairHighId);
 
-    boolean existsByPairLowIdAndPairHighIdAndRelationshipStateAndDeletedAtIsNull(
+        boolean existsByPairLowUser_AccountIdAndPairHighUser_AccountIdAndRelationshipStateAndDeletedAtIsNull(
             Long pairLowId,
             Long pairHighId,
             RelationshipState relationshipState
