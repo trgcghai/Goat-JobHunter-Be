@@ -83,13 +83,13 @@ public interface UserService {
     ResultPaginationResponse handleGetCurrentUserInterviews(Specification<Interview> spec, Pageable pageable);
     /*     ========================= ========================= =========================  */
 
-    // Admin related methods
+    /*     ========================= Admin Related Endpoints =========================  */
     List<UserEnabledResponse> handleActivateUsers(List<Long> userIds);
 
     List<UserEnabledResponse> handleDeactivateUsers(List<Long> userIds);
+    /*     ========================= Admin Related Endpoints =========================  */
 
     UserVisibilityResponse handleUpdateMyVisibility(Visibility visibility) throws InvalidException;
 
     List<UserVisibilityResponse> handleUpdateUsersVisibility(List<Long> accountIds, Visibility visibility) throws InvalidException;
-
 }

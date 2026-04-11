@@ -40,6 +40,7 @@ public class UserController {
     private final RecruiterService recruiterService;
     private final JobService jobService;
     private final ResumeService resumeService;
+    private final DeviceService deviceService;
 
     @Value("${minhdat.jwt.access-token-validity-in-seconds}")
     private long jwtAccessToken;
@@ -397,5 +398,11 @@ public class UserController {
         List<UserVisibilityResponse> responses = this.userService
                 .handleUpdateUsersVisibility(request.getAccountIds(), request.getVisibility());
         return ResponseEntity.status(HttpStatus.OK).body(responses);
+    }
+
+    @GetMapping("/me/devices")
+    public ResponseEntity<ResultPaginationResponse> getCurrentUserDevice(Pageable pageable) {
+        ResultPaginationResponse result = this.deviceService.handleGetAllDevicesByEmail(pageable);
+        return ResponseEntity.status(HttpStatus.OK).body(result);
     }
 }

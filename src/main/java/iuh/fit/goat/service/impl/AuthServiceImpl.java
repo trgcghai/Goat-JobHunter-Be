@@ -9,9 +9,7 @@ import iuh.fit.goat.dto.request.auth.LoginRequest;
 import iuh.fit.goat.dto.request.auth.RegisterCompanyRequest;
 import iuh.fit.goat.dto.request.auth.RegisterUserRequest;
 import iuh.fit.goat.dto.request.auth.VerifyAccountRequest;
-import iuh.fit.goat.dto.response.StorageResponse;
 import iuh.fit.goat.dto.response.auth.LoginResponse;
-import iuh.fit.goat.dto.response.company.CompanyResponse;
 import iuh.fit.goat.dto.response.notification.DeviceNotificationResponse;
 import iuh.fit.goat.entity.*;
 import iuh.fit.goat.exception.InvalidException;
@@ -36,7 +34,6 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.stereotype.Service;
-import org.springframework.web.multipart.MultipartFile;
 
 
 import java.time.Instant;
@@ -62,7 +59,7 @@ public class AuthServiceImpl implements AuthService {
     private final RoleService roleService;
     private final StorageService storageService;
     private final NotificationService notificationService;
-    private final DeviceInfoService deviceInfoService;
+    private final DeviceService deviceService;
 
     private final AccountRepository accountRepository;
 
@@ -89,12 +86,8 @@ public class AuthServiceImpl implements AuthService {
         SecurityContextHolder.getContext().setAuthentication(authentication);
 
         Account account = this.userService.handleGetAccountByEmail(loginRequest.getEmail());
-        if (account == null) {
-            throw new InvalidException("Invalid account");
-        }
-        if (!account.isEnabled()) {
-            throw new InvalidException("Account is locked");
-        }
+        if (account == null)  throw new InvalidException("Invalid account");
+        if (!account.isEnabled()) throw new InvalidException("Account is inactive");
 
         log.info("Account logged in: {}", account);
 
@@ -105,7 +98,7 @@ public class AuthServiceImpl implements AuthService {
 //        Kiểm tra nếu đã có refresh token trong Redis thì xóa đi để tạo mới và các thiết bị khác sẽ đăng xuất
         String oldRefreshToken = this.redisService.getValue("account:" + account.getEmail() + ":refresh");
         if(oldRefreshToken != null) {
-            String deviceName = this.deviceInfoService.getDeviceName(request);
+            String deviceName = this.deviceService.getDeviceName(request);
             this.notificationService.handleForceLogout(
                     account.getEmail(),
                     new DeviceNotificationResponse(
@@ -116,6 +109,12 @@ public class AuthServiceImpl implements AuthService {
             );
             this.redisService.deleteKey("account:" + account.getEmail() + ":refresh");
         }
+
+//        Lưu thiết bị đã đăng nhập
+        Device device = new Device();
+        device.setName(this.deviceService.getDeviceName(request));
+        device.setAccount(account);
+        this.deviceService.handleUpsertDevice(device);
 
         // Tạo token mới và lưu vào Redis
         String accessToken = this.securityUtil.createAccessToken(account.getEmail(), loginResponse);
