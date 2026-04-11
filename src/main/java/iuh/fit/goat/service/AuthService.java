@@ -25,4 +25,6 @@ public interface AuthService {
     void handleVerifyAccount(VerifyAccountRequest verifyAccount) throws InvalidException;
 
     void handleResendCode(String email) throws InvalidException;
+
+    void handleDeleteMyAccount() throws InvalidException;
 }

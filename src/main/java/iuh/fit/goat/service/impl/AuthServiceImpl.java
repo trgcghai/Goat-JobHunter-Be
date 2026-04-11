@@ -34,6 +34,7 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 
 import java.time.Instant;
@@ -82,12 +83,12 @@ public class AuthServiceImpl implements AuthService {
                 .authenticate(new UsernamePasswordAuthenticationToken(
                         loginRequest.getEmail(), loginRequest.getPassword())
                 );
-
         SecurityContextHolder.getContext().setAuthentication(authentication);
 
         Account account = this.userService.handleGetAccountByEmail(loginRequest.getEmail());
-        if (account == null)  throw new InvalidException("Invalid account");
-        if (!account.isEnabled()) throw new InvalidException("Account is inactive");
+        if (account == null)  throw new InvalidException("Tài khoản không hợp lệ");
+        if (account.getDeletedAt() != null) throw new InvalidException("Tài khoản của bạn đã bị xóa. Vui lòng tạo tài khoản mới.");
+        if (!account.isEnabled()) throw new InvalidException("Tài khoản bị vô hiệu hóa. Vui lòng liên hệ hỗ trợ để biết thêm chi tiết.");
 
         log.info("Account logged in: {}", account);
 
@@ -190,14 +191,6 @@ public class AuthServiceImpl implements AuthService {
         String newAccessToken = this.securityUtil.createAccessToken(email, loginResponse);
         String newRefreshToken = this.securityUtil.createRefreshToken(email, loginResponse);
 
-//        this.redisService.replaceKey(
-//                "refresh:" + refreshToken,
-//                "refresh:" + newRefreshToken,
-//                currentAccount.getEmail(),
-//                jwtRefreshToken,
-//                TimeUnit.SECONDS
-//        );
-
         this.redisService.replaceKey(
             "account:" + email + ":refresh",
             "account:" + email + ":refresh",
@@ -288,10 +281,12 @@ public class AuthServiceImpl implements AuthService {
 
     @Override
     public Object handleRegisterUser(RegisterUserRequest request) throws InvalidException {
-
-        // validate email existence
-        if (this.userService.handleExistsByEmail(request.getEmail())) {
-            throw new InvalidException("Email exists: " + request.getEmail());
+        Account account = this.userService.handleGetAccountByEmail(request.getEmail());
+        if (account != null && account.getDeletedAt() != null) {
+            throw new InvalidException("Email đã đăng ký trước đây và tài khoản đã bị xóa. Vui lòng tạo tài khoản mới.");
+        }
+        if (account != null) {
+            throw new InvalidException("Email đã được đăng ký.");
         }
 
         // hash password
@@ -370,8 +365,12 @@ public class AuthServiceImpl implements AuthService {
 
     @Override
     public Object handleRegisterCompany(RegisterCompanyRequest request) throws InvalidException {
-        if (this.accountService.handleGetAccountByEmail(request.getEmail()) != null) {
-            throw new InvalidException("Email exists: " + request.getEmail());
+        Account account = this.userService.handleGetAccountByEmail(request.getEmail());
+        if (account != null && account.getDeletedAt() != null) {
+            throw new InvalidException("Email đã đăng ký trước đây và tài khoản đã bị xóa. Vui lòng liên hệ hỗ trợ để khôi phục.");
+        }
+        if (account != null) {
+            throw new InvalidException("Email đã được đăng ký.");
         }
 
         if(this.companyService.handleGetCompanyByName(request.getName()) != null) {
@@ -464,6 +463,48 @@ public class AuthServiceImpl implements AuthService {
                 TimeUnit.SECONDS
         );
         this.emailNotificationService.handleSendVerificationEmail(key, verificationCode);
+    }
+
+    @Override
+    @Transactional
+    public void handleDeleteMyAccount() throws InvalidException {
+        String email = SecurityUtil.getCurrentUserEmail();
+        Account account = this.accountRepository.findByEmailWithRole(email).orElse(null);
+        if(account == null) throw new InvalidException("Tài khoản không hợp lệ");
+
+        if(account.getAddresses() != null) account.getAddresses().forEach(Address::onDelete);
+        if(account.getRecipientNotifications() != null) account.getRecipientNotifications().forEach(Notification::onDelete);
+        if(account.getBlogs() != null) account.getBlogs().forEach(Blog::onDelete);
+        if(account.getComments() != null) account.getComments().forEach(Comment::onDelete);
+        if(account.getBlogReactions() != null) account.getBlogReactions().forEach(BlogReaction::onDelete);
+        if(account.getCommentReactions() != null) account.getCommentReactions().forEach(CommentReaction::onDelete);
+        if(account.getReportedTickets() != null) account.getReportedTickets().forEach(Ticket::onDelete);
+        if(account.getAssignedTickets() != null) account.getAssignedTickets().forEach(Ticket::onDelete);
+        if(account.getMemberships() != null) account.getMemberships().forEach(ChatMember::onDelete);
+        if(account.getDevices() != null) account.getDevices().forEach(Device::onDelete);
+
+        if(account instanceof User user) {
+            if(user.getSentFriendRequests() != null) user.getSentFriendRequests().forEach(Friendship::onDelete);
+            if(user.getReceivedFriendRequests() != null) user.getReceivedFriendRequests().forEach(Friendship::onDelete);
+            if(user.getReviews() != null) user.getReviews().forEach(Review::onDelete);
+
+            if(user instanceof Applicant applicant) {
+                if(applicant.getApplications() != null) applicant.getApplications().forEach(Application::onDelete);
+                if(applicant.getResumes() != null) applicant.getResumes().forEach(Resume::onDelete);
+            } else if(user instanceof Recruiter recruiter) {
+                if(recruiter.getConductedInterviews() != null) recruiter.getConductedInterviews().forEach(Interview::onDelete);
+            }
+        }
+
+        if(account instanceof Company company) {
+            if(company.getJobs() != null) company.getJobs().forEach(Job::onDelete);
+            if(company.getRecruiters() != null) company.getRecruiters().forEach(Recruiter::onDelete);
+            if(company.getReviews() != null) company.getReviews().forEach(Review::onDelete);
+            if(company.getAwards() != null) company.getAwards().forEach(CompanyAward::onDelete);
+        }
+
+        account.onDelete();
+        this.accountRepository.save(account);
     }
 
     private LoginResponse createLoginResponse(Account account) {

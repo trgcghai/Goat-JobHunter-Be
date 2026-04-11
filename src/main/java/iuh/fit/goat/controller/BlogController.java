@@ -86,8 +86,15 @@ public class BlogController {
             @Filter Specification<Blog> spec, Pageable pageable
     ) {
         Specification<Blog> baseSpec = (spec != null) ? spec : Specification.unrestricted();
+        Specification<Blog> otherSpec = (root, query, cb) -> cb.and(
+                cb.and(
+                        cb.equal(root.get("enabled"), true),
+                        cb.isNull(root.get("deletedAt"))
+                )
+        );
+        Specification<Blog> finalSpec = baseSpec.and(otherSpec);
 
-        ResultPaginationResponse res = this.blogService.handleGetAllBlogs(baseSpec, pageable);
+        ResultPaginationResponse res = this.blogService.handleGetAllBlogs(finalSpec, pageable);
         return ResponseEntity.status(HttpStatus.OK).body(res);
     }
 

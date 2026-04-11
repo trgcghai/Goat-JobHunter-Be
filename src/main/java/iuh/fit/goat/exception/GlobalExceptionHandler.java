@@ -41,13 +41,24 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(value = {
             InvalidException.class,
-            BadCredentialsException.class,
             UsernameNotFoundException.class
     })
     ResponseEntity<RestResponse<Object>> handleAllSpecialExceptions(Exception e){
         RestResponse<Object> response = new RestResponse<Object>();
         response.setStatusCode(HttpStatus.BAD_REQUEST.value());
         response.setMessage(e.getMessage());
+        response.setError("Exception Occurred");
+
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
+    }
+
+    @ExceptionHandler(value = {
+            BadCredentialsException.class,
+    })
+    ResponseEntity<RestResponse<Object>> handleBadCredentialsExceptions(Exception e){
+        RestResponse<Object> response = new RestResponse<Object>();
+        response.setStatusCode(HttpStatus.BAD_REQUEST.value());
+        response.setMessage("Email hoặc mật khẩu không chính xác");
         response.setError("Exception Occurred");
 
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);

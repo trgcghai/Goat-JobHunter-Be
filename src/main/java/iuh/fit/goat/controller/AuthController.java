@@ -95,4 +95,10 @@ public class AuthController {
         }
     }
 
+    @DeleteMapping("/account")
+    public ResponseEntity<Void> deleteMyAccount() throws InvalidException {
+        this.authService.handleDeleteMyAccount();
+        return ResponseEntity.status(HttpStatus.OK).body(null);
+    }
+
 }

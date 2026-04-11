@@ -5,7 +5,6 @@ import iuh.fit.goat.dto.response.device.DeviceResponse;
 import iuh.fit.goat.entity.Device;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.jpa.domain.Specification;
 
 public interface DeviceService {
     String getDeviceName(HttpServletRequest request);

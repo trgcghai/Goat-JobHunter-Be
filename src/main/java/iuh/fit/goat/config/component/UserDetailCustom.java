@@ -24,7 +24,6 @@ public class UserDetailCustom implements UserDetailsService {
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
         // Thử tìm User trước
         Account account = this.userService.handleGetAccountByEmail(username);
-        Company company = null;
 
         if (account == null) {
             throw new UsernameNotFoundException("Account not found: " + username);
