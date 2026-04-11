@@ -14,6 +14,8 @@ public enum SoftDeleteFilter {
     SUBSCRIBER("activeSubscriberFilter"),
     INTERVIEW("activeInterviewFilter"),
     FRIENDSHIP("activeFriendshipFilter"),
+    FRIEND_REQUEST("activeFriendRequestFilter"),
+    USER_RELATIONSHIP("activeUserRelationshipFilter"),
     JOB("activeJobFilter"),
     BLOG("activeBlogFilter"),
     COMMENT("activeCommentFilter"),
