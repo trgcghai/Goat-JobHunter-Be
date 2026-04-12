@@ -1,6 +1,6 @@
 package iuh.fit.goat.dto.response.applicant;
 
-import iuh.fit.goat.dto.response.user.UserResponse;
+import iuh.fit.goat.dto.response.account.UserResponse;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;

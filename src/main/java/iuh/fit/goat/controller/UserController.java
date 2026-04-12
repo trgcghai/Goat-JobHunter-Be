@@ -4,14 +4,14 @@ import com.turkraft.springfilter.boot.Filter;
 import iuh.fit.goat.dto.request.user.ResetPasswordRequest;
 import iuh.fit.goat.dto.request.user.UpdateMyVisibilityRequest;
 import iuh.fit.goat.dto.request.user.UpdatePasswordRequest;
-import iuh.fit.goat.dto.request.user.UserEnabledRequest;
+import iuh.fit.goat.dto.request.account.AccountEnabledRequest;
 import iuh.fit.goat.dto.request.user.UsersVisibilityRequest;
 import iuh.fit.goat.dto.response.auth.LoginResponse;
 import iuh.fit.goat.dto.response.ResultPaginationResponse;
 import iuh.fit.goat.dto.response.company.CompanyResponse;
-import iuh.fit.goat.dto.response.user.UserEnabledResponse;
-import iuh.fit.goat.dto.response.user.UserResponse;
-import iuh.fit.goat.dto.response.user.UserVisibilityResponse;
+import iuh.fit.goat.dto.response.account.AccountEnabledResponse;
+import iuh.fit.goat.dto.response.account.UserResponse;
+import iuh.fit.goat.dto.response.account.UserVisibilityResponse;
 import iuh.fit.goat.entity.*;
 import iuh.fit.goat.exception.InvalidException;
 import iuh.fit.goat.service.*;
@@ -359,29 +359,6 @@ public class UserController {
         return ResponseEntity.status(HttpStatus.OK).body(result);
     }
     /*     ========================= ========================= =========================  */
-
-
-    @PutMapping("/activate")
-    public ResponseEntity<List<UserEnabledResponse>> activateUsers(@RequestBody UserEnabledRequest request)
-            throws InvalidException {
-        List<Long> userIds = request.getUserIds();
-        if (userIds == null || userIds.isEmpty()) {
-            throw new InvalidException("User IDs list cannot be empty");
-        }
-        List<UserEnabledResponse> res = this.userService.handleActivateUsers(userIds);
-        return ResponseEntity.status(HttpStatus.OK).body(res);
-    }
-
-    @PutMapping("/deactivate")
-    public ResponseEntity<List<UserEnabledResponse>> deactivateUsers(@RequestBody UserEnabledRequest request)
-            throws InvalidException {
-        List<Long> userIds = request.getUserIds();
-        if (userIds == null || userIds.isEmpty()) {
-            throw new InvalidException("User IDs list cannot be empty");
-        }
-        List<UserEnabledResponse> res = this.userService.handleDeactivateUsers(userIds);
-        return ResponseEntity.status(HttpStatus.OK).body(res);
-    }
 
     @PutMapping("/me/visibility")
     public ResponseEntity<UserVisibilityResponse> updateMyVisibility(

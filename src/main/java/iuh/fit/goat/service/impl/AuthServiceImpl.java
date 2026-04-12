@@ -50,7 +50,6 @@ public class AuthServiceImpl implements AuthService {
     private final SecurityUtil securityUtil;
     private final ObjectMapper mapper;
 
-    private final AccountService accountService;
     private final UserService userService;
     private final RedisService redisService;
     private final EmailNotificationService emailNotificationService;
@@ -76,19 +75,17 @@ public class AuthServiceImpl implements AuthService {
             LoginRequest loginRequest, HttpServletResponse response, HttpServletRequest request
     ) throws InvalidException {
 
-        log.info("User: {}", this.accountRepository.findByEmailAndDeletedAtIsNull(loginRequest.getEmail()));
-        log.info("loginRequest: {}", loginRequest);
+        Account account = this.userService.handleGetAccountByEmail(loginRequest.getEmail());
+        if (account == null)  throw new InvalidException("Tài khoản không hợp lệ");
+        if (account.getDeletedAt() != null) throw new InvalidException("Tài khoản của bạn đã bị xóa. Vui lòng tạo tài khoản mới.");
+        if (account.isLocked()) throw new InvalidException("Tài khoản bị khóa. Vui lòng liên hệ hỗ trợ để biết thêm chi tiết.");
+        if (!account.isEnabled()) throw new InvalidException("Tài khoản bị vô hiệu hóa. Vui lòng liên hệ hỗ trợ để biết thêm chi tiết.");
 
         Authentication authentication = this.authenticationManagerBuilder.getObject()
                 .authenticate(new UsernamePasswordAuthenticationToken(
                         loginRequest.getEmail(), loginRequest.getPassword())
                 );
         SecurityContextHolder.getContext().setAuthentication(authentication);
-
-        Account account = this.userService.handleGetAccountByEmail(loginRequest.getEmail());
-        if (account == null)  throw new InvalidException("Tài khoản không hợp lệ");
-        if (account.getDeletedAt() != null) throw new InvalidException("Tài khoản của bạn đã bị xóa. Vui lòng tạo tài khoản mới.");
-        if (!account.isEnabled()) throw new InvalidException("Tài khoản bị vô hiệu hóa. Vui lòng liên hệ hỗ trợ để biết thêm chi tiết.");
 
         log.info("Account logged in: {}", account);
 
@@ -169,12 +166,9 @@ public class AuthServiceImpl implements AuthService {
         }
 
         Account currentAccount = this.accountRepository.findByEmailAndDeletedAtIsNull(email).orElse(null);
-        if(currentAccount == null){
-            throw new InvalidException("User not found");
-        }
-        if(!currentAccount.isEnabled()) {
-            throw new InvalidException("Account is locked");
-        }
+        if(currentAccount == null) throw new InvalidException("Tài khoản không hợp lệ");
+        if(currentAccount.isLocked()) throw new InvalidException("Tài khoản bị khóa. Vui lòng liên hệ hỗ trợ để biết thêm chi tiết.");
+        if(!currentAccount.isEnabled()) throw new InvalidException("Tài khoản bị vô hiệu hóa. Vui lòng liên hệ hỗ trợ để biết thêm chi tiết.");
 
         UserDetails userDetails = new org.springframework.security.core.userdetails.User(
                 currentAccount.getEmail(),
@@ -516,6 +510,7 @@ public class AuthServiceImpl implements AuthService {
         loginResponse.setUsername(Objects.requireNonNullElse(account.getUsername(), ""));
         loginResponse.setAvatar(Objects.requireNonNullElse(account.getAvatar(), ""));
         loginResponse.setEnabled(account.isEnabled());
+        loginResponse.setLocked(account.isLocked());
         loginResponse.setVisibility(account.getVisibility());
         loginResponse.setAddresses(Objects.requireNonNullElse(account.getAddresses(), new ArrayList<>()));
 

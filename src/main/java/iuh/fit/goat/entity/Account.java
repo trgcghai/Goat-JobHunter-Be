@@ -45,6 +45,7 @@ public abstract class Account extends BaseEntity {
     protected String password;
     protected String avatar;
     protected boolean enabled = false;
+    protected boolean locked = false;
     @Enumerated(EnumType.STRING)
     protected Visibility visibility = Visibility.PUBLIC;
 

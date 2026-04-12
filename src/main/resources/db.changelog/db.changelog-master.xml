@@ -33,5 +33,6 @@
     <include file="db.changelog/schema/2026-03-28/unique-constraint-blog-reaction.xml"/>
     <include file="db.changelog/schema/2026-04-09/add-account-visibility.xml"/>
     <include file="/db.changelog/schema/2026-04-11/device-entity.xml"/>
+    <include file="db.changelog/schema/2026-04-11/field-locked-account.xml"/>
 
 </databaseChangeLog>

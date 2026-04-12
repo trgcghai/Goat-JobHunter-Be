@@ -12,7 +12,6 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
-import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
@@ -39,6 +38,7 @@ import java.util.List;
 @EnableMethodSecurity(securedEnabled = true)
 @RequiredArgsConstructor
 public class SecurityConfiguration {
+
     @Value("${minhdat.jwt.base64-secret}")
     private String jwtKey;
 
@@ -195,6 +195,7 @@ public class SecurityConfiguration {
                                 .requestMatchers(HttpMethod.PUT, "/api/v1/roles").hasRole("SUPER_ADMIN")
                                 .requestMatchers(HttpMethod.PUT, "/api/v1/users/visibility").hasRole("SUPER_ADMIN")
                                 .requestMatchers(HttpMethod.GET, "/api/v1/reviews").hasRole("SUPER_ADMIN")
+                                .requestMatchers("/api/v1/admin/**").hasRole("SUPER_ADMIN")
                                 .requestMatchers(HttpMethod.POST, "/api/v1/reviews").authenticated()
                                 .requestMatchers(HttpMethod.GET, "/api/v1/comments/**").permitAll()
                                 .requestMatchers(whiteList).permitAll()
