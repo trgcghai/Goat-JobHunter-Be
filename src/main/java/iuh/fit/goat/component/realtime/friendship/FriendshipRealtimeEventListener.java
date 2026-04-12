@@ -22,8 +22,8 @@ public class FriendshipRealtimeEventListener {
     public void onFriendshipRealtimeEvent(FriendshipRealtimeEvent event) {
         FriendshipRealtimeEventResponse payload = new FriendshipRealtimeEventResponse(
                 event.getType(),
-                event.getActorUserId(),
-                event.getTargetUserId(),
+                event.getActorUser(),
+                event.getTargetUser(),
                 event.getRequestId(),
                 event.getRelationshipState(),
                 Instant.now()

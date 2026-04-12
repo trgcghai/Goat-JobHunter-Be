@@ -3,6 +3,9 @@ package iuh.fit.goat.repository;
 import iuh.fit.goat.entity.FriendRequest;
 import iuh.fit.goat.enumeration.FriendRequestStatus;
 import jakarta.persistence.LockModeType;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Lock;
 import org.springframework.data.jpa.repository.Modifying;
@@ -15,10 +18,24 @@ import java.util.Optional;
 
 @Repository
 public interface FriendRequestRepository extends JpaRepository<FriendRequest, Long> {
-        boolean existsByPairLowUser_AccountIdAndPairHighUser_AccountIdAndStatusAndDeletedAtIsNull(
+    boolean existsByPairLowUser_AccountIdAndPairHighUser_AccountIdAndStatusAndDeletedAtIsNull(
             Long pairLowId,
             Long pairHighId,
             FriendRequestStatus status
+    );
+
+    @EntityGraph(attributePaths = {"sender", "receiver"})
+    Page<FriendRequest> findByReceiver_AccountIdAndStatusAndDeletedAtIsNull(
+            Long receiverId,
+            FriendRequestStatus status,
+            Pageable pageable
+    );
+
+    @EntityGraph(attributePaths = {"sender", "receiver"})
+    Page<FriendRequest> findBySender_AccountIdAndStatusAndDeletedAtIsNull(
+            Long senderId,
+            FriendRequestStatus status,
+            Pageable pageable
     );
 
     @Lock(LockModeType.PESSIMISTIC_WRITE)

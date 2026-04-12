@@ -3,6 +3,9 @@ package iuh.fit.goat.repository;
 import iuh.fit.goat.entity.UserRelationship;
 import iuh.fit.goat.enumeration.RelationshipState;
 import jakarta.persistence.LockModeType;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Lock;
 import org.springframework.data.jpa.repository.Modifying;
@@ -26,10 +29,23 @@ public interface UserRelationshipRepository extends JpaRepository<UserRelationsh
             """)
     Optional<UserRelationship> findByPairForUpdate(@Param("pairLowId") Long pairLowId, @Param("pairHighId") Long pairHighId);
 
-        boolean existsByPairLowUser_AccountIdAndPairHighUser_AccountIdAndRelationshipStateAndDeletedAtIsNull(
+    boolean existsByPairLowUser_AccountIdAndPairHighUser_AccountIdAndRelationshipStateAndDeletedAtIsNull(
             Long pairLowId,
             Long pairHighId,
             RelationshipState relationshipState
+    );
+
+    @EntityGraph(attributePaths = {"pairLowUser", "pairHighUser"})
+    @Query("""
+            SELECT ur FROM UserRelationship ur
+            WHERE ur.deletedAt IS NULL
+              AND ur.relationshipState = :relationshipState
+              AND (ur.pairLowUser.accountId = :accountId OR ur.pairHighUser.accountId = :accountId)
+            """)
+    Page<UserRelationship> findFriendsByAccountId(
+            @Param("accountId") Long accountId,
+            @Param("relationshipState") RelationshipState relationshipState,
+            Pageable pageable
     );
 
     @Modifying(clearAutomatically = true, flushAutomatically = true)

@@ -17,8 +17,8 @@ import java.time.Instant;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class FriendshipRealtimeEventResponse {
     private FriendshipRealtimeEventType type;
-    private Long actorUserId;
-    private Long targetUserId;
+    private FriendUserSnippetResponse actorUser;
+    private FriendUserSnippetResponse targetUser;
     private Long requestId;
     private RelationshipState relationshipState;
     private Instant emittedAt;

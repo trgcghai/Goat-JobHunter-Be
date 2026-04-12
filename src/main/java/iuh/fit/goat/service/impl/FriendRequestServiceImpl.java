@@ -2,7 +2,11 @@ package iuh.fit.goat.service.impl;
 
 import iuh.fit.goat.component.realtime.friendship.FriendshipRealtimeEvent;
 import iuh.fit.goat.dto.request.friendship.CreateFriendRequestRequest;
+import iuh.fit.goat.dto.response.ResultPaginationResponse;
+import iuh.fit.goat.dto.response.friendship.FriendRequestListItemResponse;
 import iuh.fit.goat.dto.response.friendship.FriendRequestResponse;
+import iuh.fit.goat.dto.response.friendship.FriendUserSnippetResponse;
+import iuh.fit.goat.dto.response.friendship.MyFriendResponse;
 import iuh.fit.goat.entity.Account;
 import iuh.fit.goat.entity.FriendRequest;
 import iuh.fit.goat.entity.User;
@@ -22,10 +26,15 @@ import iuh.fit.goat.util.SecurityUtil;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Instant;
+import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 
@@ -37,6 +46,72 @@ public class FriendRequestServiceImpl implements FriendRequestService {
     private final UserRepository userRepository;
     private final AccountRepository accountRepository;
     private final ApplicationEventPublisher eventPublisher;
+
+    @Override
+    @Transactional(readOnly = true)
+    public ResultPaginationResponse handleGetMyFriends(Pageable pageable) throws InvalidException {
+        User currentUser = this.handleGetCurrentUser();
+        Pageable resolvedPageable = this.resolvePageable(
+                pageable,
+                Sort.by(Sort.Direction.DESC, "friendsSince").and(Sort.by(Sort.Direction.DESC, "relationshipId"))
+        );
+
+        Page<UserRelationship> page = this.userRelationshipRepository.findFriendsByAccountId(
+                currentUser.getAccountId(),
+                RelationshipState.FRIEND,
+                resolvedPageable
+        );
+
+        List<MyFriendResponse> responses = page.getContent().stream()
+                .map(relationship -> this.convertToMyFriendResponse(relationship, currentUser.getAccountId()))
+                .toList();
+
+        return this.buildPaginationResponse(page, resolvedPageable, responses);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public ResultPaginationResponse handleGetMyReceivedFriendRequests(Pageable pageable) throws InvalidException {
+        User currentUser = this.handleGetCurrentUser();
+        Pageable resolvedPageable = this.resolvePageable(
+                pageable,
+                Sort.by(Sort.Direction.DESC, "requestedAt").and(Sort.by(Sort.Direction.DESC, "requestId"))
+        );
+
+        Page<FriendRequest> page = this.friendRequestRepository.findByReceiver_AccountIdAndStatusAndDeletedAtIsNull(
+                currentUser.getAccountId(),
+                FriendRequestStatus.PENDING,
+                resolvedPageable
+        );
+
+        List<FriendRequestListItemResponse> responses = page.getContent().stream()
+                .map(request -> this.convertToListItemResponse(request, FriendRequestListItemResponse.Direction.RECEIVED))
+                .toList();
+
+        return this.buildPaginationResponse(page, resolvedPageable, responses);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public ResultPaginationResponse handleGetMySentFriendRequests(Pageable pageable) throws InvalidException {
+        User currentUser = this.handleGetCurrentUser();
+        Pageable resolvedPageable = this.resolvePageable(
+                pageable,
+                Sort.by(Sort.Direction.DESC, "requestedAt").and(Sort.by(Sort.Direction.DESC, "requestId"))
+        );
+
+        Page<FriendRequest> page = this.friendRequestRepository.findBySender_AccountIdAndStatusAndDeletedAtIsNull(
+                currentUser.getAccountId(),
+                FriendRequestStatus.PENDING,
+                resolvedPageable
+        );
+
+        List<FriendRequestListItemResponse> responses = page.getContent().stream()
+                .map(request -> this.convertToListItemResponse(request, FriendRequestListItemResponse.Direction.SENT))
+                .toList();
+
+        return this.buildPaginationResponse(page, resolvedPageable, responses);
+    }
 
     @Override
     @Transactional
@@ -268,6 +343,70 @@ public class FriendRequestServiceImpl implements FriendRequestService {
         return response;
     }
 
+    private FriendUserSnippetResponse convertToUserSnippet(User user) {
+        FriendUserSnippetResponse response = new FriendUserSnippetResponse();
+        response.setAccountId(user.getAccountId());
+        response.setFullName(user.getFullName());
+        response.setUsername(user.getUsername());
+        response.setAvatar(user.getAvatar());
+        response.setHeadline(user.getHeadline());
+        response.setBio(user.getBio());
+        response.setCoverPhoto(user.getCoverPhoto());
+        response.setVisibility(user.getVisibility());
+        return response;
+    }
+
+    private MyFriendResponse convertToMyFriendResponse(UserRelationship relationship, Long currentUserId) {
+        User friend = Objects.equals(relationship.getPairLowUser().getAccountId(), currentUserId)
+                ? relationship.getPairHighUser()
+                : relationship.getPairLowUser();
+
+        MyFriendResponse response = new MyFriendResponse();
+        response.setRelationshipId(relationship.getRelationshipId());
+        response.setFriendsSince(relationship.getFriendsSince());
+        response.setFriend(this.convertToUserSnippet(friend));
+        return response;
+    }
+
+    private FriendRequestListItemResponse convertToListItemResponse(
+            FriendRequest request,
+            FriendRequestListItemResponse.Direction direction
+    ) {
+        User counterpart = direction == FriendRequestListItemResponse.Direction.RECEIVED
+                ? request.getSender()
+                : request.getReceiver();
+
+        FriendRequestListItemResponse response = new FriendRequestListItemResponse();
+        response.setRequestId(request.getRequestId());
+        response.setStatus(request.getStatus());
+        response.setRequestedAt(request.getRequestedAt() != null ? request.getRequestedAt() : request.getCreatedAt());
+        response.setRespondedAt(request.getRespondedAt());
+        response.setDirection(direction);
+        response.setCounterpart(this.convertToUserSnippet(counterpart));
+        return response;
+    }
+
+    private ResultPaginationResponse buildPaginationResponse(Page<?> page, Pageable pageable, Object result) {
+        ResultPaginationResponse.Meta meta = new ResultPaginationResponse.Meta();
+        meta.setPage(pageable.getPageNumber() + 1);
+        meta.setPageSize(pageable.getPageSize());
+        meta.setPages(page.getTotalPages());
+        meta.setTotal(page.getTotalElements());
+        return new ResultPaginationResponse(meta, result);
+    }
+
+    private Pageable resolvePageable(Pageable pageable, Sort defaultSort) {
+        if (pageable == null || pageable.isUnpaged()) {
+            return PageRequest.of(0, 20, defaultSort);
+        }
+
+        if (pageable.getSort().isSorted()) {
+            return pageable;
+        }
+
+        return PageRequest.of(pageable.getPageNumber(), pageable.getPageSize(), defaultSort);
+    }
+
     private void publishRealtimeEvent(
             FriendshipRealtimeEventType type,
             User actor,
@@ -278,8 +417,8 @@ public class FriendRequestServiceImpl implements FriendRequestService {
         this.eventPublisher.publishEvent(
                 FriendshipRealtimeEvent.builder()
                         .type(type)
-                        .actorUserId(actor.getAccountId())
-                        .targetUserId(target.getAccountId())
+                .actorUser(this.convertToUserSnippet(actor))
+                .targetUser(this.convertToUserSnippet(target))
                         .requestId(requestId)
                         .relationshipState(relationshipState)
                         .actorPrincipal(actor.getEmail())
