@@ -38,17 +38,18 @@ public interface FriendRequestRepository extends JpaRepository<FriendRequest, Lo
             Pageable pageable
     );
 
+    @EntityGraph(attributePaths = {"sender", "receiver", "pairLowUser", "pairHighUser"})
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("SELECT fr FROM FriendRequest fr WHERE fr.requestId = :requestId AND fr.deletedAt IS NULL")
     Optional<FriendRequest> findActiveByIdForUpdate(@Param("requestId") Long requestId);
 
-    @Modifying(clearAutomatically = true, flushAutomatically = true)
+    @Modifying(flushAutomatically = true)
     @Query("""
             UPDATE FriendRequest fr
             SET fr.status = :newStatus,
                 fr.respondedAt = :respondedAt
-                                                WHERE fr.pairLowUser.accountId = :pairLowId
-                                                        AND fr.pairHighUser.accountId = :pairHighId
+            WHERE fr.pairLowUser.accountId = :pairLowId
+              AND fr.pairHighUser.accountId = :pairHighId
               AND fr.status = :currentStatus
               AND fr.requestId <> :excludedRequestId
               AND fr.deletedAt IS NULL

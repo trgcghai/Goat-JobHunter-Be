@@ -20,6 +20,7 @@ import java.util.Optional;
 public interface UserRelationshipRepository extends JpaRepository<UserRelationship, Long> {
     Optional<UserRelationship> findByPairLowUser_AccountIdAndPairHighUser_AccountIdAndDeletedAtIsNull(Long pairLowId, Long pairHighId);
 
+    @EntityGraph(attributePaths = {"pairLowUser", "pairHighUser", "blockedBy"})
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("""
             SELECT ur FROM UserRelationship ur
@@ -48,7 +49,7 @@ public interface UserRelationshipRepository extends JpaRepository<UserRelationsh
             Pageable pageable
     );
 
-    @Modifying(clearAutomatically = true, flushAutomatically = true)
+    @Modifying(flushAutomatically = true)
     @Query(value = """
             INSERT INTO user_relationships (
                 relationship_id,
