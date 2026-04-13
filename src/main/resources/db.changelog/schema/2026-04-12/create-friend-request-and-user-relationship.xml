@@ -1,0 +1,292 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+                      http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-5.0.xsd"
+        objectQuotingStrategy="QUOTE_ONLY_RESERVED_WORDS">
+
+    <changeSet id="1776000000000-1" author="copilot">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <sequenceExists sequenceName="friend_requests_seq"/>
+            </not>
+        </preConditions>
+        <createSequence incrementBy="50" sequenceName="friend_requests_seq" startValue="1"/>
+    </changeSet>
+
+    <changeSet id="1776000000000-2" author="copilot">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <sequenceExists sequenceName="user_relationships_seq"/>
+            </not>
+        </preConditions>
+        <createSequence incrementBy="50" sequenceName="user_relationships_seq" startValue="1"/>
+    </changeSet>
+
+    <changeSet id="1776000000000-3" author="copilot">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <tableExists tableName="friend_requests"/>
+            </not>
+        </preConditions>
+        <createTable tableName="friend_requests">
+            <column name="request_id" type="BIGINT" defaultValueSequenceNext="friend_requests_seq">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="pk_friend_requests"/>
+            </column>
+            <column name="created_at" type="DATETIME"/>
+            <column name="created_by" type="VARCHAR(255)"/>
+            <column name="updated_at" type="DATETIME"/>
+            <column name="updated_by" type="VARCHAR(255)"/>
+            <column name="deleted_at" type="DATETIME"/>
+            <column name="deleted_by" type="VARCHAR(255)"/>
+            <column name="sender_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="receiver_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="pair_low_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="pair_high_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="status" type="VARCHAR(50)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="requested_at" type="DATETIME">
+                <constraints nullable="false"/>
+            </column>
+            <column name="responded_at" type="DATETIME"/>
+        </createTable>
+    </changeSet>
+
+    <changeSet id="1776000000000-4" author="copilot">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <tableExists tableName="user_relationships"/>
+            </not>
+        </preConditions>
+        <createTable tableName="user_relationships">
+            <column name="relationship_id" type="BIGINT" defaultValueSequenceNext="user_relationships_seq">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="pk_user_relationships"/>
+            </column>
+            <column name="created_at" type="DATETIME"/>
+            <column name="created_by" type="VARCHAR(255)"/>
+            <column name="updated_at" type="DATETIME"/>
+            <column name="updated_by" type="VARCHAR(255)"/>
+            <column name="deleted_at" type="DATETIME"/>
+            <column name="deleted_by" type="VARCHAR(255)"/>
+            <column name="pair_low_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="pair_high_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="relationship_state" type="VARCHAR(50)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="friends_since" type="DATETIME"/>
+            <column name="blocked_since" type="DATETIME"/>
+            <column name="blocked_by_id" type="BIGINT"/>
+        </createTable>
+    </changeSet>
+
+    <changeSet id="1776000000000-5" author="copilot">
+        <preConditions onFail="MARK_RAN">
+            <and>
+                <tableExists tableName="user_relationships"/>
+                <not>
+                    <uniqueConstraintExists tableName="user_relationships" constraintName="uc_user_relationship_pair"/>
+                </not>
+            </and>
+        </preConditions>
+        <addUniqueConstraint tableName="user_relationships"
+                             columnNames="pair_low_id, pair_high_id"
+                             constraintName="uc_user_relationship_pair"/>
+    </changeSet>
+
+    <changeSet id="1776000000000-6" author="copilot">
+        <preConditions onFail="MARK_RAN">
+            <and>
+                <tableExists tableName="friend_requests"/>
+                <not>
+                    <foreignKeyConstraintExists foreignKeyName="FK_FRQ_ON_SENDER"/>
+                </not>
+            </and>
+        </preConditions>
+        <addForeignKeyConstraint baseTableName="friend_requests"
+                                 baseColumnNames="sender_id"
+                                 referencedTableName="users"
+                                 referencedColumnNames="account_id"
+                                 constraintName="FK_FRQ_ON_SENDER"/>
+    </changeSet>
+
+    <changeSet id="1776000000000-7" author="copilot">
+        <preConditions onFail="MARK_RAN">
+            <and>
+                <tableExists tableName="friend_requests"/>
+                <not>
+                    <foreignKeyConstraintExists foreignKeyName="FK_FRQ_ON_RECEIVER"/>
+                </not>
+            </and>
+        </preConditions>
+        <addForeignKeyConstraint baseTableName="friend_requests"
+                                 baseColumnNames="receiver_id"
+                                 referencedTableName="users"
+                                 referencedColumnNames="account_id"
+                                 constraintName="FK_FRQ_ON_RECEIVER"/>
+    </changeSet>
+
+    <changeSet id="1776000000000-8" author="copilot">
+        <preConditions onFail="MARK_RAN">
+            <and>
+                <tableExists tableName="friend_requests"/>
+                <not>
+                    <foreignKeyConstraintExists foreignKeyName="FK_FRQ_ON_PAIR_LOW"/>
+                </not>
+            </and>
+        </preConditions>
+        <addForeignKeyConstraint baseTableName="friend_requests"
+                                 baseColumnNames="pair_low_id"
+                                 referencedTableName="users"
+                                 referencedColumnNames="account_id"
+                                 constraintName="FK_FRQ_ON_PAIR_LOW"/>
+    </changeSet>
+
+    <changeSet id="1776000000000-9" author="copilot">
+        <preConditions onFail="MARK_RAN">
+            <and>
+                <tableExists tableName="friend_requests"/>
+                <not>
+                    <foreignKeyConstraintExists foreignKeyName="FK_FRQ_ON_PAIR_HIGH"/>
+                </not>
+            </and>
+        </preConditions>
+        <addForeignKeyConstraint baseTableName="friend_requests"
+                                 baseColumnNames="pair_high_id"
+                                 referencedTableName="users"
+                                 referencedColumnNames="account_id"
+                                 constraintName="FK_FRQ_ON_PAIR_HIGH"/>
+    </changeSet>
+
+    <changeSet id="1776000000000-10" author="copilot">
+        <preConditions onFail="MARK_RAN">
+            <and>
+                <tableExists tableName="user_relationships"/>
+                <not>
+                    <foreignKeyConstraintExists foreignKeyName="FK_URL_ON_PAIR_LOW"/>
+                </not>
+            </and>
+        </preConditions>
+        <addForeignKeyConstraint baseTableName="user_relationships"
+                                 baseColumnNames="pair_low_id"
+                                 referencedTableName="users"
+                                 referencedColumnNames="account_id"
+                                 constraintName="FK_URL_ON_PAIR_LOW"/>
+    </changeSet>
+
+    <changeSet id="1776000000000-11" author="copilot">
+        <preConditions onFail="MARK_RAN">
+            <and>
+                <tableExists tableName="user_relationships"/>
+                <not>
+                    <foreignKeyConstraintExists foreignKeyName="FK_URL_ON_PAIR_HIGH"/>
+                </not>
+            </and>
+        </preConditions>
+        <addForeignKeyConstraint baseTableName="user_relationships"
+                                 baseColumnNames="pair_high_id"
+                                 referencedTableName="users"
+                                 referencedColumnNames="account_id"
+                                 constraintName="FK_URL_ON_PAIR_HIGH"/>
+    </changeSet>
+
+    <changeSet id="1776000000000-12" author="copilot">
+        <preConditions onFail="MARK_RAN">
+            <and>
+                <tableExists tableName="user_relationships"/>
+                <not>
+                    <foreignKeyConstraintExists foreignKeyName="FK_URL_ON_BLOCKED_BY"/>
+                </not>
+            </and>
+        </preConditions>
+        <addForeignKeyConstraint baseTableName="user_relationships"
+                                 baseColumnNames="blocked_by_id"
+                                 referencedTableName="users"
+                                 referencedColumnNames="account_id"
+                                 constraintName="FK_URL_ON_BLOCKED_BY"/>
+    </changeSet>
+
+    <changeSet id="1776000000000-13" author="copilot">
+        <preConditions onFail="MARK_RAN">
+            <and>
+                <tableExists tableName="friend_requests"/>
+                <not>
+                    <indexExists tableName="friend_requests" indexName="idx_frq_sender_status"/>
+                </not>
+            </and>
+        </preConditions>
+        <createIndex tableName="friend_requests" indexName="idx_frq_sender_status">
+            <column name="sender_id"/>
+            <column name="status"/>
+        </createIndex>
+    </changeSet>
+
+    <changeSet id="1776000000000-14" author="copilot">
+        <preConditions onFail="MARK_RAN">
+            <and>
+                <tableExists tableName="friend_requests"/>
+                <not>
+                    <indexExists tableName="friend_requests" indexName="idx_frq_receiver_status"/>
+                </not>
+            </and>
+        </preConditions>
+        <createIndex tableName="friend_requests" indexName="idx_frq_receiver_status">
+            <column name="receiver_id"/>
+            <column name="status"/>
+        </createIndex>
+    </changeSet>
+
+    <changeSet id="1776000000000-15" author="copilot">
+        <preConditions onFail="MARK_RAN">
+            <and>
+                <tableExists tableName="friend_requests"/>
+                <not>
+                    <indexExists tableName="friend_requests" indexName="idx_frq_pair"/>
+                </not>
+            </and>
+        </preConditions>
+        <createIndex tableName="friend_requests" indexName="idx_frq_pair">
+            <column name="pair_low_id"/>
+            <column name="pair_high_id"/>
+        </createIndex>
+    </changeSet>
+
+    <changeSet id="1776000000000-16" author="copilot">
+        <preConditions onFail="MARK_RAN">
+            <and>
+                <tableExists tableName="user_relationships"/>
+                <not>
+                    <indexExists tableName="user_relationships" indexName="idx_url_state"/>
+                </not>
+            </and>
+        </preConditions>
+        <createIndex tableName="user_relationships" indexName="idx_url_state">
+            <column name="relationship_state"/>
+        </createIndex>
+    </changeSet>
+
+    <changeSet id="1776000000000-17" author="copilot">
+        <preConditions onFail="MARK_RAN">
+            <tableExists tableName="friend_requests"/>
+        </preConditions>
+        <sql>
+            CREATE UNIQUE INDEX IF NOT EXISTS uc_frq_pending_pair
+            ON friend_requests (pair_low_id, pair_high_id)
+            WHERE status = 'PENDING' AND deleted_at IS NULL;
+        </sql>
+    </changeSet>
+
+</databaseChangeLog>
