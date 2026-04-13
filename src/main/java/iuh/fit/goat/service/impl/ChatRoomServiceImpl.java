@@ -735,7 +735,7 @@ public class ChatRoomServiceImpl implements ChatRoomService {
             int memberCount = countActiveMembers(chatRoom);
             String name = resolveChatRoomName(chatRoom, currentUserEmail);
             String avatar = resolveChatRoomAvatar(chatRoom, currentUserEmail);
-            boolean isBlocked = resolveIsBlocked(chatRoom, currentUserEmail);
+            BlockStatus blockStatus = resolveBlockStatus(chatRoom, currentUserEmail);
             LastMessageInfo lastMessageInfo = buildLastMessageInfo(lastMessage, currentUserEmail);
 
             return ChatRoomResponse.builder()
@@ -746,7 +746,9 @@ public class ChatRoomServiceImpl implements ChatRoomService {
                     .memberCount(memberCount)
                     .lastMessagePreview(lastMessageInfo.content())
                     .lastMessageTime(lastMessageInfo.time())
-                    .isBlocked(isBlocked)
+                    .isBlocked(blockStatus.blocked())
+                    .isBlockedByMe(blockStatus.blockedByMe())
+                    .counterpartAccountId(blockStatus.counterpartAccountId())
                     .currentUserSentLastMessage(lastMessageInfo.isCurrentUserSender())
                     .build();
 
@@ -866,7 +868,7 @@ public class ChatRoomServiceImpl implements ChatRoomService {
 
     private ChatRoomResponse buildFallbackResponse(ChatRoom chatRoom) {
         String currentUserEmail = SecurityUtil.getCurrentUserEmail();
-        boolean isBlocked = resolveIsBlocked(chatRoom, currentUserEmail);
+        BlockStatus blockStatus = resolveBlockStatus(chatRoom, currentUserEmail);
 
         return ChatRoomResponse.builder()
                 .roomId(chatRoom.getRoomId())
@@ -877,46 +879,59 @@ public class ChatRoomServiceImpl implements ChatRoomService {
                 .lastMessagePreview("") // Để trống thay vì "Không thể tải tin nhắn này"
                 .currentUserSentLastMessage(false)
                 .lastMessageTime(null)
-            .isBlocked(isBlocked)
+                .isBlocked(blockStatus.blocked())
+                .isBlockedByMe(blockStatus.blockedByMe())
+                .counterpartAccountId(blockStatus.counterpartAccountId())
                 .build();
     }
 
-        private boolean resolveIsBlocked(ChatRoom chatRoom, String currentUserEmail) {
+    private BlockStatus resolveBlockStatus(ChatRoom chatRoom, String currentUserEmail) {
         if (chatRoom.getType() != ChatRoomType.DIRECT || currentUserEmail == null || currentUserEmail.isBlank()) {
-            return false;
+            return new BlockStatus(false, false, null);
         }
 
         Optional<Long> currentUserId = chatRoom.getMembers().stream()
-            .filter(member -> member.getDeletedAt() == null)
-            .map(ChatMember::getAccount)
-            .filter(Objects::nonNull)
-            .filter(account -> account.getEmail() != null && account.getEmail().equalsIgnoreCase(currentUserEmail))
-            .map(Account::getAccountId)
-            .findFirst();
+                .filter(member -> member.getDeletedAt() == null)
+                .map(ChatMember::getAccount)
+                .filter(Objects::nonNull)
+                .filter(account -> account.getEmail() != null && account.getEmail().equalsIgnoreCase(currentUserEmail))
+                .map(Account::getAccountId)
+                .findFirst();
 
         Optional<Long> peerUserId = chatRoom.getMembers().stream()
-            .filter(member -> isOtherActiveMember(member, currentUserEmail))
-            .map(ChatMember::getAccount)
-            .filter(Objects::nonNull)
-            .map(Account::getAccountId)
-            .findFirst();
+                .filter(member -> isOtherActiveMember(member, currentUserEmail))
+                .map(ChatMember::getAccount)
+                .filter(Objects::nonNull)
+                .map(Account::getAccountId)
+                .findFirst();
 
         if (currentUserId.isEmpty() || peerUserId.isEmpty()) {
-            return false;
+            return new BlockStatus(false, false, null);
         }
 
         UserRelationshipRepository.PairIds pair = UserRelationshipRepository.PairIds.of(
-            currentUserId.get(),
-            peerUserId.get()
+                currentUserId.get(),
+                peerUserId.get()
         );
 
-        return this.userRelationshipRepository
-            .existsByPairLowUser_AccountIdAndPairHighUser_AccountIdAndRelationshipStateAndDeletedAtIsNull(
-                pair.pairLowId(),
-                pair.pairHighId(),
-                RelationshipState.BLOCKED
-            );
+        Optional<UserRelationship> relationship = this.userRelationshipRepository
+                .findByPairLowUser_AccountIdAndPairHighUser_AccountIdAndDeletedAtIsNull(
+                        pair.pairLowId(),
+                        pair.pairHighId()
+                );
+
+        if (relationship.isEmpty() || relationship.get().getRelationshipState() != RelationshipState.BLOCKED) {
+            return new BlockStatus(false, false, peerUserId.get());
         }
+
+        boolean blockedByMe = relationship.get().getBlockedBy() != null
+                && Objects.equals(relationship.get().getBlockedBy().getAccountId(), currentUserId.get());
+
+        return new BlockStatus(true, blockedByMe, peerUserId.get());
+    }
+
+    private record BlockStatus(boolean blocked, boolean blockedByMe, Long counterpartAccountId) {
+    }
 
     /**
      * Format message content based on type

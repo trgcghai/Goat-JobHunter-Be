@@ -21,5 +21,7 @@ public class ChatRoomResponse {
     private String lastMessagePreview;
     private LocalDateTime lastMessageTime;
     private boolean isBlocked;
+    private boolean isBlockedByMe;
+    private Long counterpartAccountId;
     private boolean currentUserSentLastMessage;
 }
