@@ -70,4 +70,18 @@ public class FriendRequestController {
         FriendRequestResponse response = this.friendRequestService.handleCancelFriendRequest(id);
         return ResponseEntity.status(HttpStatus.OK).body(response);
     }
+
+    @PostMapping("/{id}/block")
+    public ResponseEntity<FriendRequestResponse> blockUser(@PathVariable("id") Long id)
+            throws InvalidException, NotFoundException {
+        FriendRequestResponse response = this.friendRequestService.handleBlockUser(id);
+        return ResponseEntity.status(HttpStatus.OK).body(response);
+    }
+
+    @PostMapping("/{id}/unblock")
+    public ResponseEntity<FriendRequestResponse> unblockUser(@PathVariable("id") Long id)
+            throws InvalidException, NotFoundException {
+        FriendRequestResponse response = this.friendRequestService.handleUnblockUser(id);
+        return ResponseEntity.status(HttpStatus.OK).body(response);
+    }
 }

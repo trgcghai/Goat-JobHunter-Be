@@ -5,7 +5,8 @@ import lombok.Getter;
 @Getter
 public enum RelationshipState {
     FRIEND("friend"),
-    BLOCKED("blocked");
+    BLOCKED("blocked"),
+    NONE("none");
 
     private final String value;
 

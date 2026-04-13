@@ -26,4 +26,10 @@ public interface FriendRequestService {
 
     FriendRequestResponse handleCancelFriendRequest(Long requestId)
             throws InvalidException, ConflictException, NotFoundException;
+
+    FriendRequestResponse handleBlockUser(Long targetUserId)
+            throws InvalidException, NotFoundException;
+
+    FriendRequestResponse handleUnblockUser(Long targetUserId)
+            throws InvalidException, NotFoundException;
 }
