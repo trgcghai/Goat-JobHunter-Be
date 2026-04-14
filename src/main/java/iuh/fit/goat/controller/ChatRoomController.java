@@ -18,7 +18,6 @@ import iuh.fit.goat.exception.PermissionException;
 import iuh.fit.goat.service.AccountService;
 import iuh.fit.goat.service.ChatRoomService;
 import iuh.fit.goat.service.MessageService;
-import iuh.fit.goat.util.MessageMapper;
 import iuh.fit.goat.util.SecurityUtil;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -82,7 +81,7 @@ public class ChatRoomController {
         }
 
         List<Message> messages = this.chatRoomService.getMessagesInChatRoom(currentAccount, id, pageable);
-        List<MessageResponse> response = messages.stream().map(MessageMapper::toResponse).toList();
+        List<MessageResponse> response = this.messageService.toMessageResponses(messages);
         return ResponseEntity.ok(response);
     }
 
@@ -99,7 +98,7 @@ public class ChatRoomController {
         }
 
         List<Message> mediaMessages = this.chatRoomService.getMediaMessagesInChatRoom(currentAccount, id, pageable);
-        List<MessageResponse> response = mediaMessages.stream().map(MessageMapper::toResponse).toList();
+        List<MessageResponse> response = this.messageService.toMessageResponses(mediaMessages);
         return ResponseEntity.ok(response);
     }
 
@@ -116,7 +115,7 @@ public class ChatRoomController {
         }
 
         List<Message> fileMessages = this.chatRoomService.getFileMessagesInChatRoom(currentAccount, id, pageable);
-        List<MessageResponse> response = fileMessages.stream().map(MessageMapper::toResponse).toList();
+        List<MessageResponse> response = this.messageService.toMessageResponses(fileMessages);
         return ResponseEntity.ok(response);
     }
 
@@ -296,7 +295,7 @@ public class ChatRoomController {
             log.info("Sending messages with {} files to chatRoom: {}", files.size(), id);
 
             List<Message> savedMessages = this.messageService.sendMessagesWithFiles(id, request, files, currentAccount);
-            List<MessageResponse> response = savedMessages.stream().map(MessageMapper::toResponse).toList();
+            List<MessageResponse> response = this.messageService.toMessageResponses(savedMessages);
             return ResponseEntity.ok(new ArrayList<>(response));
         }
 
@@ -305,9 +304,12 @@ public class ChatRoomController {
 
             log.info("Sending text-only message to chatRoom: {}", id);
 
-            MessageCreateRequest textRequest = new MessageCreateRequest(request.getContent());
+            MessageCreateRequest textRequest = new MessageCreateRequest(
+                    request.getContent(),
+                    request.getReplyToMessageId()
+            );
             Message textMessage = messageService.sendMessage(id, textRequest, currentAccount);
-            MessageResponse response = MessageMapper.toResponse(textMessage);
+            MessageResponse response = this.messageService.toMessageResponse(textMessage);
             return ResponseEntity.ok(new ArrayList<>(Collections.singletonList(response)));
         }
 
@@ -322,7 +324,7 @@ public class ChatRoomController {
     ) throws InvalidException, NotFoundException, ConflictException, PermissionException {
         Account currentAccount = getCurrentAccount();
         Message revokedMessage = this.messageService.revokeMessage(chatRoomId, messageId, currentAccount);
-        return ResponseEntity.ok(MessageMapper.toResponse(revokedMessage));
+        return ResponseEntity.ok(this.messageService.toMessageResponse(revokedMessage));
     }
 
     @DeleteMapping("/{chatRoomId}/messages/{messageId}/permanent")

@@ -60,6 +60,9 @@ public class MessageServiceImpl implements MessageService {
     private static final long MAX_FILE_SIZE = 20 * 1024 * 1024; // 20MB
     private static final int MAX_FORWARD_TARGETS = 20;
     private static final String MESSAGE_DELETED_EVENT = "MESSAGE_DELETED";
+    private static final int MAX_REPLY_PREVIEW_LENGTH = 120;
+    private static final String REVOKED_MESSAGE_PREVIEW = "Tin nhắn đã được thu hồi";
+    private static final String UNAVAILABLE_MESSAGE_PREVIEW = "Tin nhắn không khả dụng";
     private final SimpMessagingTemplate messagingTemplate;
 
     // ========== PUBLIC API METHODS ==========
@@ -120,6 +123,9 @@ public class MessageServiceImpl implements MessageService {
                 .orElseThrow(() -> new InvalidException("Chat Room not found"));
         this.validateNoBlockedDirectInteraction(chatRoom, currentAccount.getAccountId());
 
+        String replyToMessageId = normalizeReplyToMessageId(request != null ? request.getReplyToMessageId() : null);
+        validateReplyTarget(chatRoomId.toString(), replyToMessageId);
+
         String messageId = generateMessageId();
         Instant now = Instant.now();
         long timestamp = now.toEpochMilli();
@@ -136,6 +142,7 @@ public class MessageServiceImpl implements MessageService {
                 .sender(senderInfo)  // NEW: Use embedded sender
                 .content(request.getContent())
                 .messageType(MessageType.TEXT)
+                .replyTo(replyToMessageId)
                 .isHidden(false)
                 .isForwarded(false)
                 .originalMessageId(null)
@@ -170,6 +177,9 @@ public class MessageServiceImpl implements MessageService {
                 .orElseThrow(() -> new InvalidException("Chat Room not found"));
         this.validateNoBlockedDirectInteraction(chatRoom, currentAccount.getAccountId());
 
+        String replyToMessageId = normalizeReplyToMessageId(request != null ? request.getReplyToMessageId() : null);
+        validateReplyTarget(chatRoomId.toString(), replyToMessageId);
+
         List<Message> createdMessages = new ArrayList<>();
         try {
             // Process files first
@@ -188,6 +198,7 @@ public class MessageServiceImpl implements MessageService {
                             chatRoomId.toString(),
                             fileUrl,
                             messageType,
+                            replyToMessageId,
                             currentAccount
                     );
 
@@ -202,7 +213,10 @@ public class MessageServiceImpl implements MessageService {
 
             // Process text content
             if (request != null && request.getContent() != null && !request.getContent().isBlank()) {
-                MessageCreateRequest textRequest = new MessageCreateRequest(request.getContent());
+                MessageCreateRequest textRequest = new MessageCreateRequest(
+                        request.getContent(),
+                        replyToMessageId
+                );
                 Message textMessage = sendMessage(chatRoomId, textRequest, currentAccount);
                 createdMessages.add(textMessage);
             }
@@ -227,8 +241,36 @@ public class MessageServiceImpl implements MessageService {
     @Override
     public void sendMessageToUsers(Long chatRoomId, Message message) {
         log.debug("Sending realtime message to chatRoom: {}", chatRoomId);
-        MessageResponse payload = MessageMapper.toResponse(message);
+        MessageResponse payload = toMessageResponse(message);
         messagingTemplate.convertAndSend("/topic/chatrooms/" + chatRoomId, payload);
+    }
+
+    @Override
+    public MessageResponse toMessageResponse(Message message) {
+        return toMessageResponse(message, Collections.emptyMap(), new HashMap<>());
+    }
+
+    @Override
+    public List<MessageResponse> toMessageResponses(List<Message> messages) {
+        if (messages == null || messages.isEmpty()) {
+            return Collections.emptyList();
+        }
+
+        Map<String, Message> localMessages = new HashMap<>();
+        for (Message message : messages) {
+            if (message == null || message.getMessageId() == null || message.getMessageId().isBlank()) {
+                continue;
+            }
+            localMessages.putIfAbsent(message.getMessageId(), message);
+        }
+
+        Map<String, Optional<Message>> parentLookupCache = new HashMap<>();
+        List<MessageResponse> responses = new ArrayList<>(messages.size());
+        for (Message message : messages) {
+            responses.add(toMessageResponse(message, localMessages, parentLookupCache));
+        }
+
+        return responses;
     }
 
     @Override
@@ -404,7 +446,7 @@ public class MessageServiceImpl implements MessageService {
 
                 successes.add(ForwardMessageSuccessResponse.builder()
                         .targetChatRoomId(targetChatRoomId)
-                        .message(MessageMapper.toResponse(savedMessage))
+                        .message(toMessageResponse(savedMessage))
                         .build());
             } catch (RuntimeException e) {
                 log.error("Failed to forward messageId={} to chatRoomId={}", messageId, targetChatRoomId, e);
@@ -527,6 +569,164 @@ public class MessageServiceImpl implements MessageService {
 
     // ========== HELPER METHODS ==========
 
+    private MessageResponse toMessageResponse(
+            Message message,
+            Map<String, Message> localMessages,
+            Map<String, Optional<Message>> parentLookupCache
+    ) {
+        if (message == null) {
+            return null;
+        }
+
+        MessageResponse.ReplyContext replyContext = buildReplyContext(message, localMessages, parentLookupCache);
+        return MessageMapper.toResponse(message, replyContext);
+    }
+
+    private MessageResponse.ReplyContext buildReplyContext(
+            Message message,
+            Map<String, Message> localMessages,
+            Map<String, Optional<Message>> parentLookupCache
+    ) {
+        String replyToMessageId = normalizeReplyToMessageId(message.getReplyTo());
+        if (replyToMessageId == null) {
+            return null;
+        }
+
+        String chatRoomId = message.getChatRoomId();
+        if (chatRoomId == null || chatRoomId.isBlank()) {
+            return MessageResponse.ReplyContext.builder()
+                    .originalMessageId(replyToMessageId)
+                    .originalContentPreview(UNAVAILABLE_MESSAGE_PREVIEW)
+                    .originalMessageUnavailable(true)
+                    .originalMessageHidden(false)
+                    .build();
+        }
+
+        Message originalMessage = resolveOriginalMessage(
+                chatRoomId,
+                replyToMessageId,
+                localMessages,
+                parentLookupCache
+        );
+
+        if (originalMessage == null) {
+            return MessageResponse.ReplyContext.builder()
+                    .originalMessageId(replyToMessageId)
+                    .originalContentPreview(UNAVAILABLE_MESSAGE_PREVIEW)
+                    .originalMessageUnavailable(true)
+                    .originalMessageHidden(false)
+                    .build();
+        }
+
+        boolean originalMessageHidden = Boolean.TRUE.equals(originalMessage.getIsHidden());
+
+        return MessageResponse.ReplyContext.builder()
+                .originalMessageId(
+                        originalMessage.getMessageId() != null
+                                ? originalMessage.getMessageId()
+                                : replyToMessageId
+                )
+                .originalSender(originalMessage.getSender())
+                .originalMessageType(originalMessage.getMessageType())
+                .originalContentPreview(
+                        originalMessageHidden
+                                ? REVOKED_MESSAGE_PREVIEW
+                                : buildOriginalMessagePreview(originalMessage)
+                )
+                .originalMessageUnavailable(false)
+                .originalMessageHidden(originalMessageHidden)
+                .build();
+    }
+
+    private Message resolveOriginalMessage(
+            String chatRoomId,
+            String replyToMessageId,
+            Map<String, Message> localMessages,
+            Map<String, Optional<Message>> parentLookupCache
+    ) {
+        if (localMessages != null && localMessages.containsKey(replyToMessageId)) {
+            return localMessages.get(replyToMessageId);
+        }
+
+        Optional<Message> parentMessage = findReplyTarget(chatRoomId, replyToMessageId, parentLookupCache);
+        return parentMessage.orElse(null);
+    }
+
+    private Optional<Message> findReplyTarget(
+            String chatRoomId,
+            String replyToMessageId,
+            Map<String, Optional<Message>> parentLookupCache
+    ) {
+        if (parentLookupCache != null && parentLookupCache.containsKey(replyToMessageId)) {
+            return parentLookupCache.get(replyToMessageId);
+        }
+
+        Optional<Message> parentMessage = this.messageRepository
+                .findByChatRoomIdAndMessageId(chatRoomId, replyToMessageId);
+
+        if (parentLookupCache != null) {
+            parentLookupCache.put(replyToMessageId, parentMessage);
+        }
+
+        return parentMessage;
+    }
+
+    private String buildOriginalMessagePreview(Message originalMessage) {
+        if (originalMessage == null) {
+            return UNAVAILABLE_MESSAGE_PREVIEW;
+        }
+
+        if (originalMessage.getMessageType() == MessageType.TEXT) {
+            return truncateReplyPreview(originalMessage.getContent());
+        }
+
+        if (originalMessage.getMessageType() == null) {
+            return UNAVAILABLE_MESSAGE_PREVIEW;
+        }
+
+        return originalMessage.getMessageType().name().toLowerCase(Locale.ROOT);
+    }
+
+    private String truncateReplyPreview(String content) {
+        if (content == null || content.isBlank()) {
+            return "text";
+        }
+
+        String normalized = content.trim();
+        if (normalized.length() <= MAX_REPLY_PREVIEW_LENGTH) {
+            return normalized;
+        }
+
+        return normalized.substring(0, MAX_REPLY_PREVIEW_LENGTH) + "...";
+    }
+
+    private String normalizeReplyToMessageId(String replyToMessageId) {
+        if (replyToMessageId == null) {
+            return null;
+        }
+
+        String normalized = replyToMessageId.trim();
+        if (normalized.isEmpty()) {
+            return null;
+        }
+
+        return normalized;
+    }
+
+    private void validateReplyTarget(String chatRoomId, String replyToMessageId) throws InvalidException {
+        if (replyToMessageId == null) {
+            return;
+        }
+
+        boolean isValidReplyTarget = this.messageRepository
+                .findByChatRoomIdAndMessageId(chatRoomId, replyToMessageId)
+                .isPresent();
+
+        if (!isValidReplyTarget) {
+            throw new InvalidException("replyToMessageId is invalid or not in this conversation");
+        }
+    }
+
     private MessageType determineMessageType(String mimeType) {
         if (mimeType == null) return MessageType.FILE;
         String type = mimeType.toLowerCase();
@@ -568,6 +768,7 @@ public class MessageServiceImpl implements MessageService {
             String chatRoomId,
             String fileUrl,
             MessageType messageType,
+            String replyToMessageId,
             Account currentAccount
     ) {
         String messageId = generateMessageId();
@@ -586,6 +787,7 @@ public class MessageServiceImpl implements MessageService {
                 .sender(senderInfo)  // NEW: Use embedded sender
                 .content(fileUrl)
                 .messageType(messageType)
+                .replyTo(replyToMessageId)
                 .isHidden(false)
                 .isForwarded(false)
                 .originalMessageId(null)
