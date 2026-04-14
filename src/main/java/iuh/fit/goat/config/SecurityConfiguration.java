@@ -3,6 +3,7 @@ package iuh.fit.goat.config;
 
 import com.nimbusds.jose.jwk.source.ImmutableSecret;
 import com.nimbusds.jose.util.Base64;
+import iuh.fit.goat.common.Role;
 import iuh.fit.goat.config.component.AuthenticationEntryPointCustom;
 import iuh.fit.goat.config.component.RedisTokenBlacklistFilter;
 import iuh.fit.goat.util.SecurityUtil;
@@ -196,6 +197,11 @@ public class SecurityConfiguration {
                                 .requestMatchers(HttpMethod.PUT, "/api/v1/users/visibility").hasRole("SUPER_ADMIN")
                                 .requestMatchers(HttpMethod.GET, "/api/v1/reviews").hasRole("SUPER_ADMIN")
                                 .requestMatchers("/api/v1/admin/**").hasRole("SUPER_ADMIN")
+                                .requestMatchers("/api/v1/friend-requests/**").hasAnyRole(
+                                    Role.ADMIN.getValue(),
+                                    Role.APPLICANT.getValue(),
+                                    Role.RECRUITER.getValue()
+                                )
                                 .requestMatchers(HttpMethod.POST, "/api/v1/reviews").authenticated()
                                 .requestMatchers(HttpMethod.GET, "/api/v1/comments/**").permitAll()
                                 .requestMatchers(whiteList).permitAll()

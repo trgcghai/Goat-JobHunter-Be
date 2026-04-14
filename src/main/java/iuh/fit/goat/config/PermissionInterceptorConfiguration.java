@@ -46,6 +46,9 @@ public class PermissionInterceptorConfiguration implements WebMvcConfigurer {
 //              Các endpoint về chatroom để người dùng có thể xem danh sách phòng chat của chính mình, chi tiết phòng chat của chính mình
                 "/api/v1/chatrooms/**",
 
+//              Các endpoint về relationship và friend request, block
+                "/api/v1/friend-requests/**",
+
 //              Các endpoint về comment để người dùng có thể xem danh sách comment của bài viết, chi tiết comment, nhưng vẫn cho phép người dùng có thể tạo/sửa/xóa comment của chính mình
                 "/api/v1/comments/**",
 

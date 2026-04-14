@@ -32,6 +32,16 @@ public interface UserRepository extends JpaRepository<User, Long>, JpaSpecificat
         AND u.email <> :currentUserEmail
         AND u.enabled = TRUE
         AND u.locked = FALSE
+        AND NOT EXISTS (
+            SELECT ur.relationshipId FROM UserRelationship ur
+            WHERE ur.deletedAt IS NULL
+            AND ur.relationshipState = iuh.fit.goat.enumeration.RelationshipState.BLOCKED
+            AND (
+                (ur.pairLowUser.accountId = :currentUserId AND ur.pairHighUser.accountId = u.accountId)
+                OR
+                (ur.pairLowUser.accountId = u.accountId AND ur.pairHighUser.accountId = :currentUserId)
+            )
+        )
         AND (
             :searchTerm IS NULL
             OR :searchTerm = ''
@@ -43,6 +53,7 @@ public interface UserRepository extends JpaRepository<User, Long>, JpaSpecificat
     Page<User> searchUsers(
         @Param("searchTerm") String searchTerm,
         @Param("currentUserEmail") String currentUserEmail,
+        @Param("currentUserId") Long currentUserId,
         Pageable pageable
     );
 }
