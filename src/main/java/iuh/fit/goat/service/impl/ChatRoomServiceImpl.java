@@ -130,7 +130,7 @@ public class ChatRoomServiceImpl implements ChatRoomService {
     @Transactional
     public ChatRoom createNewSingleChatRoom(Account currentAccount, MessageToNewChatRoom request) throws InvalidException {
         // Validate if receiver is valid
-        Account uReceiver = this.accountRepository.findByAccountIdAndDeletedAtIsNull(request.getAccountId()).orElse(null);
+        Account uReceiver = this.accountRepository.findByAccountIdAndDeletedAtIsNullAndLockedIsFalse(request.getAccountId()).orElse(null);
         if (uReceiver == null) {
             throw new InvalidException("Receiver not found");
         }
@@ -198,7 +198,7 @@ public class ChatRoomServiceImpl implements ChatRoomService {
             List<MultipartFile> files
     ) throws InvalidException {
         // Validate receiver exists
-        Account uReceiver = this.accountRepository.findByAccountIdAndDeletedAtIsNull(request.getAccountId()).orElse(null);
+        Account uReceiver = this.accountRepository.findByAccountIdAndDeletedAtIsNullAndLockedIsFalse(request.getAccountId()).orElse(null);
         if (uReceiver == null) {
             throw new InvalidException("Receiver not found");
         }
@@ -435,7 +435,7 @@ public class ChatRoomServiceImpl implements ChatRoomService {
         validateModeratorOrOwnerPermission(requesterMember, "add member");
 
         // Validate target user exists
-        Account targetAccount = this.accountRepository.findByAccountIdAndDeletedAtIsNull(request.getAccountId())
+        Account targetAccount = this.accountRepository.findByAccountIdAndDeletedAtIsNullAndLockedIsFalse(request.getAccountId())
                 .orElseThrow(() -> new InvalidException("User to be added not found"));
 
         // Check if user is already a member

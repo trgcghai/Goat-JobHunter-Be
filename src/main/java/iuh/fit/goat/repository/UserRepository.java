@@ -30,6 +30,8 @@ public interface UserRepository extends JpaRepository<User, Long>, JpaSpecificat
         WHERE u.deletedAt IS NULL
         AND u.role.name <> 'SUPER_ADMIN'
         AND u.email <> :currentUserEmail
+        AND u.enabled = TRUE
+        AND u.locked = FALSE
         AND NOT EXISTS (
             SELECT ur.relationshipId FROM UserRelationship ur
             WHERE ur.deletedAt IS NULL

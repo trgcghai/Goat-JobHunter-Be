@@ -2,6 +2,7 @@ package iuh.fit.goat.service.impl;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import iuh.fit.goat.dto.response.notification.DeviceNotificationResponse;
 import iuh.fit.goat.enumeration.NotificationType;
 import iuh.fit.goat.dto.response.notification.NotificationResponse;
 import iuh.fit.goat.entity.*;
@@ -243,6 +244,12 @@ public class NotificationServiceImpl implements NotificationService {
         } catch (JsonProcessingException e) {
             log.error("Failed to process follow notification for company {}: {}", company.getAccountId(), e.getMessage());
         }
+    }
+
+    @Override
+    public void handleForceLogout(String email, DeviceNotificationResponse notification) {
+        log.info("Force logout: {}", email);
+        this.messagingTemplate.convertAndSendToUser(email, "/queue/logout", notification);
     }
 
     @Override

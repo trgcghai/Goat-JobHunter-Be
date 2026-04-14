@@ -8,6 +8,7 @@ import org.hibernate.annotations.Filter;
 import java.util.ArrayList;
 import java.util.List;
 
+import static jakarta.persistence.CascadeType.*;
 import static jakarta.persistence.FetchType.LAZY;
 
 @Entity
@@ -24,7 +25,7 @@ public class Recruiter extends User{
     @JoinColumn(name = "company_id")
     private Company company;
 
-    @OneToMany(mappedBy = "interviewer", fetch = LAZY)
+    @OneToMany(mappedBy = "interviewer", fetch = LAZY, cascade = {PERSIST, MERGE, REMOVE})
     @JsonIgnore
     @Filter(
             name = "activeInterviewFilter",

@@ -26,8 +26,12 @@ public interface EmailNotificationService {
 
     void handleSendJobInvitationEmail(List<Long> applicantIds, Long jobId);
 
-    void handleSendUserEnabledEmail(
+    void handleSendAccountEnabledEmail(
             String recipient, String username, boolean enabled
+    );
+
+    void handleSendAccountLockedEmail(
+            String recipient, String username, boolean locked
     );
 
     void handleSendReviewActionNotice(

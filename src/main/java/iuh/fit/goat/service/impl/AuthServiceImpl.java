@@ -9,9 +9,8 @@ import iuh.fit.goat.dto.request.auth.LoginRequest;
 import iuh.fit.goat.dto.request.auth.RegisterCompanyRequest;
 import iuh.fit.goat.dto.request.auth.RegisterUserRequest;
 import iuh.fit.goat.dto.request.auth.VerifyAccountRequest;
-import iuh.fit.goat.dto.response.StorageResponse;
 import iuh.fit.goat.dto.response.auth.LoginResponse;
-import iuh.fit.goat.dto.response.company.CompanyResponse;
+import iuh.fit.goat.dto.response.notification.DeviceNotificationResponse;
 import iuh.fit.goat.entity.*;
 import iuh.fit.goat.exception.InvalidException;
 import iuh.fit.goat.repository.AccountRepository;
@@ -19,6 +18,7 @@ import iuh.fit.goat.service.*;
 import iuh.fit.goat.util.BasicUtil;
 import iuh.fit.goat.util.FileUploadUtil;
 import iuh.fit.goat.util.SecurityUtil;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -34,9 +34,10 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.stereotype.Service;
-import org.springframework.web.multipart.MultipartFile;
+import org.springframework.transaction.annotation.Transactional;
 
 
+import java.time.Instant;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
 
@@ -49,7 +50,6 @@ public class AuthServiceImpl implements AuthService {
     private final SecurityUtil securityUtil;
     private final ObjectMapper mapper;
 
-    private final AccountService accountService;
     private final UserService userService;
     private final RedisService redisService;
     private final EmailNotificationService emailNotificationService;
@@ -58,6 +58,8 @@ public class AuthServiceImpl implements AuthService {
     private final CompanyService companyService;
     private final RoleService roleService;
     private final StorageService storageService;
+    private final NotificationService notificationService;
+    private final DeviceService deviceService;
 
     private final AccountRepository accountRepository;
 
@@ -69,25 +71,21 @@ public class AuthServiceImpl implements AuthService {
     private long validityInSeconds;
 
     @Override
-    public LoginResponse handleLogin(LoginRequest loginRequest, HttpServletResponse response) throws InvalidException {
+    public LoginResponse handleLogin(
+            LoginRequest loginRequest, HttpServletResponse response, HttpServletRequest request
+    ) throws InvalidException {
 
-        log.info("User: {}", this.accountRepository.findByEmailAndDeletedAtIsNull(loginRequest.getEmail()));
-        log.info("loginRequest: {}", loginRequest);
+        Account account = this.userService.handleGetAccountByEmail(loginRequest.getEmail());
+        if (account == null)  throw new InvalidException("Tài khoản không hợp lệ");
+        if (account.getDeletedAt() != null) throw new InvalidException("Tài khoản của bạn đã bị xóa. Vui lòng tạo tài khoản mới.");
+        if (account.isLocked()) throw new InvalidException("Tài khoản bị khóa. Vui lòng liên hệ hỗ trợ để biết thêm chi tiết.");
+        if (!account.isEnabled()) throw new InvalidException("Tài khoản bị vô hiệu hóa. Vui lòng liên hệ hỗ trợ để biết thêm chi tiết.");
 
         Authentication authentication = this.authenticationManagerBuilder.getObject()
                 .authenticate(new UsernamePasswordAuthenticationToken(
                         loginRequest.getEmail(), loginRequest.getPassword())
                 );
-
         SecurityContextHolder.getContext().setAuthentication(authentication);
-
-        Account account = this.userService.handleGetAccountByEmail(loginRequest.getEmail());
-        if (account == null) {
-            throw new InvalidException("Invalid account");
-        }
-        if (!account.isEnabled()) {
-            throw new InvalidException("Account is locked");
-        }
 
         log.info("Account logged in: {}", account);
 
@@ -95,16 +93,36 @@ public class AuthServiceImpl implements AuthService {
 
         log.info("loginResponse logged in: {}", loginResponse);
 
-        // Tạo token và lưu vào Redis
+//        Kiểm tra nếu đã có refresh token trong Redis thì xóa đi để tạo mới và các thiết bị khác sẽ đăng xuất
+        String oldRefreshToken = this.redisService.getValue("account:" + account.getEmail() + ":refresh");
+        if(oldRefreshToken != null) {
+            String deviceName = this.deviceService.getDeviceName(request);
+            this.notificationService.handleForceLogout(
+                    account.getEmail(),
+                    new DeviceNotificationResponse(
+                            "Tài khoản của bạn đang được đăng nhập: " + deviceName,
+                            deviceName,
+                            Instant.now()
+                    )
+            );
+            this.redisService.deleteKey("account:" + account.getEmail() + ":refresh");
+        }
+
+//        Lưu thiết bị đã đăng nhập
+        Device device = new Device();
+        device.setName(this.deviceService.getDeviceName(request));
+        device.setAccount(account);
+        this.deviceService.handleUpsertDevice(device);
+
+        // Tạo token mới và lưu vào Redis
         String accessToken = this.securityUtil.createAccessToken(account.getEmail(), loginResponse);
         String refreshToken = this.securityUtil.createRefreshToken(account.getEmail(), loginResponse);
 
         log.info("Refresh Token Created in Login: {}", refreshToken);
 
-        // Lưu refresh token vào Redis
         this.redisService.saveWithTTL(
-                "refresh:" + refreshToken,
-                account.getEmail(),
+                "account:" + account.getEmail() + ":refresh",
+                refreshToken,
                 jwtRefreshToken,
                 TimeUnit.SECONDS
         );
@@ -135,24 +153,22 @@ public class AuthServiceImpl implements AuthService {
 
     @Override
     public LoginResponse handleRefreshToken(String refreshToken, HttpServletResponse response) throws InvalidException {
-        if(refreshToken.equalsIgnoreCase("missingValue")) {
-            throw new InvalidException("You don't have a refresh token at cookie");
-        }
-        log.info("Refresh Token in Redis: " + refreshToken);
-        if (!this.redisService.hasKey("refresh:" + refreshToken)) {
-            throw new InvalidException("Invalid or expired refresh token");
-        }
-
         Jwt jwt = this.securityUtil.checkValidToken(refreshToken);
         String email = jwt.getSubject();
 
+        if(refreshToken.equalsIgnoreCase("missingValue")) {
+            throw new InvalidException("You don't have a refresh token at cookie");
+        }
+        if (!this.redisService.hasKey("account:" + email + ":refresh")
+                || !this.redisService.getValue("account:" + email + ":refresh").equalsIgnoreCase(refreshToken)
+        ) {
+            throw new InvalidException("Invalid or expired refresh token");
+        }
+
         Account currentAccount = this.accountRepository.findByEmailAndDeletedAtIsNull(email).orElse(null);
-        if(currentAccount == null){
-            throw new InvalidException("User not found");
-        }
-        if(!currentAccount.isEnabled()) {
-            throw new InvalidException("Account is locked");
-        }
+        if(currentAccount == null) throw new InvalidException("Tài khoản không hợp lệ");
+        if(currentAccount.isLocked()) throw new InvalidException("Tài khoản bị khóa. Vui lòng liên hệ hỗ trợ để biết thêm chi tiết.");
+        if(!currentAccount.isEnabled()) throw new InvalidException("Tài khoản bị vô hiệu hóa. Vui lòng liên hệ hỗ trợ để biết thêm chi tiết.");
 
         UserDetails userDetails = new org.springframework.security.core.userdetails.User(
                 currentAccount.getEmail(),
@@ -170,11 +186,11 @@ public class AuthServiceImpl implements AuthService {
         String newRefreshToken = this.securityUtil.createRefreshToken(email, loginResponse);
 
         this.redisService.replaceKey(
-                "refresh:" + refreshToken,
-                "refresh:" + newRefreshToken,
-                currentAccount.getEmail(),
-                jwtRefreshToken,
-                TimeUnit.SECONDS
+            "account:" + email + ":refresh",
+            "account:" + email + ":refresh",
+            newRefreshToken,
+            jwtRefreshToken,
+            TimeUnit.SECONDS
         );
 
         ResponseCookie newAccessCookie = ResponseCookie
@@ -203,7 +219,11 @@ public class AuthServiceImpl implements AuthService {
 
     @Override
     public void handleLogout(String accessToken, String refreshToken, HttpServletResponse response) {
-        this.redisService.deleteKey("refresh:" + refreshToken);
+        Jwt jwt = this.securityUtil.checkValidToken(refreshToken);
+        String email = jwt.getSubject();
+        if(email == null || email.isEmpty()) return;
+
+        this.redisService.deleteKey("account:" + email + ":refresh");
         this.redisService.saveWithTTL(
                 "blacklist:" + accessToken,
                 "revoked",
@@ -255,10 +275,12 @@ public class AuthServiceImpl implements AuthService {
 
     @Override
     public Object handleRegisterUser(RegisterUserRequest request) throws InvalidException {
-
-        // validate email existence
-        if (this.userService.handleExistsByEmail(request.getEmail())) {
-            throw new InvalidException("Email exists: " + request.getEmail());
+        Account account = this.userService.handleGetAccountByEmail(request.getEmail());
+        if (account != null && account.getDeletedAt() != null) {
+            throw new InvalidException("Email đã đăng ký trước đây và tài khoản đã bị xóa. Vui lòng tạo tài khoản mới.");
+        }
+        if (account != null) {
+            throw new InvalidException("Email đã được đăng ký.");
         }
 
         // hash password
@@ -337,8 +359,12 @@ public class AuthServiceImpl implements AuthService {
 
     @Override
     public Object handleRegisterCompany(RegisterCompanyRequest request) throws InvalidException {
-        if (this.accountService.handleGetAccountByEmail(request.getEmail()) != null) {
-            throw new InvalidException("Email exists: " + request.getEmail());
+        Account account = this.userService.handleGetAccountByEmail(request.getEmail());
+        if (account != null && account.getDeletedAt() != null) {
+            throw new InvalidException("Email đã đăng ký trước đây và tài khoản đã bị xóa. Vui lòng liên hệ hỗ trợ để khôi phục.");
+        }
+        if (account != null) {
+            throw new InvalidException("Email đã được đăng ký.");
         }
 
         if(this.companyService.handleGetCompanyByName(request.getName()) != null) {
@@ -433,6 +459,48 @@ public class AuthServiceImpl implements AuthService {
         this.emailNotificationService.handleSendVerificationEmail(key, verificationCode);
     }
 
+    @Override
+    @Transactional
+    public void handleDeleteMyAccount() throws InvalidException {
+        String email = SecurityUtil.getCurrentUserEmail();
+        Account account = this.accountRepository.findByEmailWithRole(email).orElse(null);
+        if(account == null) throw new InvalidException("Tài khoản không hợp lệ");
+
+        if(account.getAddresses() != null) account.getAddresses().forEach(Address::onDelete);
+        if(account.getRecipientNotifications() != null) account.getRecipientNotifications().forEach(Notification::onDelete);
+        if(account.getBlogs() != null) account.getBlogs().forEach(Blog::onDelete);
+        if(account.getComments() != null) account.getComments().forEach(Comment::onDelete);
+        if(account.getBlogReactions() != null) account.getBlogReactions().forEach(BlogReaction::onDelete);
+        if(account.getCommentReactions() != null) account.getCommentReactions().forEach(CommentReaction::onDelete);
+        if(account.getReportedTickets() != null) account.getReportedTickets().forEach(Ticket::onDelete);
+        if(account.getAssignedTickets() != null) account.getAssignedTickets().forEach(Ticket::onDelete);
+        if(account.getMemberships() != null) account.getMemberships().forEach(ChatMember::onDelete);
+        if(account.getDevices() != null) account.getDevices().forEach(Device::onDelete);
+
+        if(account instanceof User user) {
+            if(user.getSentFriendRequests() != null) user.getSentFriendRequests().forEach(Friendship::onDelete);
+            if(user.getReceivedFriendRequests() != null) user.getReceivedFriendRequests().forEach(Friendship::onDelete);
+            if(user.getReviews() != null) user.getReviews().forEach(Review::onDelete);
+
+            if(user instanceof Applicant applicant) {
+                if(applicant.getApplications() != null) applicant.getApplications().forEach(Application::onDelete);
+                if(applicant.getResumes() != null) applicant.getResumes().forEach(Resume::onDelete);
+            } else if(user instanceof Recruiter recruiter) {
+                if(recruiter.getConductedInterviews() != null) recruiter.getConductedInterviews().forEach(Interview::onDelete);
+            }
+        }
+
+        if(account instanceof Company company) {
+            if(company.getJobs() != null) company.getJobs().forEach(Job::onDelete);
+            if(company.getRecruiters() != null) company.getRecruiters().forEach(Recruiter::onDelete);
+            if(company.getReviews() != null) company.getReviews().forEach(Review::onDelete);
+            if(company.getAwards() != null) company.getAwards().forEach(CompanyAward::onDelete);
+        }
+
+        account.onDelete();
+        this.accountRepository.save(account);
+    }
+
     private LoginResponse createLoginResponse(Account account) {
         LoginResponse loginResponse = new LoginResponse();
 
@@ -442,6 +510,7 @@ public class AuthServiceImpl implements AuthService {
         loginResponse.setUsername(Objects.requireNonNullElse(account.getUsername(), ""));
         loginResponse.setAvatar(Objects.requireNonNullElse(account.getAvatar(), ""));
         loginResponse.setEnabled(account.isEnabled());
+        loginResponse.setLocked(account.isLocked());
         loginResponse.setVisibility(account.getVisibility());
         loginResponse.setAddresses(Objects.requireNonNullElse(account.getAddresses(), new ArrayList<>()));
 

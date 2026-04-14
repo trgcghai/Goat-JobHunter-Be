@@ -1,4 +1,4 @@
-package iuh.fit.goat.dto.response.user;
+package iuh.fit.goat.dto.response.account;
 
 import iuh.fit.goat.enumeration.Visibility;
 import lombok.AllArgsConstructor;

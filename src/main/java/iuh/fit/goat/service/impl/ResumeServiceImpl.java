@@ -43,7 +43,7 @@ public class ResumeServiceImpl implements ResumeService {
         String currentEmail = SecurityUtil.getCurrentUserEmail();
         if(currentEmail.isEmpty()) throw new InvalidException("You should be logged in");
 
-        Applicant applicant = this.applicantRepository.findByEmailAndDeletedAtIsNull(currentEmail).orElse(null);
+        Applicant applicant = this.applicantRepository.findByEmailAndDeletedAtIsNullAndEnabledIsTrueAndLockedIsFalse(currentEmail).orElse(null);
         if(applicant == null) throw new InvalidException("Applicant not found");
 
         FileUploadUtil.assertAllowed(request.getFileUrl());
@@ -256,7 +256,7 @@ public class ResumeServiceImpl implements ResumeService {
 
     private Resume validateResumeOwnership(Long resumeId) throws InvalidException {
         String currentEmail = SecurityUtil.getCurrentUserEmail();
-        Applicant applicant = this.applicantRepository.findByEmailAndDeletedAtIsNull(currentEmail)
+        Applicant applicant = this.applicantRepository.findByEmailAndDeletedAtIsNullAndEnabledIsTrueAndLockedIsFalse(currentEmail)
                 .orElseThrow(() -> new InvalidException("Applicant not found"));
 
         Resume resume = this.handleGetResumeById(resumeId);

@@ -53,6 +53,7 @@ dependencies {
     implementation("software.amazon.awssdk:dynamodb")
     implementation("software.amazon.awssdk:dynamodb-enhanced")
 	implementation("org.springframework:spring-test:7.0.6")
+	implementation("nl.basjes.parse.useragent:yauaa:8.1.1")
 
 	implementation("commons-io:commons-io:2.19.0")
 	implementation("commons-net:commons-net:3.12.0")

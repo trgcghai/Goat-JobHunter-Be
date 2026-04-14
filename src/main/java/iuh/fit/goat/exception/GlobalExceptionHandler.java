@@ -5,6 +5,8 @@ import org.springframework.context.support.DefaultMessageSourceResolvable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.security.authentication.DisabledException;
+import org.springframework.security.authentication.LockedException;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.validation.BindingResult;
 import org.springframework.validation.FieldError;
@@ -51,8 +53,7 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(value = {
             InvalidException.class,
-            BadCredentialsException.class,
-            UsernameNotFoundException.class
+            UsernameNotFoundException.class,
     })
     ResponseEntity<RestResponse<Object>> handleAllSpecialExceptions(Exception e){
         RestResponse<Object> response = new RestResponse<Object>();
@@ -62,6 +63,19 @@ public class GlobalExceptionHandler {
 
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
     }
+
+    @ExceptionHandler(value = {
+            BadCredentialsException.class,
+    })
+    ResponseEntity<RestResponse<Object>> handleBadCredentialsException(Exception e){
+        RestResponse<Object> response = new RestResponse<Object>();
+        response.setStatusCode(HttpStatus.BAD_REQUEST.value());
+        response.setMessage("Email hoặc mật khẩu không chính xác");
+        response.setError("Exception Occurred");
+
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
+    }
+
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
     ResponseEntity<RestResponse<Object>> handleValidationException(MethodArgumentNotValidException e) {

@@ -7,9 +7,9 @@ import iuh.fit.goat.dto.request.user.ResetPasswordRequest;
 import iuh.fit.goat.dto.response.auth.LoginResponse;
 import iuh.fit.goat.dto.response.ResultPaginationResponse;
 import iuh.fit.goat.dto.response.job.JobResponse;
-import iuh.fit.goat.dto.response.user.UserEnabledResponse;
-import iuh.fit.goat.dto.response.user.UserResponse;
-import iuh.fit.goat.dto.response.user.UserVisibilityResponse;
+import iuh.fit.goat.dto.response.account.AccountEnabledResponse;
+import iuh.fit.goat.dto.response.account.UserResponse;
+import iuh.fit.goat.dto.response.account.UserVisibilityResponse;
 import iuh.fit.goat.entity.*;
 import iuh.fit.goat.enumeration.Visibility;
 import iuh.fit.goat.exception.InvalidException;
@@ -779,16 +779,6 @@ public class UserServiceImpl implements UserService {
     /*     ========================= ========================= =========================  */
 
     @Override
-    public List<UserEnabledResponse> handleActivateUsers(List<Long> userIds) {
-        return this.setUsersEnabled(userIds, true);
-    }
-
-    @Override
-    public List<UserEnabledResponse> handleDeactivateUsers(List<Long> userIds) {
-        return this.setUsersEnabled(userIds, false);
-    }
-
-    @Override
     @Transactional
     public UserVisibilityResponse handleUpdateMyVisibility(Visibility visibility) throws InvalidException {
         String currentEmail = SecurityUtil.getCurrentUserEmail();
@@ -836,29 +826,6 @@ public class UserServiceImpl implements UserService {
                 .toList();
     }
 
-    private List<UserEnabledResponse> setUsersEnabled(List<Long> userIds, boolean enabled) {
-        if (userIds == null || userIds.isEmpty()) {
-            return new ArrayList<>();
-        }
-
-        List<User> users = this.userRepository.findAllById(userIds);
-        if (users.isEmpty()) {
-            return new ArrayList<>();
-        }
-
-        users.forEach(u -> {
-            u.setEnabled(enabled);
-            this.emailNotificationService.handleSendUserEnabledEmail(
-                    u.getEmail(), u.getUsername(), enabled
-            );
-        });
-        this.userRepository.saveAll(users);
-
-        return users.stream()
-                .map(u -> new UserEnabledResponse(u.getAccountId(), u.isEnabled()))
-                .toList();
-    }
-
     @Override
     public UserResponse convertToUserResponse(User user) {
         UserResponse userResponse = new UserResponse();
@@ -873,6 +840,7 @@ public class UserServiceImpl implements UserService {
         userResponse.setGender(user.getGender());
         userResponse.setDob(user.getDob());
         userResponse.setEnabled(user.isEnabled());
+        userResponse.setLocked(user.isLocked());
         userResponse.setVisibility(user.getVisibility());
         userResponse.setCoverPhoto(user.getCoverPhoto());
         userResponse.setHeadline(user.getHeadline());

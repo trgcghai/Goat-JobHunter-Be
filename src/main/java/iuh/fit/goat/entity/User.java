@@ -50,7 +50,7 @@ public class User extends Account {
     @Column(columnDefinition = "TEXT")
     protected String bio;
 
-    @OneToMany(mappedBy = "sender", fetch = LAZY, cascade = {PERSIST, MERGE})
+    @OneToMany(mappedBy = "sender", fetch = LAZY, cascade = {PERSIST, MERGE, REMOVE})
     @JsonIgnore
     @Filter(
             name = "activeFriendRequestFilter",
@@ -58,7 +58,7 @@ public class User extends Account {
     )
     private List<FriendRequest> sentFriendRequests = new ArrayList<>();
 
-    @OneToMany(mappedBy = "receiver", fetch = LAZY, cascade = {PERSIST, MERGE})
+    @OneToMany(mappedBy = "receiver", fetch = LAZY, cascade = {PERSIST, MERGE, REMOVE})
     @JsonIgnore
     @Filter(
             name = "activeFriendRequestFilter",
@@ -90,7 +90,7 @@ public class User extends Account {
     )
     private List<UserRelationship> blockedRelationships = new ArrayList<>();
 
-    @OneToMany(mappedBy = "user", fetch = LAZY, cascade = {PERSIST, MERGE})
+    @OneToMany(mappedBy = "user", fetch = LAZY, cascade = {PERSIST, MERGE, REMOVE})
     @JsonIgnore
     @Filter(
             name = "activeReviewFilter",

@@ -4,16 +4,17 @@ import iuh.fit.goat.service.RedisService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.redis.connection.RedisStringCommands;
 import org.springframework.data.redis.core.RedisCallback;
-import org.springframework.data.redis.core.StringRedisTemplate;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.core.types.Expiration;
 import org.springframework.stereotype.Service;
 
+import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
 @Service
 @RequiredArgsConstructor
 public class RedisServiceImpl implements RedisService {
-    private final StringRedisTemplate redisTemplate;
+    private final RedisTemplate<String, Object> redisTemplate;
 
     @Override
     public void saveWithTTL(String key, String value, long ttl, TimeUnit timeUnit) {
@@ -27,7 +28,8 @@ public class RedisServiceImpl implements RedisService {
 
     @Override
     public String getValue(String key) {
-        return this.redisTemplate.opsForValue().get(key);
+        Object value = this.redisTemplate.opsForValue().get(key);
+        return value != null ? value.toString() : null;
     }
 
     @Override
@@ -52,5 +54,13 @@ public class RedisServiceImpl implements RedisService {
             );
             return null;
         });
+    }
+
+    @Override
+    public void deleteByPattern(String pattern) {
+        Set<String> keys = this.redisTemplate.keys(pattern);
+        if (!keys.isEmpty()) {
+            this.redisTemplate.delete(keys);
+        }
     }
 }
