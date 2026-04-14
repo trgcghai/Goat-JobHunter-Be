@@ -109,9 +109,16 @@ public class UserServiceImpl implements UserService {
 
         // Get current logged-in user email
         String currentUserEmail = SecurityUtil.getCurrentUserLogin().orElseThrow(() -> new InvalidException("User not authenticated"));
+        Account currentAccount = this.accountRepository.findByEmailAndDeletedAtIsNull(currentUserEmail)
+            .orElseThrow(() -> new InvalidException("Current account doesn't exist"));
 
         // Fetch filtered users using repository method
-        Page<User> pageUser = this.userRepository.searchUsers(searchTerm, currentUserEmail, pageable);
+        Page<User> pageUser = this.userRepository.searchUsers(
+            searchTerm,
+            currentUserEmail,
+            currentAccount.getAccountId(),
+            pageable
+        );
 
         // Convert to response
         ResultPaginationResponse.Meta meta = new ResultPaginationResponse.Meta();

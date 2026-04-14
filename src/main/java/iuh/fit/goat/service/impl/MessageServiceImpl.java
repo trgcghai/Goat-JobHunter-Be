@@ -12,11 +12,15 @@ import iuh.fit.goat.dto.response.message.MessageResponse;
 import iuh.fit.goat.dto.response.StorageResponse;
 import iuh.fit.goat.entity.Account;
 import iuh.fit.goat.entity.ChatMember;
+import iuh.fit.goat.entity.ChatRoom;
 import iuh.fit.goat.entity.Company;
 import iuh.fit.goat.entity.Message;
 import iuh.fit.goat.entity.User;
 import iuh.fit.goat.entity.embeddable.SenderInfo;
+import iuh.fit.goat.enumeration.ChatRoomType;
 import iuh.fit.goat.enumeration.MessageType;
+import iuh.fit.goat.enumeration.RelationshipState;
+import iuh.fit.goat.exception.BlockedInteractionException;
 import iuh.fit.goat.exception.ConflictException;
 import iuh.fit.goat.exception.InvalidException;
 import iuh.fit.goat.exception.NotFoundException;
@@ -24,6 +28,7 @@ import iuh.fit.goat.exception.PermissionException;
 import iuh.fit.goat.repository.ChatMemberRepository;
 import iuh.fit.goat.repository.ChatRoomRepository;
 import iuh.fit.goat.repository.MessageRepository;
+import iuh.fit.goat.repository.UserRelationshipRepository;
 import iuh.fit.goat.service.MessageService;
 import iuh.fit.goat.service.StorageService;
 import iuh.fit.goat.util.MessageHelper;
@@ -33,6 +38,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Pageable;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.net.URI;
@@ -49,6 +55,7 @@ public class MessageServiceImpl implements MessageService {
     private final MessageRepository messageRepository;
     private final ChatRoomRepository chatRoomRepository;
     private final ChatMemberRepository chatMemberRepository;
+    private final UserRelationshipRepository userRelationshipRepository;
 
     private static final long MAX_FILE_SIZE = 20 * 1024 * 1024; // 20MB
     private static final int MAX_FORWARD_TARGETS = 20;
@@ -106,9 +113,12 @@ public class MessageServiceImpl implements MessageService {
     * Send text message.
      */
     @Override
+    @Transactional
     public Message sendMessage(Long chatRoomId, MessageCreateRequest request, Account currentAccount) throws InvalidException
     {
-        this.chatRoomRepository.findById(chatRoomId).orElseThrow(() -> new InvalidException("Chat Room not found"));
+        ChatRoom chatRoom = this.chatRoomRepository.findById(chatRoomId)
+                .orElseThrow(() -> new InvalidException("Chat Room not found"));
+        this.validateNoBlockedDirectInteraction(chatRoom, currentAccount.getAccountId());
 
         String messageId = generateMessageId();
         Instant now = Instant.now();
@@ -149,13 +159,16 @@ public class MessageServiceImpl implements MessageService {
      * Send messages with files (batch operation)
      */
     @Override
+    @Transactional
     public List<Message> sendMessagesWithFiles(
             Long chatRoomId,
             MessageCreateRequest request,
             List<MultipartFile> files,
             Account currentAccount
     ) throws InvalidException {
-        this.chatRoomRepository.findById(chatRoomId).orElseThrow(() -> new InvalidException("Chat Room not found"));
+        ChatRoom chatRoom = this.chatRoomRepository.findById(chatRoomId)
+                .orElseThrow(() -> new InvalidException("Chat Room not found"));
+        this.validateNoBlockedDirectInteraction(chatRoom, currentAccount.getAccountId());
 
         List<Message> createdMessages = new ArrayList<>();
         try {
@@ -182,7 +195,7 @@ public class MessageServiceImpl implements MessageService {
                     createdMessages.add(savedMessage);
                     sendMessageToUsers(chatRoomId, savedMessage);
 
-                        log.info("File message created: messageId={}, type={}, chatRoomId={}",
+                    log.info("File message created: messageId={}, type={}, chatRoomId={}",
                             savedMessage.getMessageId(), messageType, chatRoomId);
                 }
             }
@@ -198,11 +211,13 @@ public class MessageServiceImpl implements MessageService {
                 throw new InvalidException("At least one file or text content is required");
             }
 
-                log.info("Batch message creation completed: {} messages created in chatRoom {}",
+            log.info("Batch message creation completed: {} messages created in chatRoom {}",
                     createdMessages.size(), chatRoomId);
 
             return createdMessages;
 
+        } catch (BlockedInteractionException e) {
+            throw e;
         } catch (Exception e) {
             log.error("Error creating messages", e);
             throw new InvalidException("Failed to create messages: " + e.getMessage());
@@ -602,6 +617,35 @@ public class MessageServiceImpl implements MessageService {
 
     private String generateMessageId() {
         return "msg_" + UUID.randomUUID().toString().replace("-", "");
+    }
+
+    private void validateNoBlockedDirectInteraction(ChatRoom chatRoom, Long currentAccountId) throws InvalidException {
+        if (chatRoom.getType() != ChatRoomType.DIRECT) {
+            return;
+        }
+
+        Long peerAccountId = this.chatMemberRepository.findByRoomRoomIdAndDeletedAtIsNull(chatRoom.getRoomId())
+                .stream()
+                .map(ChatMember::getAccount)
+                .filter(Objects::nonNull)
+                .map(Account::getAccountId)
+                .filter(accountId -> !Objects.equals(accountId, currentAccountId))
+                .findFirst()
+                .orElseThrow(() -> new InvalidException("Direct chat room has invalid members"));
+
+        UserRelationshipRepository.PairIds pair = UserRelationshipRepository.PairIds.of(currentAccountId, peerAccountId);
+        this.userRelationshipRepository.lockPairForTransactionByCanonicalIds(pair.pairLowId(), pair.pairHighId());
+
+        boolean blocked = this.userRelationshipRepository
+                .existsByPairLowUser_AccountIdAndPairHighUser_AccountIdAndRelationshipStateAndDeletedAtIsNull(
+                        pair.pairLowId(),
+                        pair.pairHighId(),
+                        RelationshipState.BLOCKED
+                );
+
+        if (blocked) {
+            throw new BlockedInteractionException("Cannot send message because this pair is blocked");
+        }
     }
 
     private void sendMessageDeletedEvent(Long chatRoomId, MessageDeletedEventResponse event) {

@@ -43,6 +43,12 @@ public class FriendRequestController {
         return ResponseEntity.status(HttpStatus.OK).body(response);
     }
 
+    @GetMapping("/me/block")
+    public ResponseEntity<ResultPaginationResponse> getMyBlockedUsers(Pageable pageable) throws InvalidException {
+        ResultPaginationResponse response = this.friendRequestService.handleGetMyBlockedUsers(pageable);
+        return ResponseEntity.status(HttpStatus.OK).body(response);
+    }
+
     @PostMapping
     public ResponseEntity<FriendRequestResponse> createFriendRequest(@Valid @RequestBody CreateFriendRequestRequest request)
             throws InvalidException, ConflictException, NotFoundException {
@@ -68,6 +74,20 @@ public class FriendRequestController {
     public ResponseEntity<FriendRequestResponse> cancelFriendRequest(@PathVariable("id") Long id)
             throws InvalidException, ConflictException, NotFoundException {
         FriendRequestResponse response = this.friendRequestService.handleCancelFriendRequest(id);
+        return ResponseEntity.status(HttpStatus.OK).body(response);
+    }
+
+    @PostMapping("/{id}/block")
+    public ResponseEntity<FriendRequestResponse> blockUser(@PathVariable("id") Long id)
+            throws InvalidException, NotFoundException {
+        FriendRequestResponse response = this.friendRequestService.handleBlockUser(id);
+        return ResponseEntity.status(HttpStatus.OK).body(response);
+    }
+
+    @PostMapping("/{id}/unblock")
+    public ResponseEntity<FriendRequestResponse> unblockUser(@PathVariable("id") Long id)
+            throws InvalidException, NotFoundException {
+        FriendRequestResponse response = this.friendRequestService.handleUnblockUser(id);
         return ResponseEntity.status(HttpStatus.OK).body(response);
     }
 }

@@ -10,12 +10,15 @@ import iuh.fit.goat.dto.response.chat.GroupMemberResponse;
 import iuh.fit.goat.entity.*;
 import iuh.fit.goat.enumeration.ChatRole;
 import iuh.fit.goat.enumeration.ChatRoomType;
+import iuh.fit.goat.enumeration.RelationshipState;
 import iuh.fit.goat.enumeration.Visibility;
 import iuh.fit.goat.exception.AccountPrivateException;
+import iuh.fit.goat.exception.BlockedInteractionException;
 import iuh.fit.goat.exception.InvalidException;
 import iuh.fit.goat.repository.AccountRepository;
 import iuh.fit.goat.repository.ChatMemberRepository;
 import iuh.fit.goat.repository.ChatRoomRepository;
+import iuh.fit.goat.repository.UserRelationshipRepository;
 import iuh.fit.goat.service.ChatRoomService;
 import iuh.fit.goat.service.MessageService;
 import iuh.fit.goat.util.EntityUtil;
@@ -42,6 +45,7 @@ public class ChatRoomServiceImpl implements ChatRoomService {
     private final ChatRoomRepository chatRoomRepository;
     private final ChatMemberRepository chatMemberRepository;
     private final AccountRepository accountRepository;
+    private final UserRelationshipRepository userRelationshipRepository;
 
     @Override
     @Transactional(readOnly = true)
@@ -131,6 +135,8 @@ public class ChatRoomServiceImpl implements ChatRoomService {
             throw new InvalidException("Receiver not found");
         }
 
+        this.validateNoBlockedDirectInteraction(currentAccount.getAccountId(), uReceiver.getAccountId());
+
         // Check if direct chat room already exists between these 2 users
         Optional<ChatRoom> existingRoom = findExistingDirectChatRoom(
                 currentAccount.getAccountId(),
@@ -196,6 +202,8 @@ public class ChatRoomServiceImpl implements ChatRoomService {
         if (uReceiver == null) {
             throw new InvalidException("Receiver not found");
         }
+
+        this.validateNoBlockedDirectInteraction(currentAccount.getAccountId(), uReceiver.getAccountId());
 
         // Check if direct chat room already exists
         Optional<ChatRoom> existingRoom = findExistingDirectChatRoom(currentAccount.getAccountId(), uReceiver.getAccountId());
@@ -688,6 +696,22 @@ public class ChatRoomServiceImpl implements ChatRoomService {
         }
     }
 
+    private void validateNoBlockedDirectInteraction(Long currentUserId, Long targetUserId) throws InvalidException {
+        UserRelationshipRepository.PairIds pair = UserRelationshipRepository.PairIds.of(currentUserId, targetUserId);
+        this.userRelationshipRepository.lockPairForTransactionByCanonicalIds(pair.pairLowId(), pair.pairHighId());
+
+        boolean blocked = this.userRelationshipRepository
+                .existsByPairLowUser_AccountIdAndPairHighUser_AccountIdAndRelationshipStateAndDeletedAtIsNull(
+                        pair.pairLowId(),
+                        pair.pairHighId(),
+                        RelationshipState.BLOCKED
+                );
+
+        if (blocked) {
+            throw new BlockedInteractionException("Cannot start a direct conversation because this pair is blocked");
+        }
+    }
+
     private Optional<ChatRoom> findExistingDirectChatRoom(Long userId1, Long userId2) {
         List<ChatRoom> directRooms = this.chatRoomRepository
                 .findDirectChatRoomsBetweenUsersOrderByLatest(userId1, userId2);
@@ -711,6 +735,7 @@ public class ChatRoomServiceImpl implements ChatRoomService {
             int memberCount = countActiveMembers(chatRoom);
             String name = resolveChatRoomName(chatRoom, currentUserEmail);
             String avatar = resolveChatRoomAvatar(chatRoom, currentUserEmail);
+            BlockStatus blockStatus = resolveBlockStatus(chatRoom, currentUserEmail);
             LastMessageInfo lastMessageInfo = buildLastMessageInfo(lastMessage, currentUserEmail);
 
             return ChatRoomResponse.builder()
@@ -721,6 +746,9 @@ public class ChatRoomServiceImpl implements ChatRoomService {
                     .memberCount(memberCount)
                     .lastMessagePreview(lastMessageInfo.content())
                     .lastMessageTime(lastMessageInfo.time())
+                    .isBlocked(blockStatus.blocked())
+                    .isBlockedByMe(blockStatus.blockedByMe())
+                    .counterpartAccountId(blockStatus.counterpartAccountId())
                     .currentUserSentLastMessage(lastMessageInfo.isCurrentUserSender())
                     .build();
 
@@ -840,6 +868,7 @@ public class ChatRoomServiceImpl implements ChatRoomService {
 
     private ChatRoomResponse buildFallbackResponse(ChatRoom chatRoom) {
         String currentUserEmail = SecurityUtil.getCurrentUserEmail();
+        BlockStatus blockStatus = resolveBlockStatus(chatRoom, currentUserEmail);
 
         return ChatRoomResponse.builder()
                 .roomId(chatRoom.getRoomId())
@@ -850,7 +879,58 @@ public class ChatRoomServiceImpl implements ChatRoomService {
                 .lastMessagePreview("") // Để trống thay vì "Không thể tải tin nhắn này"
                 .currentUserSentLastMessage(false)
                 .lastMessageTime(null)
+                .isBlocked(blockStatus.blocked())
+                .isBlockedByMe(blockStatus.blockedByMe())
+                .counterpartAccountId(blockStatus.counterpartAccountId())
                 .build();
+    }
+
+    private BlockStatus resolveBlockStatus(ChatRoom chatRoom, String currentUserEmail) {
+        if (chatRoom.getType() != ChatRoomType.DIRECT || currentUserEmail == null || currentUserEmail.isBlank()) {
+            return new BlockStatus(false, false, null);
+        }
+
+        Optional<Long> currentUserId = chatRoom.getMembers().stream()
+                .filter(member -> member.getDeletedAt() == null)
+                .map(ChatMember::getAccount)
+                .filter(Objects::nonNull)
+                .filter(account -> account.getEmail() != null && account.getEmail().equalsIgnoreCase(currentUserEmail))
+                .map(Account::getAccountId)
+                .findFirst();
+
+        Optional<Long> peerUserId = chatRoom.getMembers().stream()
+                .filter(member -> isOtherActiveMember(member, currentUserEmail))
+                .map(ChatMember::getAccount)
+                .filter(Objects::nonNull)
+                .map(Account::getAccountId)
+                .findFirst();
+
+        if (currentUserId.isEmpty() || peerUserId.isEmpty()) {
+            return new BlockStatus(false, false, null);
+        }
+
+        UserRelationshipRepository.PairIds pair = UserRelationshipRepository.PairIds.of(
+                currentUserId.get(),
+                peerUserId.get()
+        );
+
+        Optional<UserRelationship> relationship = this.userRelationshipRepository
+                .findByPairLowUser_AccountIdAndPairHighUser_AccountIdAndDeletedAtIsNull(
+                        pair.pairLowId(),
+                        pair.pairHighId()
+                );
+
+        if (relationship.isEmpty() || relationship.get().getRelationshipState() != RelationshipState.BLOCKED) {
+            return new BlockStatus(false, false, peerUserId.get());
+        }
+
+        boolean blockedByMe = relationship.get().getBlockedBy() != null
+                && Objects.equals(relationship.get().getBlockedBy().getAccountId(), currentUserId.get());
+
+        return new BlockStatus(true, blockedByMe, peerUserId.get());
+    }
+
+    private record BlockStatus(boolean blocked, boolean blockedByMe, Long counterpartAccountId) {
     }
 
     /**

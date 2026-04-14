@@ -14,6 +14,7 @@ import iuh.fit.goat.entity.UserRelationship;
 import iuh.fit.goat.enumeration.FriendRequestStatus;
 import iuh.fit.goat.enumeration.FriendshipRealtimeEventType;
 import iuh.fit.goat.enumeration.RelationshipState;
+import iuh.fit.goat.exception.BlockedInteractionException;
 import iuh.fit.goat.exception.ConflictException;
 import iuh.fit.goat.exception.InvalidException;
 import iuh.fit.goat.exception.NotFoundException;
@@ -64,6 +65,29 @@ public class FriendRequestServiceImpl implements FriendRequestService {
 
         List<MyFriendResponse> responses = page.getContent().stream()
                 .map(relationship -> this.convertToMyFriendResponse(relationship, currentUser.getAccountId()))
+                .toList();
+
+        return this.buildPaginationResponse(page, resolvedPageable, responses);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public ResultPaginationResponse handleGetMyBlockedUsers(Pageable pageable) throws InvalidException {
+        User currentUser = this.handleGetCurrentUser();
+        Pageable resolvedPageable = this.resolvePageable(
+                pageable,
+                Sort.by(Sort.Direction.DESC, "blockedSince").and(Sort.by(Sort.Direction.DESC, "relationshipId"))
+        );
+
+        Page<UserRelationship> page = this.userRelationshipRepository.findBlockedByAccountId(
+                currentUser.getAccountId(),
+                RelationshipState.BLOCKED,
+                resolvedPageable
+        );
+
+        List<FriendUserSnippetResponse> responses = page.getContent().stream()
+                .map(relationship -> this.resolveCounterpartUser(relationship, currentUser.getAccountId()))
+                .map(this::convertToUserSnippet)
                 .toList();
 
         return this.buildPaginationResponse(page, resolvedPageable, responses);
@@ -130,6 +154,7 @@ public class FriendRequestServiceImpl implements FriendRequestService {
                 .orElseThrow(() -> new NotFoundException("Target user doesn't exist"));
 
         UserPair pair = UserPair.of(sender, receiver);
+        this.userRelationshipRepository.lockPairForTransactionByCanonicalIds(pair.pairLowId(), pair.pairHighId());
 
         Optional<UserRelationship> existingRelationship = this.userRelationshipRepository
                 .findByPairForUpdate(pair.pairLowId(), pair.pairHighId());
@@ -139,7 +164,7 @@ public class FriendRequestServiceImpl implements FriendRequestService {
                 throw new ConflictException("Users are already friends");
             }
             if (existingRelationship.get().getRelationshipState() == RelationshipState.BLOCKED) {
-                throw new ConflictException("Cannot send friend request because this pair is blocked");
+                throw new BlockedInteractionException("Cannot send friend request because this pair is blocked");
             }
         }
 
@@ -187,20 +212,23 @@ public class FriendRequestServiceImpl implements FriendRequestService {
         this.validateRequestId(requestId);
 
         User currentUser = this.handleGetCurrentUser();
+        FriendRequest requestSnapshot = this.friendRequestRepository.findActiveById(requestId)
+                .orElseThrow(() -> new NotFoundException("Friend request not found"));
+        UserPair pair = UserPair.of(requestSnapshot.getSender(), requestSnapshot.getReceiver());
+        this.userRelationshipRepository.lockPairForTransactionByCanonicalIds(pair.pairLowId(), pair.pairHighId());
+
         FriendRequest request = this.handleGetPendingRequestForUpdate(requestId);
 
         if (!Objects.equals(request.getReceiver().getAccountId(), currentUser.getAccountId())) {
             throw new InvalidException("Only the receiver can accept this friend request");
         }
 
-        UserPair pair = UserPair.of(request.getSender(), request.getReceiver());
-
         Optional<UserRelationship> existingRelationship = this.userRelationshipRepository
                 .findByPairForUpdate(pair.pairLowId(), pair.pairHighId());
 
         if (existingRelationship.isPresent()) {
             if (existingRelationship.get().getRelationshipState() == RelationshipState.BLOCKED) {
-                throw new ConflictException("Cannot accept friend request because this pair is blocked");
+                throw new BlockedInteractionException("Cannot accept friend request because this pair is blocked");
             }
             if (existingRelationship.get().getRelationshipState() == RelationshipState.FRIEND) {
                 throw new ConflictException("Users are already friends");
@@ -271,6 +299,99 @@ public class FriendRequestServiceImpl implements FriendRequestService {
 
     @Override
     @Transactional
+    public FriendRequestResponse handleBlockUser(Long targetUserId)
+            throws InvalidException, NotFoundException {
+        this.validateTargetUserId(targetUserId);
+
+        User actor = this.handleGetCurrentUser();
+        if (Objects.equals(actor.getAccountId(), targetUserId)) {
+            throw new InvalidException("You cannot block yourself");
+        }
+
+        User target = this.userRepository.findByAccountIdAndDeletedAtIsNull(targetUserId)
+                .orElseThrow(() -> new NotFoundException("Target user doesn't exist"));
+
+        UserPair pair = UserPair.of(actor, target);
+        this.userRelationshipRepository.lockPairForTransactionByCanonicalIds(pair.pairLowId(), pair.pairHighId());
+
+        Instant now = Instant.now();
+        this.userRelationshipRepository.upsertBlockedRelationshipByCanonicalIds(
+                pair.pairLowId(),
+                pair.pairHighId(),
+                RelationshipState.BLOCKED.name(),
+                now,
+                actor.getAccountId(),
+                actor.getEmail()
+        );
+
+        this.friendRequestRepository.updateStatusByPair(
+                pair.pairLowId(),
+                pair.pairHighId(),
+                FriendRequestStatus.PENDING,
+                FriendRequestStatus.CANCELED,
+                now
+        );
+
+        this.publishRealtimeEvent(
+                FriendshipRealtimeEventType.USER_BLOCKED,
+                actor,
+                target,
+                null,
+                RelationshipState.BLOCKED
+        );
+
+        return this.convertToRelationshipActionResponse(
+                actor.getAccountId(),
+                target.getAccountId(),
+                RelationshipState.BLOCKED,
+                now
+        );
+    }
+
+    @Override
+    @Transactional
+    public FriendRequestResponse handleUnblockUser(Long targetUserId)
+            throws InvalidException, NotFoundException {
+        this.validateTargetUserId(targetUserId);
+
+        User actor = this.handleGetCurrentUser();
+        if (Objects.equals(actor.getAccountId(), targetUserId)) {
+            throw new InvalidException("You cannot unblock yourself");
+        }
+
+        User target = this.userRepository.findByAccountIdAndDeletedAtIsNull(targetUserId)
+                .orElseThrow(() -> new NotFoundException("Target user doesn't exist"));
+
+        UserPair pair = UserPair.of(actor, target);
+        this.userRelationshipRepository.lockPairForTransactionByCanonicalIds(pair.pairLowId(), pair.pairHighId());
+
+        int deletedCount = this.userRelationshipRepository.hardDeleteByCanonicalPairAndState(
+                pair.pairLowId(),
+                pair.pairHighId(),
+                RelationshipState.BLOCKED
+        );
+
+        Instant now = Instant.now();
+        if (deletedCount > 0) {
+            this.publishRealtimeEvent(
+                    FriendshipRealtimeEventType.USER_UNBLOCKED,
+                    actor,
+                    target,
+                    null,
+                    RelationshipState.NONE
+            );
+        }
+
+        return this.convertToRelationshipActionResponse(
+                actor.getAccountId(),
+                target.getAccountId(),
+                RelationshipState.NONE,
+                now
+        );
+    }
+
+    @Override
+    @Transactional
     public FriendRequestResponse handleCancelFriendRequest(Long requestId)
             throws InvalidException, ConflictException, NotFoundException {
         this.validateRequestId(requestId);
@@ -331,6 +452,12 @@ public class FriendRequestServiceImpl implements FriendRequestService {
         }
     }
 
+    private void validateTargetUserId(Long targetUserId) throws InvalidException {
+        if (targetUserId == null || targetUserId <= 0) {
+            throw new InvalidException("Target user ID is invalid");
+        }
+    }
+
     private FriendRequestResponse convertToResponse(FriendRequest request, RelationshipState relationshipState) {
         FriendRequestResponse response = new FriendRequestResponse();
         response.setRequestId(request.getRequestId());
@@ -340,6 +467,20 @@ public class FriendRequestServiceImpl implements FriendRequestService {
         response.setRelationshipState(relationshipState);
         response.setRequestedAt(request.getRequestedAt() != null ? request.getRequestedAt() : request.getCreatedAt());
         response.setRespondedAt(request.getRespondedAt());
+        return response;
+    }
+
+    private FriendRequestResponse convertToRelationshipActionResponse(
+            Long actorUserId,
+            Long targetUserId,
+            RelationshipState relationshipState,
+            Instant actionAt
+    ) {
+        FriendRequestResponse response = new FriendRequestResponse();
+        response.setSenderId(actorUserId);
+        response.setReceiverId(targetUserId);
+        response.setRelationshipState(relationshipState);
+        response.setRequestedAt(actionAt);
         return response;
     }
 
@@ -357,15 +498,19 @@ public class FriendRequestServiceImpl implements FriendRequestService {
     }
 
     private MyFriendResponse convertToMyFriendResponse(UserRelationship relationship, Long currentUserId) {
-        User friend = Objects.equals(relationship.getPairLowUser().getAccountId(), currentUserId)
-                ? relationship.getPairHighUser()
-                : relationship.getPairLowUser();
+        User friend = this.resolveCounterpartUser(relationship, currentUserId);
 
         MyFriendResponse response = new MyFriendResponse();
         response.setRelationshipId(relationship.getRelationshipId());
         response.setFriendsSince(relationship.getFriendsSince());
         response.setFriend(this.convertToUserSnippet(friend));
         return response;
+    }
+
+    private User resolveCounterpartUser(UserRelationship relationship, Long currentUserId) {
+        return Objects.equals(relationship.getPairLowUser().getAccountId(), currentUserId)
+                ? relationship.getPairHighUser()
+                : relationship.getPairLowUser();
     }
 
     private FriendRequestListItemResponse convertToListItemResponse(

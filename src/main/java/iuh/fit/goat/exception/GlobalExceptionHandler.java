@@ -39,6 +39,16 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(HttpStatus.FORBIDDEN).body(response);
     }
 
+    @ExceptionHandler(BlockedInteractionException.class)
+    ResponseEntity<RestResponse<Object>> handleBlockedInteractionException(BlockedInteractionException e){
+        RestResponse<Object> response = new RestResponse<Object>();
+        response.setStatusCode(HttpStatus.FORBIDDEN.value());
+        response.setMessage(e.getMessage());
+        response.setError(BlockedInteractionException.ERROR_CODE);
+
+        return ResponseEntity.status(HttpStatus.FORBIDDEN).body(response);
+    }
+
     @ExceptionHandler(value = {
             InvalidException.class,
             BadCredentialsException.class,

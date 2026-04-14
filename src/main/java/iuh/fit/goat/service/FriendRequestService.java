@@ -15,6 +15,8 @@ public interface FriendRequestService {
 
         ResultPaginationResponse handleGetMySentFriendRequests(Pageable pageable) throws InvalidException;
 
+        ResultPaginationResponse handleGetMyBlockedUsers(Pageable pageable) throws InvalidException;
+
     FriendRequestResponse handleCreateFriendRequest(CreateFriendRequestRequest request)
             throws InvalidException, ConflictException, NotFoundException;
 
@@ -26,4 +28,10 @@ public interface FriendRequestService {
 
     FriendRequestResponse handleCancelFriendRequest(Long requestId)
             throws InvalidException, ConflictException, NotFoundException;
+
+    FriendRequestResponse handleBlockUser(Long targetUserId)
+            throws InvalidException, NotFoundException;
+
+    FriendRequestResponse handleUnblockUser(Long targetUserId)
+            throws InvalidException, NotFoundException;
 }

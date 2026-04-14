@@ -43,6 +43,10 @@ public interface FriendRequestRepository extends JpaRepository<FriendRequest, Lo
     @Query("SELECT fr FROM FriendRequest fr WHERE fr.requestId = :requestId AND fr.deletedAt IS NULL")
     Optional<FriendRequest> findActiveByIdForUpdate(@Param("requestId") Long requestId);
 
+        @EntityGraph(attributePaths = {"sender", "receiver", "pairLowUser", "pairHighUser"})
+        @Query("SELECT fr FROM FriendRequest fr WHERE fr.requestId = :requestId AND fr.deletedAt IS NULL")
+        Optional<FriendRequest> findActiveById(@Param("requestId") Long requestId);
+
     @Modifying(flushAutomatically = true)
     @Query("""
             UPDATE FriendRequest fr
@@ -61,5 +65,23 @@ public interface FriendRequestRepository extends JpaRepository<FriendRequest, Lo
             @Param("newStatus") FriendRequestStatus newStatus,
             @Param("respondedAt") Instant respondedAt,
             @Param("excludedRequestId") Long excludedRequestId
+    );
+
+    @Modifying(flushAutomatically = true)
+    @Query("""
+            UPDATE FriendRequest fr
+            SET fr.status = :newStatus,
+                fr.respondedAt = :respondedAt
+            WHERE fr.pairLowUser.accountId = :pairLowId
+              AND fr.pairHighUser.accountId = :pairHighId
+              AND fr.status = :currentStatus
+              AND fr.deletedAt IS NULL
+            """)
+    int updateStatusByPair(
+            @Param("pairLowId") Long pairLowId,
+            @Param("pairHighId") Long pairHighId,
+            @Param("currentStatus") FriendRequestStatus currentStatus,
+            @Param("newStatus") FriendRequestStatus newStatus,
+            @Param("respondedAt") Instant respondedAt
     );
 }
