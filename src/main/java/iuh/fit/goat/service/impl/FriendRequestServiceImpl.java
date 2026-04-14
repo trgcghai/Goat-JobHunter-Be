@@ -72,6 +72,29 @@ public class FriendRequestServiceImpl implements FriendRequestService {
 
     @Override
     @Transactional(readOnly = true)
+    public ResultPaginationResponse handleGetMyBlockedUsers(Pageable pageable) throws InvalidException {
+        User currentUser = this.handleGetCurrentUser();
+        Pageable resolvedPageable = this.resolvePageable(
+                pageable,
+                Sort.by(Sort.Direction.DESC, "blockedSince").and(Sort.by(Sort.Direction.DESC, "relationshipId"))
+        );
+
+        Page<UserRelationship> page = this.userRelationshipRepository.findBlockedByAccountId(
+                currentUser.getAccountId(),
+                RelationshipState.BLOCKED,
+                resolvedPageable
+        );
+
+        List<FriendUserSnippetResponse> responses = page.getContent().stream()
+                .map(relationship -> this.resolveCounterpartUser(relationship, currentUser.getAccountId()))
+                .map(this::convertToUserSnippet)
+                .toList();
+
+        return this.buildPaginationResponse(page, resolvedPageable, responses);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
     public ResultPaginationResponse handleGetMyReceivedFriendRequests(Pageable pageable) throws InvalidException {
         User currentUser = this.handleGetCurrentUser();
         Pageable resolvedPageable = this.resolvePageable(
@@ -475,15 +498,19 @@ public class FriendRequestServiceImpl implements FriendRequestService {
     }
 
     private MyFriendResponse convertToMyFriendResponse(UserRelationship relationship, Long currentUserId) {
-        User friend = Objects.equals(relationship.getPairLowUser().getAccountId(), currentUserId)
-                ? relationship.getPairHighUser()
-                : relationship.getPairLowUser();
+        User friend = this.resolveCounterpartUser(relationship, currentUserId);
 
         MyFriendResponse response = new MyFriendResponse();
         response.setRelationshipId(relationship.getRelationshipId());
         response.setFriendsSince(relationship.getFriendsSince());
         response.setFriend(this.convertToUserSnippet(friend));
         return response;
+    }
+
+    private User resolveCounterpartUser(UserRelationship relationship, Long currentUserId) {
+        return Objects.equals(relationship.getPairLowUser().getAccountId(), currentUserId)
+                ? relationship.getPairHighUser()
+                : relationship.getPairLowUser();
     }
 
     private FriendRequestListItemResponse convertToListItemResponse(

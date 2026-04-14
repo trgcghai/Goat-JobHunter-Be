@@ -67,6 +67,19 @@ public interface UserRelationshipRepository extends JpaRepository<UserRelationsh
             Pageable pageable
     );
 
+    @EntityGraph(attributePaths = {"pairLowUser", "pairHighUser", "blockedBy"})
+    @Query("""
+            SELECT ur FROM UserRelationship ur
+            WHERE ur.deletedAt IS NULL
+              AND ur.relationshipState = :relationshipState
+              AND ur.blockedBy.accountId = :blockedById
+            """)
+    Page<UserRelationship> findBlockedByAccountId(
+            @Param("blockedById") Long blockedById,
+            @Param("relationshipState") RelationshipState relationshipState,
+            Pageable pageable
+    );
+
     @Modifying(flushAutomatically = true)
     @Query(value = """
             INSERT INTO user_relationships (

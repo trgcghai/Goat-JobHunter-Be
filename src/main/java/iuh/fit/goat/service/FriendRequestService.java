@@ -15,6 +15,8 @@ public interface FriendRequestService {
 
         ResultPaginationResponse handleGetMySentFriendRequests(Pageable pageable) throws InvalidException;
 
+        ResultPaginationResponse handleGetMyBlockedUsers(Pageable pageable) throws InvalidException;
+
     FriendRequestResponse handleCreateFriendRequest(CreateFriendRequestRequest request)
             throws InvalidException, ConflictException, NotFoundException;
 
