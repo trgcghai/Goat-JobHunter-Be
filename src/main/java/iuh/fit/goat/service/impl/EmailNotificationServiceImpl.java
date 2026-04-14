@@ -243,14 +243,27 @@ public class EmailNotificationServiceImpl implements EmailNotificationService {
     }
 
     @Override
-    public void handleSendUserEnabledEmail(String recipient, String username, boolean enabled) {
+    public void handleSendAccountEnabledEmail(String recipient, String username, boolean enabled) {
         String subject = "Xác thực tài khoản";
 
         Context context = new Context();
         context.setVariable("username", username);
         context.setVariable("enabled", enabled);
 
-        String content = this.templateEngine.process("user", context);
+        String content = this.templateEngine.process("account_enabled", context);
+
+        this.asyncEmailService.handleSendEmailSync(recipient, subject, content, false, true);
+    }
+
+    @Override
+    public void handleSendAccountLockedEmail(String recipient, String username, boolean locked) {
+        String subject = "Xóa tài khoản";
+
+        Context context = new Context();
+        context.setVariable("username", username);
+        context.setVariable("locked", locked);
+
+        String content = this.templateEngine.process("account_locked", context);
 
         this.asyncEmailService.handleSendEmailSync(recipient, subject, content, false, true);
     }

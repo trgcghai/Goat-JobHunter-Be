@@ -9,5 +9,5 @@ import java.util.Optional;
 
 @Repository
 public interface RecruiterRepository extends JpaRepository<Recruiter, Long>, JpaSpecificationExecutor<Recruiter> {
-    Optional<Recruiter> findByEmailAndDeletedAtIsNull(String email);
+    Optional<Recruiter> findByEmailAndDeletedAtIsNullAndEnabledIsTrueAndLockedIsFalse(String email);
 }

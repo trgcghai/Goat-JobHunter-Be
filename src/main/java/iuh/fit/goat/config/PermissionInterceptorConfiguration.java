@@ -116,6 +116,9 @@ public class PermissionInterceptorConfiguration implements WebMvcConfigurer {
 //              Các endpoint về role để người dùng có thể xem danh sách vai trò và chi tiết vai trò
                 "/api/v1/roles/{id}",
                 "/api/v1/roles",
+
+//               Các endpoint về admin được xử lý trong Security
+                "/api/v1/admin/**",
         };
 
         registry.addInterceptor(getPermissionInterceptor())

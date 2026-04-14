@@ -6,12 +6,11 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import iuh.fit.goat.dto.request.applicant.ApplicantUpdateRequest;
 import iuh.fit.goat.dto.response.applicant.ApplicantResponse;
 import iuh.fit.goat.dto.response.ResultPaginationResponse;
-import iuh.fit.goat.dto.response.user.UserResponse;
+import iuh.fit.goat.dto.response.account.UserResponse;
 import iuh.fit.goat.enumeration.Gender;
 import iuh.fit.goat.exception.InvalidException;
 import iuh.fit.goat.service.ApplicantService;
 import iuh.fit.goat.service.ProfileRealtimeService;
-import iuh.fit.goat.service.RoleService;
 import iuh.fit.goat.service.StorageService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -23,7 +22,6 @@ import iuh.fit.goat.repository.*;
 import iuh.fit.goat.util.*;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.io.File;
 import java.io.IOException;
 import java.util.*;
 import java.util.function.Function;
@@ -43,7 +41,6 @@ public class ApplicantServiceImpl implements ApplicantService {
 
     @Override
     public Applicant handleCreateApplicant(Applicant applicant) throws InvalidException {
-        applicant.setEnabled(false);
         if (applicant.getAvatar() == null) {
             try {
                 MultipartFile multipartFile = BasicUtil.convertToMultipartFile(
@@ -167,7 +164,7 @@ public class ApplicantServiceImpl implements ApplicantService {
     @Override
     public Applicant handleToggleAvailableStatus() throws InvalidException {
         String email = SecurityUtil.getCurrentUserEmail();
-        Applicant applicant = this.applicantRepository.findByEmailAndDeletedAtIsNull(email)
+        Applicant applicant = this.applicantRepository.findByEmailAndDeletedAtIsNullAndEnabledIsTrueAndLockedIsFalse(email)
                 .orElseThrow(() -> new InvalidException("Applicant not found"));
 
         boolean currentStatus = applicant.isAvailableStatus();
@@ -207,6 +204,7 @@ public class ApplicantServiceImpl implements ApplicantService {
         applicantResponse.setGender(applicant.getGender());
         applicantResponse.setDob(applicant.getDob());
         applicantResponse.setEnabled(applicant.isEnabled());
+        applicantResponse.setLocked(applicant.isLocked());
         applicantResponse.setVisibility(applicant.getVisibility());
         applicantResponse.setCoverPhoto(applicant.getCoverPhoto());
         applicantResponse.setHeadline(applicant.getHeadline());

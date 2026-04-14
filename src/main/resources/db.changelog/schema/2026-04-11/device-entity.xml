@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+                      http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-5.0.xsd"
+        objectQuotingStrategy="QUOTE_ONLY_RESERVED_WORDS">
+    <changeSet id="1775887536886-2" author="minhdat">
+        <createTable tableName="devices">
+            <column name="device_id" type="BIGINT">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="pk_devices"/>
+            </column>
+            <column name="created_at" type="DATETIME"/>
+            <column name="created_by" type="VARCHAR(255)"/>
+            <column name="updated_at" type="DATETIME"/>
+            <column name="updated_by" type="VARCHAR(255)"/>
+            <column name="deleted_at" type="DATETIME"/>
+            <column name="deleted_by" type="VARCHAR(255)"/>
+            <column name="name" type="VARCHAR(255)"/>
+            <column name="account_id" type="BIGINT"/>
+        </createTable>
+    </changeSet>
+    <changeSet id="1775887536886-3" author="minhdat">
+        <addForeignKeyConstraint baseColumnNames="account_id" baseTableName="devices"
+                                 constraintName="FK_DEVICES_ON_ACCOUNT" referencedColumnNames="account_id"
+                                 referencedTableName="accounts"/>
+    </changeSet>
+    <changeSet id="1775887536886-1" author="minhdat">
+        <dropNotNullConstraint columnDataType="varchar(255)" columnName="visibility" tableName="accounts"/>
+    </changeSet>
+    <changeSet id="1775890969211-1" author="minhdat">
+        <createSequence incrementBy="50"
+                        sequenceName="devices_seq"
+                        startValue="1"
+        />
+    </changeSet>
+
+</databaseChangeLog>

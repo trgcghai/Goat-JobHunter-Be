@@ -5,16 +5,14 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import iuh.fit.goat.dto.request.recruiter.RecruiterUpdateRequest;
 import iuh.fit.goat.dto.response.recruiter.RecruiterResponse;
-import iuh.fit.goat.dto.response.user.UserResponse;
+import iuh.fit.goat.dto.response.account.UserResponse;
 import iuh.fit.goat.entity.Address;
 import iuh.fit.goat.entity.Recruiter;
-import iuh.fit.goat.entity.Role;
 import iuh.fit.goat.enumeration.Gender;
 import iuh.fit.goat.exception.InvalidException;
 import iuh.fit.goat.repository.*;
 import iuh.fit.goat.service.ProfileRealtimeService;
 import iuh.fit.goat.service.RecruiterService;
-import iuh.fit.goat.service.RoleService;
 import iuh.fit.goat.service.StorageService;
 import iuh.fit.goat.util.BasicUtil;
 import iuh.fit.goat.util.FileUploadUtil;
@@ -42,7 +40,6 @@ public class RecruiterServiceImpl implements RecruiterService {
 
     @Override
     public Recruiter handleCreateRecruiter(Recruiter recruiter) throws InvalidException {
-        recruiter.setEnabled(false);
         if (recruiter.getAvatar() == null) {
             try {
                 MultipartFile multipartFile = BasicUtil.convertToMultipartFile(
@@ -178,6 +175,7 @@ public class RecruiterServiceImpl implements RecruiterService {
         recruiterResponse.setGender(recruiter.getGender());
         recruiterResponse.setDob(recruiter.getDob());
         recruiterResponse.setEnabled(recruiter.isEnabled());
+        recruiterResponse.setLocked(recruiter.isLocked());
         recruiterResponse.setVisibility(recruiter.getVisibility());
         recruiterResponse.setCoverPhoto(recruiter.getCoverPhoto());
         recruiterResponse.setHeadline(recruiter.getHeadline());

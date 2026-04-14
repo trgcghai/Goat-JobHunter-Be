@@ -17,9 +17,9 @@ public interface AccountRepository extends JpaRepository<Account, Long>,
 
     Optional<Account> findByEmailAndDeletedAtIsNull(String email);
 
-    Optional<Account> findByAccountIdAndDeletedAtIsNull(long accountId);
+    Optional<Account> findByAccountIdAndDeletedAtIsNullAndLockedIsFalse(long accountId);
 
-    @Query("SELECT a FROM Account a LEFT JOIN FETCH a.role WHERE a.email = :email")
+    @Query("SELECT a FROM Account a LEFT JOIN FETCH a.role WHERE a.email = :email AND a.deletedAt IS NULL")
     Optional<Account> findByEmailWithRole(@Param("email") String email);
 
     List<Account> findAllByAccountIdInAndDeletedAtIsNull(List<Long> accountIds);

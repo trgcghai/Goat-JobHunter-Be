@@ -3,9 +3,8 @@ package iuh.fit.goat.service;
 import iuh.fit.goat.dto.request.user.ResetPasswordRequest;
 import iuh.fit.goat.dto.response.ResultPaginationResponse;
 import iuh.fit.goat.dto.response.company.CompanyResponse;
-import iuh.fit.goat.dto.response.user.UserEnabledResponse;
-import iuh.fit.goat.dto.response.user.UserResponse;
-import iuh.fit.goat.dto.response.user.UserVisibilityResponse;
+import iuh.fit.goat.dto.response.account.UserResponse;
+import iuh.fit.goat.dto.response.account.UserVisibilityResponse;
 import iuh.fit.goat.entity.*;
 import iuh.fit.goat.enumeration.Visibility;
 import iuh.fit.goat.exception.InvalidException;
@@ -83,13 +82,7 @@ public interface UserService {
     ResultPaginationResponse handleGetCurrentUserInterviews(Specification<Interview> spec, Pageable pageable);
     /*     ========================= ========================= =========================  */
 
-    // Admin related methods
-    List<UserEnabledResponse> handleActivateUsers(List<Long> userIds);
-
-    List<UserEnabledResponse> handleDeactivateUsers(List<Long> userIds);
-
     UserVisibilityResponse handleUpdateMyVisibility(Visibility visibility) throws InvalidException;
 
     List<UserVisibilityResponse> handleUpdateUsersVisibility(List<Long> accountIds, Visibility visibility) throws InvalidException;
-
 }

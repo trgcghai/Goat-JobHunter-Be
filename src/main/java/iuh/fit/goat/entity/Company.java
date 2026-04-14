@@ -43,7 +43,7 @@ public class Company extends Account {
     private String workingDays;
     private String overtimePolicy;
 
-    @OneToMany(mappedBy = "company", fetch = LAZY, cascade = {PERSIST, MERGE})
+    @OneToMany(mappedBy = "company", fetch = LAZY, cascade = {PERSIST, MERGE, REMOVE})
     @JsonIgnore
     @Filter(
             name = "activeJobFilter",
@@ -51,7 +51,7 @@ public class Company extends Account {
     )
     private List<Job> jobs = new ArrayList<>();
 
-    @OneToMany(mappedBy = "company", fetch = LAZY, cascade = {PERSIST, MERGE})
+    @OneToMany(mappedBy = "company", fetch = LAZY, cascade = {PERSIST, MERGE, REMOVE})
     @JsonIgnore
     @Filter(
             name = "activeAccountFilter",
@@ -67,7 +67,7 @@ public class Company extends Account {
     )
     private List<Account> followers = new ArrayList<>();
 
-    @OneToMany(mappedBy = "company", fetch = LAZY, cascade = {PERSIST, MERGE})
+    @OneToMany(mappedBy = "company", fetch = LAZY, cascade = {PERSIST, MERGE, REMOVE})
     @JsonIgnore
     @Filter(
             name = "activeReviewFilter",
@@ -75,7 +75,7 @@ public class Company extends Account {
     )
     private List<Review> reviews = new ArrayList<>();
 
-    @OneToMany(mappedBy = "company", fetch = LAZY, cascade = {PERSIST, MERGE})
+    @OneToMany(mappedBy = "company", fetch = LAZY, cascade = {PERSIST, MERGE, REMOVE})
     @JsonIgnore
     private List<CompanyAward> awards = new ArrayList<>();
 }

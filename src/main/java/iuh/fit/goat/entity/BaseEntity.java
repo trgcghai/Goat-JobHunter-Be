@@ -5,12 +5,14 @@ import jakarta.persistence.MappedSuperclass;
 import jakarta.persistence.PrePersist;
 import jakarta.persistence.PreUpdate;
 import lombok.Getter;
+import lombok.Setter;
 
 import java.time.Instant;
 import java.time.LocalDate;
 
 @MappedSuperclass
 @Getter
+@Setter
 public abstract class BaseEntity {
     private Instant createdAt;
     private String createdBy;

@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Job Hunter</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f4f6f8;
+            margin: 0;
+            padding: 0;
+            color: #333;
+        }
+        .container {
+            max-width: 600px;
+            margin: 40px auto;
+            background-color: #ffffff;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+        }
+        h2 {
+            margin-top: 0;
+            font-size: 22px;
+            font-weight: 600;
+        }
+        .unlocked { color: #28a745; }
+        .locked { color: #d9534f; }
+
+        p {
+            font-size: 16px;
+            line-height: 1.6;
+        }
+        .footer {
+            font-size: 14px;
+            color: #888;
+            margin-top: 30px;
+        }
+        .btn-contact {
+            display: inline-block;
+            padding: 10px 20px;
+            background-color: #0275d8;
+            color: #fff !important;
+            text-decoration: none;
+            border-radius: 6px;
+            margin-top: 10px;
+            font-weight: bold;
+        }
+        .btn-contact:hover {
+            background-color: #025aa5;
+        }
+    </style>
+</head>
+
+<body>
+<div class="container">
+
+    <!-- Title unlocked -->
+    <h2 th:if="${locked == false}" class="unlocked">
+        Tài khoản của bạn đã được mở khóa
+    </h2>
+
+    <!-- Title locked -->
+    <h2 th:if="${locked == true}" class="locked">
+        Tài khoản của bạn đã bị khóa
+    </h2>
+
+    <p>
+        Xin chào
+        <strong th:text="${username}"></strong>,
+    </p>
+
+    <!-- Unlocked content -->
+    <p th:if="${locked == false}">
+        Tài khoản của bạn đã được <strong>mở khóa thành công</strong>.
+        Bạn có thể đăng nhập và tiếp tục sử dụng hệ thống như bình thường.
+    </p>
+
+    <!-- Locked content -->
+    <p th:if="${locked == true}">
+        Rất tiếc, tài khoản của bạn đã bị <strong>khóa</strong>.
+        Điều này có thể xảy ra do vi phạm chính sách hoặc theo yêu cầu từ quản trị viên.
+    </p>
+
+    <!-- Show support only when locked -->
+    <div th:if="${locked == true}">
+        <p>
+            Nếu bạn cho rằng đây là nhầm lẫn, vui lòng liên hệ bộ phận hỗ trợ để được giải quyết:
+        </p>
+
+        <a href="mailto:nguyenthangdat84@gmail.com"
+           class="btn-contact">
+            Liên hệ hỗ trợ
+        </a>
+    </div>
+
+    <div class="footer">
+        <p>
+            Trân trọng,<br>
+            GOAT
+        </p>
+    </div>
+
+</div>
+</body>
+</html>
