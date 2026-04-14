@@ -147,7 +147,7 @@ public class ChatRoomServiceImpl implements ChatRoomService {
             // Send message in existing room instead of creating new one
             this.messageService.sendMessage(
                     existingRoom.get().getRoomId(),
-                    new MessageCreateRequest(request.getContent()),
+                    new MessageCreateRequest(request.getContent(), null),
                     currentAccount
             );
 
@@ -185,7 +185,11 @@ public class ChatRoomServiceImpl implements ChatRoomService {
         this.chatMemberRepository.saveAllAndFlush(Arrays.asList(sender, receiver));
 
         // Send message
-        this.messageService.sendMessage(chatRoom.getRoomId(), new MessageCreateRequest(request.getContent()), currentAccount);
+        this.messageService.sendMessage(
+                chatRoom.getRoomId(),
+                new MessageCreateRequest(request.getContent(), null),
+                currentAccount
+        );
 
         return chatRoom;
     }
@@ -212,7 +216,7 @@ public class ChatRoomServiceImpl implements ChatRoomService {
             // Send messages in existing room
             this.messageService.sendMessagesWithFiles(
                     existingRoom.get().getRoomId(),
-                    new MessageCreateRequest(request.getContent()),
+                    new MessageCreateRequest(request.getContent(), null),
                     files,
                     currentAccount
             );
@@ -253,7 +257,7 @@ public class ChatRoomServiceImpl implements ChatRoomService {
         // Send messages with files
         this.messageService.sendMessagesWithFiles(
                 chatRoom.getRoomId(),
-                new MessageCreateRequest(request.getContent()),
+            new MessageCreateRequest(request.getContent(), null),
                 files,
                 currentAccount
         );

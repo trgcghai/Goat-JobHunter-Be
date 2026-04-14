@@ -3,6 +3,7 @@ package iuh.fit.goat.dto.response.message;
 import iuh.fit.goat.entity.embeddable.SenderInfo;
 import iuh.fit.goat.enumeration.MessageType;
 import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -19,10 +20,25 @@ public class MessageResponse {
     private SenderInfo sender;
     private String content;
     private MessageType messageType;
-    private String replyTo;
+    private String replyToMessageId;
+    private ReplyContext replyContext;
     private Boolean isHidden;
     private Boolean isForwarded;
     private String originalMessageId;
     private Instant createdAt;
     private Instant updatedAt;
+
+    @Getter
+    @Setter
+    @NoArgsConstructor
+    @AllArgsConstructor
+    @Builder
+    public static class ReplyContext {
+        private String originalMessageId;
+        private SenderInfo originalSender;
+        private MessageType originalMessageType;
+        private String originalContentPreview;
+        private Boolean originalMessageUnavailable;
+        private Boolean originalMessageHidden;
+    }
 }
