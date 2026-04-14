@@ -9,7 +9,7 @@ import iuh.fit.goat.exception.NotFoundException;
 import org.springframework.data.domain.Pageable;
 
 public interface FriendRequestService {
-        ResultPaginationResponse handleGetMyFriends(Pageable pageable) throws InvalidException;
+        ResultPaginationResponse handleGetMyFriends(Pageable pageable, String searchTerm) throws InvalidException;
 
         ResultPaginationResponse handleGetMyReceivedFriendRequests(Pageable pageable) throws InvalidException;
 

@@ -38,6 +38,8 @@ import java.time.Instant;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.regex.Pattern;
+import java.util.regex.PatternSyntaxException;
 
 @Service
 @RequiredArgsConstructor
@@ -50,16 +52,20 @@ public class FriendRequestServiceImpl implements FriendRequestService {
 
     @Override
     @Transactional(readOnly = true)
-    public ResultPaginationResponse handleGetMyFriends(Pageable pageable) throws InvalidException {
+    public ResultPaginationResponse handleGetMyFriends(Pageable pageable, String searchTerm) throws InvalidException {
         User currentUser = this.handleGetCurrentUser();
         Pageable resolvedPageable = this.resolvePageable(
                 pageable,
                 Sort.by(Sort.Direction.DESC, "friendsSince").and(Sort.by(Sort.Direction.DESC, "relationshipId"))
         );
+        String normalizedSearchTerm = this.normalizeSearchTerm(searchTerm);
+        String regexPattern = this.resolveRegexPattern(normalizedSearchTerm);
 
         Page<UserRelationship> page = this.userRelationshipRepository.findFriendsByAccountId(
                 currentUser.getAccountId(),
                 RelationshipState.FRIEND,
+                normalizedSearchTerm,
+                regexPattern,
                 resolvedPageable
         );
 
@@ -550,6 +556,28 @@ public class FriendRequestServiceImpl implements FriendRequestService {
         }
 
         return PageRequest.of(pageable.getPageNumber(), pageable.getPageSize(), defaultSort);
+    }
+
+    private String normalizeSearchTerm(String searchTerm) {
+        if (searchTerm == null) {
+            return null;
+        }
+
+        String normalizedSearchTerm = searchTerm.trim();
+        return normalizedSearchTerm.isEmpty() ? null : normalizedSearchTerm;
+    }
+
+    private String resolveRegexPattern(String searchTerm) {
+        if (searchTerm == null || searchTerm.isBlank()) {
+            return null;
+        }
+
+        try {
+            Pattern.compile(searchTerm);
+            return searchTerm;
+        } catch (PatternSyntaxException ex) {
+            return null;
+        }
     }
 
     private void publishRealtimeEvent(
