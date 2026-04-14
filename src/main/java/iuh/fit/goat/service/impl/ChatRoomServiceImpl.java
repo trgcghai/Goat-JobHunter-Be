@@ -740,6 +740,7 @@ public class ChatRoomServiceImpl implements ChatRoomService {
             String name = resolveChatRoomName(chatRoom, currentUserEmail);
             String avatar = resolveChatRoomAvatar(chatRoom, currentUserEmail);
             BlockStatus blockStatus = resolveBlockStatus(chatRoom, currentUserEmail);
+            blockStatus = applyInvalidDirectMemberBlockStatus(chatRoom, name, avatar, blockStatus);
             LastMessageInfo lastMessageInfo = buildLastMessageInfo(lastMessage, currentUserEmail);
 
             return ChatRoomResponse.builder()
@@ -837,6 +838,7 @@ public class ChatRoomServiceImpl implements ChatRoomService {
     private boolean isOtherActiveMember(ChatMember member, String currentUserEmail) {
         return member.getDeletedAt() == null
                 && member.getAccount() != null
+                && member.getAccount().getEmail() != null
                 && !member.getAccount().getEmail().equalsIgnoreCase(currentUserEmail);
     }
 
@@ -872,13 +874,16 @@ public class ChatRoomServiceImpl implements ChatRoomService {
 
     private ChatRoomResponse buildFallbackResponse(ChatRoom chatRoom) {
         String currentUserEmail = SecurityUtil.getCurrentUserEmail();
+        String name = resolveChatRoomName(chatRoom, currentUserEmail);
+        String avatar = resolveChatRoomAvatar(chatRoom, currentUserEmail);
         BlockStatus blockStatus = resolveBlockStatus(chatRoom, currentUserEmail);
+        blockStatus = applyInvalidDirectMemberBlockStatus(chatRoom, name, avatar, blockStatus);
 
         return ChatRoomResponse.builder()
                 .roomId(chatRoom.getRoomId())
                 .type(chatRoom.getType())
-                .name(resolveChatRoomName(chatRoom, currentUserEmail))
-                .avatar(resolveChatRoomAvatar(chatRoom, currentUserEmail))
+            .name(name)
+            .avatar(avatar)
                 .memberCount(countActiveMembers(chatRoom))
                 .lastMessagePreview("") // Để trống thay vì "Không thể tải tin nhắn này"
                 .currentUserSentLastMessage(false)
@@ -887,6 +892,29 @@ public class ChatRoomServiceImpl implements ChatRoomService {
                 .isBlockedByMe(blockStatus.blockedByMe())
                 .counterpartAccountId(blockStatus.counterpartAccountId())
                 .build();
+    }
+
+    private BlockStatus applyInvalidDirectMemberBlockStatus(
+            ChatRoom chatRoom,
+            String name,
+            String avatar,
+            BlockStatus blockStatus
+    ) {
+        if (chatRoom.getType() != ChatRoomType.DIRECT) {
+            return blockStatus;
+        }
+
+        boolean invalidDirectMembers = avatar == null
+                && blockStatus.counterpartAccountId() == null
+                && name != null
+                && name.trim().equalsIgnoreCase("Không có tên");
+
+        if (invalidDirectMembers) {
+            log.warn("Direct chat room has invalid members. roomId={}", chatRoom.getRoomId());
+            return new BlockStatus(true, false, null);
+        }
+
+        return blockStatus;
     }
 
     private BlockStatus resolveBlockStatus(ChatRoom chatRoom, String currentUserEmail) {
