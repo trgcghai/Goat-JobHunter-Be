@@ -71,7 +71,7 @@ public class ChatRoomController {
     }
 
     @GetMapping("/{id}/messages")
-    public ResponseEntity<?> getMessagesInChatRoom(@PathVariable Long id, Pageable pageable) throws InvalidException {
+    public ResponseEntity<List<MessageResponse>> getMessagesInChatRoom(@PathVariable Long id, Pageable pageable) throws InvalidException {
         String email = SecurityUtil.getCurrentUserLogin()
                 .orElseThrow(() -> new InvalidException("User not authenticated"));
 
