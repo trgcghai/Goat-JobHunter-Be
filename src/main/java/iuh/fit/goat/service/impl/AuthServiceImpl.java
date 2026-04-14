@@ -478,8 +478,8 @@ public class AuthServiceImpl implements AuthService {
         if(account.getDevices() != null) account.getDevices().forEach(Device::onDelete);
 
         if(account instanceof User user) {
-            if(user.getSentFriendRequests() != null) user.getSentFriendRequests().forEach(Friendship::onDelete);
-            if(user.getReceivedFriendRequests() != null) user.getReceivedFriendRequests().forEach(Friendship::onDelete);
+            if(user.getSentFriendRequests() != null) user.getSentFriendRequests().forEach(FriendRequest::onDelete);
+            if(user.getReceivedFriendRequests() != null) user.getReceivedFriendRequests().forEach(FriendRequest::onDelete);
             if(user.getReviews() != null) user.getReviews().forEach(Review::onDelete);
 
             if(user instanceof Applicant applicant) {
