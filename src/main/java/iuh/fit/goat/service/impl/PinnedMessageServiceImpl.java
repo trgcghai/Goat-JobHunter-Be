@@ -1,5 +1,6 @@
 package iuh.fit.goat.service.impl;
 
+import iuh.fit.goat.common.MessageEvent;
 import iuh.fit.goat.dto.response.message.PinnedMessageResponse;
 import iuh.fit.goat.entity.*;
 import iuh.fit.goat.enumeration.ChatRole;
@@ -58,7 +59,17 @@ public class PinnedMessageServiceImpl implements PinnedMessageService {
                 account instanceof Company company ? company.getName() : ((User) Objects.requireNonNull(account)).getFullName()
         );
 
-        return buildPinnedMessageResponse(pinnedMessage, message);
+        PinnedMessageResponse response = buildPinnedMessageResponse(pinnedMessage, message);
+
+        this.messageService.createAndSendSystemMessage(
+                chatRoomId,
+                MessageEvent.MESSAGE_PINNED,
+                account,
+                response.getMessage().getContent(),
+                response.getMessageId()
+        );
+
+        return response;
     }
 
     @Override
@@ -73,6 +84,19 @@ public class PinnedMessageServiceImpl implements PinnedMessageService {
         if (pinnedMessage == null) throw new InvalidException("Tin nhắn không được ghim hoặc đã bị gỡ ghim");
 
         this.messageRepository.deletePinnedMessage(chatRoomId.toString(), messageId);
+
+        String currentEmail = currentAccount.getEmail();
+        Account account = this.accountRepository.findByEmailAndDeletedAtIsNull(currentEmail).orElse(null);
+        Message message = this.messageRepository.findByChatRoomIdAndMessageId(chatRoomId.toString(), messageId)
+                .orElseThrow(() -> new InvalidException("Tin nhắn không tồn tại trong phòng chat"));
+        PinnedMessageResponse response = buildPinnedMessageResponse(pinnedMessage, message);
+        this.messageService.createAndSendSystemMessage(
+                chatRoomId,
+                MessageEvent.MESSAGE_UNPINNED,
+                account,
+                response.getMessage().getContent(),
+                response.getMessageId()
+        );
     }
 
     @Override

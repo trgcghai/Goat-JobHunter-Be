@@ -43,6 +43,26 @@ public class MessageHelper {
             }
             case GROUP_AVATAR_CHANGED ->
                     String.format("%s đã thay đổi ảnh đại diện nhóm", actorName);
+            case MESSAGE_PINNED -> {
+                String message = (String) params[0];
+                String messageId = (String) params[1];
+                boolean isImage = message.startsWith("http") && message.contains("images");
+                boolean isFile= message.startsWith("http") && !message.contains("images");
+
+                yield String.format("%s đã ghim một tin nhắn: %s (Xem %s)",
+                        actorName, isFile ? "File" : isImage ? "Ảnh" : message, messageId
+                );
+            }
+            case MESSAGE_UNPINNED -> {
+                String message = (String) params[0];
+                String messageId = (String) params[1];
+                boolean isImage = message.startsWith("http") && message.contains("images");
+                boolean isFile= message.startsWith("http") && !message.contains("images");
+
+                yield String.format("%s đã bỏ ghim một tin nhắn: %s (Xem %s)",
+                        actorName, isFile ? "File" : isImage ? "Ảnh" : message, messageId
+                );
+            }
         };
     }
 
@@ -50,7 +70,7 @@ public class MessageHelper {
         String fullName = account instanceof Company ? ((Company) account).getName()
                 : ((User) account).getFullName();
 
-        if (fullName.isBlank()) return fullName;
+        if (!fullName.isEmpty()) return fullName;
 
         return account.getUsername();
     }
