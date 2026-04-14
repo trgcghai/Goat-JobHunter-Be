@@ -29,9 +29,9 @@ public interface  MessageService {
 
     void sendMessageToUsers(Long chatRoomId, Message message);
 
-        MessageResponse toMessageResponse(Message message);
+    MessageResponse toMessageResponse(Message message);
 
-        List<MessageResponse> toMessageResponses(List<Message> messages);
+    List<MessageResponse> toMessageResponses(List<Message> messages);
 
     List<Message> getMediaMessagesByChatRoom(Long chatRoomId, Pageable pageable) throws InvalidException;
 
@@ -47,5 +47,5 @@ public interface  MessageService {
                                           Account currentAccount)
             throws InvalidException, NotFoundException, PermissionException;
 
-    Message createAndSendSystemMessage(Long chatRoomId, MessageEvent type, Account actor, Object... params);
+    void createAndSendSystemMessage(Long chatRoomId, MessageEvent type, Account actor, Object... params);
 }

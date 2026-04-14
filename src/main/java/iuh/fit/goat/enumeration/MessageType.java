@@ -6,6 +6,7 @@ import lombok.Getter;
 public enum MessageType {
     TEXT("text"), IMAGE("image"),
     AUDIO("audio"), VIDEO("Video"), FILE("file"),
+    CONTACT_CARD(""),
     SYSTEM("system"); // For system messages like user joined, added, left, user role changed, etc.
 
     private final String value;
