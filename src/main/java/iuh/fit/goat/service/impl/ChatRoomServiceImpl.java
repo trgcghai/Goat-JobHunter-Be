@@ -976,6 +976,7 @@ public class ChatRoomServiceImpl implements ChatRoomService {
             case VIDEO -> "[Video]";
             case FILE -> "[Tệp tin]";
             case AUDIO -> "[Âm thanh]";
+            case CONTACT_CARD -> "[Danh thiếp]";
             default -> "[Tin nhắn không xác định]";
         };
     }

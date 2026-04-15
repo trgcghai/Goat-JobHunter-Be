@@ -9,10 +9,18 @@ public final class MessageMapper {
     }
 
     public static MessageResponse toResponse(Message message) {
-        return toResponse(message, null);
+        return toResponse(message, null, null);
     }
 
     public static MessageResponse toResponse(Message message, MessageResponse.ReplyContext replyContext) {
+        return toResponse(message, replyContext, null);
+    }
+
+    public static MessageResponse toResponse(
+            Message message,
+            MessageResponse.ReplyContext replyContext,
+            MessageResponse.ContactCardContext contactCardContext
+    ) {
         if (message == null) {
             return null;
         }
@@ -25,6 +33,7 @@ public final class MessageMapper {
         response.setMessageType(message.getMessageType());
         response.setReplyToMessageId(message.getReplyTo());
         response.setReplyContext(replyContext);
+        response.setContactCard(contactCardContext);
         response.setIsHidden(message.getIsHidden());
         response.setIsForwarded(Boolean.TRUE.equals(message.getIsForwarded()));
         response.setOriginalMessageId(message.getOriginalMessageId());

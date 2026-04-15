@@ -17,6 +17,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
@@ -26,8 +27,11 @@ public class FriendRequestController {
     private final FriendRequestService friendRequestService;
 
     @GetMapping("/me")
-    public ResponseEntity<ResultPaginationResponse> getMyFriends(Pageable pageable) throws InvalidException {
-        ResultPaginationResponse response = this.friendRequestService.handleGetMyFriends(pageable);
+    public ResponseEntity<ResultPaginationResponse> getMyFriends(
+            Pageable pageable,
+            @RequestParam(value = "searchTerm", required = false) String searchTerm
+    ) throws InvalidException {
+        ResultPaginationResponse response = this.friendRequestService.handleGetMyFriends(pageable, searchTerm);
         return ResponseEntity.status(HttpStatus.OK).body(response);
     }
 

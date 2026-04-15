@@ -60,10 +60,82 @@ public interface UserRelationshipRepository extends JpaRepository<UserRelationsh
             WHERE ur.deletedAt IS NULL
               AND ur.relationshipState = :relationshipState
               AND (ur.pairLowUser.accountId = :accountId OR ur.pairHighUser.accountId = :accountId)
+              AND (
+                    :searchTerm IS NULL
+                    OR :searchTerm = ''
+                    OR LOWER(
+                        COALESCE(
+                            CASE
+                                WHEN ur.pairLowUser.accountId = :accountId THEN ur.pairHighUser.username
+                                ELSE ur.pairLowUser.username
+                            END,
+                            ''
+                        )
+                    ) LIKE LOWER(CONCAT('%', :searchTerm, '%'))
+                    OR LOWER(
+                        COALESCE(
+                            CASE
+                                WHEN ur.pairLowUser.accountId = :accountId THEN ur.pairHighUser.fullName
+                                ELSE ur.pairLowUser.fullName
+                            END,
+                            ''
+                        )
+                    ) LIKE LOWER(CONCAT('%', :searchTerm, '%'))
+                    OR LOWER(
+                        COALESCE(
+                            CASE
+                                WHEN ur.pairLowUser.accountId = :accountId THEN ur.pairHighUser.email
+                                ELSE ur.pairLowUser.email
+                            END,
+                            ''
+                        )
+                    ) LIKE LOWER(CONCAT('%', :searchTerm, '%'))
+                    OR (
+                        :regexPattern IS NOT NULL
+                        AND :regexPattern <> ''
+                        AND (
+                            function(
+                                'regexp_match',
+                                COALESCE(
+                                    CASE
+                                        WHEN ur.pairLowUser.accountId = :accountId THEN ur.pairHighUser.username
+                                        ELSE ur.pairLowUser.username
+                                    END,
+                                    ''
+                                ),
+                                CONCAT('(?i)', :regexPattern)
+                            ) IS NOT NULL
+                            OR function(
+                                'regexp_match',
+                                COALESCE(
+                                    CASE
+                                        WHEN ur.pairLowUser.accountId = :accountId THEN ur.pairHighUser.fullName
+                                        ELSE ur.pairLowUser.fullName
+                                    END,
+                                    ''
+                                ),
+                                CONCAT('(?i)', :regexPattern)
+                            ) IS NOT NULL
+                            OR function(
+                                'regexp_match',
+                                COALESCE(
+                                    CASE
+                                        WHEN ur.pairLowUser.accountId = :accountId THEN ur.pairHighUser.email
+                                        ELSE ur.pairLowUser.email
+                                    END,
+                                    ''
+                                ),
+                                CONCAT('(?i)', :regexPattern)
+                            ) IS NOT NULL
+                        )
+                    )
+              )
             """)
     Page<UserRelationship> findFriendsByAccountId(
             @Param("accountId") Long accountId,
             @Param("relationshipState") RelationshipState relationshipState,
+            @Param("searchTerm") String searchTerm,
+            @Param("regexPattern") String regexPattern,
             Pageable pageable
     );
 

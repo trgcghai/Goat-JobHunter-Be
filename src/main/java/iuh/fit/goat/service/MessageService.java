@@ -17,7 +17,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 
-public interface  MessageService {
+public interface MessageService {
 
     Message getLastMessageByChatRoom(Long chatRoomId) throws InvalidException;
 
@@ -26,6 +26,8 @@ public interface  MessageService {
     Message sendMessage(Long chatRoomId, MessageCreateRequest request, Account currentAccount) throws InvalidException;
 
     List<Message> sendMessagesWithFiles(Long chatRoomId, MessageCreateRequest request, List<MultipartFile> files, Account currentAccount) throws InvalidException;
+
+    List<Message> sendContactCardMessages(Long chatRoomId, List<Long> userIds, Account currentAccount) throws InvalidException;
 
     void sendMessageToUsers(Long chatRoomId, Message message);
 

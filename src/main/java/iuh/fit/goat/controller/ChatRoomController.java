@@ -1,6 +1,7 @@
 package iuh.fit.goat.controller;
 
 import iuh.fit.goat.dto.request.chat.*;
+import iuh.fit.goat.dto.request.message.ContactCardMessageRequest;
 import iuh.fit.goat.dto.request.message.ForwardMessageRequest;
 import iuh.fit.goat.dto.request.message.MessageCreateRequest;
 import iuh.fit.goat.dto.request.message.MessageToNewChatRoom;
@@ -74,7 +75,7 @@ public class ChatRoomController {
     }
 
     @GetMapping("/{id}/messages")
-    public ResponseEntity<?> getMessagesInChatRoom(@PathVariable Long id, Pageable pageable) throws InvalidException {
+    public ResponseEntity<List<MessageResponse>> getMessagesInChatRoom(@PathVariable Long id, Pageable pageable) throws InvalidException {
         String email = SecurityUtil.getCurrentUserLogin()
                 .orElseThrow(() -> new InvalidException("User not authenticated"));
 
@@ -318,6 +319,28 @@ public class ChatRoomController {
 
         throw new InvalidException("At least one file or text content is required");
 //        return this.messageService.sendMessage(id, request, currentUser);
+    }
+
+    @PostMapping("/{id}/messages/contact")
+    public ResponseEntity<List<MessageResponse>> sendContactCardMessages(
+            @PathVariable Long id,
+            @Valid @RequestBody ContactCardMessageRequest request
+    ) throws InvalidException {
+        String email = SecurityUtil.getCurrentUserLogin()
+                .orElseThrow(() -> new InvalidException("User not authenticated"));
+
+        Account currentAccount = this.accountService.handleGetAccountByEmail(email);
+        if (currentAccount == null) {
+            throw new InvalidException("User not found");
+        }
+
+        if (!this.chatRoomService.isUserInChatRoom(id, currentAccount.getAccountId())) {
+            throw new InvalidException("User is not belong to this chat room");
+        }
+
+        List<Message> savedMessages = this.messageService.sendContactCardMessages(id, request.getUserIds(), currentAccount);
+        List<MessageResponse> response = this.messageService.toMessageResponses(savedMessages);
+        return ResponseEntity.ok(new ArrayList<>(response));
     }
 
     @DeleteMapping("/{chatRoomId}/messages/{messageId}")

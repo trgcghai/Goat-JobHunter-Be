@@ -29,6 +29,7 @@ import iuh.fit.goat.repository.ChatMemberRepository;
 import iuh.fit.goat.repository.ChatRoomRepository;
 import iuh.fit.goat.repository.MessageRepository;
 import iuh.fit.goat.repository.UserRelationshipRepository;
+import iuh.fit.goat.repository.UserRepository;
 import iuh.fit.goat.service.MessageService;
 import iuh.fit.goat.service.StorageService;
 import iuh.fit.goat.util.MessageHelper;
@@ -56,6 +57,7 @@ public class MessageServiceImpl implements MessageService {
     private final ChatRoomRepository chatRoomRepository;
     private final ChatMemberRepository chatMemberRepository;
     private final UserRelationshipRepository userRelationshipRepository;
+    private final UserRepository userRepository;
 
     private static final long MAX_FILE_SIZE = 20 * 1024 * 1024; // 20MB
     private static final int MAX_FORWARD_TARGETS = 20;
@@ -239,6 +241,55 @@ public class MessageServiceImpl implements MessageService {
     }
 
     @Override
+    @Transactional
+    public List<Message> sendContactCardMessages(Long chatRoomId, List<Long> userIds, Account currentAccount)
+            throws InvalidException {
+        if (chatRoomId == null) {
+            throw new InvalidException("Chat room ID cannot be null");
+        }
+        if (currentAccount == null) {
+            throw new InvalidException("Current account is invalid");
+        }
+
+        ChatRoom chatRoom = this.chatRoomRepository.findById(chatRoomId)
+                .orElseThrow(() -> new InvalidException("Chat Room not found"));
+        this.validateNoBlockedDirectInteraction(chatRoom, currentAccount.getAccountId());
+
+        List<Long> normalizedUserIds = this.normalizeContactCardUserIds(userIds);
+        if (normalizedUserIds.isEmpty()) {
+            throw new InvalidException("At least one valid user ID is required");
+        }
+
+        List<Message> createdMessages = new ArrayList<>();
+        for (Long userId : normalizedUserIds) {
+            if (Objects.equals(userId, currentAccount.getAccountId())) {
+                continue;
+            }
+
+            Optional<User> referencedUser = this.userRepository.findByAccountIdAndDeletedAtIsNull(userId);
+            if (referencedUser.isEmpty()) {
+                continue;
+            }
+
+            if (!this.isFriendWithCurrentUser(currentAccount.getAccountId(), userId)) {
+                continue;
+            }
+
+            Message contactCardMessage = this.createContactCardMessage(chatRoomId.toString(), userId, currentAccount);
+            Message savedMessage = this.messageRepository.saveMessage(contactCardMessage);
+            createdMessages.add(savedMessage);
+            sendMessageToUsers(chatRoomId, savedMessage);
+        }
+
+        if (createdMessages.isEmpty()) {
+            throw new InvalidException("No eligible contacts to send");
+        }
+
+        log.info("CONTACT_CARD batch completed: {} cards sent in chatRoom {}", createdMessages.size(), chatRoomId);
+        return createdMessages;
+    }
+
+    @Override
     public void sendMessageToUsers(Long chatRoomId, Message message) {
         log.debug("Sending realtime message to chatRoom: {}", chatRoomId);
         MessageResponse payload = toMessageResponse(message);
@@ -247,7 +298,7 @@ public class MessageServiceImpl implements MessageService {
 
     @Override
     public MessageResponse toMessageResponse(Message message) {
-        return toMessageResponse(message, Collections.emptyMap(), new HashMap<>());
+        return toMessageResponse(message, Collections.emptyMap(), new HashMap<>(), new HashMap<>());
     }
 
     @Override
@@ -265,9 +316,10 @@ public class MessageServiceImpl implements MessageService {
         }
 
         Map<String, Optional<Message>> parentLookupCache = new HashMap<>();
+        Map<Long, Optional<User>> contactLookupCache = preloadContactUsers(messages);
         List<MessageResponse> responses = new ArrayList<>(messages.size());
         for (Message message : messages) {
-            responses.add(toMessageResponse(message, localMessages, parentLookupCache));
+            responses.add(toMessageResponse(message, localMessages, parentLookupCache, contactLookupCache));
         }
 
         return responses;
@@ -571,14 +623,108 @@ public class MessageServiceImpl implements MessageService {
     private MessageResponse toMessageResponse(
             Message message,
             Map<String, Message> localMessages,
-            Map<String, Optional<Message>> parentLookupCache
+            Map<String, Optional<Message>> parentLookupCache,
+            Map<Long, Optional<User>> contactLookupCache
     ) {
         if (message == null) {
             return null;
         }
 
         MessageResponse.ReplyContext replyContext = buildReplyContext(message, localMessages, parentLookupCache);
-        return MessageMapper.toResponse(message, replyContext);
+        MessageResponse.ContactCardContext contactCardContext = buildContactCardContext(message, contactLookupCache);
+        return MessageMapper.toResponse(message, replyContext, contactCardContext);
+    }
+
+    private MessageResponse.ContactCardContext buildContactCardContext(
+            Message message,
+            Map<Long, Optional<User>> contactLookupCache
+    ) {
+        Long contactUserId = extractContactCardUserId(message);
+        if (contactUserId == null) {
+            return null;
+        }
+
+        User contactUser = resolveContactUser(contactUserId, contactLookupCache);
+        if (contactUser == null) {
+            return null;
+        }
+
+        return MessageResponse.ContactCardContext.builder()
+                .accountId(contactUser.getAccountId())
+                .fullName(contactUser.getFullName())
+                .username(contactUser.getUsername())
+                .avatar(contactUser.getAvatar())
+                .headline(contactUser.getHeadline())
+                .bio(contactUser.getBio())
+                .coverPhoto(contactUser.getCoverPhoto())
+                .visibility(contactUser.getVisibility())
+                .build();
+    }
+
+    private Map<Long, Optional<User>> preloadContactUsers(List<Message> messages) {
+        Map<Long, Optional<User>> contactLookupCache = new HashMap<>();
+        if (messages == null || messages.isEmpty()) {
+            return contactLookupCache;
+        }
+
+        LinkedHashSet<Long> contactUserIds = new LinkedHashSet<>();
+        for (Message message : messages) {
+            Long contactUserId = extractContactCardUserId(message);
+            if (contactUserId != null) {
+                contactUserIds.add(contactUserId);
+            }
+        }
+
+        if (contactUserIds.isEmpty()) {
+            return contactLookupCache;
+        }
+
+        List<User> existingUsers = this.userRepository
+                .findByAccountIdInAndDeletedAtIsNull(new ArrayList<>(contactUserIds));
+
+        for (User user : existingUsers) {
+            contactLookupCache.put(user.getAccountId(), Optional.of(user));
+        }
+
+        for (Long userId : contactUserIds) {
+            contactLookupCache.putIfAbsent(userId, Optional.empty());
+        }
+
+        return contactLookupCache;
+    }
+
+    private User resolveContactUser(Long contactUserId, Map<Long, Optional<User>> contactLookupCache) {
+        if (contactLookupCache != null && contactLookupCache.containsKey(contactUserId)) {
+            return contactLookupCache.get(contactUserId).orElse(null);
+        }
+
+        Optional<User> referencedUser = this.userRepository.findByAccountIdAndDeletedAtIsNull(contactUserId);
+        if (contactLookupCache != null) {
+            contactLookupCache.put(contactUserId, referencedUser);
+        }
+
+        return referencedUser.orElse(null);
+    }
+
+    private Long extractContactCardUserId(Message message) {
+        if (message == null || message.getMessageType() != MessageType.CONTACT_CARD) {
+            return null;
+        }
+
+        return parseContactCardUserId(message.getContent());
+    }
+
+    private Long parseContactCardUserId(String content) {
+        if (content == null || content.isBlank()) {
+            return null;
+        }
+
+        try {
+            long parsed = Long.parseLong(content.trim());
+            return parsed > 0 ? parsed : null;
+        } catch (NumberFormatException e) {
+            return null;
+        }
     }
 
     private MessageResponse.ReplyContext buildReplyContext(
@@ -791,6 +937,27 @@ public class MessageServiceImpl implements MessageService {
                 .build();
     }
 
+    private Message createContactCardMessage(String chatRoomId, Long referencedUserId, Account currentAccount) {
+        String messageId = generateMessageId();
+        Instant now = Instant.now();
+        long timestamp = now.toEpochMilli();
+
+        return Message.builder()
+                .messageSk(Message.buildMessageSk(timestamp, messageId))
+                .chatRoomId(chatRoomId)
+                .messageId(messageId)
+                .sender(buildSenderInfo(currentAccount))
+                .content(String.valueOf(referencedUserId))
+                .messageType(MessageType.CONTACT_CARD)
+                .replyTo(null)
+                .isHidden(false)
+                .isForwarded(false)
+                .originalMessageId(null)
+                .createdAt(now)
+                .updatedAt(now)
+                .build();
+    }
+
     private Message createForwardedMessage(Message sourceMessage, Long targetChatRoomId, Account currentAccount) {
         String forwardedMessageId = generateMessageId();
         Instant now = Instant.now();
@@ -843,6 +1010,35 @@ public class MessageServiceImpl implements MessageService {
         if (blocked) {
             throw new BlockedInteractionException("Cannot send message because this pair is blocked");
         }
+    }
+
+    private List<Long> normalizeContactCardUserIds(List<Long> userIds) {
+        if (userIds == null || userIds.isEmpty()) {
+            return Collections.emptyList();
+        }
+
+        LinkedHashSet<Long> deduplicated = new LinkedHashSet<>();
+        for (Long userId : userIds) {
+            if (userId != null && userId > 0) {
+                deduplicated.add(userId);
+            }
+        }
+
+        return new ArrayList<>(deduplicated);
+    }
+
+    private boolean isFriendWithCurrentUser(Long currentAccountId, Long targetUserId) {
+        if (currentAccountId == null || targetUserId == null || Objects.equals(currentAccountId, targetUserId)) {
+            return false;
+        }
+
+        UserRelationshipRepository.PairIds pair = UserRelationshipRepository.PairIds.of(currentAccountId, targetUserId);
+        return this.userRelationshipRepository
+                .existsByPairLowUser_AccountIdAndPairHighUser_AccountIdAndRelationshipStateAndDeletedAtIsNull(
+                        pair.pairLowId(),
+                        pair.pairHighId(),
+                        RelationshipState.FRIEND
+                );
     }
 
     private void sendMessageDeletedEvent(Long chatRoomId, MessageDeletedEventResponse event) {
