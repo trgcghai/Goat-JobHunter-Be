@@ -16,51 +16,56 @@ public class MessageHelper {
         return switch (type) {
             case MEMBER_ADDED -> {
                 String memberName = (String) params[0];
-                yield String.format("%s đã thêm %s vào nhóm", actorName, memberName);
+
+                yield String.format("(event:%s) %s đã thêm %s vào nhóm", MessageEvent.MEMBER_ADDED, actorName, memberName);
             }
             case MEMBER_REMOVED -> {
                 String memberName = (String) params[0];
-                yield String.format("%s đã xóa %s khỏi nhóm", actorName, memberName);
+
+                yield String.format("(event:%s) %s đã xóa %s khỏi nhóm", MessageEvent.MEMBER_REMOVED, actorName, memberName);
             }
             case MEMBER_LEFT ->
-                    String.format("%s đã rời khỏi nhóm", actorName);
+                    String.format("(event:%s) %s đã rời khỏi nhóm", MessageEvent.MEMBER_LEFT, actorName);
             case ROLE_CHANGED -> {
                 String memberName = (String) params[0];
                 ChatRole newRole = (ChatRole) params[1];
                 String roleText = getRoleText(newRole);
-                yield String.format("%s đã thay đổi vai trò của %s thành %s",
-                        actorName, memberName, roleText);
+
+                yield String.format("(event:%s) %s đã thay đổi vai trò của %s thành %s",
+                        MessageEvent.ROLE_CHANGED, actorName, memberName, roleText);
             }
             case GROUP_CREATED -> {
                 String groupName = (String) params[0];
-                yield String.format("%s đã tạo nhóm \"%s\"", actorName, groupName);
+
+                yield String.format("(event:%s) %s đã tạo nhóm \"%s\"", MessageEvent.GROUP_CREATED, actorName, groupName);
             }
             case GROUP_NAME_CHANGED -> {
                 String oldName = (String) params[0];
                 String newName = (String) params[1];
-                yield String.format("%s đã đổi tên nhóm từ \"%s\" thành \"%s\"",
-                        actorName, oldName, newName);
+
+                yield String.format("(event:%s) %s đã đổi tên nhóm từ \"%s\" thành \"%s\"",
+                        MessageEvent.GROUP_NAME_CHANGED, actorName, oldName, newName);
             }
             case GROUP_AVATAR_CHANGED ->
-                    String.format("%s đã thay đổi ảnh đại diện nhóm", actorName);
+                    String.format("(event:%s) %s đã thay đổi ảnh đại diện nhóm", MessageEvent.GROUP_AVATAR_CHANGED, actorName);
             case MESSAGE_PINNED -> {
                 String message = (String) params[0];
                 String messageId = (String) params[1];
-                boolean isImage = message.startsWith("http") && message.contains("images");
-                boolean isFile= message.startsWith("http") && !message.contains("images");
+                boolean isImage = message != null && message.startsWith("http") && message.contains("images");
+                boolean isFile= message != null && message.startsWith("http") && !message.contains("images");
 
-                yield String.format("%s đã ghim một tin nhắn: %s (Xem %s)",
-                        actorName, isFile ? "File" : isImage ? "Ảnh" : message, messageId
+                yield String.format("(event:%s) %s đã ghim một tin nhắn: %s (Xem %s)",
+                        MessageEvent.MESSAGE_PINNED, actorName, isFile ? "File" : isImage ? "Ảnh" : message != null ? message : "", messageId
                 );
             }
             case MESSAGE_UNPINNED -> {
                 String message = (String) params[0];
                 String messageId = (String) params[1];
-                boolean isImage = message.startsWith("http") && message.contains("images");
-                boolean isFile= message.startsWith("http") && !message.contains("images");
+                boolean isImage = message != null && message.startsWith("http") && message.contains("images");
+                boolean isFile= message != null && message.startsWith("http") && !message.contains("images");
 
-                yield String.format("%s đã bỏ ghim một tin nhắn: %s (Xem %s)",
-                        actorName, isFile ? "File" : isImage ? "Ảnh" : message, messageId
+                yield String.format("(event:%s) %s đã bỏ ghim một tin nhắn: %s (Xem %s)",
+                        MessageEvent.MESSAGE_UNPINNED, actorName, isFile ? "File" : isImage ? "Ảnh" : message != null ? message : "", messageId
                 );
             }
         };
