@@ -11,6 +11,7 @@ import software.amazon.awssdk.enhanced.dynamodb.Key;
 import software.amazon.awssdk.enhanced.dynamodb.model.QueryConditional;
 import software.amazon.awssdk.enhanced.dynamodb.model.QueryEnhancedRequest;
 
+import java.time.Instant;
 import java.util.*;
 
 @Repository
@@ -127,18 +128,18 @@ public class MessageRepository {
         }
 
         QueryConditional queryConditional = QueryConditional
-                .keyEqualTo(Key.builder()
+                .keyEqualTo(
+                        Key.builder()
                         .partitionValue(chatRoomId)
-                        .build());
+                        .build()
+                );
 
         QueryEnhancedRequest queryRequest = QueryEnhancedRequest.builder()
                 .queryConditional(queryConditional)
                 .scanIndexForward(false)
                 .build();
 
-        Iterator<Message> results = messageTable.query(queryRequest).items().iterator();
-        while (results.hasNext()) {
-            Message message = results.next();
+        for (Message message : messageTable.query(queryRequest).items()) {
             if (messageId.equals(message.getMessageId())) {
                 return Optional.of(message);
             }
@@ -181,6 +182,27 @@ public class MessageRepository {
         }
     }
 
+    // ========== Pinned Message Methods ==========
+    public PinnedMessage pinMessage(String chatRoomId, String messageId, String pinnedBy) {
+        if (chatRoomId == null || chatRoomId.isBlank() || messageId == null || messageId.isBlank()) {
+            throw new RuntimeException("chatRoomId and messageId are required");
+        }
+
+        try {
+            PinnedMessage pinnedMessage = PinnedMessage.builder()
+                    .chatRoomId(chatRoomId)
+                    .messageId(messageId)
+                    .pinnedBy(pinnedBy != null ? pinnedBy : "System")
+                    .pinnedAt(Instant.now())
+                    .build();
+
+            this.pinnedMessageTable.putItem(pinnedMessage);
+            return pinnedMessage;
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to pin message", e);
+        }
+    }
+
     public void deletePinnedMessage(String chatRoomId, String messageId) {
         if (chatRoomId == null || chatRoomId.isBlank() || messageId == null || messageId.isBlank()) {
             return;
@@ -193,10 +215,66 @@ public class MessageRepository {
                     .build();
 
             pinnedMessageTable.deleteItem(key);
-            log.debug("Pinned message cleaned up: chatRoomId={}, messageId={}", chatRoomId, messageId);
         } catch (Exception e) {
-            log.error("Error cleaning pinned message: chatRoomId={}, messageId={}", chatRoomId, messageId, e);
             throw new RuntimeException("Failed to cleanup pinned message", e);
+        }
+    }
+
+    public List<PinnedMessage> getPinnedMessagesByChatRoom(String chatRoomId) {
+        if (chatRoomId == null || chatRoomId.isBlank()) {
+            return Collections.emptyList();
+        }
+
+        try {
+            QueryConditional conditional = QueryConditional
+                    .keyEqualTo(Key.builder().partitionValue(chatRoomId).build());
+
+            QueryEnhancedRequest request = QueryEnhancedRequest.builder()
+                    .queryConditional(conditional)
+                    .build();
+
+            return pinnedMessageTable.query(request)
+                    .items()
+                    .stream()
+                    .toList();
+
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to retrieve pinned messages", e);
+        }
+    }
+
+    public boolean isPinned(String chatRoomId, String messageId) {
+        if (chatRoomId == null || chatRoomId.isBlank() || messageId == null || messageId.isBlank()) {
+            return false;
+        }
+
+        try {
+            Key key = Key.builder()
+                    .partitionValue(chatRoomId)
+                    .sortValue(messageId)
+                    .build();
+
+            PinnedMessage pinnedMessage = this.pinnedMessageTable.getItem(key);
+            return pinnedMessage != null;
+        } catch (Exception e) {
+            return false;
+        }
+    }
+
+    public PinnedMessage getPinnedMessage(String chatRoomId, String messageId) {
+        if (chatRoomId == null || chatRoomId.isBlank() || messageId == null || messageId.isBlank()) {
+            return null;
+        }
+
+        try {
+            Key key = Key.builder()
+                    .partitionValue(chatRoomId)
+                    .sortValue(messageId)
+                    .build();
+
+            return pinnedMessageTable.getItem(key);
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to retrieve pinned message", e);
         }
     }
 }

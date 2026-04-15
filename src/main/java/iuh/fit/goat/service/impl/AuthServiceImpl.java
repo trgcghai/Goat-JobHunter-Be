@@ -461,10 +461,13 @@ public class AuthServiceImpl implements AuthService {
 
     @Override
     @Transactional
-    public void handleDeleteMyAccount() throws InvalidException {
+    public void handleDeleteMyAccount(String password) throws InvalidException {
         String email = SecurityUtil.getCurrentUserEmail();
         Account account = this.accountRepository.findByEmailWithRole(email).orElse(null);
         if(account == null) throw new InvalidException("Tài khoản không hợp lệ");
+        if(!this.passwordEncoder.matches(password, account.getPassword())) {
+            throw new InvalidException("Mật khẩu không chính xác");
+        }
 
         if(account.getAddresses() != null) account.getAddresses().forEach(Address::onDelete);
         if(account.getRecipientNotifications() != null) account.getRecipientNotifications().forEach(Notification::onDelete);

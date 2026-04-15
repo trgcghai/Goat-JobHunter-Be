@@ -11,6 +11,7 @@ import iuh.fit.goat.dto.response.chat.GroupMemberResponse;
 import iuh.fit.goat.dto.response.message.ForwardMessageResponse;
 import iuh.fit.goat.dto.response.message.MessageDeletedEventResponse;
 import iuh.fit.goat.dto.response.message.MessageResponse;
+import iuh.fit.goat.dto.response.message.PinnedMessageResponse;
 import iuh.fit.goat.entity.*;
 import iuh.fit.goat.exception.ConflictException;
 import iuh.fit.goat.exception.InvalidException;
@@ -19,6 +20,7 @@ import iuh.fit.goat.exception.PermissionException;
 import iuh.fit.goat.service.AccountService;
 import iuh.fit.goat.service.ChatRoomService;
 import iuh.fit.goat.service.MessageService;
+import iuh.fit.goat.service.PinnedMessageService;
 import iuh.fit.goat.util.SecurityUtil;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -42,6 +44,7 @@ public class ChatRoomController {
     private final ChatRoomService chatRoomService;
     private final MessageService messageService;
     private final AccountService accountService;
+    private final PinnedMessageService pinnedMessageService;
 
     @GetMapping("/me")
     public ResponseEntity<?> getMyChatRooms(Pageable pageable) throws InvalidException {
@@ -385,5 +388,64 @@ public class ChatRoomController {
 
         ChatRoom chatRoom = this.chatRoomService.existsDirectChatRoom(currentAccount.getAccountId(), accountId);
         return ResponseEntity.ok(chatRoom);
+    }
+
+    // ========== PINNED MESSAGES ENDPOINTS ==========
+    @PostMapping("/{chatRoomId}/messages/{messageId}/pin")
+    public ResponseEntity<PinnedMessageResponse> pinMessage(
+            @PathVariable Long chatRoomId,
+            @PathVariable String messageId
+    ) throws InvalidException
+    {
+        Account currentAccount = getCurrentAccount();
+        PinnedMessageResponse response = this.pinnedMessageService.pinMessage(chatRoomId, messageId, currentAccount);
+        return ResponseEntity.ok(response);
+    }
+
+    @DeleteMapping("/{chatRoomId}/messages/{messageId}/pin")
+    public ResponseEntity<Void> unpinMessage(
+            @PathVariable Long chatRoomId,
+            @PathVariable String messageId
+    ) throws InvalidException
+    {
+        Account currentAccount = getCurrentAccount();
+        this.pinnedMessageService.unpinMessage(chatRoomId, messageId, currentAccount);
+        return ResponseEntity.ok().build();
+    }
+
+    @GetMapping("/{chatRoomId}/pinned-messages")
+    public ResponseEntity<List<PinnedMessageResponse>> getPinnedMessages(
+            @PathVariable Long chatRoomId
+    ) throws InvalidException
+    {
+        Account currentAccount = getCurrentAccount();
+        List<PinnedMessageResponse> response = this.pinnedMessageService.getPinnedMessages(chatRoomId, currentAccount);
+        return ResponseEntity.ok(response);
+    }
+
+    @DeleteMapping("/{chatRoomId}/pinned-messages")
+    public ResponseEntity<Void> clearAllPinnedMessages( @PathVariable Long chatRoomId) throws InvalidException {
+        Account currentAccount = getCurrentAccount();
+        this.pinnedMessageService.clearAllPinnedMessages(chatRoomId, currentAccount);
+        return ResponseEntity.ok().build();
+    }
+
+    @GetMapping("/{chatRoomId}/pinned-messages/{messageId}")
+    public ResponseEntity<PinnedMessageResponse> getPinnedMessageDetail(
+            @PathVariable Long chatRoomId,
+            @PathVariable String messageId
+    ) throws InvalidException
+    {
+        PinnedMessageResponse response = this.pinnedMessageService.getPinnedMessageDetail(chatRoomId, messageId);
+        return ResponseEntity.ok(response);
+    }
+
+    @GetMapping("/{chatRoomId}/messages/{messageId}/pinned")
+    public ResponseEntity<Boolean> isMessagePinned(
+            @PathVariable Long chatRoomId,
+            @PathVariable String messageId
+    ) {
+        boolean isPinned = this.pinnedMessageService.isMessagePinned(chatRoomId, messageId);
+        return ResponseEntity.ok(isPinned);
     }
 }

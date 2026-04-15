@@ -1,9 +1,6 @@
 package iuh.fit.goat.controller;
 
-import iuh.fit.goat.dto.request.auth.LoginRequest;
-import iuh.fit.goat.dto.request.auth.RegisterCompanyRequest;
-import iuh.fit.goat.dto.request.auth.RegisterUserRequest;
-import iuh.fit.goat.dto.request.auth.VerifyAccountRequest;
+import iuh.fit.goat.dto.request.auth.*;
 import iuh.fit.goat.dto.response.auth.LoginResponse;
 import iuh.fit.goat.exception.InvalidException;
 import iuh.fit.goat.service.AuthService;
@@ -96,8 +93,8 @@ public class AuthController {
     }
 
     @DeleteMapping("/account")
-    public ResponseEntity<Void> deleteMyAccount() throws InvalidException {
-        this.authService.handleDeleteMyAccount();
+    public ResponseEntity<Void> deleteMyAccount(@Valid @RequestBody DeleteAccountRequest request) throws InvalidException {
+        this.authService.handleDeleteMyAccount(request.getPassword());
         return ResponseEntity.status(HttpStatus.OK).body(null);
     }
 

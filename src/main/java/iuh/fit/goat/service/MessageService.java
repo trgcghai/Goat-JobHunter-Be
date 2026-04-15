@@ -49,5 +49,5 @@ public interface MessageService {
                                           Account currentAccount)
             throws InvalidException, NotFoundException, PermissionException;
 
-    Message createAndSendSystemMessage(Long chatRoomId, MessageEvent type, Account actor, Object... params);
+    void createAndSendSystemMessage(Long chatRoomId, MessageEvent type, Account actor, Object... params);
 }
