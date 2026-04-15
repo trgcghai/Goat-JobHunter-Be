@@ -13,26 +13,21 @@ import java.time.Instant;
 @Builder
 public class PinnedMessage {
 
-    private String chatRoomId;  // PK
+    private String chatRoomId;
     private String messageId;
     private String pinnedBy;
     private Instant pinnedAt;
 
     public PinnedMessage() {
         this.pinnedAt = Instant.now();
-        this.pinnedBy = SecurityUtil.getCurrentUserLogin().isPresent()
-                ? SecurityUtil.getCurrentUserLogin().get()
-                : "System";
     }
 
-    // Partition Key
     @DynamoDbPartitionKey
     @DynamoDbAttribute("chatRoomId")
     public String getChatRoomId() {
         return chatRoomId;
     }
 
-    // Sort Key
     @DynamoDbSortKey
     @DynamoDbAttribute("messageId")
     public String getMessageId() {

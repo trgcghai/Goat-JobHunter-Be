@@ -527,7 +527,7 @@ public class MessageServiceImpl implements MessageService {
     }
 
     @Override
-    public Message createAndSendSystemMessage(
+    public void createAndSendSystemMessage(
             Long chatRoomId,
             MessageEvent type,
             Account actor,
@@ -560,7 +560,6 @@ public class MessageServiceImpl implements MessageService {
         sendMessageToUsers(chatRoomId, savedMessage);
 
         log.info("System message created: type={}, chatRoomId={}", type, chatRoomId);
-        return savedMessage;
     }
 
     private boolean isMediaType(MessageType type) {
@@ -752,16 +751,12 @@ public class MessageServiceImpl implements MessageService {
     }
 
     private String getFolderByMessageType(MessageType type) {
-        switch (type) {
-            case IMAGE:
-                return "images";
-            case VIDEO:
-                return "videos";
-            case AUDIO:
-                return "audios";
-            default:
-                return "files";
-        }
+        return switch (type) {
+            case IMAGE -> "images";
+            case VIDEO -> "videos";
+            case AUDIO -> "audios";
+            default -> "files";
+        };
     }
 
     private Message createFileMessage(
@@ -987,7 +982,7 @@ public class MessageServiceImpl implements MessageService {
                 : ((User) account).getFullName();
 
         String avatar = account instanceof Company ? ((Company) account).getLogo()
-                : ((User) account).getAvatar();
+                : account.getAvatar();
 
         return SenderInfo.builder()
                 .accountId(account.getAccountId())

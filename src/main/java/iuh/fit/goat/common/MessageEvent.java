@@ -8,4 +8,6 @@ public enum MessageEvent {
     GROUP_CREATED,
     GROUP_NAME_CHANGED,
     GROUP_AVATAR_CHANGED,
+    MESSAGE_PINNED,
+    MESSAGE_UNPINNED
 }
