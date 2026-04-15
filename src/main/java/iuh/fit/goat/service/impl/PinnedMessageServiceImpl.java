@@ -3,17 +3,12 @@ package iuh.fit.goat.service.impl;
 import iuh.fit.goat.common.MessageEvent;
 import iuh.fit.goat.dto.response.message.PinnedMessageResponse;
 import iuh.fit.goat.entity.*;
-import iuh.fit.goat.enumeration.ChatRole;
 import iuh.fit.goat.exception.InvalidException;
-import iuh.fit.goat.exception.NotFoundException;
-import iuh.fit.goat.exception.PermissionException;
 import iuh.fit.goat.repository.AccountRepository;
-import iuh.fit.goat.repository.ChatMemberRepository;
 import iuh.fit.goat.repository.ChatRoomRepository;
 import iuh.fit.goat.repository.MessageRepository;
 import iuh.fit.goat.service.MessageService;
 import iuh.fit.goat.service.PinnedMessageService;
-import iuh.fit.goat.util.EntityUtil;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -65,7 +60,7 @@ public class PinnedMessageServiceImpl implements PinnedMessageService {
                 chatRoomId,
                 MessageEvent.MESSAGE_PINNED,
                 account,
-                response.getMessage().getContent(),
+                response.getMessage(),
                 response.getMessageId()
         );
 
@@ -94,7 +89,7 @@ public class PinnedMessageServiceImpl implements PinnedMessageService {
                 chatRoomId,
                 MessageEvent.MESSAGE_UNPINNED,
                 account,
-                response.getMessage().getContent(),
+                response.getMessage(),
                 response.getMessageId()
         );
     }
