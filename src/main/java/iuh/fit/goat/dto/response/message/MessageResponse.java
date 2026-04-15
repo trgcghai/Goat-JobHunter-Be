@@ -2,6 +2,7 @@ package iuh.fit.goat.dto.response.message;
 
 import iuh.fit.goat.entity.embeddable.SenderInfo;
 import iuh.fit.goat.enumeration.MessageType;
+import iuh.fit.goat.enumeration.Visibility;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -22,6 +23,7 @@ public class MessageResponse {
     private MessageType messageType;
     private String replyToMessageId;
     private ReplyContext replyContext;
+    private ContactCardContext contactCard;
     private Boolean isHidden;
     private Boolean isForwarded;
     private String originalMessageId;
@@ -40,5 +42,21 @@ public class MessageResponse {
         private String originalContentPreview;
         private Boolean originalMessageUnavailable;
         private Boolean originalMessageHidden;
+    }
+
+    @Getter
+    @Setter
+    @NoArgsConstructor
+    @AllArgsConstructor
+    @Builder
+    public static class ContactCardContext {
+        private Long accountId;
+        private String fullName;
+        private String username;
+        private String avatar;
+        private String headline;
+        private String bio;
+        private String coverPhoto;
+        private Visibility visibility;
     }
 }

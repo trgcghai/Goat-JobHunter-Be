@@ -22,6 +22,8 @@ public interface UserRepository extends JpaRepository<User, Long>, JpaSpecificat
 
     List<User> findByAccountIdIn(List<Long> accountIds);
 
+    List<User> findByAccountIdInAndDeletedAtIsNull(List<Long> accountIds);
+
     @Query("SELECT u FROM User u LEFT JOIN FETCH u.role WHERE u.email = :email")
     Optional<User> findByEmailWithRole(@Param("email") String email);
 
