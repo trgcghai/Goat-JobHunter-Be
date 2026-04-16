@@ -62,6 +62,8 @@ public class MessageServiceImpl implements MessageService {
     private static final long MAX_FILE_SIZE = 20 * 1024 * 1024; // 20MB
     private static final int MAX_FORWARD_TARGETS = 20;
     private static final String MESSAGE_DELETED_EVENT = "MESSAGE_DELETED";
+    private static final String DELETE_TYPE_ORIGINAL = "original";
+    private static final String DELETE_TYPE_FORWARDED = "forwarded";
     private static final int MAX_REPLY_PREVIEW_LENGTH = 120;
     private static final String REVOKED_MESSAGE_PREVIEW = "Tin nhắn đã được thu hồi";
     private static final String UNAVAILABLE_MESSAGE_PREVIEW = "Tin nhắn không khả dụng";
@@ -291,9 +293,13 @@ public class MessageServiceImpl implements MessageService {
 
     @Override
     public void sendMessageToUsers(Long chatRoomId, Message message) {
-        log.debug("Sending realtime message to chatRoom: {}", chatRoomId);
-        MessageResponse payload = toMessageResponse(message);
-        messagingTemplate.convertAndSend("/topic/chatrooms/" + chatRoomId, payload);
+        if (chatRoomId == null) {
+            log.warn("Skip realtime emit because chatRoomId is null for messageId={}",
+                    message != null ? message.getMessageId() : null);
+            return;
+        }
+
+        sendMessageToUsers(chatRoomId.toString(), message);
     }
 
     @Override
@@ -415,15 +421,37 @@ public class MessageServiceImpl implements MessageService {
             throw new PermissionException("Only sender can revoke this message");
         }
 
-        message.setIsHidden(true);
-        message.setContent(null);
-        message.setUpdatedAt(Instant.now());
+        List<Message> cascadeMessages = collectCascadeRecallMessages(message);
 
-        Message revokedMessage = this.messageRepository.saveMessage(message);
-        sendMessageToUsers(chatRoomId, revokedMessage);
+        List<Message> recalledMessages;
+        try {
+            recalledMessages = applyRecallState(cascadeMessages);
+        } catch (RuntimeException e) {
+            log.error("Failed to cascade revoke messageId={} in chatRoomId={}", messageId, chatRoomId, e);
+            throw new InvalidException("Failed to revoke message");
+        }
 
-        log.info("Message revoked: messageId={}, chatRoomId={}, byAccountId={}",
-                messageId, chatRoomId, currentAccount.getAccountId());
+        LinkedHashSet<String> affectedChatRoomIds = new LinkedHashSet<>();
+        for (Message recalledMessage : recalledMessages) {
+            if (recalledMessage.getChatRoomId() != null && !recalledMessage.getChatRoomId().isBlank()) {
+                affectedChatRoomIds.add(recalledMessage.getChatRoomId());
+            }
+
+            sendMessageToUsers(recalledMessage.getChatRoomId(), recalledMessage);
+        }
+
+        Message revokedMessage = recalledMessages.stream()
+                .filter(recalledMessage -> messageId.equals(recalledMessage.getMessageId()))
+                .findFirst()
+                .orElse(message);
+
+        log.info("Cascade message revoke completed: messageId={}, rootChatRoomId={}, byAccountId={}, totalCandidates={}, totalRecalled={}, affectedChatRooms={}",
+                messageId,
+                chatRoomId,
+                currentAccount.getAccountId(),
+                cascadeMessages.size(),
+                recalledMessages.size(),
+                affectedChatRoomIds);
 
         return revokedMessage;
     }
@@ -525,6 +553,7 @@ public class MessageServiceImpl implements MessageService {
     }
 
     @Override
+    @Transactional
     public MessageDeletedEventResponse deleteMessagePermanently(Long chatRoomId, String messageId, Account currentAccount)
             throws InvalidException, NotFoundException, PermissionException {
         if (chatRoomId == null) {
@@ -552,30 +581,58 @@ public class MessageServiceImpl implements MessageService {
             throw new PermissionException("Only sender or super admin can permanently delete this message");
         }
 
-        cleanupMessageBinaryContent(message);
+        List<CascadeDeleteTarget> deleteTargets = collectCascadeDeleteTargets(message);
+        List<MessageDeletedEventResponse> emittedEvents = new ArrayList<>();
 
-        try {
-            this.messageRepository.deletePinnedMessage(chatRoomId.toString(), messageId);
-            this.messageRepository.deleteMessage(chatRoomId.toString(), message.getMessageSk());
-        } catch (RuntimeException e) {
-            log.error("Failed to permanently delete message: messageId={}, chatRoomId={}", messageId, chatRoomId, e);
-            throw new InvalidException("Failed to permanently delete message");
+        for (CascadeDeleteTarget target : deleteTargets) {
+            Message targetMessage = target.message();
+
+            try {
+                deleteSingleMessagePermanently(targetMessage);
+            } catch (InvalidException e) {
+                log.error("Cascade permanent delete failed: rootMessageId={}, rootChatRoomId={}, failedMessageId={}, failedChatRoomId={}, totalCandidates={}, totalDeleted={}",
+                        messageId,
+                        chatRoomId,
+                        targetMessage != null ? targetMessage.getMessageId() : null,
+                        targetMessage != null ? targetMessage.getChatRoomId() : null,
+                        deleteTargets.size(),
+                        emittedEvents.size(),
+                        e);
+                throw new InvalidException("Failed to permanently delete message");
+            }
+
+            MessageDeletedEventResponse event = buildMessageDeletedEvent(
+                    targetMessage,
+                    target.deleteType(),
+                    currentAccount.getAccountId(),
+                    Instant.now()
+            );
+
+            sendMessageDeletedEvent(targetMessage.getChatRoomId(), event);
+            emittedEvents.add(event);
         }
 
-        MessageDeletedEventResponse event = MessageDeletedEventResponse.builder()
-                .eventType(MESSAGE_DELETED_EVENT)
-                .chatRoomId(chatRoomId.toString())
-                .messageId(messageId)
-                .deletedByAccountId(currentAccount.getAccountId())
-                .deletedAt(Instant.now())
-                .build();
+        MessageDeletedEventResponse rootEvent = emittedEvents.stream()
+                .filter(event -> messageId.equals(event.getMessageId()))
+                .findFirst()
+                .orElseThrow(() -> new InvalidException("Failed to permanently delete message"));
 
-        sendMessageDeletedEvent(chatRoomId, event);
+        LinkedHashSet<String> affectedChatRoomIds = new LinkedHashSet<>();
+        for (MessageDeletedEventResponse event : emittedEvents) {
+            if (event.getChatRoomId() != null && !event.getChatRoomId().isBlank()) {
+                affectedChatRoomIds.add(event.getChatRoomId());
+            }
+        }
 
-        log.info("Message permanently deleted: messageId={}, chatRoomId={}, byAccountId={}",
-                messageId, chatRoomId, currentAccount.getAccountId());
+        log.info("Cascade permanent delete completed: messageId={}, rootChatRoomId={}, byAccountId={}, totalCandidates={}, totalDeleted={}, affectedChatRooms={}",
+                messageId,
+                chatRoomId,
+                currentAccount.getAccountId(),
+                deleteTargets.size(),
+                emittedEvents.size(),
+                affectedChatRoomIds);
 
-        return event;
+        return rootEvent;
     }
 
     @Override
@@ -979,6 +1036,138 @@ public class MessageServiceImpl implements MessageService {
                 .build();
     }
 
+    private List<Message> collectCascadeRecallMessages(Message rootMessage) {
+        if (rootMessage == null) {
+            return Collections.emptyList();
+        }
+
+        LinkedHashMap<String, Message> messagesById = new LinkedHashMap<>();
+        addMessageIfAbsent(messagesById, rootMessage);
+
+        List<Message> forwardedDescendants = this.messageRepository
+                .findForwardedDescendantsByOriginalMessageId(rootMessage.getMessageId());
+
+        for (Message forwardedDescendant : forwardedDescendants) {
+            addMessageIfAbsent(messagesById, forwardedDescendant);
+        }
+
+        return new ArrayList<>(messagesById.values());
+    }
+
+    private void addMessageIfAbsent(Map<String, Message> messagesById, Message message) {
+        if (message == null || message.getMessageId() == null || message.getMessageId().isBlank()) {
+            return;
+        }
+
+        messagesById.putIfAbsent(message.getMessageId(), message);
+    }
+
+    private List<Message> applyRecallState(List<Message> messages) {
+        if (messages == null || messages.isEmpty()) {
+            return Collections.emptyList();
+        }
+
+        Instant recallTime = Instant.now();
+        List<Message> recalledMessages = new ArrayList<>();
+
+        for (Message message : messages) {
+            if (message == null || Boolean.TRUE.equals(message.getIsHidden())) {
+                continue;
+            }
+
+            message.setIsHidden(true);
+            message.setContent(null);
+            message.setUpdatedAt(recallTime);
+
+            Message savedMessage = this.messageRepository.saveMessage(message);
+            recalledMessages.add(savedMessage);
+        }
+
+        return recalledMessages;
+    }
+
+    private List<CascadeDeleteTarget> collectCascadeDeleteTargets(Message rootMessage) {
+        if (rootMessage == null) {
+            return Collections.emptyList();
+        }
+
+        LinkedHashMap<String, CascadeDeleteTarget> targetsByMessageId = new LinkedHashMap<>();
+
+        List<Message> forwardedDescendants = this.messageRepository
+                .findForwardedDescendantsByOriginalMessageId(rootMessage.getMessageId());
+
+        List<Message> descendantsInDeleteOrder = new ArrayList<>(forwardedDescendants);
+        Collections.reverse(descendantsInDeleteOrder);
+
+        for (Message descendant : descendantsInDeleteOrder) {
+            addCascadeDeleteTargetIfAbsent(targetsByMessageId, descendant, DELETE_TYPE_FORWARDED);
+        }
+
+        addCascadeDeleteTargetIfAbsent(targetsByMessageId, rootMessage, DELETE_TYPE_ORIGINAL);
+
+        return new ArrayList<>(targetsByMessageId.values());
+    }
+
+    private void addCascadeDeleteTargetIfAbsent(
+            Map<String, CascadeDeleteTarget> targetsByMessageId,
+            Message message,
+            String deleteType
+    ) {
+        if (message == null || message.getMessageId() == null || message.getMessageId().isBlank()) {
+            return;
+        }
+
+        targetsByMessageId.putIfAbsent(message.getMessageId(), new CascadeDeleteTarget(message, deleteType));
+    }
+
+    private void deleteSingleMessagePermanently(Message message) throws InvalidException {
+        if (message == null) {
+            throw new InvalidException("Message is invalid");
+        }
+
+        String targetChatRoomId = message.getChatRoomId();
+        String targetMessageId = message.getMessageId();
+        String targetMessageSk = message.getMessageSk();
+
+        if (targetChatRoomId == null || targetChatRoomId.isBlank()
+                || targetMessageId == null || targetMessageId.isBlank()
+                || targetMessageSk == null || targetMessageSk.isBlank()) {
+            throw new InvalidException("Message data is invalid for permanent delete");
+        }
+
+        cleanupMessageBinaryContent(message);
+
+        try {
+            this.messageRepository.deletePinnedMessage(targetChatRoomId, targetMessageId);
+            this.messageRepository.deleteMessage(targetChatRoomId, targetMessageSk);
+        } catch (RuntimeException e) {
+            log.error("Failed to permanently delete message item: messageId={}, chatRoomId={}",
+                    targetMessageId,
+                    targetChatRoomId,
+                    e);
+            throw new InvalidException("Failed to permanently delete message");
+        }
+    }
+
+    private MessageDeletedEventResponse buildMessageDeletedEvent(
+            Message message,
+            String deleteType,
+            Long deletedByAccountId,
+            Instant deletedAt
+    ) {
+        return MessageDeletedEventResponse.builder()
+                .eventType(MESSAGE_DELETED_EVENT)
+                .chatRoomId(message.getChatRoomId())
+                .messageId(message.getMessageId())
+                .deleteType(deleteType)
+                .deletedByAccountId(deletedByAccountId)
+                .deletedAt(deletedAt)
+                .build();
+    }
+
+    private record CascadeDeleteTarget(Message message, String deleteType) {
+    }
+
     private String generateMessageId() {
         return "msg_" + UUID.randomUUID().toString().replace("-", "");
     }
@@ -1041,9 +1230,51 @@ public class MessageServiceImpl implements MessageService {
                 );
     }
 
+    private void sendMessageToUsers(String chatRoomId, Message message) {
+        if (chatRoomId == null || chatRoomId.isBlank() || message == null) {
+            log.warn("Skip realtime emit because payload is invalid: chatRoomId={}, messageNull={}",
+                    chatRoomId,
+                    message == null);
+            return;
+        }
+
+        log.debug("Sending realtime message to chatRoom: {}", chatRoomId);
+        MessageResponse payload = toMessageResponse(message);
+        messagingTemplate.convertAndSend("/topic/chatrooms/" + chatRoomId, payload);
+    }
+
     private void sendMessageDeletedEvent(Long chatRoomId, MessageDeletedEventResponse event) {
-        log.debug("Sending delete event to chatRoom: {}", chatRoomId);
-        messagingTemplate.convertAndSend("/topic/chatrooms/" + chatRoomId, event);
+        if (chatRoomId == null) {
+            log.warn("Skip delete event because chatRoomId is null for messageId={}",
+                    event != null ? event.getMessageId() : null);
+            return;
+        }
+
+        sendMessageDeletedEvent(chatRoomId.toString(), event);
+    }
+
+    private void sendMessageDeletedEvent(String chatRoomId, MessageDeletedEventResponse event) {
+        if (chatRoomId == null || chatRoomId.isBlank() || event == null) {
+            log.warn("Skip delete event because payload is invalid: chatRoomId={}, eventNull={}",
+                    chatRoomId,
+                    event == null);
+            return;
+        }
+
+        log.debug("Sending delete event to chatRoom: {}, messageId={}, deleteType={}",
+                chatRoomId,
+                event.getMessageId(),
+                event.getDeleteType());
+
+        try {
+            messagingTemplate.convertAndSend("/topic/chatrooms/" + chatRoomId, event);
+        } catch (RuntimeException e) {
+            log.error("Failed to send delete event: chatRoomId={}, messageId={}, deleteType={}",
+                    chatRoomId,
+                    event.getMessageId(),
+                    event.getDeleteType(),
+                    e);
+        }
     }
 
     private boolean isSuperAdmin(Account account) {
