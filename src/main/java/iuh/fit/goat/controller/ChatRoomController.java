@@ -89,6 +89,18 @@ public class ChatRoomController {
         return ResponseEntity.ok(response);
     }
 
+    @GetMapping("/{id}/messages/search")
+    public ResponseEntity<ResultPaginationResponse> searchMessagesInChatRoom(
+            @PathVariable Long id,
+            @RequestParam(required = false) String searchTerm,
+            Pageable pageable
+    ) throws InvalidException {
+        Account currentAccount = getCurrentAccount();
+        ResultPaginationResponse response = this.chatRoomService
+                .searchMessagesInChatRoom(currentAccount, id, searchTerm, pageable);
+        return ResponseEntity.ok(response);
+    }
+
     @GetMapping("/{id}/media")
     public ResponseEntity<List<MessageResponse>> getMediaMessagesInChatRoom(
             @PathVariable Long id,

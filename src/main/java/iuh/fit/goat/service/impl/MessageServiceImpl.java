@@ -9,6 +9,7 @@ import iuh.fit.goat.dto.response.message.ForwardMessageResponse;
 import iuh.fit.goat.dto.response.message.ForwardMessageSuccessResponse;
 import iuh.fit.goat.dto.response.message.MessageDeletedEventResponse;
 import iuh.fit.goat.dto.response.message.MessageResponse;
+import iuh.fit.goat.dto.response.ResultPaginationResponse;
 import iuh.fit.goat.dto.response.StorageResponse;
 import iuh.fit.goat.entity.Account;
 import iuh.fit.goat.entity.ChatMember;
@@ -67,6 +68,10 @@ public class MessageServiceImpl implements MessageService {
     private static final int MAX_REPLY_PREVIEW_LENGTH = 120;
     private static final String REVOKED_MESSAGE_PREVIEW = "Tin nhắn đã được thu hồi";
     private static final String UNAVAILABLE_MESSAGE_PREVIEW = "Tin nhắn không khả dụng";
+    private static final int DEFAULT_SEARCH_PAGE_SIZE = 20;
+    private static final int MAX_SEARCH_PAGE_SIZE = 50;
+    private static final int MAX_SEARCH_TERM_LENGTH = 100;
+    private static final int SEARCH_SCAN_LIMIT = 3000;
     private final SimpMessagingTemplate messagingTemplate;
 
     // ========== PUBLIC API METHODS ==========
@@ -114,6 +119,46 @@ public class MessageServiceImpl implements MessageService {
         log.info("Retrieved {} messages for chatRoom: {}", messages.size(), chatRoomId);
 
         return messages;
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public ResultPaginationResponse searchMessagesByChatRoom(Long chatRoomId, String searchTerm, Pageable pageable)
+            throws InvalidException {
+        if (chatRoomId == null) {
+            throw new InvalidException("Chat room ID cannot be null");
+        }
+
+        this.chatRoomRepository.findById(chatRoomId)
+                .orElseThrow(() -> new InvalidException("Chat Room not found"));
+
+        int pageNumber = pageable != null ? Math.max(pageable.getPageNumber(), 0) : 0;
+        int requestedPageSize = pageable != null ? pageable.getPageSize() : DEFAULT_SEARCH_PAGE_SIZE;
+        int pageSize = resolveSearchPageSize(requestedPageSize);
+
+        String normalizedSearchTerm = normalizeSearchTerm(searchTerm);
+        if (normalizedSearchTerm == null) {
+            return buildSearchPaginationResponse(Collections.emptyList(), pageNumber, pageSize, 0);
+        }
+
+        MessageRepository.MessageSearchResult searchResult = this.messageRepository.searchMessagesByChatRoom(
+                chatRoomId.toString(),
+                normalizedSearchTerm,
+                pageNumber,
+                pageSize,
+                SEARCH_SCAN_LIMIT
+        );
+
+        if (searchResult.scanLimitReached()) {
+            log.warn("Message search reached scan limit: chatRoomId={}, page={}, pageSize={}, scanLimit={}",
+                    chatRoomId,
+                    pageNumber + 1,
+                    pageSize,
+                    SEARCH_SCAN_LIMIT);
+        }
+
+        List<MessageResponse> result = toMessageResponses(searchResult.messages());
+        return buildSearchPaginationResponse(result, pageNumber, pageSize, searchResult.matchedCount());
     }
 
     /**
@@ -673,6 +718,54 @@ public class MessageServiceImpl implements MessageService {
 
     private boolean isMediaType(MessageType type) {
         return type == MessageType.IMAGE || type == MessageType.VIDEO || type == MessageType.AUDIO;
+    }
+
+    private ResultPaginationResponse buildSearchPaginationResponse(
+            List<MessageResponse> messages,
+            int pageNumber,
+            int pageSize,
+            long total
+    ) {
+        ResultPaginationResponse.Meta meta = new ResultPaginationResponse.Meta();
+        meta.setPage(pageNumber + 1);
+        meta.setPageSize(pageSize);
+        meta.setPages(calculateTotalPages(total, pageSize));
+        meta.setTotal(total);
+
+        return new ResultPaginationResponse(meta, messages);
+    }
+
+    private int calculateTotalPages(long total, int pageSize) {
+        if (total <= 0 || pageSize <= 0) {
+            return 0;
+        }
+
+        return (int) ((total + pageSize - 1) / pageSize);
+    }
+
+    private int resolveSearchPageSize(int requestedPageSize) {
+        if (requestedPageSize <= 0) {
+            return DEFAULT_SEARCH_PAGE_SIZE;
+        }
+
+        return Math.min(requestedPageSize, MAX_SEARCH_PAGE_SIZE);
+    }
+
+    private String normalizeSearchTerm(String searchTerm) throws InvalidException {
+        if (searchTerm == null) {
+            return null;
+        }
+
+        String normalized = searchTerm.trim();
+        if (normalized.isEmpty()) {
+            return null;
+        }
+
+        if (normalized.length() > MAX_SEARCH_TERM_LENGTH) {
+            throw new InvalidException("searchTerm must not exceed " + MAX_SEARCH_TERM_LENGTH + " characters");
+        }
+
+        return normalized;
     }
 
     // ========== HELPER METHODS ==========

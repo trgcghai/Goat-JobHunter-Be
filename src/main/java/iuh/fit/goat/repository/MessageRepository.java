@@ -8,6 +8,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Repository;
 import software.amazon.awssdk.enhanced.dynamodb.DynamoDbTable;
 import software.amazon.awssdk.enhanced.dynamodb.Key;
+import software.amazon.awssdk.enhanced.dynamodb.model.Page;
 import software.amazon.awssdk.enhanced.dynamodb.model.QueryConditional;
 import software.amazon.awssdk.enhanced.dynamodb.model.QueryEnhancedRequest;
 
@@ -20,9 +21,20 @@ import java.util.*;
 public class MessageRepository {
 
     private static final int DEFAULT_LIMIT = 100;
+    private static final int DEFAULT_SEARCH_PAGE_SIZE = 20;
+    private static final int DEFAULT_SEARCH_SCAN_LIMIT = 3000;
+    private static final int MAX_SEARCH_SCAN_LIMIT = 10000;
+    private static final int SEARCH_QUERY_PAGE_SIZE = 100;
 
     private final DynamoDbTable<Message> messageTable;
     private final DynamoDbTable<PinnedMessage> pinnedMessageTable;
+
+    public record MessageSearchResult(
+            List<Message> messages,
+            long matchedCount,
+            boolean scanLimitReached
+    ) {
+    }
 
     /**
      * Scan all messages (for migration only)
@@ -109,6 +121,67 @@ public class MessageRepository {
         return queryMessagesByChatRoom(chatRoomId, limit, includeHidden);
     }
 
+    public MessageSearchResult searchMessagesByChatRoom(
+            String chatRoomId,
+            String searchTerm,
+            int pageNumber,
+            int pageSize,
+            int scanLimit
+    ) {
+        if (chatRoomId == null || chatRoomId.isBlank() || searchTerm == null || searchTerm.isBlank()) {
+            return new MessageSearchResult(Collections.emptyList(), 0, false);
+        }
+
+        int safePageNumber = Math.max(pageNumber, 0);
+        int safePageSize = pageSize > 0 ? pageSize : DEFAULT_SEARCH_PAGE_SIZE;
+        int safeScanLimit = resolveSearchScanLimit(scanLimit, safePageSize);
+        long offset = (long) safePageNumber * safePageSize;
+        String normalizedTerm = searchTerm.toLowerCase(Locale.ROOT);
+
+        QueryConditional queryConditional = QueryConditional
+                .keyEqualTo(Key.builder().partitionValue(chatRoomId).build());
+
+        QueryEnhancedRequest queryRequest = QueryEnhancedRequest.builder()
+                .queryConditional(queryConditional)
+                .scanIndexForward(false)
+                .limit(Math.min(SEARCH_QUERY_PAGE_SIZE, safeScanLimit))
+                .build();
+
+        List<Message> pagedMessages = new ArrayList<>(safePageSize);
+        long matchedCount = 0;
+        int scannedCount = 0;
+        boolean scanLimitReached = false;
+
+        outer:
+        for (Page<Message> page : messageTable.query(queryRequest)) {
+            for (Message message : page.items()) {
+                if (scannedCount >= safeScanLimit) {
+                    scanLimitReached = true;
+                    break outer;
+                }
+
+                scannedCount++;
+
+                if (!matchesSearchTerm(message, normalizedTerm)) {
+                    continue;
+                }
+
+                if (matchedCount < offset) {
+                    matchedCount++;
+                    continue;
+                }
+
+                if (pagedMessages.size() < safePageSize) {
+                    pagedMessages.add(message);
+                }
+
+                matchedCount++;
+            }
+        }
+
+        return new MessageSearchResult(pagedMessages, matchedCount, scanLimitReached);
+    }
+
     /**
          * Query messages from a specific chat room partition.
      */
@@ -137,6 +210,25 @@ public class MessageRepository {
         });
 
         return messages;
+    }
+
+    private int resolveSearchScanLimit(int requestedScanLimit, int pageSize) {
+        int effectiveRequestedLimit = requestedScanLimit > 0 ? requestedScanLimit : DEFAULT_SEARCH_SCAN_LIMIT;
+        int boundedLimit = Math.min(effectiveRequestedLimit, MAX_SEARCH_SCAN_LIMIT);
+        return Math.max(boundedLimit, pageSize);
+    }
+
+    private boolean matchesSearchTerm(Message message, String normalizedTerm) {
+        if (message == null || Boolean.TRUE.equals(message.getIsHidden())) {
+            return false;
+        }
+
+        String content = message.getContent();
+        if (content == null || content.isBlank()) {
+            return false;
+        }
+
+        return content.toLowerCase(Locale.ROOT).contains(normalizedTerm);
     }
 
     /**
