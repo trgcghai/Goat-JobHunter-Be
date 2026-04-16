@@ -97,7 +97,7 @@ public class PinnedMessageServiceImpl implements PinnedMessageService {
     @Override
     @Transactional(readOnly = true)
     public List<PinnedMessageResponse> getPinnedMessages(Long chatRoomId, Account currentAccount) throws InvalidException {
-        ChatRoom chatRoom = this.chatRoomRepository.findByRoomIdAndDeletedAtIsNull(chatRoomId)
+        ChatRoom chatRoom = this.chatRoomRepository.findByRoomId(chatRoomId)
                 .orElseThrow(() -> new InvalidException("Không tìm thấy phòng chat"));
 
         if (!isUserInChatRoom(chatRoom, currentAccount.getAccountId())) {

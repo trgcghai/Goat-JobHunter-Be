@@ -25,7 +25,6 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class NotificationServiceImpl implements NotificationService {
     private final NotificationRepository notificationRepository;
-    private final UserRepository userRepository;
     private final BlogRepository blogRepository;
     private final CommentRepository commentRepository;
     private final AccountRepository accountRepository;
@@ -250,6 +249,12 @@ public class NotificationServiceImpl implements NotificationService {
     public void handleForceLogout(String email, DeviceNotificationResponse notification) {
         log.info("Force logout: {}", email);
         this.messagingTemplate.convertAndSendToUser(email, "/queue/logout", notification);
+    }
+
+    @Override
+    public void handleSendMessageTextToUser(String email, String content) {
+        log.info("Send message text to user: {}", email);
+        this.messagingTemplate.convertAndSendToUser(email, "/queue/message-text", content);
     }
 
     @Override

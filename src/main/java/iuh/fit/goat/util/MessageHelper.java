@@ -22,13 +22,16 @@ public class MessageHelper {
 
                 yield String.format("(event:%s) %s đã thêm %s vào nhóm", MessageEvent.MEMBER_ADDED, actorName, memberName);
             }
+
             case MEMBER_REMOVED -> {
                 String memberName = (String) params[0];
 
                 yield String.format("(event:%s) %s đã xóa %s khỏi nhóm", MessageEvent.MEMBER_REMOVED, actorName, memberName);
             }
+
             case MEMBER_LEFT ->
                     String.format("(event:%s) %s đã rời khỏi nhóm", MessageEvent.MEMBER_LEFT, actorName);
+
             case ROLE_CHANGED -> {
                 String memberName = (String) params[0];
                 ChatRole newRole = (ChatRole) params[1];
@@ -37,11 +40,13 @@ public class MessageHelper {
                 yield String.format("(event:%s) %s đã thay đổi vai trò của %s thành %s",
                         MessageEvent.ROLE_CHANGED, actorName, memberName, roleText);
             }
+
             case GROUP_CREATED -> {
                 String groupName = (String) params[0];
 
                 yield String.format("(event:%s) %s đã tạo nhóm \"%s\"", MessageEvent.GROUP_CREATED, actorName, groupName);
             }
+
             case GROUP_NAME_CHANGED -> {
                 String oldName = (String) params[0];
                 String newName = (String) params[1];
@@ -49,12 +54,14 @@ public class MessageHelper {
                 yield String.format("(event:%s) %s đã đổi tên nhóm từ \"%s\" thành \"%s\"",
                         MessageEvent.GROUP_NAME_CHANGED, actorName, oldName, newName);
             }
+
             case GROUP_AVATAR_CHANGED ->
-                    String.format("(event:%s) %s đã thay đổi ảnh đại diện nhóm", MessageEvent.GROUP_AVATAR_CHANGED, actorName);
+                String.format("(event:%s) %s đã thay đổi ảnh đại diện nhóm", MessageEvent.GROUP_AVATAR_CHANGED, actorName);
+
+            case GROUP_DISSOLVED ->
+                String.format("(event:%s) %s đã giải tán nhóm", MessageEvent.GROUP_DISSOLVED, actorName);
+
             case MESSAGE_PINNED -> {
-
-                log.info("Generating message for MESSAGE_PINNED event with params: {}", params);
-
                 MessageResponse message = (MessageResponse) params[0];
                 String messageId = (String) params[1];
 
@@ -62,6 +69,7 @@ public class MessageHelper {
                         MessageEvent.MESSAGE_PINNED, actorName, formatMessageContent(message), messageId
                 );
             }
+
             case MESSAGE_UNPINNED -> {
                 MessageResponse message = (MessageResponse) params[0];
                 String messageId = (String) params[1];

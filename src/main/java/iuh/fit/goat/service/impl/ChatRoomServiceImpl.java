@@ -21,6 +21,7 @@ import iuh.fit.goat.repository.ChatRoomRepository;
 import iuh.fit.goat.repository.UserRelationshipRepository;
 import iuh.fit.goat.service.ChatRoomService;
 import iuh.fit.goat.service.MessageService;
+import iuh.fit.goat.service.NotificationService;
 import iuh.fit.goat.util.EntityUtil;
 import iuh.fit.goat.util.SecurityUtil;
 import lombok.RequiredArgsConstructor;
@@ -46,6 +47,7 @@ public class ChatRoomServiceImpl implements ChatRoomService {
     private final ChatMemberRepository chatMemberRepository;
     private final AccountRepository accountRepository;
     private final UserRelationshipRepository userRelationshipRepository;
+    private final NotificationService notificationService;
 
     @Override
     @Transactional(readOnly = true)
@@ -82,7 +84,8 @@ public class ChatRoomServiceImpl implements ChatRoomService {
     @Transactional(readOnly = true)
     public ChatRoomResponse getDetailChatRoomInformation(Account currentAccount, Long chatRoomId) throws InvalidException {
         // Validate chat room exists
-        ChatRoom chatRoom = getChatRoomById(chatRoomId);
+        ChatRoom chatRoom = this.chatRoomRepository.findByRoomId(chatRoomId)
+                .orElseThrow(() -> new InvalidException("Chat room not found"));
 
         // Check if user is member
         getCurrentMemberInChatRoom(chatRoom, currentAccount.getAccountId());
@@ -94,7 +97,7 @@ public class ChatRoomServiceImpl implements ChatRoomService {
     @Override
     public List<Message> getMessagesInChatRoom(Account account, Long chatRoomId, Pageable pageable) throws InvalidException {
         // Check if user belong to chat room or not
-        ChatRoom chatRoom = this.chatRoomRepository.findByRoomIdAndDeletedAtIsNull(chatRoomId).orElse(null);
+        ChatRoom chatRoom = this.chatRoomRepository.findByRoomId(chatRoomId).orElse(null);
         if (chatRoom == null) {
             throw new InvalidException("Chat room not found");
         }
@@ -288,7 +291,7 @@ public class ChatRoomServiceImpl implements ChatRoomService {
 
     @Override
     public List<Message> getMediaMessagesInChatRoom(Account account, Long chatRoomId, Pageable pageable) throws InvalidException {
-        ChatRoom chatRoom = this.chatRoomRepository.findByRoomIdAndDeletedAtIsNull(chatRoomId)
+        ChatRoom chatRoom = this.chatRoomRepository.findByRoomId(chatRoomId)
                 .orElseThrow(() -> new InvalidException("Chat room not found"));
 
         if (!this.isUserInChatRoom(chatRoom, account.getAccountId())) {
@@ -300,7 +303,7 @@ public class ChatRoomServiceImpl implements ChatRoomService {
 
     @Override
     public List<Message> getFileMessagesInChatRoom(Account account, Long chatRoomId, Pageable pageable) throws InvalidException {
-        ChatRoom chatRoom = this.chatRoomRepository.findByRoomIdAndDeletedAtIsNull(chatRoomId)
+        ChatRoom chatRoom = this.chatRoomRepository.findByRoomId(chatRoomId)
                 .orElseThrow(() -> new InvalidException("Chat room not found"));
 
         if (!this.isUserInChatRoom(chatRoom, account.getAccountId())) {
@@ -405,25 +408,27 @@ public class ChatRoomServiceImpl implements ChatRoomService {
     @Override
     @Transactional
     public void leaveGroupChat(Account currentAccount, Long chatRoomId) throws InvalidException {
-        ChatRoom chatRoom = getChatRoomById(chatRoomId);
+        ChatRoom chatRoom = this.chatRoomRepository.findByRoomId(chatRoomId)
+                .orElseThrow(() -> new InvalidException("Phòng chat không tồn tại"));
+
         validateGroupChatRoom(chatRoom);
 
         ChatMember currentMember = getCurrentMemberInChatRoom(chatRoom, currentAccount.getAccountId());
 
-        // OWNER cannot leave unless ownership is transferred
         if (currentMember.getRole() == ChatRole.OWNER) {
-            throw new InvalidException("Owner cannot leave group. Please transfer ownership first.");
+            throw new InvalidException("Chủ phòng không thể rời nhóm. Vui lòng chuyển quyền chủ phòng cho một thành viên khác trước khi rời nhóm.");
         }
 
-        // Remove from collection
-        chatRoom.getMembers().remove(currentMember);
-
-        // Clear relationship
-        currentMember.setRoom(null);
-
-        // Hard delete
-        this.chatMemberRepository.delete(currentMember);
+        // Xóa mềm thành viên khỏi nhóm
+        currentMember.onDelete();
+        this.chatMemberRepository.save(currentMember);
         this.chatMemberRepository.flush();
+
+        this.messageService.createAndSendSystemMessage(
+                chatRoomId,
+                MessageEvent.MEMBER_LEFT,
+                currentAccount
+        );
 
         log.info("User: {} left group chat: {}", currentAccount.getAccountId(), chatRoomId);
     }
@@ -579,7 +584,8 @@ public class ChatRoomServiceImpl implements ChatRoomService {
     @Override
     @Transactional(readOnly = true)
     public List<GroupMemberResponse> getGroupMembers(Account currentAccount, Long chatRoomId) throws InvalidException {
-        ChatRoom chatRoom = getChatRoomById(chatRoomId);
+        ChatRoom chatRoom = this.chatRoomRepository.findByRoomId(chatRoomId)
+                .orElseThrow(() -> new InvalidException("Chat room not found"));
         validateGroupChatRoom(chatRoom);
 
         getCurrentMemberInChatRoom(chatRoom, currentAccount.getAccountId());
@@ -591,6 +597,39 @@ public class ChatRoomServiceImpl implements ChatRoomService {
         return members.stream()
                 .map(this::mapToGroupMemberResponse)
                 .toList();
+    }
+
+    @Override
+    @Transactional
+    public void smartGroupDissolution(Long chatRoomId, Account currentAccount, String groupNameConfirmation) throws InvalidException {
+        ChatRoom chatRoom = this.chatRoomRepository.findByRoomIdAndDeletedAtIsNull(chatRoomId)
+                .orElseThrow(() -> new InvalidException("Phòng chat không tồn tại"));
+
+        if(chatRoom.getType() != ChatRoomType.GROUP) throw new InvalidException("Chỉ có thể giải tán nhóm chat");
+
+        ChatMember currentMember = this.getCurrentMemberInChatRoom(chatRoom, currentAccount.getAccountId());
+        if (currentMember.getRole() != ChatRole.OWNER) throw new InvalidException("Chủ phòng mới có quyền giải tán nhóm");
+
+        if (!chatRoom.getName().equalsIgnoreCase(groupNameConfirmation)) throw new InvalidException("Tên nhóm không khớp. Vui lòng nhập đúng tên nhóm để xác nhận giải tán.");
+
+        chatRoom.onDelete();
+        currentMember.onDelete();
+        this.chatRoomRepository.save(chatRoom);
+        this.chatMemberRepository.save(currentMember);
+
+        this.messageService.createAndSendSystemMessage(
+                chatRoomId,
+                MessageEvent.GROUP_DISSOLVED,
+                currentAccount
+        );
+
+        String messageText = "Nhóm chat '" + chatRoom.getName() + "' đã được giải tán bởi chủ phòng.";
+        List<String> emails = chatRoom.getMembers().stream()
+                        .map(member -> member.getAccount().getEmail())
+                        .toList();
+        emails.forEach(
+                email -> this.notificationService.handleSendMessageTextToUser(email, messageText)
+        );
     }
 
     // =============== HELPER METHODS FOR GROUP CHAT ====================
@@ -755,6 +794,7 @@ public class ChatRoomServiceImpl implements ChatRoomService {
                     .isBlockedByMe(blockStatus.blockedByMe())
                     .counterpartAccountId(blockStatus.counterpartAccountId())
                     .currentUserSentLastMessage(lastMessageInfo.isCurrentUserSender())
+                    .deletedAt(chatRoom.getDeletedAt())
                     .build();
 
         } catch (Exception e) {
@@ -981,4 +1021,3 @@ public class ChatRoomServiceImpl implements ChatRoomService {
         };
     }
 }
-

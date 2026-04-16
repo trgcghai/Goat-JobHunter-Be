@@ -152,9 +152,7 @@ public class ChatRoomController {
     }
 
     @DeleteMapping("/group/{chatRoomId}")
-    public ResponseEntity<Void> leaveGroupChat(
-            @PathVariable Long chatRoomId
-    ) throws InvalidException {
+    public ResponseEntity<Void> leaveGroupChat(@PathVariable Long chatRoomId) throws InvalidException {
         Account currentAccount = getCurrentAccount();
         this.chatRoomService.leaveGroupChat(currentAccount, chatRoomId);
         return ResponseEntity.ok().build();
@@ -447,5 +445,17 @@ public class ChatRoomController {
     ) {
         boolean isPinned = this.pinnedMessageService.isMessagePinned(chatRoomId, messageId);
         return ResponseEntity.ok(isPinned);
+    }
+
+    // ========== GROUP DISSOLUTION ENDPOINTS ==========
+    @DeleteMapping("/group/{chatRoomId}/dissolve")
+    public ResponseEntity<Void> dissolveGroup(@PathVariable Long chatRoomId, @RequestParam String groupNameConfirmation) throws InvalidException {
+        String email = SecurityUtil.getCurrentUserEmail();
+        Account currentAccount = this.accountService.handleGetAccountByEmail(email);
+        if(currentAccount == null) throw new InvalidException("Tài khoản không tồn tại");
+
+        this.chatRoomService.smartGroupDissolution(chatRoomId, currentAccount, groupNameConfirmation);
+
+        return ResponseEntity.ok(null);
     }
 }

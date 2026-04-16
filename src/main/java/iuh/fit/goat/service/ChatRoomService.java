@@ -46,4 +46,6 @@ public interface ChatRoomService {
     ChatMember updateMemberRole(Account currentAccount, Long chatRoomId, Long chatMemberId, UpdateMemberRoleRequest request) throws InvalidException;
 
     List<GroupMemberResponse> getGroupMembers(Account currentAccount, Long chatRoomId) throws InvalidException;
+
+    void smartGroupDissolution(Long chatRoomId, Account currentAccount, String groupNameConfirmation) throws InvalidException;
 }
