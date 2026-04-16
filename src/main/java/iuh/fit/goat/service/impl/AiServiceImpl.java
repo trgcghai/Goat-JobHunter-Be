@@ -10,6 +10,7 @@ import iuh.fit.goat.dto.request.ai.ChatRequest;
 import iuh.fit.goat.dto.response.ai.ResumeEvaluationAiResponse;
 import iuh.fit.goat.dto.response.resume.ResumeEvaluationResponse;
 import iuh.fit.goat.entity.*;
+import iuh.fit.goat.enumeration.AIMessageRole;
 import iuh.fit.goat.exception.InvalidException;
 import iuh.fit.goat.repository.*;
 import iuh.fit.goat.service.*;
@@ -18,9 +19,13 @@ import iuh.fit.goat.util.SecurityUtil;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionTemplate;
 
+import java.time.Instant;
 import java.util.*;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
@@ -44,6 +49,9 @@ public class AiServiceImpl implements AiService {
     private final CompanyRepository companyRepository;
     private final ResumeRepository resumeRepository;
     private final ResumeEvaluationRepository resumeEvaluationRepository;
+    private final ConversationRepository conversationRepository;
+    private final AIMessageRepository aiMessageRepository;
+    private final PlatformTransactionManager transactionManager;
 
     @Value("${google.api.model}")
     private String model;
@@ -54,23 +62,114 @@ public class AiServiceImpl implements AiService {
     private static Long ttl = 900L;
 
     @Override
-    @Transactional
-    public String chatWithAi(ChatRequest request) {
-        String currentUserEmail = SecurityUtil.getCurrentUserEmail();
-        Account currentAccount = null;
-        Role currentUserRole = null;
+    public String chatWithAi(ChatRequest request) throws InvalidException {
+        Account currentAccount = this.getCurrentAccount();
+        Role currentUserRole = currentAccount.getRole() != null ? this.getRoleFromUser(currentAccount) : null;
 
-        if (currentUserEmail != null) {
-            currentAccount = this.accountService.handleGetAccountByEmail(currentUserEmail);
-            if (currentAccount != null && currentAccount.getRole() != null) {
-                currentUserRole = getRoleFromUser(currentAccount);
-            }
-        }
+        Conversation conversation = this.conversationRepository
+                .findByConversationIdAndAccount_AccountIdAndDeletedAtIsNull(
+                        request.getConversationId(),
+                        currentAccount.getAccountId()
+                )
+                .orElseThrow(() -> new InvalidException("Conversation not found or access denied"));
 
+        this.persistAiMessage(
+                conversation.getConversationId(),
+                currentAccount.getAccountId(),
+                AIMessageRole.USER,
+                request.getMessage()
+        );
+
+        String history = this.buildConversationHistoryWithoutLatestUser(conversation.getConversationId());
         String systemPrompt = buildSystemPrompt(currentAccount, currentUserRole);
         String contextData = buildSmartContext(currentAccount, currentUserRole, request.getMessage());
 
-        return callAiApi(systemPrompt, contextData, "", request.getMessage());
+        String aiResponse = callAiApi(systemPrompt, contextData, history, request.getMessage());
+
+        this.persistAiMessage(
+                conversation.getConversationId(),
+                currentAccount.getAccountId(),
+                AIMessageRole.AI,
+                aiResponse
+        );
+
+        return aiResponse;
+    }
+
+    private Account getCurrentAccount() throws InvalidException {
+        String currentUserEmail = SecurityUtil.getCurrentUserEmail();
+        if (currentUserEmail == null || currentUserEmail.isBlank()) {
+            throw new InvalidException("User not authenticated");
+        }
+
+        Account currentAccount = this.accountService.handleGetAccountByEmail(currentUserEmail);
+        if (currentAccount == null) {
+            throw new InvalidException("User not found");
+        }
+
+        return currentAccount;
+    }
+
+    private void persistAiMessage(
+            Long conversationId,
+            Long accountId,
+            AIMessageRole role,
+            String content
+    ) throws InvalidException {
+        TransactionTemplate template = new TransactionTemplate(this.transactionManager);
+
+        try {
+            template.executeWithoutResult(status -> {
+                Conversation managedConversation = this.conversationRepository
+                        .findByConversationIdAndAccount_AccountIdAndDeletedAtIsNull(conversationId, accountId)
+                        .orElseThrow(() -> new IllegalStateException("Conversation not found or access denied"));
+
+                AIMessage aiMessage = new AIMessage();
+                aiMessage.setRole(role);
+                String normalizedContent = (content == null || content.isBlank())
+                    ? "Xin loi, hien tai toi khong the xu ly yeu cau. Vui long thu lai sau."
+                    : content;
+                aiMessage.setContent(normalizedContent);
+                aiMessage.setConversation(managedConversation);
+                aiMessage.setAccount(managedConversation.getAccount());
+                this.aiMessageRepository.save(aiMessage);
+
+                managedConversation.setUpdatedAt(Instant.now());
+                this.conversationRepository.save(managedConversation);
+            });
+        } catch (IllegalStateException e) {
+            throw new InvalidException(e.getMessage());
+        }
+    }
+
+    private String buildConversationHistoryWithoutLatestUser(Long conversationId) {
+        List<AIMessage> messages = this.aiMessageRepository.findRecentByConversationId(
+                conversationId,
+                PageRequest.of(0, 21)
+        );
+
+        if (messages.isEmpty()) {
+            return "";
+        }
+
+        List<AIMessage> ordered = new ArrayList<>(messages);
+        Collections.reverse(ordered);
+
+        int latestMessageIndex = ordered.size() - 1;
+        if (latestMessageIndex >= 0 && ordered.get(latestMessageIndex).getRole() == AIMessageRole.USER) {
+            ordered.remove(latestMessageIndex);
+        }
+
+        if (ordered.isEmpty()) {
+            return "";
+        }
+
+        String history = ordered.stream()
+            .map(message -> (message.getRole() == AIMessageRole.USER ? "User: " : "AI: ")
+                + Objects.toString(message.getContent(), ""))
+                .collect(Collectors.joining("\n"));
+
+        return "\n--- LỊCH SỬ HỘI THOẠI ---\n" + history + "\n";
     }
 
     // Lấy vai trò của current user

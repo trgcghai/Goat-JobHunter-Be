@@ -35,5 +35,6 @@
     <include file="/db.changelog/schema/2026-04-11/device-entity.xml"/>
     <include file="db.changelog/schema/2026-04-11/field-locked-account.xml"/>
     <include file="db.changelog/schema/2026-04-12/create-friend-request-and-user-relationship.xml"/>
+    <include file="db.changelog/schema/2026-04-16/create-ai-conversation-and-message.xml"/>
 
 </databaseChangeLog>
