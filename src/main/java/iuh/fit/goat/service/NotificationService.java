@@ -24,6 +24,8 @@ public interface NotificationService {
 
     void handleForceLogout(String email, DeviceNotificationResponse notification);
 
+    void handleSendMessageTextToUser(String email, String content);
+
     void sendNotificationToUser(Account account, Notification notification);
 
     NotificationResponse convertToNotificationResponse(Notification notification);
