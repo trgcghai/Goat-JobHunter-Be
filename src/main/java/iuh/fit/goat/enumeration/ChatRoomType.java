@@ -4,7 +4,7 @@ import lombok.Getter;
 
 @Getter
 public enum ChatRoomType {
-    DIRECT("Trực tiếp"), GROUP("Nhóm"), AI("Ai");
+    DIRECT("Trực tiếp"), GROUP("Nhóm");
 
     private final String value;
 

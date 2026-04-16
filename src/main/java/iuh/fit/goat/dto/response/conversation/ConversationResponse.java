@@ -17,5 +17,6 @@ public class ConversationResponse {
     private long conversationId;
     private String title;
     private boolean pinned;
+    private Instant createdAt;
     private Instant updatedAt;
 }
