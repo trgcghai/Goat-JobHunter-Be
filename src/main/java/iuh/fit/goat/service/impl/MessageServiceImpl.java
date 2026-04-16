@@ -291,9 +291,13 @@ public class MessageServiceImpl implements MessageService {
 
     @Override
     public void sendMessageToUsers(Long chatRoomId, Message message) {
-        log.debug("Sending realtime message to chatRoom: {}", chatRoomId);
-        MessageResponse payload = toMessageResponse(message);
-        messagingTemplate.convertAndSend("/topic/chatrooms/" + chatRoomId, payload);
+        if (chatRoomId == null) {
+            log.warn("Skip realtime emit because chatRoomId is null for messageId={}",
+                    message != null ? message.getMessageId() : null);
+            return;
+        }
+
+        sendMessageToUsers(chatRoomId.toString(), message);
     }
 
     @Override
@@ -415,15 +419,37 @@ public class MessageServiceImpl implements MessageService {
             throw new PermissionException("Only sender can revoke this message");
         }
 
-        message.setIsHidden(true);
-        message.setContent(null);
-        message.setUpdatedAt(Instant.now());
+        List<Message> cascadeMessages = collectCascadeRecallMessages(message);
 
-        Message revokedMessage = this.messageRepository.saveMessage(message);
-        sendMessageToUsers(chatRoomId, revokedMessage);
+        List<Message> recalledMessages;
+        try {
+            recalledMessages = applyRecallState(cascadeMessages);
+        } catch (RuntimeException e) {
+            log.error("Failed to cascade revoke messageId={} in chatRoomId={}", messageId, chatRoomId, e);
+            throw new InvalidException("Failed to revoke message");
+        }
 
-        log.info("Message revoked: messageId={}, chatRoomId={}, byAccountId={}",
-                messageId, chatRoomId, currentAccount.getAccountId());
+        LinkedHashSet<String> affectedChatRoomIds = new LinkedHashSet<>();
+        for (Message recalledMessage : recalledMessages) {
+            if (recalledMessage.getChatRoomId() != null && !recalledMessage.getChatRoomId().isBlank()) {
+                affectedChatRoomIds.add(recalledMessage.getChatRoomId());
+            }
+
+            sendMessageToUsers(recalledMessage.getChatRoomId(), recalledMessage);
+        }
+
+        Message revokedMessage = recalledMessages.stream()
+                .filter(recalledMessage -> messageId.equals(recalledMessage.getMessageId()))
+                .findFirst()
+                .orElse(message);
+
+        log.info("Cascade message revoke completed: messageId={}, rootChatRoomId={}, byAccountId={}, totalCandidates={}, totalRecalled={}, affectedChatRooms={}",
+                messageId,
+                chatRoomId,
+                currentAccount.getAccountId(),
+                cascadeMessages.size(),
+                recalledMessages.size(),
+                affectedChatRoomIds);
 
         return revokedMessage;
     }
@@ -979,6 +1005,56 @@ public class MessageServiceImpl implements MessageService {
                 .build();
     }
 
+    private List<Message> collectCascadeRecallMessages(Message rootMessage) {
+        if (rootMessage == null) {
+            return Collections.emptyList();
+        }
+
+        LinkedHashMap<String, Message> messagesById = new LinkedHashMap<>();
+        addMessageIfAbsent(messagesById, rootMessage);
+
+        List<Message> forwardedDescendants = this.messageRepository
+                .findForwardedDescendantsByOriginalMessageId(rootMessage.getMessageId());
+
+        for (Message forwardedDescendant : forwardedDescendants) {
+            addMessageIfAbsent(messagesById, forwardedDescendant);
+        }
+
+        return new ArrayList<>(messagesById.values());
+    }
+
+    private void addMessageIfAbsent(Map<String, Message> messagesById, Message message) {
+        if (message == null || message.getMessageId() == null || message.getMessageId().isBlank()) {
+            return;
+        }
+
+        messagesById.putIfAbsent(message.getMessageId(), message);
+    }
+
+    private List<Message> applyRecallState(List<Message> messages) {
+        if (messages == null || messages.isEmpty()) {
+            return Collections.emptyList();
+        }
+
+        Instant recallTime = Instant.now();
+        List<Message> recalledMessages = new ArrayList<>();
+
+        for (Message message : messages) {
+            if (message == null || Boolean.TRUE.equals(message.getIsHidden())) {
+                continue;
+            }
+
+            message.setIsHidden(true);
+            message.setContent(null);
+            message.setUpdatedAt(recallTime);
+
+            Message savedMessage = this.messageRepository.saveMessage(message);
+            recalledMessages.add(savedMessage);
+        }
+
+        return recalledMessages;
+    }
+
     private String generateMessageId() {
         return "msg_" + UUID.randomUUID().toString().replace("-", "");
     }
@@ -1039,6 +1115,19 @@ public class MessageServiceImpl implements MessageService {
                         pair.pairHighId(),
                         RelationshipState.FRIEND
                 );
+    }
+
+    private void sendMessageToUsers(String chatRoomId, Message message) {
+        if (chatRoomId == null || chatRoomId.isBlank() || message == null) {
+            log.warn("Skip realtime emit because payload is invalid: chatRoomId={}, messageNull={}",
+                    chatRoomId,
+                    message == null);
+            return;
+        }
+
+        log.debug("Sending realtime message to chatRoom: {}", chatRoomId);
+        MessageResponse payload = toMessageResponse(message);
+        messagingTemplate.convertAndSend("/topic/chatrooms/" + chatRoomId, payload);
     }
 
     private void sendMessageDeletedEvent(Long chatRoomId, MessageDeletedEventResponse event) {

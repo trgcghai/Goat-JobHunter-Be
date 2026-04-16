@@ -35,6 +35,68 @@ public class MessageRepository {
                 .toList();
     }
 
+    /**
+     * Find all forwarded descendants of a root message ID.
+     *
+     * This uses a full table scan because current schema has no secondary index on originalMessageId.
+     */
+    public List<Message> findForwardedDescendantsByOriginalMessageId(String rootMessageId) {
+        if (rootMessageId == null || rootMessageId.isBlank()) {
+            return Collections.emptyList();
+        }
+
+        List<Message> allMessages = scanAllMessages();
+        Map<String, List<Message>> childrenByOriginalMessageId = new HashMap<>();
+
+        for (Message message : allMessages) {
+            if (message == null || message.getMessageId() == null || message.getMessageId().isBlank()) {
+                continue;
+            }
+
+            if (!Boolean.TRUE.equals(message.getIsForwarded())) {
+                continue;
+            }
+
+            String originalMessageId = message.getOriginalMessageId();
+            if (originalMessageId == null || originalMessageId.isBlank()) {
+                continue;
+            }
+
+            childrenByOriginalMessageId
+                    .computeIfAbsent(originalMessageId, ignored -> new ArrayList<>())
+                    .add(message);
+        }
+
+        List<Message> descendants = new ArrayList<>();
+        Set<String> visitedMessageIds = new HashSet<>();
+        Deque<String> queue = new ArrayDeque<>();
+
+        visitedMessageIds.add(rootMessageId);
+        queue.add(rootMessageId);
+
+        while (!queue.isEmpty()) {
+            String parentMessageId = queue.poll();
+            List<Message> children = childrenByOriginalMessageId
+                    .getOrDefault(parentMessageId, Collections.emptyList());
+
+            for (Message child : children) {
+                String childMessageId = child.getMessageId();
+                if (childMessageId == null || childMessageId.isBlank()) {
+                    continue;
+                }
+
+                if (!visitedMessageIds.add(childMessageId)) {
+                    continue;
+                }
+
+                descendants.add(child);
+                queue.add(childMessageId);
+            }
+        }
+
+        return descendants;
+    }
+
     // ========== Message Query Methods ==========
 
     /**
