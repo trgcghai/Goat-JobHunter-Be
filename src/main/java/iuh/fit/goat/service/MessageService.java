@@ -6,6 +6,7 @@ import iuh.fit.goat.dto.request.message.MessageCreateRequest;
 import iuh.fit.goat.dto.response.message.ForwardMessageResponse;
 import iuh.fit.goat.dto.response.message.MessageDeletedEventResponse;
 import iuh.fit.goat.dto.response.message.MessageResponse;
+import iuh.fit.goat.dto.response.ResultPaginationResponse;
 import iuh.fit.goat.entity.Account;
 import iuh.fit.goat.entity.Message;
 import iuh.fit.goat.exception.ConflictException;
@@ -22,6 +23,9 @@ public interface MessageService {
     Message getLastMessageByChatRoom(Long chatRoomId) throws InvalidException;
 
     List<Message> getMessagesByChatRoom(Long chatRoomId, Pageable pageable);
+
+    ResultPaginationResponse searchMessagesByChatRoom(Long chatRoomId, String searchTerm, Pageable pageable)
+            throws InvalidException;
 
     Message sendMessage(Long chatRoomId, MessageCreateRequest request, Account currentAccount) throws InvalidException;
 

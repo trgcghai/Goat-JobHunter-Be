@@ -110,6 +110,24 @@ public class ChatRoomServiceImpl implements ChatRoomService {
     }
 
     @Override
+    @Transactional(readOnly = true)
+    public ResultPaginationResponse searchMessagesInChatRoom(
+            Account account,
+            Long chatRoomId,
+            String searchTerm,
+            Pageable pageable
+    ) throws InvalidException {
+        ChatRoom chatRoom = this.chatRoomRepository.findByRoomId(chatRoomId)
+                .orElseThrow(() -> new InvalidException("Chat room not found"));
+
+        if (!this.isUserInChatRoom(chatRoom, account.getAccountId())) {
+            throw new InvalidException("User is not in chat room");
+        }
+
+        return this.messageService.searchMessagesByChatRoom(chatRoomId, searchTerm, pageable);
+    }
+
+    @Override
     public boolean isUserInChatRoom(ChatRoom chatRoom, Long accountId) {
         return chatRoom.getMembers()
                 .stream()

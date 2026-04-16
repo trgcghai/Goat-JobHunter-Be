@@ -19,6 +19,13 @@ public interface ChatRoomService {
 
     List<Message> getMessagesInChatRoom(Account account, Long chatRoomId, Pageable pageable) throws InvalidException;
 
+    ResultPaginationResponse searchMessagesInChatRoom(
+            Account account,
+            Long chatRoomId,
+            String searchTerm,
+            Pageable pageable
+    ) throws InvalidException;
+
     boolean isUserInChatRoom(ChatRoom chatRoom, Long accountId);
 
     boolean isUserInChatRoom(Long chatRoomId, Long accountId) throws InvalidException;
