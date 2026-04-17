@@ -5,6 +5,7 @@ import iuh.fit.goat.dto.request.message.MessageToNewChatRoom;
 import iuh.fit.goat.dto.response.ResultPaginationResponse;
 import iuh.fit.goat.dto.response.chat.ChatRoomResponse;
 import iuh.fit.goat.dto.response.chat.GroupMemberResponse;
+import iuh.fit.goat.dto.response.chat.UnreadMessageResponse;
 import iuh.fit.goat.entity.*;
 import iuh.fit.goat.exception.InvalidException;
 import org.springframework.data.domain.Pageable;
@@ -55,4 +56,6 @@ public interface ChatRoomService {
     List<GroupMemberResponse> getGroupMembers(Account currentAccount, Long chatRoomId) throws InvalidException;
 
     void smartGroupDissolution(Long chatRoomId, Account currentAccount, String groupNameConfirmation) throws InvalidException;
+
+    List<UnreadMessageResponse> getUnreadMessages(Pageable pageable) throws InvalidException;
 }

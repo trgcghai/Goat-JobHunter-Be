@@ -1,10 +1,7 @@
 package iuh.fit.goat.service.impl;
 
-import iuh.fit.goat.entity.Account;
 import iuh.fit.goat.entity.ChatMember;
-import iuh.fit.goat.entity.ChatRoom;
 import iuh.fit.goat.entity.Message;
-import iuh.fit.goat.exception.InvalidException;
 import iuh.fit.goat.repository.ChatMemberRepository;
 import iuh.fit.goat.repository.ChatRoomRepository;
 import iuh.fit.goat.repository.MessageRepository;
@@ -21,10 +18,7 @@ import org.springframework.transaction.annotation.Transactional;
 @RequiredArgsConstructor
 public class ChatMemberServiceImpl implements ChatMemberService {
 
-    private final AccountService accountService;
-
     private final ChatMemberRepository chatMemberRepository;
-    private final ChatRoomRepository chatRoomRepository;
     private final MessageRepository messageRepository;
 
     @Override
@@ -42,21 +36,10 @@ public class ChatMemberServiceImpl implements ChatMemberService {
     }
 
     @Override
-    public long countUnreadMessages(Long chatRoomId) throws InvalidException {
-        ChatRoom chatRoom = this.chatRoomRepository.findByRoomId(chatRoomId)
-                .orElseThrow(() -> new InvalidException("Phòng trò chuyện không tồn tại"));
-
-        String email = SecurityUtil.getCurrentUserEmail();
-        Account currentAccount = this.accountService.handleGetAccountByEmail(email);
-        if(currentAccount == null) throw new InvalidException("Tài khoản không tồn tại");
-
-        ChatMember member = this.chatMemberRepository.findByRoomRoomIdAndDeletedAtIsNull(chatRoom.getRoomId()).stream()
-                    .filter(m -> m.getAccount().getAccountId() == currentAccount.getAccountId())
-                    .findFirst()
-                    .orElseThrow(() -> new InvalidException("Không phải là thành viên của phòng trò chuyện này"));
-
-
-        return this.messageRepository.countUnreadMessages(String.valueOf(chatRoom.getRoomId()), member.getLastReadMessageSk());
+    public long countUnreadMessages(Long chatRoomId, ChatMember member) {
+        return this.messageRepository.countUnreadMessages(
+                String.valueOf(chatRoomId), member.getLastReadMessageSk(), String.valueOf(member.getAccount().getAccountId())
+        );
     }
 
     @Override
@@ -64,6 +47,11 @@ public class ChatMemberServiceImpl implements ChatMemberService {
         if (message == null || currentLastReadMessage == null) {
             return false;
         }
+
+        if(message.getSender().getEmail().equalsIgnoreCase(SecurityUtil.getCurrentUserEmail())) {
+            return true;
+        }
+
         return message.getCreatedAt().isBefore(currentLastReadMessage.getCreatedAt());
     }
 }

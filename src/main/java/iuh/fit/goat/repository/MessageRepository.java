@@ -215,7 +215,7 @@ public class MessageRepository {
         return messages;
     }
 
-    public long countUnreadMessages(String chatRoomId, String lastReadMessageSk) {
+    public long countUnreadMessages(String chatRoomId, String lastReadMessageSk, String currentAccountId) {
         QueryEnhancedRequest request;
 
         if (lastReadMessageSk == null || lastReadMessageSk.isBlank()) {
@@ -242,7 +242,11 @@ public class MessageRepository {
         PageIterable<Message> pages = this.messageTable.query(request);
         long count = 0;
         for (Page<Message> page : pages) {
-            count += page.items().size();
+            for(Message message : page.items()) {
+                if(message.getSender() != null && message.getSender().getAccountId() != null && !message.getSender().getAccountId().toString().equals(currentAccountId)) {
+                    count++;
+                }
+            }
         }
 
         return count;

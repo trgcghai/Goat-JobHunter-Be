@@ -7,6 +7,7 @@ import iuh.fit.goat.dto.request.message.MessageToNewChatRoom;
 import iuh.fit.goat.dto.response.chat.ChatRoomResponse;
 import iuh.fit.goat.dto.response.ResultPaginationResponse;
 import iuh.fit.goat.dto.response.chat.GroupMemberResponse;
+import iuh.fit.goat.dto.response.chat.UnreadMessageResponse;
 import iuh.fit.goat.entity.*;
 import iuh.fit.goat.enumeration.ChatRole;
 import iuh.fit.goat.enumeration.ChatRoomType;
@@ -652,6 +653,37 @@ public class ChatRoomServiceImpl implements ChatRoomService {
         );
     }
 
+    @Override
+    public List<UnreadMessageResponse> getUnreadMessages(Pageable pageable) throws InvalidException {
+        String currentUserEmail = SecurityUtil.getCurrentUserEmail();
+        Account currentAccount = this.accountRepository.findByEmailAndDeletedAtIsNull(currentUserEmail)
+                .orElseThrow(() -> new InvalidException("Tài khoản không tồn tại"));
+
+        Page<ChatRoom> chatRoomPage = this.chatRoomRepository.findChatRoomsByMemberAccountId(currentAccount.getAccountId(), pageable);
+
+        return chatRoomPage.getContent().stream()
+                    .map(chatRoom -> {
+                        ChatMember member = chatRoom.getMembers().stream()
+                                .filter(m -> m.getDeletedAt() == null &&
+                                        m.getAccount().getAccountId() == currentAccount.getAccountId())
+                                .findFirst()
+                                .orElse(null);
+
+                        if (member == null) {
+                            return null;
+                        }
+
+                        long unreadCount = this.chatMemberService.countUnreadMessages(chatRoom.getRoomId(), member);
+
+                        return new UnreadMessageResponse(
+                                chatRoom.getRoomId(),
+                                unreadCount
+                        );
+                    })
+                    .filter(Objects::nonNull)
+                    .toList();
+    }
+
     // =============== HELPER METHODS FOR GROUP CHAT ====================
 
     private GroupMemberResponse mapToGroupMemberResponse(ChatMember member) {
@@ -801,7 +833,6 @@ public class ChatRoomServiceImpl implements ChatRoomService {
             BlockStatus blockStatus = resolveBlockStatus(chatRoom, currentUserEmail);
             blockStatus = applyInvalidDirectMemberBlockStatus(chatRoom, name, avatar, blockStatus);
             LastMessageInfo lastMessageInfo = buildLastMessageInfo(lastMessage, currentUserEmail);
-            long countUnreadMessages = this.chatMemberService.countUnreadMessages(chatRoom.getRoomId());
 
             return ChatRoomResponse.builder()
                     .roomId(chatRoom.getRoomId())
@@ -815,7 +846,6 @@ public class ChatRoomServiceImpl implements ChatRoomService {
                     .isBlockedByMe(blockStatus.blockedByMe())
                     .counterpartAccountId(blockStatus.counterpartAccountId())
                     .currentUserSentLastMessage(lastMessageInfo.isCurrentUserSender())
-                    .countUnreadMessages(countUnreadMessages)
                     .deletedAt(chatRoom.getDeletedAt())
                     .build();
 

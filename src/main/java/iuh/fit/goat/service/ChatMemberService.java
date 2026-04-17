@@ -1,7 +1,7 @@
 package iuh.fit.goat.service;
 
+import iuh.fit.goat.entity.ChatMember;
 import iuh.fit.goat.entity.Message;
-import iuh.fit.goat.exception.InvalidException;
 
 public interface ChatMemberService {
 
@@ -9,7 +9,7 @@ public interface ChatMemberService {
 
     String getLastReadMessageSk(Long chatRoomId, Long accountId);
 
-    long countUnreadMessages(Long chatRoomId) throws InvalidException;
+    long countUnreadMessages(Long chatRoomId, ChatMember member);
 
     boolean isMessageRead(Message message, Message currentLastReadMessage);
 }

@@ -8,6 +8,7 @@ import iuh.fit.goat.dto.request.message.MessageToNewChatRoom;
 import iuh.fit.goat.dto.response.ResultPaginationResponse;
 import iuh.fit.goat.dto.response.chat.ChatRoomResponse;
 import iuh.fit.goat.dto.response.chat.GroupMemberResponse;
+import iuh.fit.goat.dto.response.chat.UnreadMessageResponse;
 import iuh.fit.goat.dto.response.message.ForwardMessageResponse;
 import iuh.fit.goat.dto.response.message.MessageDeletedEventResponse;
 import iuh.fit.goat.dto.response.message.MessageResponse;
@@ -60,6 +61,12 @@ public class ChatRoomController {
 
         ResultPaginationResponse response = this.chatRoomService.getMyChatRooms(currentAccount.getAccountId(), pageable);
         return ResponseEntity.ok(response);
+    }
+
+    @GetMapping("/me/unread-count")
+    public ResponseEntity<List<UnreadMessageResponse>> countUnreadMessagesByCurrentAccount(Pageable pageable) throws InvalidException {
+        List<UnreadMessageResponse> responses = this.chatRoomService.getUnreadMessages(pageable);
+        return ResponseEntity.ok(responses);
     }
 
     @GetMapping("/{id}")
