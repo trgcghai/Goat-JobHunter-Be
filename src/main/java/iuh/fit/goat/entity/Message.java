@@ -1,11 +1,13 @@
 package iuh.fit.goat.entity;
 
+import iuh.fit.goat.entity.embeddable.MediaItem;
 import iuh.fit.goat.entity.embeddable.SenderInfo;
 import iuh.fit.goat.enumeration.MessageType;
 import lombok.*;
 import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.*;
 
 import java.time.Instant;
+import java.util.List;
 
 @DynamoDbBean
 @Data
@@ -26,6 +28,7 @@ public class Message {
     private String senderId;
 
     private String content;
+    private List<MediaItem> mediaItems;
     private MessageType messageType;
     private String replyTo;
     private Boolean isHidden;
@@ -65,6 +68,11 @@ public class Message {
     @DynamoDbAttribute("content")
     public String getContent() {
         return content;
+    }
+
+    @DynamoDbAttribute("mediaItems")
+    public List<MediaItem> getMediaItems() {
+        return mediaItems;
     }
 
     @DynamoDbAttribute("messageType")

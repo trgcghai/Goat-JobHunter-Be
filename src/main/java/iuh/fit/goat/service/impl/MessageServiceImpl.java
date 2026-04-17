@@ -17,8 +17,10 @@ import iuh.fit.goat.entity.ChatRoom;
 import iuh.fit.goat.entity.Company;
 import iuh.fit.goat.entity.Message;
 import iuh.fit.goat.entity.User;
+import iuh.fit.goat.entity.embeddable.MediaItem;
 import iuh.fit.goat.entity.embeddable.SenderInfo;
 import iuh.fit.goat.enumeration.ChatRoomType;
+import iuh.fit.goat.enumeration.MediaType;
 import iuh.fit.goat.enumeration.MessageType;
 import iuh.fit.goat.enumeration.RelationshipState;
 import iuh.fit.goat.exception.BlockedInteractionException;
@@ -64,6 +66,8 @@ public class MessageServiceImpl implements MessageService {
     private final UserRepository userRepository;
 
     private static final long MAX_FILE_SIZE = 20 * 1024 * 1024; // 20MB
+    private static final int MAX_MEDIA_ITEMS_PER_MESSAGE = 10;
+    private static final long MAX_MEDIA_BATCH_SIZE = 100 * 1024 * 1024; // 100MB
     private static final int MAX_FORWARD_TARGETS = 20;
     private static final String MESSAGE_DELETED_EVENT = "MESSAGE_DELETED";
     private static final String DELETE_TYPE_ORIGINAL = "original";
@@ -286,16 +290,101 @@ public class MessageServiceImpl implements MessageService {
 
         String replyToMessageId = normalizeReplyToMessageId(request != null ? request.getReplyToMessageId() : null);
         validateReplyTarget(chatRoomId.toString(), replyToMessageId);
+        String normalizedContent = normalizeMessageContent(request != null ? request.getContent() : null);
 
         List<Message> createdMessages = new ArrayList<>();
+        boolean mediaMessageCreated = false;
         try {
             // Process files first
             if (files != null && !files.isEmpty()) {
+                List<MultipartFile> mediaFiles = new ArrayList<>();
+                List<MultipartFile> nonMediaFiles = new ArrayList<>();
+
                 for (MultipartFile file : files) {
                     validateFile(file);
 
-                    String mimeType = file.getContentType();
-                    MessageType messageType = determineMessageType(mimeType);
+                    MediaType mediaType = determineMediaType(file.getContentType());
+                    if (mediaType != null) {
+                        mediaFiles.add(file);
+                    } else {
+                        nonMediaFiles.add(file);
+                    }
+                }
+
+                if (!mediaFiles.isEmpty()) {
+                    validateMediaBatchConstraints(mediaFiles);
+
+                    if (mediaFiles.size() >= 2) {
+                        List<MediaItem> mediaItems = new ArrayList<>();
+                        int displayOrder = 0;
+
+                        for (MultipartFile mediaFile : mediaFiles) {
+                            String mimeType = mediaFile.getContentType();
+                            MediaType mediaType = determineMediaType(mimeType);
+                            if (mediaType == null) {
+                                continue;
+                            }
+
+                            String folder = getFolderByMediaType(mediaType);
+                            StorageResponse storageResponse = storageService.handleUploadFile(mediaFile, folder);
+
+                            mediaItems.add(MediaItem.builder()
+                                    .url(storageResponse.getUrl())
+                                    .mediaType(mediaType)
+                                    .mimeType(mimeType)
+                                    .sizeBytes(mediaFile.getSize())
+                                    .displayOrder(displayOrder++)
+                                    .build());
+                        }
+
+                        if (!mediaItems.isEmpty()) {
+                            Message mediaMessage = createMediaMessage(
+                                    chatRoomId.toString(),
+                                    mediaItems,
+                                    normalizedContent,
+                                    replyToMessageId,
+                                    currentAccount
+                            );
+
+                            Message savedMessage = messageRepository.saveMessage(mediaMessage);
+                            createdMessages.add(savedMessage);
+                            sendMessageToUsers(chatRoomId, savedMessage);
+
+                            mediaMessageCreated = true;
+                            log.info("Media batch message created: messageId={}, mediaItems={}, chatRoomId={}",
+                                    savedMessage.getMessageId(),
+                                    mediaItems.size(),
+                                    chatRoomId);
+                        }
+                    } else {
+                        MultipartFile mediaFile = mediaFiles.get(0);
+                        MessageType messageType = determineLegacyMediaMessageType(mediaFile.getContentType());
+
+                        String folder = getFolderByMessageType(messageType);
+                        StorageResponse storageResponse = storageService.handleUploadFile(mediaFile, folder);
+                        String fileUrl = storageResponse.getUrl();
+
+                        Message fileMessage = createFileMessage(
+                                chatRoomId.toString(),
+                                fileUrl,
+                                messageType,
+                                replyToMessageId,
+                                currentAccount
+                        );
+
+                        Message savedMessage = messageRepository.saveMessage(fileMessage);
+                        createdMessages.add(savedMessage);
+                        sendMessageToUsers(chatRoomId, savedMessage);
+
+                        log.info("Single media message created in legacy format: messageId={}, type={}, chatRoomId={}",
+                                savedMessage.getMessageId(),
+                                messageType,
+                                chatRoomId);
+                    }
+                }
+
+                for (MultipartFile file : nonMediaFiles) {
+                    MessageType messageType = determineMessageType(file.getContentType());
 
                     String folder = getFolderByMessageType(messageType);
                     StorageResponse storageResponse = storageService.handleUploadFile(file, folder);
@@ -319,9 +408,9 @@ public class MessageServiceImpl implements MessageService {
             }
 
             // Process text content
-            if (request != null && request.getContent() != null && !request.getContent().isBlank()) {
+            if (!mediaMessageCreated && normalizedContent != null) {
                 MessageCreateRequest textRequest = new MessageCreateRequest(
-                        request.getContent(),
+                        normalizedContent,
                         replyToMessageId
                 );
                 Message textMessage = sendMessage(chatRoomId, textRequest, currentAccount);
@@ -820,7 +909,10 @@ public class MessageServiceImpl implements MessageService {
     }
 
     private boolean isMediaType(MessageType type) {
-        return type == MessageType.IMAGE || type == MessageType.VIDEO || type == MessageType.AUDIO;
+        return type == MessageType.MEDIA
+                || type == MessageType.IMAGE
+                || type == MessageType.VIDEO
+                || type == MessageType.AUDIO;
     }
 
     private ResultPaginationResponse buildSearchPaginationResponse(
@@ -1173,11 +1265,28 @@ public class MessageServiceImpl implements MessageService {
             return truncateReplyPreview(originalMessage.getContent());
         }
 
+        if (originalMessage.getMessageType() == MessageType.MEDIA) {
+            return buildMediaPreview(originalMessage.getMediaItems());
+        }
+
         if (originalMessage.getMessageType() == null) {
             return UNAVAILABLE_MESSAGE_PREVIEW;
         }
 
         return originalMessage.getMessageType().name().toLowerCase(Locale.ROOT);
+    }
+
+    private String buildMediaPreview(List<MediaItem> mediaItems) {
+        if (mediaItems == null || mediaItems.isEmpty()) {
+            return MessageType.MEDIA.name().toLowerCase(Locale.ROOT);
+        }
+
+        MediaItem first = mediaItems.get(0);
+        if (first == null || first.getMediaType() == null) {
+            return MessageType.MEDIA.name().toLowerCase(Locale.ROOT);
+        }
+
+        return first.getMediaType().name().toLowerCase(Locale.ROOT);
     }
 
     private String truncateReplyPreview(String content) {
@@ -1221,12 +1330,53 @@ public class MessageServiceImpl implements MessageService {
     }
 
     private MessageType determineMessageType(String mimeType) {
-        if (mimeType == null) return MessageType.FILE;
-        String type = mimeType.toLowerCase();
-        if (type.startsWith("image/")) return MessageType.IMAGE;
-        if (type.startsWith("video/")) return MessageType.VIDEO;
-        if (type.startsWith("audio/")) return MessageType.AUDIO;
+        MediaType mediaType = determineMediaType(mimeType);
+        if (mediaType != null) {
+            return MessageType.MEDIA;
+        }
+
         return MessageType.FILE;
+    }
+
+    private MessageType determineLegacyMediaMessageType(String mimeType) {
+        MediaType mediaType = determineMediaType(mimeType);
+        if (mediaType == null) {
+            return MessageType.FILE;
+        }
+
+        return switch (mediaType) {
+            case IMAGE -> MessageType.IMAGE;
+            case VIDEO -> MessageType.VIDEO;
+            case AUDIO -> MessageType.AUDIO;
+        };
+    }
+
+    private MediaType determineMediaType(String mimeType) {
+        if (mimeType == null) {
+            return null;
+        }
+
+        String normalized = mimeType.toLowerCase(Locale.ROOT);
+        if (normalized.startsWith("image/")) {
+            return MediaType.IMAGE;
+        }
+        if (normalized.startsWith("video/")) {
+            return MediaType.VIDEO;
+        }
+        if (normalized.startsWith("audio/")) {
+            return MediaType.AUDIO;
+        }
+
+        return null;
+    }
+
+    private String normalizeMessageContent(String content) {
+        if (content == null) {
+            return null;
+        }
+
+        String normalized = content.trim();
+        return normalized.isEmpty() ? null : normalized;
     }
 
     private void validateFile(MultipartFile file) throws InvalidException {
@@ -1244,6 +1394,28 @@ public class MessageServiceImpl implements MessageService {
         }
     }
 
+    private void validateMediaBatchConstraints(List<MultipartFile> mediaFiles) throws InvalidException {
+        if (mediaFiles == null || mediaFiles.isEmpty()) {
+            return;
+        }
+
+        if (mediaFiles.size() > MAX_MEDIA_ITEMS_PER_MESSAGE) {
+            throw new InvalidException("Cannot upload more than " + MAX_MEDIA_ITEMS_PER_MESSAGE + " media items per message");
+        }
+
+        long totalSize = 0L;
+        for (MultipartFile mediaFile : mediaFiles) {
+            if (mediaFile == null) {
+                continue;
+            }
+
+            totalSize += mediaFile.getSize();
+            if (totalSize > MAX_MEDIA_BATCH_SIZE) {
+                throw new InvalidException("Total media payload exceeds maximum size of 100MB");
+            }
+        }
+    }
+
     private String getFolderByMessageType(MessageType type) {
         return switch (type) {
             case IMAGE -> "images";
@@ -1251,6 +1423,44 @@ public class MessageServiceImpl implements MessageService {
             case AUDIO -> "audios";
             default -> "files";
         };
+    }
+
+    private String getFolderByMediaType(MediaType mediaType) {
+        return switch (mediaType) {
+            case IMAGE -> "images";
+            case VIDEO -> "videos";
+            case AUDIO -> "audios";
+        };
+    }
+
+    private Message createMediaMessage(
+            String chatRoomId,
+            List<MediaItem> mediaItems,
+            String content,
+            String replyToMessageId,
+            Account currentAccount
+    ) {
+        String messageId = generateMessageId();
+        Instant now = Instant.now();
+        long timestamp = now.toEpochMilli();
+
+        String messageSk = Message.buildMessageSk(timestamp, messageId);
+
+        return Message.builder()
+                .messageSk(messageSk)
+                .chatRoomId(chatRoomId)
+                .messageId(messageId)
+                .sender(buildSenderInfo(currentAccount))
+                .content(content)
+                .mediaItems(cloneMediaItems(mediaItems))
+                .messageType(MessageType.MEDIA)
+                .replyTo(replyToMessageId)
+                .isHidden(false)
+                .isForwarded(false)
+                .originalMessageId(null)
+                .createdAt(now)
+                .updatedAt(now)
+                .build();
     }
 
     private Message createFileMessage(
@@ -1275,6 +1485,7 @@ public class MessageServiceImpl implements MessageService {
                 .messageId(messageId)
                 .sender(senderInfo)  // NEW: Use embedded sender
                 .content(fileUrl)
+                .mediaItems(null)
                 .messageType(messageType)
                 .replyTo(replyToMessageId)
                 .isHidden(false)
@@ -1296,6 +1507,7 @@ public class MessageServiceImpl implements MessageService {
                 .messageId(messageId)
                 .sender(buildSenderInfo(currentAccount))
                 .content(String.valueOf(referencedUserId))
+            .mediaItems(null)
                 .messageType(MessageType.CONTACT_CARD)
                 .replyTo(null)
                 .isHidden(false)
@@ -1317,6 +1529,7 @@ public class MessageServiceImpl implements MessageService {
                 .messageId(forwardedMessageId)
                 .sender(buildSenderInfo(currentAccount))
                 .content(sourceMessage.getContent())
+            .mediaItems(cloneMediaItems(sourceMessage.getMediaItems()))
                 .messageType(sourceMessage.getMessageType())
                 .replyTo(null)
                 .isHidden(false)
@@ -1325,6 +1538,29 @@ public class MessageServiceImpl implements MessageService {
                 .createdAt(now)
                 .updatedAt(now)
                 .build();
+    }
+
+    private List<MediaItem> cloneMediaItems(List<MediaItem> sourceMediaItems) {
+        if (sourceMediaItems == null || sourceMediaItems.isEmpty()) {
+            return null;
+        }
+
+        List<MediaItem> clonedItems = new ArrayList<>();
+        for (MediaItem mediaItem : sourceMediaItems) {
+            if (mediaItem == null || mediaItem.getUrl() == null || mediaItem.getUrl().isBlank()) {
+                continue;
+            }
+
+            clonedItems.add(MediaItem.builder()
+                    .url(mediaItem.getUrl())
+                    .mediaType(mediaItem.getMediaType())
+                    .mimeType(mediaItem.getMimeType())
+                    .sizeBytes(mediaItem.getSizeBytes())
+                    .displayOrder(mediaItem.getDisplayOrder())
+                    .build());
+        }
+
+        return clonedItems.isEmpty() ? null : clonedItems;
     }
 
     private List<Message> collectCascadeRecallMessages(Message rootMessage) {
@@ -1368,6 +1604,7 @@ public class MessageServiceImpl implements MessageService {
 
             message.setIsHidden(true);
             message.setContent(null);
+            message.setMediaItems(null);
             message.setUpdatedAt(recallTime);
 
             Message savedMessage = this.messageRepository.saveMessage(message);
@@ -1575,15 +1812,57 @@ public class MessageServiceImpl implements MessageService {
     }
 
     private void cleanupMessageBinaryContent(Message message) throws InvalidException {
-        if (message == null || message.getMessageType() == null) {
+        if (message == null) {
             return;
         }
 
-        if (!isBinaryMessageType(message.getMessageType())) {
+        MessageType messageType = message.getMessageType();
+        boolean hasMediaItems = message.getMediaItems() != null && !message.getMediaItems().isEmpty();
+
+        if (!hasMediaItems && !isBinaryMessageType(messageType)) {
             return;
         }
 
-        String content = message.getContent();
+        LinkedHashSet<String> storageKeys = new LinkedHashSet<>();
+        collectStorageKeysFromMediaItems(message.getMediaItems(), storageKeys);
+
+        if (requiresLegacyContentCleanup(messageType)) {
+            addStorageKeyFromContent(message.getContent(), storageKeys);
+        }
+
+        for (String key : storageKeys) {
+            deleteStorageObjectByKey(message.getMessageId(), key);
+        }
+    }
+
+    private void collectStorageKeysFromMediaItems(List<MediaItem> mediaItems, Set<String> storageKeys)
+            throws InvalidException {
+        if (mediaItems == null || mediaItems.isEmpty()) {
+            return;
+        }
+
+        for (MediaItem mediaItem : mediaItems) {
+            if (mediaItem == null || mediaItem.getUrl() == null || mediaItem.getUrl().isBlank()) {
+                continue;
+            }
+
+            String key = extractStorageKey(mediaItem.getUrl());
+            if (key == null || key.isBlank()) {
+                throw new InvalidException("Cannot determine storage key for deleting media item content");
+            }
+
+            storageKeys.add(key);
+        }
+    }
+
+    private boolean requiresLegacyContentCleanup(MessageType messageType) {
+        return messageType == MessageType.IMAGE
+                || messageType == MessageType.VIDEO
+                || messageType == MessageType.AUDIO
+                || messageType == MessageType.FILE;
+    }
+
+    private void addStorageKeyFromContent(String content, Set<String> storageKeys) throws InvalidException {
         if (content == null || content.isBlank()) {
             return;
         }
@@ -1593,16 +1872,21 @@ public class MessageServiceImpl implements MessageService {
             throw new InvalidException("Cannot determine storage key for deleting message content");
         }
 
+        storageKeys.add(key);
+    }
+
+    private void deleteStorageObjectByKey(String messageId, String key) throws InvalidException {
         try {
             this.storageService.handleDeleteFile(key);
         } catch (Exception e) {
-            log.error("Failed to delete storage object for messageId={}", message.getMessageId(), e);
+            log.error("Failed to delete storage object for messageId={}", messageId, e);
             throw new InvalidException("Failed to delete message file from storage");
         }
     }
 
     private boolean isBinaryMessageType(MessageType messageType) {
-        return messageType == MessageType.IMAGE
+        return messageType == MessageType.MEDIA
+                || messageType == MessageType.IMAGE
                 || messageType == MessageType.VIDEO
                 || messageType == MessageType.AUDIO
                 || messageType == MessageType.FILE;
@@ -1647,9 +1931,32 @@ public class MessageServiceImpl implements MessageService {
             throw new InvalidException("System messages cannot be forwarded");
         }
 
-        if (sourceMessage.getContent() == null || sourceMessage.getContent().isBlank()) {
+        if (!hasForwardablePayload(sourceMessage)) {
             throw new InvalidException("Cannot forward an empty message");
         }
+    }
+
+    private boolean hasForwardablePayload(Message sourceMessage) {
+        if (sourceMessage == null) {
+            return false;
+        }
+
+        if (sourceMessage.getContent() != null && !sourceMessage.getContent().isBlank()) {
+            return true;
+        }
+
+        List<MediaItem> mediaItems = sourceMessage.getMediaItems();
+        if (mediaItems == null || mediaItems.isEmpty()) {
+            return false;
+        }
+
+        for (MediaItem mediaItem : mediaItems) {
+            if (mediaItem != null && mediaItem.getUrl() != null && !mediaItem.getUrl().isBlank()) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     private ForwardMessageFailureResponse buildForwardFailure(Long targetChatRoomId, String code, String message) {
