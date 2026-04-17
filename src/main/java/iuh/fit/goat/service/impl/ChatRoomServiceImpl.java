@@ -106,7 +106,7 @@ public class ChatRoomServiceImpl implements ChatRoomService {
             throw new InvalidException("User is not in chat room");
         }
 
-        return this.messageService.getMessagesByChatRoom(chatRoomId, pageable);
+        return this.messageService.getMessagesByChatRoom(chatRoomId, pageable, account);
     }
 
     @Override
@@ -124,7 +124,7 @@ public class ChatRoomServiceImpl implements ChatRoomService {
             throw new InvalidException("User is not in chat room");
         }
 
-        return this.messageService.searchMessagesByChatRoom(chatRoomId, searchTerm, pageable);
+        return this.messageService.searchMessagesByChatRoom(chatRoomId, searchTerm, pageable, account);
     }
 
     @Override
@@ -316,7 +316,7 @@ public class ChatRoomServiceImpl implements ChatRoomService {
             throw new InvalidException("User is not in chat room");
         }
 
-        return this.messageService.getMediaMessagesByChatRoom(chatRoomId, pageable);
+        return this.messageService.getMediaMessagesByChatRoom(chatRoomId, pageable, account);
     }
 
     @Override
@@ -328,7 +328,7 @@ public class ChatRoomServiceImpl implements ChatRoomService {
             throw new InvalidException("User is not in chat room");
         }
 
-        return this.messageService.getFileMessagesByChatRoom(chatRoomId, pageable);
+        return this.messageService.getFileMessagesByChatRoom(chatRoomId, pageable, account);
     }
 
 

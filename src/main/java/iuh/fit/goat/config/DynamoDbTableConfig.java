@@ -1,6 +1,7 @@
 package iuh.fit.goat.config;
 
 import iuh.fit.goat.entity.Message;
+import iuh.fit.goat.entity.MessageHidden;
 import iuh.fit.goat.entity.PinnedMessage;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
@@ -18,6 +19,9 @@ public class DynamoDbTableConfig {
 
     @Value("${dynamodb.table.pinned_messages}")
     private String pinnedMessagesTableName;
+
+    @Value("${dynamodb.table.message_hidden}")
+    private String messageHiddenTableName;
 
     private final DynamoDbEnhancedClient enhancedClient;
 
@@ -38,5 +42,12 @@ public class DynamoDbTableConfig {
     public DynamoDbTable<PinnedMessage> pinnedMessageTable() {
         TableSchema<PinnedMessage> schema = TableSchema.fromBean(PinnedMessage.class);
         return enhancedClient.table(pinnedMessagesTableName, schema);
+    }
+
+    @Bean
+    @Scope("prototype")
+    public DynamoDbTable<MessageHidden> messageHiddenTable() {
+        TableSchema<MessageHidden> schema = TableSchema.fromBean(MessageHidden.class);
+        return enhancedClient.table(messageHiddenTableName, schema);
     }
 }

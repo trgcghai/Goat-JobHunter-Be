@@ -22,9 +22,14 @@ public interface MessageService {
 
     Message getLastMessageByChatRoom(Long chatRoomId) throws InvalidException;
 
-    List<Message> getMessagesByChatRoom(Long chatRoomId, Pageable pageable);
+    List<Message> getMessagesByChatRoom(Long chatRoomId, Pageable pageable, Account currentAccount);
 
-    ResultPaginationResponse searchMessagesByChatRoom(Long chatRoomId, String searchTerm, Pageable pageable)
+    ResultPaginationResponse searchMessagesByChatRoom(
+            Long chatRoomId,
+            String searchTerm,
+            Pageable pageable,
+            Account currentAccount
+    )
             throws InvalidException;
 
     Message sendMessage(Long chatRoomId, MessageCreateRequest request, Account currentAccount) throws InvalidException;
@@ -39,9 +44,14 @@ public interface MessageService {
 
     List<MessageResponse> toMessageResponses(List<Message> messages);
 
-    List<Message> getMediaMessagesByChatRoom(Long chatRoomId, Pageable pageable) throws InvalidException;
+    List<Message> getMediaMessagesByChatRoom(Long chatRoomId, Pageable pageable, Account currentAccount)
+            throws InvalidException;
 
-    List<Message> getFileMessagesByChatRoom(Long chatRoomId, Pageable pageable) throws InvalidException;
+    List<Message> getFileMessagesByChatRoom(Long chatRoomId, Pageable pageable, Account currentAccount)
+            throws InvalidException;
+
+    void hideMessageForMe(Long chatRoomId, String messageId, Account currentAccount)
+            throws InvalidException, NotFoundException, PermissionException;
 
     Message revokeMessage(Long chatRoomId, String messageId, Account currentAccount)
             throws InvalidException, NotFoundException, ConflictException, PermissionException;
