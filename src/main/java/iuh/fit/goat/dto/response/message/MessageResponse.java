@@ -1,6 +1,7 @@
 package iuh.fit.goat.dto.response.message;
 
 import iuh.fit.goat.entity.embeddable.SenderInfo;
+import iuh.fit.goat.enumeration.MediaType;
 import iuh.fit.goat.enumeration.MessageType;
 import iuh.fit.goat.enumeration.Visibility;
 import lombok.AllArgsConstructor;
@@ -10,6 +11,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import java.time.Instant;
+import java.util.List;
 
 @Getter
 @Setter
@@ -20,6 +22,7 @@ public class MessageResponse {
     private String chatRoomId;
     private SenderInfo sender;
     private String content;
+    private List<MediaItem> mediaItems;
     private MessageType messageType;
     private String replyToMessageId;
     private ReplyContext replyContext;
@@ -42,6 +45,19 @@ public class MessageResponse {
         private String originalContentPreview;
         private Boolean originalMessageUnavailable;
         private Boolean originalMessageHidden;
+    }
+
+    @Getter
+    @Setter
+    @NoArgsConstructor
+    @AllArgsConstructor
+    @Builder
+    public static class MediaItem {
+        private String url;
+        private MediaType mediaType;
+        private String mimeType;
+        private Long sizeBytes;
+        private Integer displayOrder;
     }
 
     @Getter

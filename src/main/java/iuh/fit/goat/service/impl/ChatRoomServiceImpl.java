@@ -23,6 +23,7 @@ import iuh.fit.goat.service.ChatRoomService;
 import iuh.fit.goat.service.MessageService;
 import iuh.fit.goat.service.NotificationService;
 import iuh.fit.goat.util.EntityUtil;
+import iuh.fit.goat.util.MessageHelper;
 import iuh.fit.goat.util.SecurityUtil;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -916,7 +917,7 @@ public class ChatRoomServiceImpl implements ChatRoomService {
         if (Boolean.TRUE.equals(message.getIsHidden())) {
             return "Tin nhắn đã được thu hồi";
         }
-        return formatMessageContent(message);
+        return MessageHelper.formatMessageContent(message);
     }
 
     private boolean isMessageFromCurrentUser(Message message, String currentUserEmail) {
@@ -1021,21 +1022,5 @@ public class ChatRoomServiceImpl implements ChatRoomService {
     }
 
     private record BlockStatus(boolean blocked, boolean blockedByMe, Long counterpartAccountId) {
-    }
-
-    /**
-     * Format message content based on type
-     */
-    private String formatMessageContent(Message message) {
-        String MESSAGE_FALLBACK = "Không thể tải tin nhắn này.";
-        return switch (message.getMessageType()) {
-            case TEXT -> message.getContent() != null ? message.getContent() : MESSAGE_FALLBACK;
-            case IMAGE -> "[Hình ảnh]";
-            case VIDEO -> "[Video]";
-            case FILE -> "[Tệp tin]";
-            case AUDIO -> "[Âm thanh]";
-            case CONTACT_CARD -> "[Danh thiếp]";
-            default -> "[Tin nhắn không xác định]";
-        };
     }
 }

@@ -4,6 +4,7 @@ import iuh.fit.goat.common.MessageEvent;
 import iuh.fit.goat.dto.response.message.MessageResponse;
 import iuh.fit.goat.entity.Account;
 import iuh.fit.goat.entity.Company;
+import iuh.fit.goat.entity.Message;
 import iuh.fit.goat.entity.User;
 import iuh.fit.goat.enumeration.ChatRole;
 import lombok.experimental.UtilityClass;
@@ -98,10 +99,25 @@ public class MessageHelper {
         };
     }
 
-    private static String formatMessageContent(MessageResponse message) {
+    public static String formatMessageContent(MessageResponse message) {
         String MESSAGE_FALLBACK = "Không thể tải tin nhắn này.";
         return switch (message.getMessageType()) {
             case TEXT -> message.getContent() != null ? message.getContent() : MESSAGE_FALLBACK;
+            case MEDIA -> "[Phương tiện]";
+            case IMAGE -> "[Hình ảnh]";
+            case VIDEO -> "[Video]";
+            case FILE -> "[Tệp tin]";
+            case AUDIO -> "[Âm thanh]";
+            case CONTACT_CARD -> "[Danh thiếp]";
+            default -> "[Tin nhắn không xác định]";
+        };
+    }
+
+    public static String formatMessageContent(Message message) {
+        String MESSAGE_FALLBACK = "Không thể tải tin nhắn này.";
+        return switch (message.getMessageType()) {
+            case TEXT -> message.getContent() != null ? message.getContent() : MESSAGE_FALLBACK;
+            case MEDIA -> "[Phương tiện]";
             case IMAGE -> "[Hình ảnh]";
             case VIDEO -> "[Video]";
             case FILE -> "[Tệp tin]";
