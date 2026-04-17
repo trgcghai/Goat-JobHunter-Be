@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+                      http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-5.0.xsd"
+        objectQuotingStrategy="QUOTE_ONLY_RESERVED_WORDS">
+    <changeSet id="1776424776834-6" author="minhdat">
+        <dropForeignKeyConstraint baseTableName="friendships" constraintName="fk_friendships_on_receiver"/>
+    </changeSet>
+    <changeSet id="1776424776834-7" author="minhdat">
+        <dropForeignKeyConstraint baseTableName="friendships" constraintName="fk_friendships_on_sender"/>
+    </changeSet>
+    <changeSet id="1776424776834-5" author="minhdat">
+        <addColumn tableName="chat_members">
+            <column name="last_read_message_sk" type="VARCHAR(255)"/>
+        </addColumn>
+    </changeSet>
+    <changeSet id="1776424776834-9" author="minhdat">
+        <dropTable cascadeConstraints="true" tableName="friendships"/>
+    </changeSet>
+    <changeSet id="1776424776834-1" author="minhdat">
+        <modifyDataType columnName="relationship_state" newDataType="VARCHAR(255)" tableName="user_relationships"/>
+    </changeSet>
+    <changeSet id="1776424776834-2" author="minhdat">
+        <modifyDataType columnName="status" newDataType="VARCHAR(255)" tableName="friend_requests"/>
+    </changeSet>
+    <changeSet id="1776424776834-4" author="minhdat">
+        <dropIndex indexName="idx_frq_pair" tableName="friend_requests"/>
+
+        <createIndex indexName="idx_frq_pair" tableName="friend_requests" unique="false">
+            <column name="pair_low_id"/>
+            <column name="pair_high_id"/>
+        </createIndex>
+
+    </changeSet>
+
+</databaseChangeLog>

@@ -25,5 +25,6 @@ public class ChatRoomResponse {
     private boolean isBlockedByMe;
     private Long counterpartAccountId;
     private boolean currentUserSentLastMessage;
+    private long countUnreadMessages;
     private Instant deletedAt;
 }

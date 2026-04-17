@@ -5,6 +5,8 @@ import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.FilterDef;
 
+import java.time.Instant;
+
 import static jakarta.persistence.FetchType.LAZY;
 
 @Entity
@@ -29,4 +31,7 @@ public class ChatMember extends BaseEntity {
     @ManyToOne(fetch = LAZY)
     @JoinColumn(name = "account_id")
     private Account account;
+
+    @Column(name = "last_read_message_sk")
+    private String lastReadMessageSk;
 }

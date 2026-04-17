@@ -18,6 +18,7 @@ import iuh.fit.goat.exception.InvalidException;
 import iuh.fit.goat.exception.NotFoundException;
 import iuh.fit.goat.exception.PermissionException;
 import iuh.fit.goat.service.AccountService;
+import iuh.fit.goat.service.ChatMemberService;
 import iuh.fit.goat.service.ChatRoomService;
 import iuh.fit.goat.service.MessageService;
 import iuh.fit.goat.service.PinnedMessageService;
@@ -45,6 +46,7 @@ public class ChatRoomController {
     private final MessageService messageService;
     private final AccountService accountService;
     private final PinnedMessageService pinnedMessageService;
+    private final ChatMemberService chatMemberService;
 
     @GetMapping("/me")
     public ResponseEntity<?> getMyChatRooms(Pageable pageable) throws InvalidException {
@@ -85,8 +87,23 @@ public class ChatRoomController {
         }
 
         List<Message> messages = this.chatRoomService.getMessagesInChatRoom(currentAccount, id, pageable);
-        List<MessageResponse> response = this.messageService.toMessageResponses(messages);
-        return ResponseEntity.ok(response);
+        List<MessageResponse> responses = this.messageService.toMessageResponses(messages);
+
+        // Cập nhật lastReadMessageSk bằng latest message
+        String lastReadMessageSk = this.chatMemberService.getLastReadMessageSk(id, currentAccount.getAccountId());
+        if (!messages.isEmpty()) {
+            Message lastestMessage = messages.getFirst();
+            Message currentLastReadMessage = messages.stream()
+                    .filter(message -> message.getMessageSk().equalsIgnoreCase(lastReadMessageSk))
+                    .findFirst().orElse(null);
+
+            boolean isRead = this.chatMemberService.isMessageRead(lastestMessage, currentLastReadMessage);
+            if (lastestMessage != null && !isRead) {
+                this.chatMemberService.updateLastReadMessageId(id, currentAccount.getAccountId(), lastestMessage.getMessageSk());
+            }
+        }
+
+        return ResponseEntity.ok(responses);
     }
 
     @GetMapping("/{id}/messages/search")

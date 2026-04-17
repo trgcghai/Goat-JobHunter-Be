@@ -19,6 +19,7 @@ import iuh.fit.goat.repository.AccountRepository;
 import iuh.fit.goat.repository.ChatMemberRepository;
 import iuh.fit.goat.repository.ChatRoomRepository;
 import iuh.fit.goat.repository.UserRelationshipRepository;
+import iuh.fit.goat.service.ChatMemberService;
 import iuh.fit.goat.service.ChatRoomService;
 import iuh.fit.goat.service.MessageService;
 import iuh.fit.goat.service.NotificationService;
@@ -42,12 +43,13 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class ChatRoomServiceImpl implements ChatRoomService {
     private final MessageService messageService;
+    private final ChatMemberService chatMemberService;
+    private final NotificationService notificationService;
 
     private final ChatRoomRepository chatRoomRepository;
     private final ChatMemberRepository chatMemberRepository;
     private final AccountRepository accountRepository;
     private final UserRelationshipRepository userRelationshipRepository;
-    private final NotificationService notificationService;
 
     @Override
     @Transactional(readOnly = true)
@@ -799,6 +801,7 @@ public class ChatRoomServiceImpl implements ChatRoomService {
             BlockStatus blockStatus = resolveBlockStatus(chatRoom, currentUserEmail);
             blockStatus = applyInvalidDirectMemberBlockStatus(chatRoom, name, avatar, blockStatus);
             LastMessageInfo lastMessageInfo = buildLastMessageInfo(lastMessage, currentUserEmail);
+            long countUnreadMessages = this.chatMemberService.countUnreadMessages(chatRoom.getRoomId());
 
             return ChatRoomResponse.builder()
                     .roomId(chatRoom.getRoomId())
@@ -812,6 +815,7 @@ public class ChatRoomServiceImpl implements ChatRoomService {
                     .isBlockedByMe(blockStatus.blockedByMe())
                     .counterpartAccountId(blockStatus.counterpartAccountId())
                     .currentUserSentLastMessage(lastMessageInfo.isCurrentUserSender())
+                    .countUnreadMessages(countUnreadMessages)
                     .deletedAt(chatRoom.getDeletedAt())
                     .build();
 

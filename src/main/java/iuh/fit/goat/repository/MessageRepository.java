@@ -9,6 +9,7 @@ import org.springframework.stereotype.Repository;
 import software.amazon.awssdk.enhanced.dynamodb.DynamoDbTable;
 import software.amazon.awssdk.enhanced.dynamodb.Key;
 import software.amazon.awssdk.enhanced.dynamodb.model.Page;
+import software.amazon.awssdk.enhanced.dynamodb.model.PageIterable;
 import software.amazon.awssdk.enhanced.dynamodb.model.QueryConditional;
 import software.amazon.awssdk.enhanced.dynamodb.model.QueryEnhancedRequest;
 
@@ -117,7 +118,8 @@ public class MessageRepository {
     public List<Message> findMessagesByChatRoom(
             String chatRoomId,
             int limit,
-            boolean includeHidden) {
+            boolean includeHidden
+    ) {
         return queryMessagesByChatRoom(chatRoomId, limit, includeHidden);
     }
 
@@ -185,10 +187,11 @@ public class MessageRepository {
     /**
          * Query messages from a specific chat room partition.
      */
-        private List<Message> queryMessagesByChatRoom(
-            String chatRoomId,
-            int limit,
-            boolean includeHidden) {
+    private List<Message> queryMessagesByChatRoom(
+        String chatRoomId,
+        int limit,
+        boolean includeHidden
+    ) {
 
         QueryConditional queryConditional = QueryConditional
                 .keyEqualTo(Key.builder()
@@ -210,6 +213,39 @@ public class MessageRepository {
         });
 
         return messages;
+    }
+
+    public long countUnreadMessages(String chatRoomId, String lastReadMessageSk) {
+        QueryEnhancedRequest request;
+
+        if (lastReadMessageSk == null || lastReadMessageSk.isBlank()) {
+            request = QueryEnhancedRequest.builder()
+                    .queryConditional(
+                            QueryConditional.keyEqualTo(
+                                    Key.builder().partitionValue(chatRoomId).build()
+                            )
+                    )
+                    .build();
+        } else {
+            request = QueryEnhancedRequest.builder()
+                    .queryConditional(
+                            QueryConditional.sortGreaterThan(
+                                    Key.builder()
+                                        .partitionValue(chatRoomId)
+                                        .sortValue(lastReadMessageSk)
+                                        .build()
+                            )
+                    )
+                    .build();
+        }
+
+        PageIterable<Message> pages = this.messageTable.query(request);
+        long count = 0;
+        for (Page<Message> page : pages) {
+            count += page.items().size();
+        }
+
+        return count;
     }
 
     private int resolveSearchScanLimit(int requestedScanLimit, int pageSize) {
