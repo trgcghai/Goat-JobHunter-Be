@@ -28,6 +28,7 @@ import iuh.fit.goat.exception.NotFoundException;
 import iuh.fit.goat.exception.PermissionException;
 import iuh.fit.goat.repository.ChatMemberRepository;
 import iuh.fit.goat.repository.ChatRoomRepository;
+import iuh.fit.goat.repository.MessageHiddenRepository;
 import iuh.fit.goat.repository.MessageRepository;
 import iuh.fit.goat.repository.UserRelationshipRepository;
 import iuh.fit.goat.repository.UserRepository;
@@ -47,6 +48,7 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.time.Instant;
 import java.util.*;
+import java.util.function.Predicate;
 
 @Service
 @Slf4j
@@ -54,6 +56,7 @@ import java.util.*;
 public class MessageServiceImpl implements MessageService {
     private final StorageService storageService;
 
+    private final MessageHiddenRepository messageHiddenRepository;
     private final MessageRepository messageRepository;
     private final ChatRoomRepository chatRoomRepository;
     private final ChatMemberRepository chatMemberRepository;
@@ -72,6 +75,10 @@ public class MessageServiceImpl implements MessageService {
     private static final int MAX_SEARCH_PAGE_SIZE = 50;
     private static final int MAX_SEARCH_TERM_LENGTH = 100;
     private static final int SEARCH_SCAN_LIMIT = 3000;
+    private static final int HIDDEN_FILTER_FETCH_MULTIPLIER = 3;
+    private static final int HIDDEN_FILTER_MAX_FETCH_ROUNDS = 4;
+    private static final int MAX_MESSAGE_FETCH_SIZE = 500;
+    private static final int MAX_SEARCH_TOP_UP_ROUNDS = 2;
     private final SimpMessagingTemplate messagingTemplate;
 
     // ========== PUBLIC API METHODS ==========
@@ -101,32 +108,48 @@ public class MessageServiceImpl implements MessageService {
     * Get messages sorted by newest first.
      */
     @Override
-    public List<Message> getMessagesByChatRoom(Long chatRoomId, Pageable pageable) {
+    public List<Message> getMessagesByChatRoom(Long chatRoomId, Pageable pageable, Account currentAccount) {
         if (chatRoomId == null) {
             throw new IllegalArgumentException("Chat room ID cannot be null");
         }
+        if (currentAccount == null) {
+            throw new IllegalArgumentException("Current account is invalid");
+        }
 
-        int requestedSize = pageable.getPageSize();
+        int requestedSize = resolveRequestedSize(pageable, DEFAULT_SEARCH_PAGE_SIZE);
 
         log.info("Fetching up to {} messages for chatRoom: {}", requestedSize, chatRoomId);
 
-        List<Message> messages = messageRepository.findMessagesByChatRoom(
+        List<Message> messages = fetchMessagesByVisibility(
                 chatRoomId.toString(),
                 requestedSize,
-                true // include hidden messages
+                true,
+                currentAccount.getAccountId(),
+                null
         );
 
-        log.info("Retrieved {} messages for chatRoom: {}", messages.size(), chatRoomId);
+        log.info("Retrieved {} visible messages for chatRoom: {}, accountId={}",
+                messages.size(),
+                chatRoomId,
+                currentAccount.getAccountId());
 
         return messages;
     }
 
     @Override
     @Transactional(readOnly = true)
-    public ResultPaginationResponse searchMessagesByChatRoom(Long chatRoomId, String searchTerm, Pageable pageable)
+    public ResultPaginationResponse searchMessagesByChatRoom(
+            Long chatRoomId,
+            String searchTerm,
+            Pageable pageable,
+            Account currentAccount
+    )
             throws InvalidException {
         if (chatRoomId == null) {
             throw new InvalidException("Chat room ID cannot be null");
+        }
+        if (currentAccount == null) {
+            throw new InvalidException("Current account is invalid");
         }
 
         this.chatRoomRepository.findById(chatRoomId)
@@ -157,7 +180,42 @@ public class MessageServiceImpl implements MessageService {
                     SEARCH_SCAN_LIMIT);
         }
 
-        List<MessageResponse> result = toMessageResponses(searchResult.messages());
+        List<Message> visibleMessages = new ArrayList<>(
+                filterHiddenMessagesForUser(searchResult.messages(), currentAccount.getAccountId())
+        );
+
+        int nextPage = pageNumber + 1;
+        int topUpRound = 0;
+        while (visibleMessages.size() < pageSize
+                && topUpRound < MAX_SEARCH_TOP_UP_ROUNDS
+                && searchResult.messages().size() >= pageSize) {
+            MessageRepository.MessageSearchResult nextPageResult = this.messageRepository.searchMessagesByChatRoom(
+                    chatRoomId.toString(),
+                    normalizedSearchTerm,
+                    nextPage,
+                    pageSize,
+                    SEARCH_SCAN_LIMIT
+            );
+
+            if (nextPageResult.messages().isEmpty()) {
+                break;
+            }
+
+            visibleMessages.addAll(filterHiddenMessagesForUser(nextPageResult.messages(), currentAccount.getAccountId()));
+
+            if (nextPageResult.messages().size() < pageSize) {
+                break;
+            }
+
+            nextPage++;
+            topUpRound++;
+        }
+
+        List<Message> pageMessages = visibleMessages.size() > pageSize
+                ? new ArrayList<>(visibleMessages.subList(0, pageSize))
+                : visibleMessages;
+
+        List<MessageResponse> result = toMessageResponses(pageMessages);
         return buildSearchPaginationResponse(result, pageNumber, pageSize, searchResult.matchedCount());
     }
 
@@ -377,60 +435,105 @@ public class MessageServiceImpl implements MessageService {
     }
 
     @Override
-    public List<Message> getMediaMessagesByChatRoom(Long chatRoomId, Pageable pageable) throws InvalidException {
+    public List<Message> getMediaMessagesByChatRoom(Long chatRoomId, Pageable pageable, Account currentAccount)
+            throws InvalidException {
         if (chatRoomId == null) {
             throw new InvalidException("Chat room ID cannot be null");
+        }
+        if (currentAccount == null) {
+            throw new InvalidException("Current account is invalid");
         }
 
         chatRoomRepository.findById(chatRoomId).orElseThrow(() -> new InvalidException("Chat Room not found"));
 
-        int requestedSize = pageable.getPageSize();
+        int requestedSize = resolveRequestedSize(pageable, DEFAULT_SEARCH_PAGE_SIZE);
 
         log.info("Fetching up to {} media messages for chatRoom: {}", requestedSize, chatRoomId);
 
-        List<Message> allMessages = messageRepository.findMessagesByChatRoom(
+        List<Message> mediaMessages = fetchMessagesByVisibility(
                 chatRoomId.toString(),
-                requestedSize * 3, // Fetch more to filter
-                false
+                requestedSize,
+                false,
+                currentAccount.getAccountId(),
+                message -> message != null && isMediaType(message.getMessageType())
         );
 
-        List<Message> mediaMessages = allMessages.stream()
-                .filter(msg -> isMediaType(msg.getMessageType()))
-                .limit(requestedSize)
-                .toList();
-
-        log.info("Retrieved {} media messages for chatRoom: {}", mediaMessages.size(), chatRoomId);
+        log.info("Retrieved {} media messages for chatRoom: {}, accountId={}",
+                mediaMessages.size(),
+                chatRoomId,
+                currentAccount.getAccountId());
 
         return mediaMessages;
     }
 
     @Override
-    public List<Message> getFileMessagesByChatRoom(Long chatRoomId, Pageable pageable) throws InvalidException {
+    public List<Message> getFileMessagesByChatRoom(Long chatRoomId, Pageable pageable, Account currentAccount)
+            throws InvalidException {
         if (chatRoomId == null) {
             throw new InvalidException("Chat room ID cannot be null");
         }
+        if (currentAccount == null) {
+            throw new InvalidException("Current account is invalid");
+        }
 
         chatRoomRepository.findById(chatRoomId)
-                .orElseThrow(() -> new InvalidException("Chat Room not found"));
+            .orElseThrow(() -> new InvalidException("Chat Room not found"));
 
-        int requestedSize = pageable.getPageSize();
+        int requestedSize = resolveRequestedSize(pageable, DEFAULT_SEARCH_PAGE_SIZE);
 
         log.info("Fetching up to {} file messages for chatRoom: {}", requestedSize, chatRoomId);
 
-        List<Message> allMessages = messageRepository.findMessagesByChatRoom(
+        List<Message> fileMessages = fetchMessagesByVisibility(
                 chatRoomId.toString(),
-                requestedSize * 3, // Fetch more to filter
-                false
+                requestedSize,
+                false,
+                currentAccount.getAccountId(),
+                message -> message != null && message.getMessageType() == MessageType.FILE
         );
 
-        List<Message> fileMessages = allMessages.stream()
-                .filter(msg -> msg.getMessageType() == MessageType.FILE)
-                .limit(requestedSize)
-                .toList();
-
-        log.info("Retrieved {} file messages for chatRoom: {}", fileMessages.size(), chatRoomId);
+        log.info("Retrieved {} file messages for chatRoom: {}, accountId={}",
+                fileMessages.size(),
+                chatRoomId,
+                currentAccount.getAccountId());
 
         return fileMessages;
+    }
+
+    @Override
+    @Transactional
+    public void hideMessageForMe(Long chatRoomId, String messageId, Account currentAccount)
+            throws InvalidException, NotFoundException, PermissionException {
+        if (chatRoomId == null) {
+            throw new InvalidException("Chat room ID cannot be null");
+        }
+        if (messageId == null || messageId.isBlank()) {
+            throw new InvalidException("Message ID cannot be blank");
+        }
+        if (currentAccount == null) {
+            throw new InvalidException("Current account is invalid");
+        }
+
+        this.chatRoomRepository.findById(chatRoomId)
+                .orElseThrow(() -> new NotFoundException("Chat room not found"));
+
+        if (!isUserInChatRoom(chatRoomId, currentAccount.getAccountId())) {
+            throw new PermissionException("Current user is not a member of this chat room");
+        }
+
+        Message message = this.messageRepository
+                .findByChatRoomIdAndMessageId(chatRoomId.toString(), messageId)
+                .orElseThrow(() -> new NotFoundException("Message not found"));
+
+        this.messageHiddenRepository.hideMessageForUser(
+                message.getMessageId(),
+                currentAccount.getAccountId(),
+                Instant.now()
+        );
+
+        log.info("Message hidden for current user: chatRoomId={}, messageId={}, accountId={}",
+                chatRoomId,
+                messageId,
+                currentAccount.getAccountId());
     }
 
     @Override
@@ -749,6 +852,101 @@ public class MessageServiceImpl implements MessageService {
         }
 
         return Math.min(requestedPageSize, MAX_SEARCH_PAGE_SIZE);
+    }
+
+    private int resolveRequestedSize(Pageable pageable, int fallbackSize) {
+        if (pageable == null || pageable.getPageSize() <= 0) {
+            return fallbackSize;
+        }
+
+        return pageable.getPageSize();
+    }
+
+    private List<Message> fetchMessagesByVisibility(
+            String chatRoomId,
+            int requestedSize,
+            boolean includeGloballyHidden,
+            Long accountId,
+            Predicate<Message> messageFilter
+    ) {
+        int safeRequestedSize = Math.max(requestedSize, 1);
+        int fetchLimit = Math.max(safeRequestedSize * HIDDEN_FILTER_FETCH_MULTIPLIER, safeRequestedSize);
+        fetchLimit = Math.min(fetchLimit, MAX_MESSAGE_FETCH_SIZE);
+
+        List<Message> visibleMessages = Collections.emptyList();
+
+        for (int round = 0; round < HIDDEN_FILTER_MAX_FETCH_ROUNDS; round++) {
+            List<Message> candidates = this.messageRepository.findMessagesByChatRoom(
+                    chatRoomId,
+                    fetchLimit,
+                    includeGloballyHidden
+            );
+
+            List<Message> filteredCandidates = filterHiddenMessagesForUser(candidates, accountId);
+            if (messageFilter != null) {
+                filteredCandidates = filteredCandidates.stream()
+                        .filter(Objects::nonNull)
+                        .filter(messageFilter)
+                        .toList();
+            }
+
+            visibleMessages = filteredCandidates;
+
+            if (visibleMessages.size() >= safeRequestedSize) {
+                break;
+            }
+
+            if (candidates.size() < fetchLimit || fetchLimit >= MAX_MESSAGE_FETCH_SIZE) {
+                break;
+            }
+
+            fetchLimit = Math.min(fetchLimit * 2, MAX_MESSAGE_FETCH_SIZE);
+        }
+
+        if (visibleMessages.size() <= safeRequestedSize) {
+            return visibleMessages;
+        }
+
+        return new ArrayList<>(visibleMessages.subList(0, safeRequestedSize));
+    }
+
+    private List<Message> filterHiddenMessagesForUser(List<Message> messages, Long accountId) {
+        if (messages == null || messages.isEmpty()) {
+            return Collections.emptyList();
+        }
+
+        if (accountId == null) {
+            return messages;
+        }
+
+        List<String> messageIds = messages.stream()
+                .map(Message::getMessageId)
+                .filter(messageId -> messageId != null && !messageId.isBlank())
+                .distinct()
+                .toList();
+
+        if (messageIds.isEmpty()) {
+            return messages;
+        }
+
+        Set<String> hiddenMessageIds = this.messageHiddenRepository.findHiddenMessageIdsForUser(messageIds, accountId);
+        if (hiddenMessageIds.isEmpty()) {
+            return messages;
+        }
+
+        List<Message> visibleMessages = new ArrayList<>(messages.size());
+        for (Message message : messages) {
+            if (message == null) {
+                continue;
+            }
+
+            String messageId = message.getMessageId();
+            if (messageId == null || !hiddenMessageIds.contains(messageId)) {
+                visibleMessages.add(message);
+            }
+        }
+
+        return visibleMessages;
     }
 
     private String normalizeSearchTerm(String searchTerm) throws InvalidException {

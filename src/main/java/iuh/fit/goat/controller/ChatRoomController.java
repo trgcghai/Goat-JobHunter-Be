@@ -353,6 +353,16 @@ public class ChatRoomController {
         return ResponseEntity.ok(new ArrayList<>(response));
     }
 
+    @PostMapping("/{chatRoomId}/messages/{messageId}/hide")
+    public ResponseEntity<Void> hideMessageForMe(
+            @PathVariable Long chatRoomId,
+            @PathVariable String messageId
+    ) throws InvalidException, NotFoundException, PermissionException {
+        Account currentAccount = getCurrentAccount();
+        this.messageService.hideMessageForMe(chatRoomId, messageId, currentAccount);
+        return ResponseEntity.ok().build();
+    }
+
     @DeleteMapping("/{chatRoomId}/messages/{messageId}")
     public ResponseEntity<MessageResponse> revokeMessage(
             @PathVariable Long chatRoomId,
