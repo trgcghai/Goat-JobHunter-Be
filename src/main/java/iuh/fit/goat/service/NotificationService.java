@@ -1,5 +1,6 @@
 package iuh.fit.goat.service;
 
+import iuh.fit.goat.dto.response.notification.DeviceNotificationResponse;
 import iuh.fit.goat.dto.response.notification.NotificationResponse;
 import iuh.fit.goat.entity.*;
 
@@ -18,8 +19,12 @@ public interface NotificationService {
     void handleNotifyReplyComment(Comment parent, Comment reply);
 
     void handleNotifyLikeBlog(Blog blog);
-//
+
     void handleNotifyFollowCompany(Company company);
+
+    void handleForceLogout(String email, DeviceNotificationResponse notification);
+
+    void handleSendMessageTextToUser(String email, String content);
 
     void sendNotificationToUser(Account account, Notification notification);
 

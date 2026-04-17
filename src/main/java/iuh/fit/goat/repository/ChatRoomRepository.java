@@ -14,13 +14,14 @@ import java.util.Optional;
 @Repository
 public interface ChatRoomRepository extends JpaRepository<ChatRoom, Long> {
 
+    Optional<ChatRoom> findByRoomId(Long chatRoomId);
+
     Optional<ChatRoom> findByRoomIdAndDeletedAtIsNull(Long chatRoomId);
 
     @Query("""
         SELECT DISTINCT cr FROM ChatRoom cr
         JOIN cr.members cm
         WHERE cm.account.accountId = :accountId
-        AND cr.deletedAt IS NULL
         AND cm.deletedAt IS NULL
         ORDER BY cr.updatedAt DESC
     """)

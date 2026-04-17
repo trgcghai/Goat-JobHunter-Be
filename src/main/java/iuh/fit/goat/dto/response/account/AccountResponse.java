@@ -1,8 +1,6 @@
-package iuh.fit.goat.dto.response.user;
+package iuh.fit.goat.dto.response.account;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
-import iuh.fit.goat.entity.Address;
-import iuh.fit.goat.enumeration.Gender;
 import iuh.fit.goat.enumeration.Visibility;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -10,29 +8,22 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import java.time.Instant;
-import java.time.LocalDate;
-import java.util.List;
 
 @Getter
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
 @JsonInclude(JsonInclude.Include.NON_NULL)
-public class UserResponse {
+public class AccountResponse {
     private long accountId;
     private String username;
-    private String email;
-    private String phone;
-    private List<Address> addresses;
     private String fullName;
+    private String email;
     private String avatar;
-    private Gender gender;
-    private LocalDate dob;
     private boolean enabled;
+    private boolean locked;
     private Visibility visibility;
-    private String coverPhoto;
-    private String headline;
-    private String bio;
+    private String phone;
     private RoleAccount role;
     private Instant createdAt;
     private Instant updatedAt;
@@ -46,4 +37,3 @@ public class UserResponse {
         private String name;
     }
 }
-

@@ -1,6 +1,7 @@
 package iuh.fit.goat.controller;
 
 import iuh.fit.goat.dto.request.chat.*;
+import iuh.fit.goat.dto.request.message.ContactCardMessageRequest;
 import iuh.fit.goat.dto.request.message.ForwardMessageRequest;
 import iuh.fit.goat.dto.request.message.MessageCreateRequest;
 import iuh.fit.goat.dto.request.message.MessageToNewChatRoom;
@@ -10,6 +11,7 @@ import iuh.fit.goat.dto.response.chat.GroupMemberResponse;
 import iuh.fit.goat.dto.response.message.ForwardMessageResponse;
 import iuh.fit.goat.dto.response.message.MessageDeletedEventResponse;
 import iuh.fit.goat.dto.response.message.MessageResponse;
+import iuh.fit.goat.dto.response.message.PinnedMessageResponse;
 import iuh.fit.goat.entity.*;
 import iuh.fit.goat.exception.ConflictException;
 import iuh.fit.goat.exception.InvalidException;
@@ -18,7 +20,7 @@ import iuh.fit.goat.exception.PermissionException;
 import iuh.fit.goat.service.AccountService;
 import iuh.fit.goat.service.ChatRoomService;
 import iuh.fit.goat.service.MessageService;
-import iuh.fit.goat.util.MessageMapper;
+import iuh.fit.goat.service.PinnedMessageService;
 import iuh.fit.goat.util.SecurityUtil;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -42,6 +44,7 @@ public class ChatRoomController {
     private final ChatRoomService chatRoomService;
     private final MessageService messageService;
     private final AccountService accountService;
+    private final PinnedMessageService pinnedMessageService;
 
     @GetMapping("/me")
     public ResponseEntity<?> getMyChatRooms(Pageable pageable) throws InvalidException {
@@ -72,7 +75,7 @@ public class ChatRoomController {
     }
 
     @GetMapping("/{id}/messages")
-    public ResponseEntity<?> getMessagesInChatRoom(@PathVariable Long id, Pageable pageable) throws InvalidException {
+    public ResponseEntity<List<MessageResponse>> getMessagesInChatRoom(@PathVariable Long id, Pageable pageable) throws InvalidException {
         String email = SecurityUtil.getCurrentUserLogin()
                 .orElseThrow(() -> new InvalidException("User not authenticated"));
 
@@ -82,7 +85,19 @@ public class ChatRoomController {
         }
 
         List<Message> messages = this.chatRoomService.getMessagesInChatRoom(currentAccount, id, pageable);
-        List<MessageResponse> response = messages.stream().map(MessageMapper::toResponse).toList();
+        List<MessageResponse> response = this.messageService.toMessageResponses(messages);
+        return ResponseEntity.ok(response);
+    }
+
+    @GetMapping("/{id}/messages/search")
+    public ResponseEntity<ResultPaginationResponse> searchMessagesInChatRoom(
+            @PathVariable Long id,
+            @RequestParam(required = false) String searchTerm,
+            Pageable pageable
+    ) throws InvalidException {
+        Account currentAccount = getCurrentAccount();
+        ResultPaginationResponse response = this.chatRoomService
+                .searchMessagesInChatRoom(currentAccount, id, searchTerm, pageable);
         return ResponseEntity.ok(response);
     }
 
@@ -99,7 +114,7 @@ public class ChatRoomController {
         }
 
         List<Message> mediaMessages = this.chatRoomService.getMediaMessagesInChatRoom(currentAccount, id, pageable);
-        List<MessageResponse> response = mediaMessages.stream().map(MessageMapper::toResponse).toList();
+        List<MessageResponse> response = this.messageService.toMessageResponses(mediaMessages);
         return ResponseEntity.ok(response);
     }
 
@@ -116,7 +131,7 @@ public class ChatRoomController {
         }
 
         List<Message> fileMessages = this.chatRoomService.getFileMessagesInChatRoom(currentAccount, id, pageable);
-        List<MessageResponse> response = fileMessages.stream().map(MessageMapper::toResponse).toList();
+        List<MessageResponse> response = this.messageService.toMessageResponses(fileMessages);
         return ResponseEntity.ok(response);
     }
 
@@ -149,9 +164,7 @@ public class ChatRoomController {
     }
 
     @DeleteMapping("/group/{chatRoomId}")
-    public ResponseEntity<Void> leaveGroupChat(
-            @PathVariable Long chatRoomId
-    ) throws InvalidException {
+    public ResponseEntity<Void> leaveGroupChat(@PathVariable Long chatRoomId) throws InvalidException {
         Account currentAccount = getCurrentAccount();
         this.chatRoomService.leaveGroupChat(currentAccount, chatRoomId);
         return ResponseEntity.ok().build();
@@ -296,7 +309,7 @@ public class ChatRoomController {
             log.info("Sending messages with {} files to chatRoom: {}", files.size(), id);
 
             List<Message> savedMessages = this.messageService.sendMessagesWithFiles(id, request, files, currentAccount);
-            List<MessageResponse> response = savedMessages.stream().map(MessageMapper::toResponse).toList();
+            List<MessageResponse> response = this.messageService.toMessageResponses(savedMessages);
             return ResponseEntity.ok(new ArrayList<>(response));
         }
 
@@ -305,14 +318,39 @@ public class ChatRoomController {
 
             log.info("Sending text-only message to chatRoom: {}", id);
 
-            MessageCreateRequest textRequest = new MessageCreateRequest(request.getContent());
+            MessageCreateRequest textRequest = new MessageCreateRequest(
+                    request.getContent(),
+                    request.getReplyToMessageId()
+            );
             Message textMessage = messageService.sendMessage(id, textRequest, currentAccount);
-            MessageResponse response = MessageMapper.toResponse(textMessage);
+            MessageResponse response = this.messageService.toMessageResponse(textMessage);
             return ResponseEntity.ok(new ArrayList<>(Collections.singletonList(response)));
         }
 
         throw new InvalidException("At least one file or text content is required");
 //        return this.messageService.sendMessage(id, request, currentUser);
+    }
+
+    @PostMapping("/{id}/messages/contact")
+    public ResponseEntity<List<MessageResponse>> sendContactCardMessages(
+            @PathVariable Long id,
+            @Valid @RequestBody ContactCardMessageRequest request
+    ) throws InvalidException {
+        String email = SecurityUtil.getCurrentUserLogin()
+                .orElseThrow(() -> new InvalidException("User not authenticated"));
+
+        Account currentAccount = this.accountService.handleGetAccountByEmail(email);
+        if (currentAccount == null) {
+            throw new InvalidException("User not found");
+        }
+
+        if (!this.chatRoomService.isUserInChatRoom(id, currentAccount.getAccountId())) {
+            throw new InvalidException("User is not belong to this chat room");
+        }
+
+        List<Message> savedMessages = this.messageService.sendContactCardMessages(id, request.getUserIds(), currentAccount);
+        List<MessageResponse> response = this.messageService.toMessageResponses(savedMessages);
+        return ResponseEntity.ok(new ArrayList<>(response));
     }
 
     @DeleteMapping("/{chatRoomId}/messages/{messageId}")
@@ -322,7 +360,7 @@ public class ChatRoomController {
     ) throws InvalidException, NotFoundException, ConflictException, PermissionException {
         Account currentAccount = getCurrentAccount();
         Message revokedMessage = this.messageService.revokeMessage(chatRoomId, messageId, currentAccount);
-        return ResponseEntity.ok(MessageMapper.toResponse(revokedMessage));
+        return ResponseEntity.ok(this.messageService.toMessageResponse(revokedMessage));
     }
 
     @DeleteMapping("/{chatRoomId}/messages/{messageId}/permanent")
@@ -360,5 +398,76 @@ public class ChatRoomController {
 
         ChatRoom chatRoom = this.chatRoomService.existsDirectChatRoom(currentAccount.getAccountId(), accountId);
         return ResponseEntity.ok(chatRoom);
+    }
+
+    // ========== PINNED MESSAGES ENDPOINTS ==========
+    @PostMapping("/{chatRoomId}/messages/{messageId}/pin")
+    public ResponseEntity<PinnedMessageResponse> pinMessage(
+            @PathVariable Long chatRoomId,
+            @PathVariable String messageId
+    ) throws InvalidException
+    {
+        Account currentAccount = getCurrentAccount();
+        PinnedMessageResponse response = this.pinnedMessageService.pinMessage(chatRoomId, messageId, currentAccount);
+        return ResponseEntity.ok(response);
+    }
+
+    @DeleteMapping("/{chatRoomId}/messages/{messageId}/pin")
+    public ResponseEntity<Void> unpinMessage(
+            @PathVariable Long chatRoomId,
+            @PathVariable String messageId
+    ) throws InvalidException
+    {
+        Account currentAccount = getCurrentAccount();
+        this.pinnedMessageService.unpinMessage(chatRoomId, messageId, currentAccount);
+        return ResponseEntity.ok().build();
+    }
+
+    @GetMapping("/{chatRoomId}/pinned-messages")
+    public ResponseEntity<List<PinnedMessageResponse>> getPinnedMessages(
+            @PathVariable Long chatRoomId
+    ) throws InvalidException
+    {
+        Account currentAccount = getCurrentAccount();
+        List<PinnedMessageResponse> response = this.pinnedMessageService.getPinnedMessages(chatRoomId, currentAccount);
+        return ResponseEntity.ok(response);
+    }
+
+    @DeleteMapping("/{chatRoomId}/pinned-messages")
+    public ResponseEntity<Void> clearAllPinnedMessages( @PathVariable Long chatRoomId) throws InvalidException {
+        Account currentAccount = getCurrentAccount();
+        this.pinnedMessageService.clearAllPinnedMessages(chatRoomId, currentAccount);
+        return ResponseEntity.ok().build();
+    }
+
+    @GetMapping("/{chatRoomId}/pinned-messages/{messageId}")
+    public ResponseEntity<PinnedMessageResponse> getPinnedMessageDetail(
+            @PathVariable Long chatRoomId,
+            @PathVariable String messageId
+    ) throws InvalidException
+    {
+        PinnedMessageResponse response = this.pinnedMessageService.getPinnedMessageDetail(chatRoomId, messageId);
+        return ResponseEntity.ok(response);
+    }
+
+    @GetMapping("/{chatRoomId}/messages/{messageId}/pinned")
+    public ResponseEntity<Boolean> isMessagePinned(
+            @PathVariable Long chatRoomId,
+            @PathVariable String messageId
+    ) {
+        boolean isPinned = this.pinnedMessageService.isMessagePinned(chatRoomId, messageId);
+        return ResponseEntity.ok(isPinned);
+    }
+
+    // ========== GROUP DISSOLUTION ENDPOINTS ==========
+    @DeleteMapping("/group/{chatRoomId}/dissolve")
+    public ResponseEntity<Void> dissolveGroup(@PathVariable Long chatRoomId, @RequestParam String groupNameConfirmation) throws InvalidException {
+        String email = SecurityUtil.getCurrentUserEmail();
+        Account currentAccount = this.accountService.handleGetAccountByEmail(email);
+        if(currentAccount == null) throw new InvalidException("Tài khoản không tồn tại");
+
+        this.chatRoomService.smartGroupDissolution(chatRoomId, currentAccount, groupNameConfirmation);
+
+        return ResponseEntity.ok(null);
     }
 }

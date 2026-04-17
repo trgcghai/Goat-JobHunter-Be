@@ -27,7 +27,7 @@ public class Applicant extends User{
     @Enumerated(EnumType.STRING)
     private Level level;
 
-    @OneToMany(mappedBy = "applicant", fetch = LAZY, cascade = {PERSIST, MERGE})
+    @OneToMany(mappedBy = "applicant", fetch = LAZY, cascade = {PERSIST, MERGE, REMOVE})
     @JsonIgnore
     @Filter(
             name = "activeApplicationFilter",
@@ -35,7 +35,7 @@ public class Applicant extends User{
     )
     private List<Application> applications = new ArrayList<>();
 
-    @OneToMany(mappedBy = "applicant", fetch = LAZY, cascade = {PERSIST, MERGE})
+    @OneToMany(mappedBy = "applicant", fetch = LAZY, cascade = {PERSIST, MERGE, REMOVE})
     @JsonIgnore
     @Filter(
             name = "activeResumeFilter",

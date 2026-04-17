@@ -31,7 +31,7 @@ public class ChatRoom extends BaseEntity {
     private ChatRoomType type;
     private String aiModel;
 
-    @OneToMany(mappedBy = "room", fetch = LAZY, cascade = {PERSIST, MERGE})
+    @OneToMany(mappedBy = "room", fetch = LAZY, cascade = {PERSIST, MERGE, REMOVE})
     @JsonIgnore
     @Filter(
             name = "activeChatMemberFilter",

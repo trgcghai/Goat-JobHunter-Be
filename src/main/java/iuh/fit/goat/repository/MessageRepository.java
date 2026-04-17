@@ -8,9 +8,11 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Repository;
 import software.amazon.awssdk.enhanced.dynamodb.DynamoDbTable;
 import software.amazon.awssdk.enhanced.dynamodb.Key;
+import software.amazon.awssdk.enhanced.dynamodb.model.Page;
 import software.amazon.awssdk.enhanced.dynamodb.model.QueryConditional;
 import software.amazon.awssdk.enhanced.dynamodb.model.QueryEnhancedRequest;
 
+import java.time.Instant;
 import java.util.*;
 
 @Repository
@@ -19,9 +21,20 @@ import java.util.*;
 public class MessageRepository {
 
     private static final int DEFAULT_LIMIT = 100;
+    private static final int DEFAULT_SEARCH_PAGE_SIZE = 20;
+    private static final int DEFAULT_SEARCH_SCAN_LIMIT = 3000;
+    private static final int MAX_SEARCH_SCAN_LIMIT = 10000;
+    private static final int SEARCH_QUERY_PAGE_SIZE = 100;
 
     private final DynamoDbTable<Message> messageTable;
     private final DynamoDbTable<PinnedMessage> pinnedMessageTable;
+
+    public record MessageSearchResult(
+            List<Message> messages,
+            long matchedCount,
+            boolean scanLimitReached
+    ) {
+    }
 
     /**
      * Scan all messages (for migration only)
@@ -34,6 +47,68 @@ public class MessageRepository {
                 .toList();
     }
 
+    /**
+     * Find all forwarded descendants of a root message ID.
+     *
+     * This uses a full table scan because current schema has no secondary index on originalMessageId.
+     */
+    public List<Message> findForwardedDescendantsByOriginalMessageId(String rootMessageId) {
+        if (rootMessageId == null || rootMessageId.isBlank()) {
+            return Collections.emptyList();
+        }
+
+        List<Message> allMessages = scanAllMessages();
+        Map<String, List<Message>> childrenByOriginalMessageId = new HashMap<>();
+
+        for (Message message : allMessages) {
+            if (message == null || message.getMessageId() == null || message.getMessageId().isBlank()) {
+                continue;
+            }
+
+            if (!Boolean.TRUE.equals(message.getIsForwarded())) {
+                continue;
+            }
+
+            String originalMessageId = message.getOriginalMessageId();
+            if (originalMessageId == null || originalMessageId.isBlank()) {
+                continue;
+            }
+
+            childrenByOriginalMessageId
+                    .computeIfAbsent(originalMessageId, ignored -> new ArrayList<>())
+                    .add(message);
+        }
+
+        List<Message> descendants = new ArrayList<>();
+        Set<String> visitedMessageIds = new HashSet<>();
+        Deque<String> queue = new ArrayDeque<>();
+
+        visitedMessageIds.add(rootMessageId);
+        queue.add(rootMessageId);
+
+        while (!queue.isEmpty()) {
+            String parentMessageId = queue.poll();
+            List<Message> children = childrenByOriginalMessageId
+                    .getOrDefault(parentMessageId, Collections.emptyList());
+
+            for (Message child : children) {
+                String childMessageId = child.getMessageId();
+                if (childMessageId == null || childMessageId.isBlank()) {
+                    continue;
+                }
+
+                if (!visitedMessageIds.add(childMessageId)) {
+                    continue;
+                }
+
+                descendants.add(child);
+                queue.add(childMessageId);
+            }
+        }
+
+        return descendants;
+    }
+
     // ========== Message Query Methods ==========
 
     /**
@@ -44,6 +119,67 @@ public class MessageRepository {
             int limit,
             boolean includeHidden) {
         return queryMessagesByChatRoom(chatRoomId, limit, includeHidden);
+    }
+
+    public MessageSearchResult searchMessagesByChatRoom(
+            String chatRoomId,
+            String searchTerm,
+            int pageNumber,
+            int pageSize,
+            int scanLimit
+    ) {
+        if (chatRoomId == null || chatRoomId.isBlank() || searchTerm == null || searchTerm.isBlank()) {
+            return new MessageSearchResult(Collections.emptyList(), 0, false);
+        }
+
+        int safePageNumber = Math.max(pageNumber, 0);
+        int safePageSize = pageSize > 0 ? pageSize : DEFAULT_SEARCH_PAGE_SIZE;
+        int safeScanLimit = resolveSearchScanLimit(scanLimit, safePageSize);
+        long offset = (long) safePageNumber * safePageSize;
+        String normalizedTerm = searchTerm.toLowerCase(Locale.ROOT);
+
+        QueryConditional queryConditional = QueryConditional
+                .keyEqualTo(Key.builder().partitionValue(chatRoomId).build());
+
+        QueryEnhancedRequest queryRequest = QueryEnhancedRequest.builder()
+                .queryConditional(queryConditional)
+                .scanIndexForward(false)
+                .limit(Math.min(SEARCH_QUERY_PAGE_SIZE, safeScanLimit))
+                .build();
+
+        List<Message> pagedMessages = new ArrayList<>(safePageSize);
+        long matchedCount = 0;
+        int scannedCount = 0;
+        boolean scanLimitReached = false;
+
+        outer:
+        for (Page<Message> page : messageTable.query(queryRequest)) {
+            for (Message message : page.items()) {
+                if (scannedCount >= safeScanLimit) {
+                    scanLimitReached = true;
+                    break outer;
+                }
+
+                scannedCount++;
+
+                if (!matchesSearchTerm(message, normalizedTerm)) {
+                    continue;
+                }
+
+                if (matchedCount < offset) {
+                    matchedCount++;
+                    continue;
+                }
+
+                if (pagedMessages.size() < safePageSize) {
+                    pagedMessages.add(message);
+                }
+
+                matchedCount++;
+            }
+        }
+
+        return new MessageSearchResult(pagedMessages, matchedCount, scanLimitReached);
     }
 
     /**
@@ -74,6 +210,25 @@ public class MessageRepository {
         });
 
         return messages;
+    }
+
+    private int resolveSearchScanLimit(int requestedScanLimit, int pageSize) {
+        int effectiveRequestedLimit = requestedScanLimit > 0 ? requestedScanLimit : DEFAULT_SEARCH_SCAN_LIMIT;
+        int boundedLimit = Math.min(effectiveRequestedLimit, MAX_SEARCH_SCAN_LIMIT);
+        return Math.max(boundedLimit, pageSize);
+    }
+
+    private boolean matchesSearchTerm(Message message, String normalizedTerm) {
+        if (message == null || Boolean.TRUE.equals(message.getIsHidden())) {
+            return false;
+        }
+
+        String content = message.getContent();
+        if (content == null || content.isBlank()) {
+            return false;
+        }
+
+        return content.toLowerCase(Locale.ROOT).contains(normalizedTerm);
     }
 
     /**
@@ -127,18 +282,18 @@ public class MessageRepository {
         }
 
         QueryConditional queryConditional = QueryConditional
-                .keyEqualTo(Key.builder()
+                .keyEqualTo(
+                        Key.builder()
                         .partitionValue(chatRoomId)
-                        .build());
+                        .build()
+                );
 
         QueryEnhancedRequest queryRequest = QueryEnhancedRequest.builder()
                 .queryConditional(queryConditional)
                 .scanIndexForward(false)
                 .build();
 
-        Iterator<Message> results = messageTable.query(queryRequest).items().iterator();
-        while (results.hasNext()) {
-            Message message = results.next();
+        for (Message message : messageTable.query(queryRequest).items()) {
             if (messageId.equals(message.getMessageId())) {
                 return Optional.of(message);
             }
@@ -181,6 +336,27 @@ public class MessageRepository {
         }
     }
 
+    // ========== Pinned Message Methods ==========
+    public PinnedMessage pinMessage(String chatRoomId, String messageId, String pinnedBy) {
+        if (chatRoomId == null || chatRoomId.isBlank() || messageId == null || messageId.isBlank()) {
+            throw new RuntimeException("chatRoomId and messageId are required");
+        }
+
+        try {
+            PinnedMessage pinnedMessage = PinnedMessage.builder()
+                    .chatRoomId(chatRoomId)
+                    .messageId(messageId)
+                    .pinnedBy(pinnedBy != null ? pinnedBy : "System")
+                    .pinnedAt(Instant.now())
+                    .build();
+
+            this.pinnedMessageTable.putItem(pinnedMessage);
+            return pinnedMessage;
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to pin message", e);
+        }
+    }
+
     public void deletePinnedMessage(String chatRoomId, String messageId) {
         if (chatRoomId == null || chatRoomId.isBlank() || messageId == null || messageId.isBlank()) {
             return;
@@ -193,10 +369,66 @@ public class MessageRepository {
                     .build();
 
             pinnedMessageTable.deleteItem(key);
-            log.debug("Pinned message cleaned up: chatRoomId={}, messageId={}", chatRoomId, messageId);
         } catch (Exception e) {
-            log.error("Error cleaning pinned message: chatRoomId={}, messageId={}", chatRoomId, messageId, e);
             throw new RuntimeException("Failed to cleanup pinned message", e);
+        }
+    }
+
+    public List<PinnedMessage> getPinnedMessagesByChatRoom(String chatRoomId) {
+        if (chatRoomId == null || chatRoomId.isBlank()) {
+            return Collections.emptyList();
+        }
+
+        try {
+            QueryConditional conditional = QueryConditional
+                    .keyEqualTo(Key.builder().partitionValue(chatRoomId).build());
+
+            QueryEnhancedRequest request = QueryEnhancedRequest.builder()
+                    .queryConditional(conditional)
+                    .build();
+
+            return pinnedMessageTable.query(request)
+                    .items()
+                    .stream()
+                    .toList();
+
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to retrieve pinned messages", e);
+        }
+    }
+
+    public boolean isPinned(String chatRoomId, String messageId) {
+        if (chatRoomId == null || chatRoomId.isBlank() || messageId == null || messageId.isBlank()) {
+            return false;
+        }
+
+        try {
+            Key key = Key.builder()
+                    .partitionValue(chatRoomId)
+                    .sortValue(messageId)
+                    .build();
+
+            PinnedMessage pinnedMessage = this.pinnedMessageTable.getItem(key);
+            return pinnedMessage != null;
+        } catch (Exception e) {
+            return false;
+        }
+    }
+
+    public PinnedMessage getPinnedMessage(String chatRoomId, String messageId) {
+        if (chatRoomId == null || chatRoomId.isBlank() || messageId == null || messageId.isBlank()) {
+            return null;
+        }
+
+        try {
+            Key key = Key.builder()
+                    .partitionValue(chatRoomId)
+                    .sortValue(messageId)
+                    .build();
+
+            return pinnedMessageTable.getItem(key);
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to retrieve pinned message", e);
         }
     }
 }

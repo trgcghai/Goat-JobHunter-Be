@@ -9,14 +9,19 @@ import iuh.fit.goat.dto.response.message.ForwardMessageResponse;
 import iuh.fit.goat.dto.response.message.ForwardMessageSuccessResponse;
 import iuh.fit.goat.dto.response.message.MessageDeletedEventResponse;
 import iuh.fit.goat.dto.response.message.MessageResponse;
+import iuh.fit.goat.dto.response.ResultPaginationResponse;
 import iuh.fit.goat.dto.response.StorageResponse;
 import iuh.fit.goat.entity.Account;
 import iuh.fit.goat.entity.ChatMember;
+import iuh.fit.goat.entity.ChatRoom;
 import iuh.fit.goat.entity.Company;
 import iuh.fit.goat.entity.Message;
 import iuh.fit.goat.entity.User;
 import iuh.fit.goat.entity.embeddable.SenderInfo;
+import iuh.fit.goat.enumeration.ChatRoomType;
 import iuh.fit.goat.enumeration.MessageType;
+import iuh.fit.goat.enumeration.RelationshipState;
+import iuh.fit.goat.exception.BlockedInteractionException;
 import iuh.fit.goat.exception.ConflictException;
 import iuh.fit.goat.exception.InvalidException;
 import iuh.fit.goat.exception.NotFoundException;
@@ -24,6 +29,8 @@ import iuh.fit.goat.exception.PermissionException;
 import iuh.fit.goat.repository.ChatMemberRepository;
 import iuh.fit.goat.repository.ChatRoomRepository;
 import iuh.fit.goat.repository.MessageRepository;
+import iuh.fit.goat.repository.UserRelationshipRepository;
+import iuh.fit.goat.repository.UserRepository;
 import iuh.fit.goat.service.MessageService;
 import iuh.fit.goat.service.StorageService;
 import iuh.fit.goat.util.MessageHelper;
@@ -33,6 +40,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Pageable;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.net.URI;
@@ -49,10 +57,21 @@ public class MessageServiceImpl implements MessageService {
     private final MessageRepository messageRepository;
     private final ChatRoomRepository chatRoomRepository;
     private final ChatMemberRepository chatMemberRepository;
+    private final UserRelationshipRepository userRelationshipRepository;
+    private final UserRepository userRepository;
 
     private static final long MAX_FILE_SIZE = 20 * 1024 * 1024; // 20MB
     private static final int MAX_FORWARD_TARGETS = 20;
     private static final String MESSAGE_DELETED_EVENT = "MESSAGE_DELETED";
+    private static final String DELETE_TYPE_ORIGINAL = "original";
+    private static final String DELETE_TYPE_FORWARDED = "forwarded";
+    private static final int MAX_REPLY_PREVIEW_LENGTH = 120;
+    private static final String REVOKED_MESSAGE_PREVIEW = "Tin nhắn đã được thu hồi";
+    private static final String UNAVAILABLE_MESSAGE_PREVIEW = "Tin nhắn không khả dụng";
+    private static final int DEFAULT_SEARCH_PAGE_SIZE = 20;
+    private static final int MAX_SEARCH_PAGE_SIZE = 50;
+    private static final int MAX_SEARCH_TERM_LENGTH = 100;
+    private static final int SEARCH_SCAN_LIMIT = 3000;
     private final SimpMessagingTemplate messagingTemplate;
 
     // ========== PUBLIC API METHODS ==========
@@ -102,13 +121,59 @@ public class MessageServiceImpl implements MessageService {
         return messages;
     }
 
+    @Override
+    @Transactional(readOnly = true)
+    public ResultPaginationResponse searchMessagesByChatRoom(Long chatRoomId, String searchTerm, Pageable pageable)
+            throws InvalidException {
+        if (chatRoomId == null) {
+            throw new InvalidException("Chat room ID cannot be null");
+        }
+
+        this.chatRoomRepository.findById(chatRoomId)
+                .orElseThrow(() -> new InvalidException("Chat Room not found"));
+
+        int pageNumber = pageable != null ? Math.max(pageable.getPageNumber(), 0) : 0;
+        int requestedPageSize = pageable != null ? pageable.getPageSize() : DEFAULT_SEARCH_PAGE_SIZE;
+        int pageSize = resolveSearchPageSize(requestedPageSize);
+
+        String normalizedSearchTerm = normalizeSearchTerm(searchTerm);
+        if (normalizedSearchTerm == null) {
+            return buildSearchPaginationResponse(Collections.emptyList(), pageNumber, pageSize, 0);
+        }
+
+        MessageRepository.MessageSearchResult searchResult = this.messageRepository.searchMessagesByChatRoom(
+                chatRoomId.toString(),
+                normalizedSearchTerm,
+                pageNumber,
+                pageSize,
+                SEARCH_SCAN_LIMIT
+        );
+
+        if (searchResult.scanLimitReached()) {
+            log.warn("Message search reached scan limit: chatRoomId={}, page={}, pageSize={}, scanLimit={}",
+                    chatRoomId,
+                    pageNumber + 1,
+                    pageSize,
+                    SEARCH_SCAN_LIMIT);
+        }
+
+        List<MessageResponse> result = toMessageResponses(searchResult.messages());
+        return buildSearchPaginationResponse(result, pageNumber, pageSize, searchResult.matchedCount());
+    }
+
     /**
     * Send text message.
      */
     @Override
+    @Transactional
     public Message sendMessage(Long chatRoomId, MessageCreateRequest request, Account currentAccount) throws InvalidException
     {
-        this.chatRoomRepository.findById(chatRoomId).orElseThrow(() -> new InvalidException("Chat Room not found"));
+        ChatRoom chatRoom = this.chatRoomRepository.findById(chatRoomId)
+                .orElseThrow(() -> new InvalidException("Chat Room not found"));
+        this.validateNoBlockedDirectInteraction(chatRoom, currentAccount.getAccountId());
+
+        String replyToMessageId = normalizeReplyToMessageId(request != null ? request.getReplyToMessageId() : null);
+        validateReplyTarget(chatRoomId.toString(), replyToMessageId);
 
         String messageId = generateMessageId();
         Instant now = Instant.now();
@@ -126,6 +191,7 @@ public class MessageServiceImpl implements MessageService {
                 .sender(senderInfo)  // NEW: Use embedded sender
                 .content(request.getContent())
                 .messageType(MessageType.TEXT)
+                .replyTo(replyToMessageId)
                 .isHidden(false)
                 .isForwarded(false)
                 .originalMessageId(null)
@@ -149,13 +215,19 @@ public class MessageServiceImpl implements MessageService {
      * Send messages with files (batch operation)
      */
     @Override
+    @Transactional
     public List<Message> sendMessagesWithFiles(
             Long chatRoomId,
             MessageCreateRequest request,
             List<MultipartFile> files,
             Account currentAccount
     ) throws InvalidException {
-        this.chatRoomRepository.findById(chatRoomId).orElseThrow(() -> new InvalidException("Chat Room not found"));
+        ChatRoom chatRoom = this.chatRoomRepository.findById(chatRoomId)
+                .orElseThrow(() -> new InvalidException("Chat Room not found"));
+        this.validateNoBlockedDirectInteraction(chatRoom, currentAccount.getAccountId());
+
+        String replyToMessageId = normalizeReplyToMessageId(request != null ? request.getReplyToMessageId() : null);
+        validateReplyTarget(chatRoomId.toString(), replyToMessageId);
 
         List<Message> createdMessages = new ArrayList<>();
         try {
@@ -175,6 +247,7 @@ public class MessageServiceImpl implements MessageService {
                             chatRoomId.toString(),
                             fileUrl,
                             messageType,
+                            replyToMessageId,
                             currentAccount
                     );
 
@@ -182,14 +255,17 @@ public class MessageServiceImpl implements MessageService {
                     createdMessages.add(savedMessage);
                     sendMessageToUsers(chatRoomId, savedMessage);
 
-                        log.info("File message created: messageId={}, type={}, chatRoomId={}",
+                    log.info("File message created: messageId={}, type={}, chatRoomId={}",
                             savedMessage.getMessageId(), messageType, chatRoomId);
                 }
             }
 
             // Process text content
             if (request != null && request.getContent() != null && !request.getContent().isBlank()) {
-                MessageCreateRequest textRequest = new MessageCreateRequest(request.getContent());
+                MessageCreateRequest textRequest = new MessageCreateRequest(
+                        request.getContent(),
+                        replyToMessageId
+                );
                 Message textMessage = sendMessage(chatRoomId, textRequest, currentAccount);
                 createdMessages.add(textMessage);
             }
@@ -198,11 +274,13 @@ public class MessageServiceImpl implements MessageService {
                 throw new InvalidException("At least one file or text content is required");
             }
 
-                log.info("Batch message creation completed: {} messages created in chatRoom {}",
+            log.info("Batch message creation completed: {} messages created in chatRoom {}",
                     createdMessages.size(), chatRoomId);
 
             return createdMessages;
 
+        } catch (BlockedInteractionException e) {
+            throw e;
         } catch (Exception e) {
             log.error("Error creating messages", e);
             throw new InvalidException("Failed to create messages: " + e.getMessage());
@@ -210,10 +288,92 @@ public class MessageServiceImpl implements MessageService {
     }
 
     @Override
+    @Transactional
+    public List<Message> sendContactCardMessages(Long chatRoomId, List<Long> userIds, Account currentAccount)
+            throws InvalidException {
+        if (chatRoomId == null) {
+            throw new InvalidException("Chat room ID cannot be null");
+        }
+        if (currentAccount == null) {
+            throw new InvalidException("Current account is invalid");
+        }
+
+        ChatRoom chatRoom = this.chatRoomRepository.findById(chatRoomId)
+                .orElseThrow(() -> new InvalidException("Chat Room not found"));
+        this.validateNoBlockedDirectInteraction(chatRoom, currentAccount.getAccountId());
+
+        List<Long> normalizedUserIds = this.normalizeContactCardUserIds(userIds);
+        if (normalizedUserIds.isEmpty()) {
+            throw new InvalidException("At least one valid user ID is required");
+        }
+
+        List<Message> createdMessages = new ArrayList<>();
+        for (Long userId : normalizedUserIds) {
+            if (Objects.equals(userId, currentAccount.getAccountId())) {
+                continue;
+            }
+
+            Optional<User> referencedUser = this.userRepository.findByAccountIdAndDeletedAtIsNull(userId);
+            if (referencedUser.isEmpty()) {
+                continue;
+            }
+
+            if (!this.isFriendWithCurrentUser(currentAccount.getAccountId(), userId)) {
+                continue;
+            }
+
+            Message contactCardMessage = this.createContactCardMessage(chatRoomId.toString(), userId, currentAccount);
+            Message savedMessage = this.messageRepository.saveMessage(contactCardMessage);
+            createdMessages.add(savedMessage);
+            sendMessageToUsers(chatRoomId, savedMessage);
+        }
+
+        if (createdMessages.isEmpty()) {
+            throw new InvalidException("No eligible contacts to send");
+        }
+
+        log.info("CONTACT_CARD batch completed: {} cards sent in chatRoom {}", createdMessages.size(), chatRoomId);
+        return createdMessages;
+    }
+
+    @Override
     public void sendMessageToUsers(Long chatRoomId, Message message) {
-        log.debug("Sending realtime message to chatRoom: {}", chatRoomId);
-        MessageResponse payload = MessageMapper.toResponse(message);
-        messagingTemplate.convertAndSend("/topic/chatrooms/" + chatRoomId, payload);
+        if (chatRoomId == null) {
+            log.warn("Skip realtime emit because chatRoomId is null for messageId={}",
+                    message != null ? message.getMessageId() : null);
+            return;
+        }
+
+        sendMessageToUsers(chatRoomId.toString(), message);
+    }
+
+    @Override
+    public MessageResponse toMessageResponse(Message message) {
+        return toMessageResponse(message, Collections.emptyMap(), new HashMap<>(), new HashMap<>());
+    }
+
+    @Override
+    public List<MessageResponse> toMessageResponses(List<Message> messages) {
+        if (messages == null || messages.isEmpty()) {
+            return Collections.emptyList();
+        }
+
+        Map<String, Message> localMessages = new HashMap<>();
+        for (Message message : messages) {
+            if (message == null || message.getMessageId() == null || message.getMessageId().isBlank()) {
+                continue;
+            }
+            localMessages.putIfAbsent(message.getMessageId(), message);
+        }
+
+        Map<String, Optional<Message>> parentLookupCache = new HashMap<>();
+        Map<Long, Optional<User>> contactLookupCache = preloadContactUsers(messages);
+        List<MessageResponse> responses = new ArrayList<>(messages.size());
+        for (Message message : messages) {
+            responses.add(toMessageResponse(message, localMessages, parentLookupCache, contactLookupCache));
+        }
+
+        return responses;
     }
 
     @Override
@@ -306,15 +466,37 @@ public class MessageServiceImpl implements MessageService {
             throw new PermissionException("Only sender can revoke this message");
         }
 
-        message.setIsHidden(true);
-        message.setContent(null);
-        message.setUpdatedAt(Instant.now());
+        List<Message> cascadeMessages = collectCascadeRecallMessages(message);
 
-        Message revokedMessage = this.messageRepository.saveMessage(message);
-        sendMessageToUsers(chatRoomId, revokedMessage);
+        List<Message> recalledMessages;
+        try {
+            recalledMessages = applyRecallState(cascadeMessages);
+        } catch (RuntimeException e) {
+            log.error("Failed to cascade revoke messageId={} in chatRoomId={}", messageId, chatRoomId, e);
+            throw new InvalidException("Failed to revoke message");
+        }
 
-        log.info("Message revoked: messageId={}, chatRoomId={}, byAccountId={}",
-                messageId, chatRoomId, currentAccount.getAccountId());
+        LinkedHashSet<String> affectedChatRoomIds = new LinkedHashSet<>();
+        for (Message recalledMessage : recalledMessages) {
+            if (recalledMessage.getChatRoomId() != null && !recalledMessage.getChatRoomId().isBlank()) {
+                affectedChatRoomIds.add(recalledMessage.getChatRoomId());
+            }
+
+            sendMessageToUsers(recalledMessage.getChatRoomId(), recalledMessage);
+        }
+
+        Message revokedMessage = recalledMessages.stream()
+                .filter(recalledMessage -> messageId.equals(recalledMessage.getMessageId()))
+                .findFirst()
+                .orElse(message);
+
+        log.info("Cascade message revoke completed: messageId={}, rootChatRoomId={}, byAccountId={}, totalCandidates={}, totalRecalled={}, affectedChatRooms={}",
+                messageId,
+                chatRoomId,
+                currentAccount.getAccountId(),
+                cascadeMessages.size(),
+                recalledMessages.size(),
+                affectedChatRoomIds);
 
         return revokedMessage;
     }
@@ -389,7 +571,7 @@ public class MessageServiceImpl implements MessageService {
 
                 successes.add(ForwardMessageSuccessResponse.builder()
                         .targetChatRoomId(targetChatRoomId)
-                        .message(MessageMapper.toResponse(savedMessage))
+                        .message(toMessageResponse(savedMessage))
                         .build());
             } catch (RuntimeException e) {
                 log.error("Failed to forward messageId={} to chatRoomId={}", messageId, targetChatRoomId, e);
@@ -416,6 +598,7 @@ public class MessageServiceImpl implements MessageService {
     }
 
     @Override
+    @Transactional
     public MessageDeletedEventResponse deleteMessagePermanently(Long chatRoomId, String messageId, Account currentAccount)
             throws InvalidException, NotFoundException, PermissionException {
         if (chatRoomId == null) {
@@ -443,34 +626,62 @@ public class MessageServiceImpl implements MessageService {
             throw new PermissionException("Only sender or super admin can permanently delete this message");
         }
 
-        cleanupMessageBinaryContent(message);
+        List<CascadeDeleteTarget> deleteTargets = collectCascadeDeleteTargets(message);
+        List<MessageDeletedEventResponse> emittedEvents = new ArrayList<>();
 
-        try {
-            this.messageRepository.deletePinnedMessage(chatRoomId.toString(), messageId);
-            this.messageRepository.deleteMessage(chatRoomId.toString(), message.getMessageSk());
-        } catch (RuntimeException e) {
-            log.error("Failed to permanently delete message: messageId={}, chatRoomId={}", messageId, chatRoomId, e);
-            throw new InvalidException("Failed to permanently delete message");
+        for (CascadeDeleteTarget target : deleteTargets) {
+            Message targetMessage = target.message();
+
+            try {
+                deleteSingleMessagePermanently(targetMessage);
+            } catch (InvalidException e) {
+                log.error("Cascade permanent delete failed: rootMessageId={}, rootChatRoomId={}, failedMessageId={}, failedChatRoomId={}, totalCandidates={}, totalDeleted={}",
+                        messageId,
+                        chatRoomId,
+                        targetMessage != null ? targetMessage.getMessageId() : null,
+                        targetMessage != null ? targetMessage.getChatRoomId() : null,
+                        deleteTargets.size(),
+                        emittedEvents.size(),
+                        e);
+                throw new InvalidException("Failed to permanently delete message");
+            }
+
+            MessageDeletedEventResponse event = buildMessageDeletedEvent(
+                    targetMessage,
+                    target.deleteType(),
+                    currentAccount.getAccountId(),
+                    Instant.now()
+            );
+
+            sendMessageDeletedEvent(targetMessage.getChatRoomId(), event);
+            emittedEvents.add(event);
         }
 
-        MessageDeletedEventResponse event = MessageDeletedEventResponse.builder()
-                .eventType(MESSAGE_DELETED_EVENT)
-                .chatRoomId(chatRoomId.toString())
-                .messageId(messageId)
-                .deletedByAccountId(currentAccount.getAccountId())
-                .deletedAt(Instant.now())
-                .build();
+        MessageDeletedEventResponse rootEvent = emittedEvents.stream()
+                .filter(event -> messageId.equals(event.getMessageId()))
+                .findFirst()
+                .orElseThrow(() -> new InvalidException("Failed to permanently delete message"));
 
-        sendMessageDeletedEvent(chatRoomId, event);
+        LinkedHashSet<String> affectedChatRoomIds = new LinkedHashSet<>();
+        for (MessageDeletedEventResponse event : emittedEvents) {
+            if (event.getChatRoomId() != null && !event.getChatRoomId().isBlank()) {
+                affectedChatRoomIds.add(event.getChatRoomId());
+            }
+        }
 
-        log.info("Message permanently deleted: messageId={}, chatRoomId={}, byAccountId={}",
-                messageId, chatRoomId, currentAccount.getAccountId());
+        log.info("Cascade permanent delete completed: messageId={}, rootChatRoomId={}, byAccountId={}, totalCandidates={}, totalDeleted={}, affectedChatRooms={}",
+                messageId,
+                chatRoomId,
+                currentAccount.getAccountId(),
+                deleteTargets.size(),
+                emittedEvents.size(),
+                affectedChatRoomIds);
 
-        return event;
+        return rootEvent;
     }
 
     @Override
-    public Message createAndSendSystemMessage(
+    public void createAndSendSystemMessage(
             Long chatRoomId,
             MessageEvent type,
             Account actor,
@@ -503,14 +714,313 @@ public class MessageServiceImpl implements MessageService {
         sendMessageToUsers(chatRoomId, savedMessage);
 
         log.info("System message created: type={}, chatRoomId={}", type, chatRoomId);
-        return savedMessage;
     }
 
     private boolean isMediaType(MessageType type) {
         return type == MessageType.IMAGE || type == MessageType.VIDEO || type == MessageType.AUDIO;
     }
 
+    private ResultPaginationResponse buildSearchPaginationResponse(
+            List<MessageResponse> messages,
+            int pageNumber,
+            int pageSize,
+            long total
+    ) {
+        ResultPaginationResponse.Meta meta = new ResultPaginationResponse.Meta();
+        meta.setPage(pageNumber + 1);
+        meta.setPageSize(pageSize);
+        meta.setPages(calculateTotalPages(total, pageSize));
+        meta.setTotal(total);
+
+        return new ResultPaginationResponse(meta, messages);
+    }
+
+    private int calculateTotalPages(long total, int pageSize) {
+        if (total <= 0 || pageSize <= 0) {
+            return 0;
+        }
+
+        return (int) ((total + pageSize - 1) / pageSize);
+    }
+
+    private int resolveSearchPageSize(int requestedPageSize) {
+        if (requestedPageSize <= 0) {
+            return DEFAULT_SEARCH_PAGE_SIZE;
+        }
+
+        return Math.min(requestedPageSize, MAX_SEARCH_PAGE_SIZE);
+    }
+
+    private String normalizeSearchTerm(String searchTerm) throws InvalidException {
+        if (searchTerm == null) {
+            return null;
+        }
+
+        String normalized = searchTerm.trim();
+        if (normalized.isEmpty()) {
+            return null;
+        }
+
+        if (normalized.length() > MAX_SEARCH_TERM_LENGTH) {
+            throw new InvalidException("searchTerm must not exceed " + MAX_SEARCH_TERM_LENGTH + " characters");
+        }
+
+        return normalized;
+    }
+
     // ========== HELPER METHODS ==========
+
+    private MessageResponse toMessageResponse(
+            Message message,
+            Map<String, Message> localMessages,
+            Map<String, Optional<Message>> parentLookupCache,
+            Map<Long, Optional<User>> contactLookupCache
+    ) {
+        if (message == null) {
+            return null;
+        }
+
+        MessageResponse.ReplyContext replyContext = buildReplyContext(message, localMessages, parentLookupCache);
+        MessageResponse.ContactCardContext contactCardContext = buildContactCardContext(message, contactLookupCache);
+        return MessageMapper.toResponse(message, replyContext, contactCardContext);
+    }
+
+    private MessageResponse.ContactCardContext buildContactCardContext(
+            Message message,
+            Map<Long, Optional<User>> contactLookupCache
+    ) {
+        Long contactUserId = extractContactCardUserId(message);
+        if (contactUserId == null) {
+            return null;
+        }
+
+        User contactUser = resolveContactUser(contactUserId, contactLookupCache);
+        if (contactUser == null) {
+            return null;
+        }
+
+        return MessageResponse.ContactCardContext.builder()
+                .accountId(contactUser.getAccountId())
+                .fullName(contactUser.getFullName())
+                .username(contactUser.getUsername())
+                .avatar(contactUser.getAvatar())
+                .headline(contactUser.getHeadline())
+                .bio(contactUser.getBio())
+                .coverPhoto(contactUser.getCoverPhoto())
+                .visibility(contactUser.getVisibility())
+                .build();
+    }
+
+    private Map<Long, Optional<User>> preloadContactUsers(List<Message> messages) {
+        Map<Long, Optional<User>> contactLookupCache = new HashMap<>();
+        if (messages == null || messages.isEmpty()) {
+            return contactLookupCache;
+        }
+
+        LinkedHashSet<Long> contactUserIds = new LinkedHashSet<>();
+        for (Message message : messages) {
+            Long contactUserId = extractContactCardUserId(message);
+            if (contactUserId != null) {
+                contactUserIds.add(contactUserId);
+            }
+        }
+
+        if (contactUserIds.isEmpty()) {
+            return contactLookupCache;
+        }
+
+        List<User> existingUsers = this.userRepository
+                .findByAccountIdInAndDeletedAtIsNull(new ArrayList<>(contactUserIds));
+
+        for (User user : existingUsers) {
+            contactLookupCache.put(user.getAccountId(), Optional.of(user));
+        }
+
+        for (Long userId : contactUserIds) {
+            contactLookupCache.putIfAbsent(userId, Optional.empty());
+        }
+
+        return contactLookupCache;
+    }
+
+    private User resolveContactUser(Long contactUserId, Map<Long, Optional<User>> contactLookupCache) {
+        if (contactLookupCache != null && contactLookupCache.containsKey(contactUserId)) {
+            return contactLookupCache.get(contactUserId).orElse(null);
+        }
+
+        Optional<User> referencedUser = this.userRepository.findByAccountIdAndDeletedAtIsNull(contactUserId);
+        if (contactLookupCache != null) {
+            contactLookupCache.put(contactUserId, referencedUser);
+        }
+
+        return referencedUser.orElse(null);
+    }
+
+    private Long extractContactCardUserId(Message message) {
+        if (message == null || message.getMessageType() != MessageType.CONTACT_CARD) {
+            return null;
+        }
+
+        return parseContactCardUserId(message.getContent());
+    }
+
+    private Long parseContactCardUserId(String content) {
+        if (content == null || content.isBlank()) {
+            return null;
+        }
+
+        try {
+            long parsed = Long.parseLong(content.trim());
+            return parsed > 0 ? parsed : null;
+        } catch (NumberFormatException e) {
+            return null;
+        }
+    }
+
+    private MessageResponse.ReplyContext buildReplyContext(
+            Message message,
+            Map<String, Message> localMessages,
+            Map<String, Optional<Message>> parentLookupCache
+    ) {
+        String replyToMessageId = normalizeReplyToMessageId(message.getReplyTo());
+        if (replyToMessageId == null) {
+            return null;
+        }
+
+        String chatRoomId = message.getChatRoomId();
+        if (chatRoomId == null || chatRoomId.isBlank()) {
+            return MessageResponse.ReplyContext.builder()
+                    .originalMessageId(replyToMessageId)
+                    .originalContentPreview(UNAVAILABLE_MESSAGE_PREVIEW)
+                    .originalMessageUnavailable(true)
+                    .originalMessageHidden(false)
+                    .build();
+        }
+
+        Message originalMessage = resolveOriginalMessage(
+                chatRoomId,
+                replyToMessageId,
+                localMessages,
+                parentLookupCache
+        );
+
+        if (originalMessage == null) {
+            return MessageResponse.ReplyContext.builder()
+                    .originalMessageId(replyToMessageId)
+                    .originalContentPreview(UNAVAILABLE_MESSAGE_PREVIEW)
+                    .originalMessageUnavailable(true)
+                    .originalMessageHidden(false)
+                    .build();
+        }
+
+        boolean originalMessageHidden = Boolean.TRUE.equals(originalMessage.getIsHidden());
+
+        return MessageResponse.ReplyContext.builder()
+                .originalMessageId(
+                        originalMessage.getMessageId() != null
+                                ? originalMessage.getMessageId()
+                                : replyToMessageId
+                )
+                .originalSender(originalMessage.getSender())
+                .originalMessageType(originalMessage.getMessageType())
+                .originalContentPreview(
+                        originalMessageHidden
+                                ? REVOKED_MESSAGE_PREVIEW
+                                : buildOriginalMessagePreview(originalMessage)
+                )
+                .originalMessageUnavailable(false)
+                .originalMessageHidden(originalMessageHidden)
+                .build();
+    }
+
+    private Message resolveOriginalMessage(
+            String chatRoomId,
+            String replyToMessageId,
+            Map<String, Message> localMessages,
+            Map<String, Optional<Message>> parentLookupCache
+    ) {
+        if (localMessages != null && localMessages.containsKey(replyToMessageId)) {
+            return localMessages.get(replyToMessageId);
+        }
+
+        Optional<Message> parentMessage = findReplyTarget(chatRoomId, replyToMessageId, parentLookupCache);
+        return parentMessage.orElse(null);
+    }
+
+    private Optional<Message> findReplyTarget(
+            String chatRoomId,
+            String replyToMessageId,
+            Map<String, Optional<Message>> parentLookupCache
+    ) {
+        if (parentLookupCache != null && parentLookupCache.containsKey(replyToMessageId)) {
+            return parentLookupCache.get(replyToMessageId);
+        }
+
+        Optional<Message> parentMessage = this.messageRepository
+                .findByChatRoomIdAndMessageId(chatRoomId, replyToMessageId);
+
+        if (parentLookupCache != null) {
+            parentLookupCache.put(replyToMessageId, parentMessage);
+        }
+
+        return parentMessage;
+    }
+
+    private String buildOriginalMessagePreview(Message originalMessage) {
+        if (originalMessage == null) {
+            return UNAVAILABLE_MESSAGE_PREVIEW;
+        }
+
+        if (originalMessage.getMessageType() == MessageType.TEXT) {
+            return truncateReplyPreview(originalMessage.getContent());
+        }
+
+        if (originalMessage.getMessageType() == null) {
+            return UNAVAILABLE_MESSAGE_PREVIEW;
+        }
+
+        return originalMessage.getMessageType().name().toLowerCase(Locale.ROOT);
+    }
+
+    private String truncateReplyPreview(String content) {
+        if (content == null || content.isBlank()) {
+            return "text";
+        }
+
+        String normalized = content.trim();
+        if (normalized.length() <= MAX_REPLY_PREVIEW_LENGTH) {
+            return normalized;
+        }
+
+        return normalized.substring(0, MAX_REPLY_PREVIEW_LENGTH) + "...";
+    }
+
+    private String normalizeReplyToMessageId(String replyToMessageId) {
+        if (replyToMessageId == null) {
+            return null;
+        }
+
+        String normalized = replyToMessageId.trim();
+        if (normalized.isEmpty()) {
+            return null;
+        }
+
+        return normalized;
+    }
+
+    private void validateReplyTarget(String chatRoomId, String replyToMessageId) throws InvalidException {
+        if (replyToMessageId == null) {
+            return;
+        }
+
+        boolean isValidReplyTarget = this.messageRepository
+                .findByChatRoomIdAndMessageId(chatRoomId, replyToMessageId)
+                .isPresent();
+
+        if (!isValidReplyTarget) {
+            throw new InvalidException("replyToMessageId is invalid or not in this conversation");
+        }
+    }
 
     private MessageType determineMessageType(String mimeType) {
         if (mimeType == null) return MessageType.FILE;
@@ -537,22 +1047,19 @@ public class MessageServiceImpl implements MessageService {
     }
 
     private String getFolderByMessageType(MessageType type) {
-        switch (type) {
-            case IMAGE:
-                return "images";
-            case VIDEO:
-                return "videos";
-            case AUDIO:
-                return "audios";
-            default:
-                return "files";
-        }
+        return switch (type) {
+            case IMAGE -> "images";
+            case VIDEO -> "videos";
+            case AUDIO -> "audios";
+            default -> "files";
+        };
     }
 
     private Message createFileMessage(
             String chatRoomId,
             String fileUrl,
             MessageType messageType,
+            String replyToMessageId,
             Account currentAccount
     ) {
         String messageId = generateMessageId();
@@ -571,6 +1078,28 @@ public class MessageServiceImpl implements MessageService {
                 .sender(senderInfo)  // NEW: Use embedded sender
                 .content(fileUrl)
                 .messageType(messageType)
+                .replyTo(replyToMessageId)
+                .isHidden(false)
+                .isForwarded(false)
+                .originalMessageId(null)
+                .createdAt(now)
+                .updatedAt(now)
+                .build();
+    }
+
+    private Message createContactCardMessage(String chatRoomId, Long referencedUserId, Account currentAccount) {
+        String messageId = generateMessageId();
+        Instant now = Instant.now();
+        long timestamp = now.toEpochMilli();
+
+        return Message.builder()
+                .messageSk(Message.buildMessageSk(timestamp, messageId))
+                .chatRoomId(chatRoomId)
+                .messageId(messageId)
+                .sender(buildSenderInfo(currentAccount))
+                .content(String.valueOf(referencedUserId))
+                .messageType(MessageType.CONTACT_CARD)
+                .replyTo(null)
                 .isHidden(false)
                 .isForwarded(false)
                 .originalMessageId(null)
@@ -600,13 +1129,245 @@ public class MessageServiceImpl implements MessageService {
                 .build();
     }
 
+    private List<Message> collectCascadeRecallMessages(Message rootMessage) {
+        if (rootMessage == null) {
+            return Collections.emptyList();
+        }
+
+        LinkedHashMap<String, Message> messagesById = new LinkedHashMap<>();
+        addMessageIfAbsent(messagesById, rootMessage);
+
+        List<Message> forwardedDescendants = this.messageRepository
+                .findForwardedDescendantsByOriginalMessageId(rootMessage.getMessageId());
+
+        for (Message forwardedDescendant : forwardedDescendants) {
+            addMessageIfAbsent(messagesById, forwardedDescendant);
+        }
+
+        return new ArrayList<>(messagesById.values());
+    }
+
+    private void addMessageIfAbsent(Map<String, Message> messagesById, Message message) {
+        if (message == null || message.getMessageId() == null || message.getMessageId().isBlank()) {
+            return;
+        }
+
+        messagesById.putIfAbsent(message.getMessageId(), message);
+    }
+
+    private List<Message> applyRecallState(List<Message> messages) {
+        if (messages == null || messages.isEmpty()) {
+            return Collections.emptyList();
+        }
+
+        Instant recallTime = Instant.now();
+        List<Message> recalledMessages = new ArrayList<>();
+
+        for (Message message : messages) {
+            if (message == null || Boolean.TRUE.equals(message.getIsHidden())) {
+                continue;
+            }
+
+            message.setIsHidden(true);
+            message.setContent(null);
+            message.setUpdatedAt(recallTime);
+
+            Message savedMessage = this.messageRepository.saveMessage(message);
+            recalledMessages.add(savedMessage);
+        }
+
+        return recalledMessages;
+    }
+
+    private List<CascadeDeleteTarget> collectCascadeDeleteTargets(Message rootMessage) {
+        if (rootMessage == null) {
+            return Collections.emptyList();
+        }
+
+        LinkedHashMap<String, CascadeDeleteTarget> targetsByMessageId = new LinkedHashMap<>();
+
+        List<Message> forwardedDescendants = this.messageRepository
+                .findForwardedDescendantsByOriginalMessageId(rootMessage.getMessageId());
+
+        List<Message> descendantsInDeleteOrder = new ArrayList<>(forwardedDescendants);
+        Collections.reverse(descendantsInDeleteOrder);
+
+        for (Message descendant : descendantsInDeleteOrder) {
+            addCascadeDeleteTargetIfAbsent(targetsByMessageId, descendant, DELETE_TYPE_FORWARDED);
+        }
+
+        addCascadeDeleteTargetIfAbsent(targetsByMessageId, rootMessage, DELETE_TYPE_ORIGINAL);
+
+        return new ArrayList<>(targetsByMessageId.values());
+    }
+
+    private void addCascadeDeleteTargetIfAbsent(
+            Map<String, CascadeDeleteTarget> targetsByMessageId,
+            Message message,
+            String deleteType
+    ) {
+        if (message == null || message.getMessageId() == null || message.getMessageId().isBlank()) {
+            return;
+        }
+
+        targetsByMessageId.putIfAbsent(message.getMessageId(), new CascadeDeleteTarget(message, deleteType));
+    }
+
+    private void deleteSingleMessagePermanently(Message message) throws InvalidException {
+        if (message == null) {
+            throw new InvalidException("Message is invalid");
+        }
+
+        String targetChatRoomId = message.getChatRoomId();
+        String targetMessageId = message.getMessageId();
+        String targetMessageSk = message.getMessageSk();
+
+        if (targetChatRoomId == null || targetChatRoomId.isBlank()
+                || targetMessageId == null || targetMessageId.isBlank()
+                || targetMessageSk == null || targetMessageSk.isBlank()) {
+            throw new InvalidException("Message data is invalid for permanent delete");
+        }
+
+        cleanupMessageBinaryContent(message);
+
+        try {
+            this.messageRepository.deletePinnedMessage(targetChatRoomId, targetMessageId);
+            this.messageRepository.deleteMessage(targetChatRoomId, targetMessageSk);
+        } catch (RuntimeException e) {
+            log.error("Failed to permanently delete message item: messageId={}, chatRoomId={}",
+                    targetMessageId,
+                    targetChatRoomId,
+                    e);
+            throw new InvalidException("Failed to permanently delete message");
+        }
+    }
+
+    private MessageDeletedEventResponse buildMessageDeletedEvent(
+            Message message,
+            String deleteType,
+            Long deletedByAccountId,
+            Instant deletedAt
+    ) {
+        return MessageDeletedEventResponse.builder()
+                .eventType(MESSAGE_DELETED_EVENT)
+                .chatRoomId(message.getChatRoomId())
+                .messageId(message.getMessageId())
+                .deleteType(deleteType)
+                .deletedByAccountId(deletedByAccountId)
+                .deletedAt(deletedAt)
+                .build();
+    }
+
+    private record CascadeDeleteTarget(Message message, String deleteType) {
+    }
+
     private String generateMessageId() {
         return "msg_" + UUID.randomUUID().toString().replace("-", "");
     }
 
+    private void validateNoBlockedDirectInteraction(ChatRoom chatRoom, Long currentAccountId) throws InvalidException {
+        if (chatRoom.getType() != ChatRoomType.DIRECT) {
+            return;
+        }
+
+        Long peerAccountId = this.chatMemberRepository.findByRoomRoomIdAndDeletedAtIsNull(chatRoom.getRoomId())
+                .stream()
+                .map(ChatMember::getAccount)
+                .filter(Objects::nonNull)
+                .map(Account::getAccountId)
+                .filter(accountId -> !Objects.equals(accountId, currentAccountId))
+                .findFirst()
+                .orElseThrow(() -> new InvalidException("Direct chat room has invalid members"));
+
+        UserRelationshipRepository.PairIds pair = UserRelationshipRepository.PairIds.of(currentAccountId, peerAccountId);
+        this.userRelationshipRepository.lockPairForTransactionByCanonicalIds(pair.pairLowId(), pair.pairHighId());
+
+        boolean blocked = this.userRelationshipRepository
+                .existsByPairLowUser_AccountIdAndPairHighUser_AccountIdAndRelationshipStateAndDeletedAtIsNull(
+                        pair.pairLowId(),
+                        pair.pairHighId(),
+                        RelationshipState.BLOCKED
+                );
+
+        if (blocked) {
+            throw new BlockedInteractionException("Cannot send message because this pair is blocked");
+        }
+    }
+
+    private List<Long> normalizeContactCardUserIds(List<Long> userIds) {
+        if (userIds == null || userIds.isEmpty()) {
+            return Collections.emptyList();
+        }
+
+        LinkedHashSet<Long> deduplicated = new LinkedHashSet<>();
+        for (Long userId : userIds) {
+            if (userId != null && userId > 0) {
+                deduplicated.add(userId);
+            }
+        }
+
+        return new ArrayList<>(deduplicated);
+    }
+
+    private boolean isFriendWithCurrentUser(Long currentAccountId, Long targetUserId) {
+        if (currentAccountId == null || targetUserId == null || Objects.equals(currentAccountId, targetUserId)) {
+            return false;
+        }
+
+        UserRelationshipRepository.PairIds pair = UserRelationshipRepository.PairIds.of(currentAccountId, targetUserId);
+        return this.userRelationshipRepository
+                .existsByPairLowUser_AccountIdAndPairHighUser_AccountIdAndRelationshipStateAndDeletedAtIsNull(
+                        pair.pairLowId(),
+                        pair.pairHighId(),
+                        RelationshipState.FRIEND
+                );
+    }
+
+    private void sendMessageToUsers(String chatRoomId, Message message) {
+        if (chatRoomId == null || chatRoomId.isBlank() || message == null) {
+            log.warn("Skip realtime emit because payload is invalid: chatRoomId={}, messageNull={}",
+                    chatRoomId,
+                    message == null);
+            return;
+        }
+
+        log.debug("Sending realtime message to chatRoom: {}", chatRoomId);
+        MessageResponse payload = toMessageResponse(message);
+        messagingTemplate.convertAndSend("/topic/chatrooms/" + chatRoomId, payload);
+    }
+
     private void sendMessageDeletedEvent(Long chatRoomId, MessageDeletedEventResponse event) {
-        log.debug("Sending delete event to chatRoom: {}", chatRoomId);
-        messagingTemplate.convertAndSend("/topic/chatrooms/" + chatRoomId, event);
+        if (chatRoomId == null) {
+            log.warn("Skip delete event because chatRoomId is null for messageId={}",
+                    event != null ? event.getMessageId() : null);
+            return;
+        }
+
+        sendMessageDeletedEvent(chatRoomId.toString(), event);
+    }
+
+    private void sendMessageDeletedEvent(String chatRoomId, MessageDeletedEventResponse event) {
+        if (chatRoomId == null || chatRoomId.isBlank() || event == null) {
+            log.warn("Skip delete event because payload is invalid: chatRoomId={}, eventNull={}",
+                    chatRoomId,
+                    event == null);
+            return;
+        }
+
+        log.debug("Sending delete event to chatRoom: {}, messageId={}, deleteType={}",
+                chatRoomId,
+                event.getMessageId(),
+                event.getDeleteType());
+
+        try {
+            messagingTemplate.convertAndSend("/topic/chatrooms/" + chatRoomId, event);
+        } catch (RuntimeException e) {
+            log.error("Failed to send delete event: chatRoomId={}, messageId={}, deleteType={}",
+                    chatRoomId,
+                    event.getMessageId(),
+                    event.getDeleteType(),
+                    e);
+        }
     }
 
     private boolean isSuperAdmin(Account account) {
@@ -741,7 +1502,7 @@ public class MessageServiceImpl implements MessageService {
                 : ((User) account).getFullName();
 
         String avatar = account instanceof Company ? ((Company) account).getLogo()
-                : ((User) account).getAvatar();
+                : account.getAvatar();
 
         return SenderInfo.builder()
                 .accountId(account.getAccountId())

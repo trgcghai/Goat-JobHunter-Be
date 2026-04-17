@@ -32,5 +32,9 @@
     <include file="db.changelog/schema/2026-03-28/change-relation-account.xml"/>
     <include file="db.changelog/schema/2026-03-28/unique-constraint-blog-reaction.xml"/>
     <include file="db.changelog/schema/2026-04-09/add-account-visibility.xml"/>
+    <include file="/db.changelog/schema/2026-04-11/device-entity.xml"/>
+    <include file="db.changelog/schema/2026-04-11/field-locked-account.xml"/>
+    <include file="db.changelog/schema/2026-04-12/create-friend-request-and-user-relationship.xml"/>
+    <include file="db.changelog/schema/2026-04-16/create-ai-conversation-and-message.xml"/>
 
 </databaseChangeLog>

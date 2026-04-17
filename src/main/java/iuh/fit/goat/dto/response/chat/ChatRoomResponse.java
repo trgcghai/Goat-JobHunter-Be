@@ -6,6 +6,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.time.Instant;
 import java.time.LocalDateTime;
 
 @Data
@@ -20,5 +21,9 @@ public class ChatRoomResponse {
     private Integer memberCount;
     private String lastMessagePreview;
     private LocalDateTime lastMessageTime;
+    private boolean isBlocked;
+    private boolean isBlockedByMe;
+    private Long counterpartAccountId;
     private boolean currentUserSentLastMessage;
+    private Instant deletedAt;
 }

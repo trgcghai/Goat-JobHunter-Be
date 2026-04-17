@@ -6,7 +6,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import iuh.fit.goat.dto.request.company.CompanyUpdateRequest;
 import iuh.fit.goat.dto.response.ResultPaginationResponse;
 import iuh.fit.goat.dto.response.company.CompanyResponse;
-import iuh.fit.goat.dto.response.user.UserResponse;
 import iuh.fit.goat.entity.*;
 import iuh.fit.goat.exception.InvalidException;
 import iuh.fit.goat.repository.AddressRepository;
@@ -50,7 +49,6 @@ public class CompanyServiceImpl implements CompanyService {
             role = this.roleService.handleGetRoleByName(COMPANY);
         }
         company.setRole(role);
-        company.setEnabled(false);
 
         return this.companyRepository.save(company);
     }
@@ -249,6 +247,8 @@ public class CompanyServiceImpl implements CompanyService {
         companyResponse.setPhone(company.getPhone());
         companyResponse.setSize(company.getSize());
         companyResponse.setVerified(company.isVerified());
+        companyResponse.setEnabled(company.isEnabled());
+        companyResponse.setLocked(company.isLocked());
         companyResponse.setVisibility(company.getVisibility());
         companyResponse.setCountry(company.getCountry());
         companyResponse.setIndustry(company.getIndustry());

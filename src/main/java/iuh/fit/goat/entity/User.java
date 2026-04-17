@@ -25,6 +25,9 @@ import static jakarta.persistence.FetchType.LAZY;
 @ToString(callSuper = true, exclude = {
         "sentFriendRequests",
         "receivedFriendRequests",
+        "relationshipsAsLowUser",
+        "relationshipsAsHighUser",
+        "blockedRelationships",
         "reviews"}
 )
 @JsonTypeInfo(
@@ -47,23 +50,47 @@ public class User extends Account {
     @Column(columnDefinition = "TEXT")
     protected String bio;
 
-    @OneToMany(mappedBy = "sender", fetch = LAZY, cascade = {PERSIST, MERGE})
+    @OneToMany(mappedBy = "sender", fetch = LAZY, cascade = {PERSIST, MERGE, REMOVE})
     @JsonIgnore
     @Filter(
-            name = "activeFriendshipFilter",
+            name = "activeFriendRequestFilter",
             condition = "deleted_at IS NULL"
     )
-    private List<Friendship> sentFriendRequests = new ArrayList<>();
+    private List<FriendRequest> sentFriendRequests = new ArrayList<>();
 
-    @OneToMany(mappedBy = "receiver", fetch = LAZY, cascade = {PERSIST, MERGE})
+    @OneToMany(mappedBy = "receiver", fetch = LAZY, cascade = {PERSIST, MERGE, REMOVE})
     @JsonIgnore
     @Filter(
-            name = "activeFriendshipFilter",
+            name = "activeFriendRequestFilter",
             condition = "deleted_at IS NULL"
     )
-    private List<Friendship> receivedFriendRequests = new ArrayList<>();
+    private List<FriendRequest> receivedFriendRequests = new ArrayList<>();
 
-    @OneToMany(mappedBy = "user", fetch = LAZY, cascade = {PERSIST, MERGE})
+    @OneToMany(mappedBy = "pairLowUser", fetch = LAZY, cascade = {PERSIST, MERGE})
+    @JsonIgnore
+    @Filter(
+            name = "activeUserRelationshipFilter",
+            condition = "deleted_at IS NULL"
+    )
+    private List<UserRelationship> relationshipsAsLowUser = new ArrayList<>();
+
+    @OneToMany(mappedBy = "pairHighUser", fetch = LAZY, cascade = {PERSIST, MERGE})
+    @JsonIgnore
+    @Filter(
+            name = "activeUserRelationshipFilter",
+            condition = "deleted_at IS NULL"
+    )
+    private List<UserRelationship> relationshipsAsHighUser = new ArrayList<>();
+
+    @OneToMany(mappedBy = "blockedBy", fetch = LAZY, cascade = {PERSIST, MERGE})
+    @JsonIgnore
+    @Filter(
+            name = "activeUserRelationshipFilter",
+            condition = "deleted_at IS NULL"
+    )
+    private List<UserRelationship> blockedRelationships = new ArrayList<>();
+
+    @OneToMany(mappedBy = "user", fetch = LAZY, cascade = {PERSIST, MERGE, REMOVE})
     @JsonIgnore
     @Filter(
             name = "activeReviewFilter",

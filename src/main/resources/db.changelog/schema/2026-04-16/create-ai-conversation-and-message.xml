@@ -1,0 +1,217 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+                      http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-5.0.xsd"
+        objectQuotingStrategy="QUOTE_ONLY_RESERVED_WORDS">
+
+    <changeSet id="1776355200000-1" author="copilot">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <sequenceExists sequenceName="conversations_seq"/>
+            </not>
+        </preConditions>
+        <createSequence incrementBy="50" sequenceName="conversations_seq" startValue="1"/>
+    </changeSet>
+
+    <changeSet id="1776355200000-2" author="copilot">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <sequenceExists sequenceName="ai_messages_seq"/>
+            </not>
+        </preConditions>
+        <createSequence incrementBy="50" sequenceName="ai_messages_seq" startValue="1"/>
+    </changeSet>
+
+    <changeSet id="1776355200000-3" author="copilot">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <tableExists tableName="conversation"/>
+            </not>
+        </preConditions>
+        <createTable tableName="conversation">
+            <column name="conversation_id" type="BIGINT" defaultValueSequenceNext="conversations_seq">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="pk_conversation"/>
+            </column>
+            <column name="created_at" type="DATETIME"/>
+            <column name="created_by" type="VARCHAR(255)"/>
+            <column name="updated_at" type="DATETIME"/>
+            <column name="updated_by" type="VARCHAR(255)"/>
+            <column name="deleted_at" type="DATETIME"/>
+            <column name="deleted_by" type="VARCHAR(255)"/>
+            <column name="title" type="VARCHAR(255)"/>
+            <column name="is_pinned" type="BOOLEAN" defaultValueBoolean="false">
+                <constraints nullable="false"/>
+            </column>
+            <column name="account_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+    </changeSet>
+
+    <changeSet id="1776355200000-4" author="copilot">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <tableExists tableName="ai_message"/>
+            </not>
+        </preConditions>
+        <createTable tableName="ai_message">
+            <column name="ai_message_id" type="BIGINT" defaultValueSequenceNext="ai_messages_seq">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="pk_ai_message"/>
+            </column>
+            <column name="created_at" type="DATETIME"/>
+            <column name="created_by" type="VARCHAR(255)"/>
+            <column name="updated_at" type="DATETIME"/>
+            <column name="updated_by" type="VARCHAR(255)"/>
+            <column name="deleted_at" type="DATETIME"/>
+            <column name="deleted_by" type="VARCHAR(255)"/>
+            <column name="role" type="VARCHAR(16)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="content" type="TEXT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="conversation_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="account_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+    </changeSet>
+
+    <changeSet id="1776355200000-5" author="copilot">
+        <preConditions onFail="MARK_RAN">
+            <and>
+                <tableExists tableName="conversation"/>
+                <not>
+                    <foreignKeyConstraintExists foreignKeyName="FK_CONVERSATION_ON_ACCOUNT"/>
+                </not>
+            </and>
+        </preConditions>
+        <addForeignKeyConstraint baseTableName="conversation"
+                                 baseColumnNames="account_id"
+                                 referencedTableName="accounts"
+                                 referencedColumnNames="account_id"
+                                 constraintName="FK_CONVERSATION_ON_ACCOUNT"/>
+    </changeSet>
+
+    <changeSet id="1776355200000-6" author="copilot">
+        <preConditions onFail="MARK_RAN">
+            <and>
+                <tableExists tableName="ai_message"/>
+                <not>
+                    <foreignKeyConstraintExists foreignKeyName="FK_AI_MESSAGE_ON_CONVERSATION"/>
+                </not>
+            </and>
+        </preConditions>
+        <addForeignKeyConstraint baseTableName="ai_message"
+                                 baseColumnNames="conversation_id"
+                                 referencedTableName="conversation"
+                                 referencedColumnNames="conversation_id"
+                                 constraintName="FK_AI_MESSAGE_ON_CONVERSATION"/>
+    </changeSet>
+
+    <changeSet id="1776355200000-7" author="copilot">
+        <preConditions onFail="MARK_RAN">
+            <and>
+                <tableExists tableName="ai_message"/>
+                <not>
+                    <foreignKeyConstraintExists foreignKeyName="FK_AI_MESSAGE_ON_ACCOUNT"/>
+                </not>
+            </and>
+        </preConditions>
+        <addForeignKeyConstraint baseTableName="ai_message"
+                                 baseColumnNames="account_id"
+                                 referencedTableName="accounts"
+                                 referencedColumnNames="account_id"
+                                 constraintName="FK_AI_MESSAGE_ON_ACCOUNT"/>
+    </changeSet>
+
+    <changeSet id="1776355200000-8" author="copilot">
+        <preConditions onFail="MARK_RAN">
+            <and>
+                <tableExists tableName="conversation"/>
+                <not>
+                    <indexExists tableName="conversation" indexName="idx_conversation_account_id"/>
+                </not>
+            </and>
+        </preConditions>
+        <createIndex tableName="conversation" indexName="idx_conversation_account_id">
+            <column name="account_id"/>
+        </createIndex>
+    </changeSet>
+
+    <changeSet id="1776355200000-9" author="copilot">
+        <preConditions onFail="MARK_RAN">
+            <and>
+                <tableExists tableName="conversation"/>
+                <not>
+                    <indexExists tableName="conversation" indexName="idx_conversation_created_at"/>
+                </not>
+            </and>
+        </preConditions>
+        <createIndex tableName="conversation" indexName="idx_conversation_created_at">
+            <column name="created_at"/>
+        </createIndex>
+    </changeSet>
+
+    <changeSet id="1776355200000-10" author="copilot">
+        <preConditions onFail="MARK_RAN">
+            <and>
+                <tableExists tableName="ai_message"/>
+                <not>
+                    <indexExists tableName="ai_message" indexName="idx_ai_message_account_id"/>
+                </not>
+            </and>
+        </preConditions>
+        <createIndex tableName="ai_message" indexName="idx_ai_message_account_id">
+            <column name="account_id"/>
+        </createIndex>
+    </changeSet>
+
+    <changeSet id="1776355200000-11" author="copilot">
+        <preConditions onFail="MARK_RAN">
+            <and>
+                <tableExists tableName="ai_message"/>
+                <not>
+                    <indexExists tableName="ai_message" indexName="idx_ai_message_conversation_id"/>
+                </not>
+            </and>
+        </preConditions>
+        <createIndex tableName="ai_message" indexName="idx_ai_message_conversation_id">
+            <column name="conversation_id"/>
+        </createIndex>
+    </changeSet>
+
+    <changeSet id="1776355200000-12" author="copilot">
+        <preConditions onFail="MARK_RAN">
+            <and>
+                <tableExists tableName="ai_message"/>
+                <not>
+                    <indexExists tableName="ai_message" indexName="idx_ai_message_created_at"/>
+                </not>
+            </and>
+        </preConditions>
+        <createIndex tableName="ai_message" indexName="idx_ai_message_created_at">
+            <column name="created_at"/>
+        </createIndex>
+    </changeSet>
+
+    <changeSet id="1776355200000-13" author="copilot">
+        <preConditions onFail="MARK_RAN">
+            <and>
+                <tableExists tableName="ai_message"/>
+                <not>
+                    <indexExists tableName="ai_message" indexName="idx_ai_message_conversation_created_at"/>
+                </not>
+            </and>
+        </preConditions>
+        <createIndex tableName="ai_message" indexName="idx_ai_message_conversation_created_at">
+            <column name="conversation_id"/>
+            <column name="created_at"/>
+        </createIndex>
+    </changeSet>
+
+</databaseChangeLog>

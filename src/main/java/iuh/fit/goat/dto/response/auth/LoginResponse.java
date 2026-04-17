@@ -28,6 +28,7 @@ public class LoginResponse {
     private String avatar;
     private String type;
     private boolean enabled;
+    private boolean locked;
     private Visibility visibility;
     private RoleAccount role;
     private UserCompany company;

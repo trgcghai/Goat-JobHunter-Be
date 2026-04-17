@@ -4,14 +4,14 @@ import com.turkraft.springfilter.boot.Filter;
 import iuh.fit.goat.dto.request.user.ResetPasswordRequest;
 import iuh.fit.goat.dto.request.user.UpdateMyVisibilityRequest;
 import iuh.fit.goat.dto.request.user.UpdatePasswordRequest;
-import iuh.fit.goat.dto.request.user.UserEnabledRequest;
+import iuh.fit.goat.dto.request.account.AccountEnabledRequest;
 import iuh.fit.goat.dto.request.user.UsersVisibilityRequest;
 import iuh.fit.goat.dto.response.auth.LoginResponse;
 import iuh.fit.goat.dto.response.ResultPaginationResponse;
 import iuh.fit.goat.dto.response.company.CompanyResponse;
-import iuh.fit.goat.dto.response.user.UserEnabledResponse;
-import iuh.fit.goat.dto.response.user.UserResponse;
-import iuh.fit.goat.dto.response.user.UserVisibilityResponse;
+import iuh.fit.goat.dto.response.account.AccountEnabledResponse;
+import iuh.fit.goat.dto.response.account.UserResponse;
+import iuh.fit.goat.dto.response.account.UserVisibilityResponse;
 import iuh.fit.goat.entity.*;
 import iuh.fit.goat.exception.InvalidException;
 import iuh.fit.goat.service.*;
@@ -40,6 +40,7 @@ public class UserController {
     private final RecruiterService recruiterService;
     private final JobService jobService;
     private final ResumeService resumeService;
+    private final DeviceService deviceService;
 
     @Value("${minhdat.jwt.access-token-validity-in-seconds}")
     private long jwtAccessToken;
@@ -359,29 +360,6 @@ public class UserController {
     }
     /*     ========================= ========================= =========================  */
 
-
-    @PutMapping("/activate")
-    public ResponseEntity<List<UserEnabledResponse>> activateUsers(@RequestBody UserEnabledRequest request)
-            throws InvalidException {
-        List<Long> userIds = request.getUserIds();
-        if (userIds == null || userIds.isEmpty()) {
-            throw new InvalidException("User IDs list cannot be empty");
-        }
-        List<UserEnabledResponse> res = this.userService.handleActivateUsers(userIds);
-        return ResponseEntity.status(HttpStatus.OK).body(res);
-    }
-
-    @PutMapping("/deactivate")
-    public ResponseEntity<List<UserEnabledResponse>> deactivateUsers(@RequestBody UserEnabledRequest request)
-            throws InvalidException {
-        List<Long> userIds = request.getUserIds();
-        if (userIds == null || userIds.isEmpty()) {
-            throw new InvalidException("User IDs list cannot be empty");
-        }
-        List<UserEnabledResponse> res = this.userService.handleDeactivateUsers(userIds);
-        return ResponseEntity.status(HttpStatus.OK).body(res);
-    }
-
     @PutMapping("/me/visibility")
     public ResponseEntity<UserVisibilityResponse> updateMyVisibility(
             @Valid @RequestBody UpdateMyVisibilityRequest request
@@ -397,5 +375,11 @@ public class UserController {
         List<UserVisibilityResponse> responses = this.userService
                 .handleUpdateUsersVisibility(request.getAccountIds(), request.getVisibility());
         return ResponseEntity.status(HttpStatus.OK).body(responses);
+    }
+
+    @GetMapping("/me/devices")
+    public ResponseEntity<ResultPaginationResponse> getCurrentUserDevice(Pageable pageable) {
+        ResultPaginationResponse result = this.deviceService.handleGetAllDevicesByEmail(pageable);
+        return ResponseEntity.status(HttpStatus.OK).body(result);
     }
 }

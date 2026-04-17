@@ -2,7 +2,6 @@ package iuh.fit.goat.service.impl;
 
 import iuh.fit.goat.dto.request.blog.ReactionBlogRequest;
 import iuh.fit.goat.dto.response.blog.BlogReactionCheckResponse;
-import iuh.fit.goat.dto.response.user.UserResponse;
 import iuh.fit.goat.entity.*;
 import iuh.fit.goat.repository.AccountRepository;
 import iuh.fit.goat.repository.BlogReactionRepository;

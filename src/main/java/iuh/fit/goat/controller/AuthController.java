@@ -1,13 +1,11 @@
 package iuh.fit.goat.controller;
 
-import iuh.fit.goat.dto.request.auth.LoginRequest;
-import iuh.fit.goat.dto.request.auth.RegisterCompanyRequest;
-import iuh.fit.goat.dto.request.auth.RegisterUserRequest;
-import iuh.fit.goat.dto.request.auth.VerifyAccountRequest;
+import iuh.fit.goat.dto.request.auth.*;
 import iuh.fit.goat.dto.response.auth.LoginResponse;
 import iuh.fit.goat.exception.InvalidException;
 import iuh.fit.goat.service.AuthService;
 import iuh.fit.goat.util.annotation.ApiMessage;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -25,9 +23,10 @@ public class AuthController {
     private final AuthService authService;
 
     @PostMapping("/login")
-    public ResponseEntity<LoginResponse> login(@Valid @RequestBody LoginRequest loginRequest, HttpServletResponse response
+    public ResponseEntity<LoginResponse> login(
+            @Valid @RequestBody LoginRequest loginRequest, HttpServletResponse response, HttpServletRequest request
     ) throws InvalidException {
-        return ResponseEntity.ok(this.authService.handleLogin(loginRequest, response));
+        return ResponseEntity.ok(this.authService.handleLogin(loginRequest, response, request));
     }
 
     @GetMapping("/refresh")
@@ -91,6 +90,12 @@ public class AuthController {
         } catch (Exception e) {
             return ResponseEntity.badRequest().body(e.getMessage());
         }
+    }
+
+    @DeleteMapping("/account")
+    public ResponseEntity<Void> deleteMyAccount(@Valid @RequestBody DeleteAccountRequest request) throws InvalidException {
+        this.authService.handleDeleteMyAccount(request.getPassword());
+        return ResponseEntity.status(HttpStatus.OK).body(null);
     }
 
 }

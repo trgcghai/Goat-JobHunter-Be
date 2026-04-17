@@ -19,6 +19,7 @@ public class MessageDeletedEventResponse {
     private String eventType;
     private String chatRoomId;
     private String messageId;
+    private String deleteType;
     private Long deletedByAccountId;
     private Instant deletedAt;
 }

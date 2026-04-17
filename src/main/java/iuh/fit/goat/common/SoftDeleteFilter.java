@@ -13,7 +13,8 @@ public enum SoftDeleteFilter {
     CAREER("activeCareerFilter"),
     SUBSCRIBER("activeSubscriberFilter"),
     INTERVIEW("activeInterviewFilter"),
-    FRIENDSHIP("activeFriendshipFilter"),
+    FRIEND_REQUEST("activeFriendRequestFilter"),
+    USER_RELATIONSHIP("activeUserRelationshipFilter"),
     JOB("activeJobFilter"),
     BLOG("activeBlogFilter"),
     COMMENT("activeCommentFilter"),
@@ -22,7 +23,8 @@ public enum SoftDeleteFilter {
     CHATMEMBER("activeChatMemberFilter"),
     TICKET("activeTicketFilter"),
     REVIEW("activeReviewFilter"),
-    RESUMEEVALUATION("activeResumeEvaluationFilter");
+    RESUMEEVALUATION("activeResumeEvaluationFilter"),
+    DEVICE("activeDeviceFilter");
 
     private final String value;
 

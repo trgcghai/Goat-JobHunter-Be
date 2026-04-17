@@ -3,7 +3,6 @@ package iuh.fit.goat.controller;
 import iuh.fit.goat.dto.request.blog.ReactionBlogRequest;
 import iuh.fit.goat.dto.request.blog.UnreactBlogRequest;
 import iuh.fit.goat.dto.response.blog.BlogReactionCheckResponse;
-import iuh.fit.goat.dto.response.user.UserResponse;
 import iuh.fit.goat.exception.InvalidException;
 import iuh.fit.goat.service.BlogReactionService;
 import jakarta.validation.Valid;

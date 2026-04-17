@@ -7,7 +7,7 @@ import iuh.fit.goat.exception.InvalidException;
 import java.util.List;
 
 public interface AiService {
-    String chatWithAi(ChatRequest request);
+    String chatWithAi(ChatRequest request) throws InvalidException;
 
     String getTopJobsContext();
 

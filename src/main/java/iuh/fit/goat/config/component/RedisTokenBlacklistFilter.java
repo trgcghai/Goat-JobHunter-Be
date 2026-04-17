@@ -27,28 +27,81 @@ public class RedisTokenBlacklistFilter extends OncePerRequestFilter {
     ) throws ServletException, IOException {
 
         String[] whiteList = {
-                "/api/v1/ping",                       // Endpoint kiểm tra trạng thái server
-                "/api/v1/clear-cookies",              // Xóa toàn bộ cookies trên FE – không cần phân quyền
+                //              Các endpoint về tài nguyên tĩnh như swagger có thể public
+                "/storage/**",
+                "/v3/api-docs/**",
+                "/swagger-ui/**",
+                "/swagger-ui.html",
 
-                "/",                                  // Trang gốc
+//              Các endpoint kiểm tra sức khỏe của server có thể public để các công cụ giám sát có thể truy cập mà không cần xác thực
+                "/actuator",
+                "/actuator/health",
+                "/actuator/health/**",
 
-                "/api/v1/auth/login",                 // Đăng nhập – public
-                "/api/v1/auth/register/**",           // Đăng ký tài khoản – public
-                "/api/v1/auth/refresh",               // Refresh token – không kiểm tra permission
-                "/api/v1/auth/verify/**",             // Xác minh email – public
-                "/api/v1/auth/resend",                // Gửi lại email xác minh – public
+//              Ai cũng có thể dùng chat
+                "/api/v1/ai/**",
 
-                "/storage/**",                        // Truy cập file tĩnh – public
-                "/api/v1/recruiters/**",              // Danh sách/chi tiết nhà tuyển dụng – public
-                "/api/v1/jobs/**",                    // Danh sách/chi tiết công việc – public
+//              Số lượng ứng tuyển của công việc, có thể public để hiển thị trên trang chi tiết công việc
+                "/api/v1/applications/count",
 
-                "/api/v1/email/**",                   // Gửi email / form liên hệ – public
-                "/api/v1/blogs/**",                   // Nội dung blog – public
-                "/api/v1/users/reset-password",       // Quên mật khẩu / đặt lại mật khẩu – public
+//              Các endpoint về auth để người dùng có thể đăng nhập, đăng ký, làm mới token mà không cần phải xác thực trước
+                "/api/v1/auth/login",
+                "/api/v1/auth/refresh",
+                "/api/v1/auth/register/**",
+                "/api/v1/auth/verify",
+                "/api/v1/auth/resend",
 
-                "/v3/api-docs/**",                    // Tài liệu OpenAPI – public
-                "/swagger-ui/**",                     // Swagger UI – public
-                "/swagger-ui.html"                    // Trang Swagger – public
+//              Các endpoint về blog để người dùng có thể xem danh sách bài viết, chi tiết bài viết, bài viết theo tag, nhưng vẫn cho phép người dùng có thể tạo/sửa/xóa bài viết của chính mình
+                "/api/v1/blogs/{id}",
+                "/api/v1/blogs/available",
+                "/api/v1/blogs/tags",
+
+//              Dữ liệu ngành nghề phải public
+                "/api/v1/careers/**",
+
+//              Thông tin danh sách công ty và chi tiết công ty có thể public
+                "/api/v1/companies/{id}",
+                "/api/v1/companies/slug/{name}",
+                "/api/v1/companies/{id}/group-addresses",
+                "/api/v1/companies/available",
+                "/api/v1/companies/{companyId}/jobs/skills",
+                "/api/v1/companies/{companyId}/jobs",
+                "/api/v1/companies/name",
+
+//              Thông tin danh sách công việc và chi tiết công việc có thể public
+                "/api/v1/jobs/related",
+                "/api/v1/jobs/{id}",
+                "/api/v1/jobs/available",
+                "/api/v1/jobs/companies/count",
+                "/api/v1/jobs/count-applications",
+
+//              Endpoint kiểm tra trạng thái server
+                "/",
+                "/ping",
+                "/clear-cookies",
+                "/uuid",
+
+//              Các endpoint đánh giá để người dùng có thể thao tác với đánh giá của chính mình, nhưng vẫn cho phép mọi người xem danh sách đánh giá của công ty và đánh giá gần nhất
+                "/api/v1/reviews/companies/{name}",
+                "/api/v1/reviews/latest",
+                "/api/v1/reviews/count",
+                "/api/v1/reviews/companies/count",
+                "/api/v1/reviews/companies/ratings/average",
+                "/api/v1/reviews/companies/{companyId}/ratings/summary",
+                "/api/v1/reviews/companies/{companyId}/recommendation-rate",
+
+//              Các endpoint về skill để người dùng có thể xem danh sách kỹ năng và chi tiết kỹ năng
+                "/api/v1/skills/{id}",
+                "/api/v1/skills/all",
+
+//              Các endpoint về user để người dùng có thể thao tác với thông tin của chính mình, nhưng vẫn cho phép mọi người xem thông tin cơ bản của user khác (không bao gồm thông tin nhạy cảm như email, password, vai trò)
+                "/api/v1/users/{id}",
+                "/api/v1/users/search",
+                "/api/v1/users/reset-password",
+
+//              Các endpoint về role để người dùng có thể xem danh sách vai trò và chi tiết vai trò
+                "/api/v1/roles/{id}",
+                "/api/v1/roles",
         };
 
         String requestURI = request.getRequestURI();
