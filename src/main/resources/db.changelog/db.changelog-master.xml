@@ -36,5 +36,7 @@
     <include file="db.changelog/schema/2026-04-11/field-locked-account.xml"/>
     <include file="db.changelog/schema/2026-04-12/create-friend-request-and-user-relationship.xml"/>
     <include file="db.changelog/schema/2026-04-16/create-ai-conversation-and-message.xml"/>
+    <include file="db.changelog/schema/2026-04-17/dro-friendship-add-field-chat-members.xml"/>
+    <include file="db.changelog/schema/2026-04-17/idx-friend-request.xml"/>
 
 </databaseChangeLog>

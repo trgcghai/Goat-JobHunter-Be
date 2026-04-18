@@ -251,7 +251,7 @@ public class MessageServiceImpl implements MessageService {
                 .chatRoomId(chatRoomId.toString())
                 .messageId(messageId)
                 .sender(senderInfo)  // NEW: Use embedded sender
-                .content(request.getContent())
+                .content(Objects.requireNonNull(request).getContent())
                 .messageType(MessageType.TEXT)
                 .replyTo(replyToMessageId)
                 .isHidden(false)
@@ -265,8 +265,7 @@ public class MessageServiceImpl implements MessageService {
 
         Message savedMessage = messageRepository.saveMessage(message);
 
-        log.info("Message created: messageId={}, chatRoomId={}",
-            messageId, chatRoomId);
+        log.info("Message created: messageId={}, chatRoomId={}", messageId, chatRoomId);
 
         sendMessageToUsers(chatRoomId, savedMessage);
 

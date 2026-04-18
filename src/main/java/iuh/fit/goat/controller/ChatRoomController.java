@@ -8,6 +8,7 @@ import iuh.fit.goat.dto.request.message.MessageToNewChatRoom;
 import iuh.fit.goat.dto.response.ResultPaginationResponse;
 import iuh.fit.goat.dto.response.chat.ChatRoomResponse;
 import iuh.fit.goat.dto.response.chat.GroupMemberResponse;
+import iuh.fit.goat.dto.response.chat.UnreadMessageResponse;
 import iuh.fit.goat.dto.response.message.ForwardMessageResponse;
 import iuh.fit.goat.dto.response.message.MessageDeletedEventResponse;
 import iuh.fit.goat.dto.response.message.MessageResponse;
@@ -18,6 +19,7 @@ import iuh.fit.goat.exception.InvalidException;
 import iuh.fit.goat.exception.NotFoundException;
 import iuh.fit.goat.exception.PermissionException;
 import iuh.fit.goat.service.AccountService;
+import iuh.fit.goat.service.ChatMemberService;
 import iuh.fit.goat.service.ChatRoomService;
 import iuh.fit.goat.service.MessageService;
 import iuh.fit.goat.service.PinnedMessageService;
@@ -45,6 +47,7 @@ public class ChatRoomController {
     private final MessageService messageService;
     private final AccountService accountService;
     private final PinnedMessageService pinnedMessageService;
+    private final ChatMemberService chatMemberService;
 
     @GetMapping("/me")
     public ResponseEntity<?> getMyChatRooms(Pageable pageable) throws InvalidException {
@@ -58,6 +61,12 @@ public class ChatRoomController {
 
         ResultPaginationResponse response = this.chatRoomService.getMyChatRooms(currentAccount.getAccountId(), pageable);
         return ResponseEntity.ok(response);
+    }
+
+    @GetMapping("/me/unread-count")
+    public ResponseEntity<List<UnreadMessageResponse>> countUnreadMessagesByCurrentAccount(Pageable pageable) throws InvalidException {
+        List<UnreadMessageResponse> responses = this.chatRoomService.getUnreadMessages(pageable);
+        return ResponseEntity.ok(responses);
     }
 
     @GetMapping("/{id}")
@@ -85,8 +94,23 @@ public class ChatRoomController {
         }
 
         List<Message> messages = this.chatRoomService.getMessagesInChatRoom(currentAccount, id, pageable);
-        List<MessageResponse> response = this.messageService.toMessageResponses(messages);
-        return ResponseEntity.ok(response);
+        List<MessageResponse> responses = this.messageService.toMessageResponses(messages);
+
+        // Cập nhật lastReadMessageSk bằng latest message
+        String lastReadMessageSk = this.chatMemberService.getLastReadMessageSk(id, currentAccount.getAccountId());
+        if (!messages.isEmpty()) {
+            Message lastestMessage = messages.getFirst();
+            Message currentLastReadMessage = messages.stream()
+                    .filter(message -> message.getMessageSk().equalsIgnoreCase(lastReadMessageSk))
+                    .findFirst().orElse(null);
+
+            boolean isRead = this.chatMemberService.isMessageRead(lastestMessage, currentLastReadMessage);
+            if (lastestMessage != null && !isRead) {
+                this.chatMemberService.updateLastReadMessageId(id, currentAccount.getAccountId(), lastestMessage.getMessageSk());
+            }
+        }
+
+        return ResponseEntity.ok(responses);
     }
 
     @GetMapping("/{id}/messages/search")

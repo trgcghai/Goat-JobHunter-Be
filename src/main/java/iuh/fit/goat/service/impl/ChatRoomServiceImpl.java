@@ -7,6 +7,7 @@ import iuh.fit.goat.dto.request.message.MessageToNewChatRoom;
 import iuh.fit.goat.dto.response.chat.ChatRoomResponse;
 import iuh.fit.goat.dto.response.ResultPaginationResponse;
 import iuh.fit.goat.dto.response.chat.GroupMemberResponse;
+import iuh.fit.goat.dto.response.chat.UnreadMessageResponse;
 import iuh.fit.goat.entity.*;
 import iuh.fit.goat.enumeration.ChatRole;
 import iuh.fit.goat.enumeration.ChatRoomType;
@@ -19,6 +20,7 @@ import iuh.fit.goat.repository.AccountRepository;
 import iuh.fit.goat.repository.ChatMemberRepository;
 import iuh.fit.goat.repository.ChatRoomRepository;
 import iuh.fit.goat.repository.UserRelationshipRepository;
+import iuh.fit.goat.service.ChatMemberService;
 import iuh.fit.goat.service.ChatRoomService;
 import iuh.fit.goat.service.MessageService;
 import iuh.fit.goat.service.NotificationService;
@@ -43,12 +45,13 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class ChatRoomServiceImpl implements ChatRoomService {
     private final MessageService messageService;
+    private final ChatMemberService chatMemberService;
+    private final NotificationService notificationService;
 
     private final ChatRoomRepository chatRoomRepository;
     private final ChatMemberRepository chatMemberRepository;
     private final AccountRepository accountRepository;
     private final UserRelationshipRepository userRelationshipRepository;
-    private final NotificationService notificationService;
 
     @Override
     @Transactional(readOnly = true)
@@ -649,6 +652,37 @@ public class ChatRoomServiceImpl implements ChatRoomService {
         emails.forEach(
                 email -> this.notificationService.handleSendMessageTextToUser(email, messageText)
         );
+    }
+
+    @Override
+    public List<UnreadMessageResponse> getUnreadMessages(Pageable pageable) throws InvalidException {
+        String currentUserEmail = SecurityUtil.getCurrentUserEmail();
+        Account currentAccount = this.accountRepository.findByEmailAndDeletedAtIsNull(currentUserEmail)
+                .orElseThrow(() -> new InvalidException("Tài khoản không tồn tại"));
+
+        Page<ChatRoom> chatRoomPage = this.chatRoomRepository.findChatRoomsByMemberAccountId(currentAccount.getAccountId(), pageable);
+
+        return chatRoomPage.getContent().stream()
+                    .map(chatRoom -> {
+                        ChatMember member = chatRoom.getMembers().stream()
+                                .filter(m -> m.getDeletedAt() == null &&
+                                        m.getAccount().getAccountId() == currentAccount.getAccountId())
+                                .findFirst()
+                                .orElse(null);
+
+                        if (member == null) {
+                            return null;
+                        }
+
+                        long unreadCount = this.chatMemberService.countUnreadMessages(chatRoom.getRoomId(), member);
+
+                        return new UnreadMessageResponse(
+                                chatRoom.getRoomId(),
+                                unreadCount
+                        );
+                    })
+                    .filter(Objects::nonNull)
+                    .toList();
     }
 
     // =============== HELPER METHODS FOR GROUP CHAT ====================
