@@ -25,12 +25,20 @@ public class DynamoDbMigrationRunner implements CommandLineRunner {
     @Value("${dynamodb.table.pinned_messages}")
     private String pinnedMessagesTableName;
 
+    @Value("${dynamodb.table.polls}")
+    private String pollsTableName;
+
+    @Value("${dynamodb.table.poll_votes}")
+    private String pollVotesTableName;
+
     @Override
     public void run(String... args) {
         log.info("🚀 Starting DynamoDB migration...");
 
         createMessagesTable();
         createPinnedMessagesTable();
+        createPollsTable();
+        createPollVotesTable();
 
         log.info("✅ DynamoDB migration completed successfully!");
     }
@@ -130,6 +138,86 @@ public class DynamoDbMigrationRunner implements CommandLineRunner {
         } catch (Exception e) {
             log.error("❌ Failed to create table '{}'", tableName, e);
             throw new RuntimeException("Failed to create pinned_messages table", e);
+        }
+    }
+
+    private void createPollsTable() {
+        String tableName = pollsTableName;
+        List<KeySchemaElement> expectedSchema = List.of(
+                KeySchemaElement.builder().attributeName("pollId").keyType(KeyType.HASH).build()
+        );
+
+        if (tableExistsAndValidateSchema(tableName, expectedSchema)) {
+            log.info("📦 Table '{}' already exists with expected schema, skipping creation", tableName);
+            return;
+        }
+
+        log.info("🔨 Creating table '{}'...", tableName);
+
+        CreateTableRequest request = CreateTableRequest.builder()
+                .tableName(tableName)
+                .attributeDefinitions(
+                        AttributeDefinition.builder()
+                                .attributeName("pollId")
+                                .attributeType(ScalarAttributeType.S)
+                                .build()
+                )
+                .keySchema(
+                        KeySchemaElement.builder()
+                                .attributeName("pollId")
+                                .keyType(KeyType.HASH)
+                                .build()
+                )
+                .billingMode(BillingMode.PAY_PER_REQUEST)
+                .build();
+
+        try {
+            dynamoDbClient.createTable(request);
+            waitForTableCreation(tableName);
+            log.info("✅ Table '{}' created successfully", tableName);
+        } catch (Exception e) {
+            log.error("❌ Failed to create table '{}'", tableName, e);
+            throw new RuntimeException("Failed to create polls table", e);
+        }
+    }
+
+    private void createPollVotesTable() {
+        String tableName = pollVotesTableName;
+        List<KeySchemaElement> expectedSchema = List.of(
+                KeySchemaElement.builder().attributeName("voteId").keyType(KeyType.HASH).build()
+        );
+
+        if (tableExistsAndValidateSchema(tableName, expectedSchema)) {
+            log.info("📦 Table '{}' already exists with expected schema, skipping creation", tableName);
+            return;
+        }
+
+        log.info("🔨 Creating table '{}'...", tableName);
+
+        CreateTableRequest request = CreateTableRequest.builder()
+                .tableName(tableName)
+                .attributeDefinitions(
+                        AttributeDefinition.builder()
+                                .attributeName("voteId")
+                                .attributeType(ScalarAttributeType.S)
+                                .build()
+                )
+                .keySchema(
+                        KeySchemaElement.builder()
+                                .attributeName("voteId")
+                                .keyType(KeyType.HASH)
+                                .build()
+                )
+                .billingMode(BillingMode.PAY_PER_REQUEST)
+                .build();
+
+        try {
+            dynamoDbClient.createTable(request);
+            waitForTableCreation(tableName);
+            log.info("✅ Table '{}' created successfully", tableName);
+        } catch (Exception e) {
+            log.error("❌ Failed to create table '{}'", tableName, e);
+            throw new RuntimeException("Failed to create poll_votes table", e);
         }
     }
 

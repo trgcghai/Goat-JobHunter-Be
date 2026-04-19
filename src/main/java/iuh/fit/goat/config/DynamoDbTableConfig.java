@@ -3,6 +3,8 @@ package iuh.fit.goat.config;
 import iuh.fit.goat.entity.Message;
 import iuh.fit.goat.entity.MessageHidden;
 import iuh.fit.goat.entity.PinnedMessage;
+import iuh.fit.goat.entity.Poll;
+import iuh.fit.goat.entity.PollVote;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -22,6 +24,12 @@ public class DynamoDbTableConfig {
 
     @Value("${dynamodb.table.message_hidden}")
     private String messageHiddenTableName;
+
+    @Value("${dynamodb.table.polls}")
+    private String pollsTableName;
+
+    @Value("${dynamodb.table.poll_votes}")
+    private String pollVotesTableName;
 
     private final DynamoDbEnhancedClient enhancedClient;
 
@@ -49,5 +57,19 @@ public class DynamoDbTableConfig {
     public DynamoDbTable<MessageHidden> messageHiddenTable() {
         TableSchema<MessageHidden> schema = TableSchema.fromBean(MessageHidden.class);
         return enhancedClient.table(messageHiddenTableName, schema);
+    }
+
+    @Bean
+    @Scope("prototype")
+    public DynamoDbTable<Poll> pollTable() {
+        TableSchema<Poll> schema = TableSchema.fromBean(Poll.class);
+        return enhancedClient.table(pollsTableName, schema);
+    }
+
+    @Bean
+    @Scope("prototype")
+    public DynamoDbTable<PollVote> pollVoteTable() {
+        TableSchema<PollVote> schema = TableSchema.fromBean(PollVote.class);
+        return enhancedClient.table(pollVotesTableName, schema);
     }
 }
