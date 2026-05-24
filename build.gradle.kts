@@ -3,6 +3,7 @@ plugins {
 	id("org.springframework.boot") version "3.5.6"
 	id("io.spring.dependency-management") version "1.1.7"
 	id("io.freefair.lombok") version "8.6"
+	id("jacoco")
 }
 
 group = "fit.se"
@@ -69,4 +70,23 @@ dependencies {
 
 tasks.withType<Test> {
 	useJUnitPlatform()
+}
+
+jacoco {
+	toolVersion = "0.8.10"
+}
+
+tasks.named<JacocoReport>("jacocoTestReport") {
+	dependsOn(tasks.test)
+	reports {
+		xml.required.set(true)
+		html.required.set(true)
+		csv.required.set(false)
+	}
+	val javaClasses = fileTree("${project.buildDir}/classes/java/main") {
+		exclude("**/generated/**")
+	}
+	classDirectories.setFrom(javaClasses)
+	sourceDirectories.setFrom(files("src/main/java"))
+	executionData.setFrom(fileTree(project.buildDir) { include("**/jacoco/*.exec", "**/jacoco.exec") })
 }
