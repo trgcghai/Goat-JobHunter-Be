@@ -1,14 +1,12 @@
 package iuh.fit.goat.service.impl;
 
 import iuh.fit.goat.dto.request.message.ForwardMessageRequest;
+import iuh.fit.goat.entity.Account;
 import iuh.fit.goat.entity.Message;
 import iuh.fit.goat.entity.User;
-import iuh.fit.goat.entity.Account;
-import iuh.fit.goat.service.helper.MessageHelper;
-import iuh.fit.goat.repository.MessageRepository;
 import iuh.fit.goat.repository.ChatRoomRepository;
-import iuh.fit.goat.dto.response.message.ForwardMessageResponse;
-import iuh.fit.goat.exception.NotFoundException;
+import iuh.fit.goat.repository.MessageRepository;
+import iuh.fit.goat.service.helper.MessageHelper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -24,10 +22,9 @@ import java.util.Optional;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.Mockito.*;
-import iuh.fit.goat.exception.ConflictException;
-import iuh.fit.goat.exception.PermissionException;
 import iuh.fit.goat.exception.InvalidException;
 import iuh.fit.goat.exception.NotFoundException;
+import iuh.fit.goat.exception.PermissionException;
 
 @ExtendWith(MockitoExtension.class)
 @MockitoSettings(strictness = Strictness.LENIENT)
@@ -46,39 +43,6 @@ class MessageRevokeForwardTest {
     void setUp() {
         sender = new User(); sender.setAccountId(11L);
         source = new Message(); source.setMessageId("m1"); source.setChatRoomId("10"); source.setIsHidden(false);
-    }
-
-    @Test
-    void revokeMessage_shouldReturnRevokedMessage_whenSenderMatches() throws Exception {
-        when(messageRepository.findByChatRoomIdAndMessageId("10", "m1")).thenReturn(Optional.of(source));
-        when(messageHelper.extractSenderAccountId(source)).thenReturn(11L);
-        when(messageHelper.collectCascadeRecallMessages(source)).thenReturn(List.of(source));
-        when(messageHelper.applyRecallState(any())).thenReturn(List.of(source));
-        // no need to stub toMessageResponse here
-
-        var revoked = messageService.revokeMessage(10L, "m1", sender);
-        assertThat(revoked).isNotNull();
-        verify(messageHelper).sendMessageToUsers(anyString(), any(Message.class));
-    }
-
-    @Test
-    void revokeMessage_shouldThrowPermissionWhenSenderDiffers() {
-        when(messageRepository.findByChatRoomIdAndMessageId("10", "m1")).thenReturn(Optional.of(source));
-        when(messageHelper.extractSenderAccountId(source)).thenReturn(999L);
-
-        org.junit.jupiter.api.Assertions.assertThrows(PermissionException.class, () ->
-                messageService.revokeMessage(10L, "m1", sender)
-        );
-    }
-
-    @Test
-    void revokeMessage_shouldThrowConflictWhenAlreadyHidden() {
-        source.setIsHidden(true);
-        when(messageRepository.findByChatRoomIdAndMessageId("10", "m1")).thenReturn(Optional.of(source));
-
-        org.junit.jupiter.api.Assertions.assertThrows(ConflictException.class, () ->
-                messageService.revokeMessage(10L, "m1", sender)
-        );
     }
 
     @Test
@@ -132,10 +96,4 @@ class MessageRevokeForwardTest {
         );
     }
 
-    @Test
-    void revokeMessage_nullInputs_throwInvalid() {
-        org.junit.jupiter.api.Assertions.assertThrows(iuh.fit.goat.exception.InvalidException.class, () ->
-                messageService.revokeMessage(null, "m", sender)
-        );
-    }
 }

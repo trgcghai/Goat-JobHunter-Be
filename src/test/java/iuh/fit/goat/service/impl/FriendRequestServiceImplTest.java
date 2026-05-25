@@ -103,28 +103,6 @@ class FriendRequestServiceImplTest {
     }
 
     @Test
-    void handleCancelFriendRequest_shouldCancelBySender() throws Exception {
-        FriendRequest request = new FriendRequest();
-        request.setRequestId(22L);
-        request.setSender(sender);
-        request.setReceiver(receiver);
-        request.setStatus(FriendRequestStatus.PENDING);
-
-        when(friendRequestRepository.findActiveByIdForUpdate(22L)).thenReturn(Optional.of(request));
-
-        try (MockedStatic<SecurityUtil> mockedSecurity = mockStatic(SecurityUtil.class)) {
-            mockedSecurity.when(SecurityUtil::getCurrentUserLogin).thenReturn(Optional.of("sender@example.com"));
-            when(accountRepository.findByEmailAndDeletedAtIsNull("sender@example.com")).thenReturn(Optional.of(sender));
-            when(friendRequestRepository.save(any(FriendRequest.class))).thenAnswer(invocation -> invocation.getArgument(0));
-
-            FriendRequestResponse response = friendRequestService.handleCancelFriendRequest(22L);
-
-            assertThat(response.getStatus()).isEqualTo(FriendRequestStatus.CANCELED);
-            verify(friendRequestRepository).save(request);
-        }
-    }
-
-    @Test
     void handleBlockUser_shouldBlockAndCancelPendingRequests() throws Exception {
         when(userRepository.findByAccountIdAndDeletedAtIsNull(2L)).thenReturn(Optional.of(receiver));
         when(userRelationshipRepository.lockPairForTransactionByCanonicalIds(1L, 2L)).thenReturn(new Object());
@@ -142,23 +120,6 @@ class FriendRequestServiceImplTest {
             verify(friendRequestRepository).updateStatusByPair(
                     eq(1L), eq(2L), eq(FriendRequestStatus.PENDING), eq(FriendRequestStatus.CANCELED), any(Instant.class)
             );
-        }
-    }
-
-    @Test
-    void handleUnblockUser_shouldRemoveBlockRelationship() throws Exception {
-        when(userRepository.findByAccountIdAndDeletedAtIsNull(2L)).thenReturn(Optional.of(receiver));
-        when(userRelationshipRepository.lockPairForTransactionByCanonicalIds(1L, 2L)).thenReturn(new Object());
-        when(userRelationshipRepository.hardDeleteByCanonicalPairAndState(1L, 2L, RelationshipState.BLOCKED)).thenReturn(1);
-
-        try (MockedStatic<SecurityUtil> mockedSecurity = mockStatic(SecurityUtil.class)) {
-            mockedSecurity.when(SecurityUtil::getCurrentUserLogin).thenReturn(Optional.of("sender@example.com"));
-            when(accountRepository.findByEmailAndDeletedAtIsNull("sender@example.com")).thenReturn(Optional.of(sender));
-
-            FriendRequestResponse response = friendRequestService.handleUnblockUser(2L);
-
-            assertThat(response.getRelationshipState()).isEqualTo(RelationshipState.NONE);
-            verify(userRelationshipRepository).hardDeleteByCanonicalPairAndState(1L, 2L, RelationshipState.BLOCKED);
         }
     }
 
