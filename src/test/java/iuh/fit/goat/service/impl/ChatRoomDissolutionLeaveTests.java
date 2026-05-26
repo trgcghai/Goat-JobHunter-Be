@@ -20,6 +20,7 @@ import java.util.List;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
@@ -112,6 +113,91 @@ class ChatRoomDissolutionLeaveTests {
         verify(messageService).createAndSendSystemMessage(eq(601L), eq(MessageEvent.GROUP_DISSOLVED), eq(owner));
         verify(notificationService, times(1)).handleSendMessageTextToUser(eq("a1@example.com"), anyString());
         verify(notificationService, times(1)).handleSendMessageTextToUser(eq("a2@example.com"), anyString());
+    }
+
+    @Test
+    void smartGroupDissolution_caseInsensitiveName_ok() throws Exception {
+        ChatRoom room = new ChatRoom(); room.setRoomId(602L); room.setType(ChatRoomType.GROUP); room.setName("TeamCase");
+        ChatMember ownerMember = new ChatMember(); ownerMember.setAccount(owner); ownerMember.setRole(ChatRole.OWNER);
+        room.setMembers(List.of(ownerMember));
+
+        when(chatRoomRepository.findByRoomIdAndDeletedAtIsNull(602L)).thenReturn(Optional.of(room));
+        when(chatRoomPermissionGuard.getCurrentMember(room, owner.getAccountId())).thenReturn(ownerMember);
+        when(chatRoomRepository.save(any())).thenAnswer(i -> i.getArgument(0));
+        when(chatMemberRepository.save(any())).thenAnswer(i -> i.getArgument(0));
+
+        chatRoomService.smartGroupDissolution(602L, owner, "teamcase");
+
+        verify(messageService).createAndSendSystemMessage(eq(602L), eq(MessageEvent.GROUP_DISSOLVED), eq(owner));
+    }
+
+    @Test
+    void smartGroupDissolution_groupNotFound_throws() {
+        when(chatRoomRepository.findByRoomIdAndDeletedAtIsNull(999L)).thenReturn(Optional.empty());
+
+        assertThatThrownBy(() -> chatRoomService.smartGroupDissolution(999L, owner, "Anything"))
+                .isInstanceOf(iuh.fit.goat.exception.InvalidException.class);
+    }
+
+    @Test
+    void smartGroupDissolution_wrongType_throws() {
+        ChatRoom room = new ChatRoom(); room.setRoomId(603L); room.setType(ChatRoomType.DIRECT);
+        when(chatRoomRepository.findByRoomIdAndDeletedAtIsNull(603L)).thenReturn(Optional.of(room));
+
+        assertThatThrownBy(() -> chatRoomService.smartGroupDissolution(603L, owner, "Name"))
+                .isInstanceOf(iuh.fit.goat.exception.InvalidException.class);
+    }
+
+    @Test
+    void smartGroupDissolution_onlyOwner_noOtherMembers_noNotifications() throws Exception {
+        ChatRoom room = new ChatRoom(); room.setRoomId(604L); room.setType(ChatRoomType.GROUP); room.setName("SoloRoom");
+        ChatMember ownerMember = new ChatMember(); ownerMember.setAccount(owner); ownerMember.setRole(ChatRole.OWNER);
+        room.setMembers(List.of(ownerMember));
+
+        when(chatRoomRepository.findByRoomIdAndDeletedAtIsNull(604L)).thenReturn(Optional.of(room));
+        when(chatRoomPermissionGuard.getCurrentMember(room, owner.getAccountId())).thenReturn(ownerMember);
+        when(chatRoomRepository.save(any())).thenAnswer(i -> i.getArgument(0));
+        when(chatMemberRepository.save(any())).thenAnswer(i -> i.getArgument(0));
+
+        chatRoomService.smartGroupDissolution(604L, owner, "SoloRoom");
+
+        verify(notificationService, times(1)).handleSendMessageTextToUser(eq("owner@example.com"), anyString());
+    }
+
+    @Test
+    void smartGroupDissolution_setsDeletedTimestamps() throws Exception {
+        ChatRoom room = new ChatRoom(); room.setRoomId(605L); room.setType(ChatRoomType.GROUP); room.setName("ToDelete");
+        ChatMember ownerMember = new ChatMember(); ownerMember.setAccount(owner); ownerMember.setRole(ChatRole.OWNER);
+        room.setMembers(List.of(ownerMember));
+
+        when(chatRoomRepository.findByRoomIdAndDeletedAtIsNull(605L)).thenReturn(Optional.of(room));
+        when(chatRoomPermissionGuard.getCurrentMember(room, owner.getAccountId())).thenReturn(ownerMember);
+        when(chatRoomRepository.save(any())).thenAnswer(i -> i.getArgument(0));
+        when(chatMemberRepository.save(any())).thenAnswer(i -> i.getArgument(0));
+
+        chatRoomService.smartGroupDissolution(605L, owner, "ToDelete");
+
+        assertThat(ownerMember.getDeletedAt()).isNotNull();
+        assertThat(room.getDeletedAt()).isNotNull();
+    }
+
+    @Test
+    void smartGroupDissolution_idempotent_secondCallFails() throws Exception {
+        ChatRoom room = new ChatRoom(); room.setRoomId(606L); room.setType(ChatRoomType.GROUP); room.setName("Once");
+        ChatMember ownerMember = new ChatMember(); ownerMember.setAccount(owner); ownerMember.setRole(ChatRole.OWNER);
+        room.setMembers(List.of(ownerMember));
+
+        when(chatRoomRepository.findByRoomIdAndDeletedAtIsNull(606L)).thenReturn(Optional.of(room)).thenReturn(Optional.empty());
+        when(chatRoomPermissionGuard.getCurrentMember(room, owner.getAccountId())).thenReturn(ownerMember);
+        when(chatRoomRepository.save(any())).thenAnswer(i -> i.getArgument(0));
+        when(chatMemberRepository.save(any())).thenAnswer(i -> i.getArgument(0));
+
+        // first call succeeds
+        chatRoomService.smartGroupDissolution(606L, owner, "Once");
+
+        // second call should report not found
+        assertThatThrownBy(() -> chatRoomService.smartGroupDissolution(606L, owner, "Once"))
+                .isInstanceOf(iuh.fit.goat.exception.InvalidException.class);
     }
 
     
